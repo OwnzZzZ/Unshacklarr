@@ -26,6 +26,7 @@
 </p>
 
 <p align="center">
+  <a href="#this-branch">🧪 This branch</a> ·
   <a href="#how-it-works">How it works</a> ·
   <a href="#features">Features</a> ·
   <a href="#tour">Tour</a> ·
@@ -41,6 +42,50 @@
   <img src="docs/screenshots/series.webp" width="900" alt="The Series page: the managed series as posters, each with its streaming service"><br>
   📺 <b>Series</b>: your Sonarr library as posters, each with its streaming service, picked by hand or from a link found on TMDB.
 </p>
+
+<a name="this-branch"></a>
+
+## 🧪 This branch: `dev-AdvancedSonarr`
+
+A development branch, ahead of `main`: what it adds is being tried out before it lands there.
+Expect rough edges, and tell us what breaks.
+
+### 🎛️ Sonarr at the wheel, if you like
+
+Unshacklarr can also be, for Sonarr, **an indexer and a download client**, like a tracker and
+qBittorrent would be:
+
+- 🔎 **An indexer (Torznab).** When Sonarr searches an episode of a series you set up here, it gets one
+  release back, `Series.S02E03.1080p.ATV.WEB-DL-Unshacklarr`, **only if the service has it now**: Unshacklarr
+  asks the service for its list first, as *What's on the service* does (a few seconds the first time, then
+  kept: found, for 12 hours; missing, asked again after 10 minutes).
+- ⬇️ **A download client (qBittorrent's API).** Sonarr sends that release to Unshacklarr, which downloads
+  the episode with Unshackle, in the same queue as the others (Activity shows it as *sent by Sonarr*).
+  Sonarr follows its progress in its own queue, then **imports it itself**, with its own rules.
+- ⏳ **Gone from the service meanwhile?** The download waits and is tried again every 10 minutes: Sonarr never
+  takes it for a failure, never blocklists the release.
+- ⚡ **One click to set up.** *Settings › Sonarr › Add to Sonarr* adds both to Sonarr through its API,
+  finding by itself the address Sonarr reaches Unshacklarr at (`http://unshacklarr:8788` in a shared
+  Docker network); the indexer only ever sends to Unshacklarr's own client. Everything can be entered by
+  hand too.
+- 🧭 **Who starts the downloads.** *Settings › Automation › Downloads started by*: **Unshacklarr** (its
+  sync, and the tries at a series' release time, as on `main`) or **Sonarr** (both stop; downloads by hand
+  stay).
+
+Both take their own key, shown in *Settings › Sonarr*, never the app's password.
+
+### 🧪 Trying it
+
+No image is published for this branch: build it from the branch.
+
+```bash
+git clone -b dev-AdvancedSonarr https://github.com/OwnzZzZ/Unshacklarr.git
+cd Unshacklarr && docker build -t unshacklarr:advanced-sonarr .
+```
+
+Then use `image: unshacklarr:advanced-sonarr` in place of the published image in your
+`docker-compose.yml` (see [Quick start](#quick-start)); your data folder carries over, and back to `main`
+too. Without Docker: `uv sync && uv run unshacklarr` in the clone.
 
 <a name="how-it-works"></a>
 
@@ -411,12 +456,6 @@ docker exec -it unshacklarr unshacklarr reset-password   # with Docker
 
 Every change, version by version: **[CHANGELOG.md](CHANGELOG.md)**. Settings shows the version
 running.
-
-> [!TIP]
-> **Coming next, to try now:** the [`dev-AdvancedSonarr`](https://github.com/OwnzZzZ/Unshacklarr/tree/dev-AdvancedSonarr)
-> branch lets **Sonarr drive**: Unshacklarr becomes its indexer and download client (set up in one
-> click), Sonarr searches, grabs and imports. Its README says what changed and how to build it; it
-> does not have the API yet.
 
 <details>
 <summary><b>🛠️ Development, translations and releases</b></summary>

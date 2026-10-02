@@ -106,6 +106,8 @@ address by address, nine languages, an API for other programs, and a full securi
   service's episodes picked by name.
 - **Links** to the series on TVDB, TMDB, its service and Sonarr.
 - **A pasted link picks its service**: paste a canalplus.com link, CanalPlus is chosen.
+- **Sonarr at the wheel, if you like.** Unshacklarr is also an indexer (Torznab) and a download client
+  (qBittorrent's API) for Sonarr: it searches, grabs and imports; only what the service has now is offered. Settings, Automation says who starts the downloads; Settings, Sonarr what to enter there.
 - **Its own broadcast schedule.** When Sonarr's dates are wrong (a channel ahead of TVDB), a series
   airs by its own: a first evening, a time, weekly days or daily, so many episodes an evening, and
   any evening changed on a calendar (a break, two the same night). The sync and the Schedule follow it.

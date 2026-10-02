@@ -124,6 +124,7 @@ SETTINGS_DEFAULTS = {
     "country": "US",             # where you watch: Schedule shows its services
     "timezone": "UTC",           # release times and the sync clock
     "language": "en",            # what notifications are written in (the page has its own, per browser)
+    "trigger": "unshacklarr",    # who starts downloads: unshacklarr (its sync, release times) or sonarr (as indexer and client)
     "tmdb_api_key": "",
     "sync_every_hours": 2,
     "auto_days": 14,             # the automatic sync gives up on an episode this long after airing
@@ -1447,6 +1448,12 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
             )
             check_audio(out, wanted_audio(show, config))
             run.card["size"] = sum(f.stat().st_size for f in videos_in(out))  # for the job's sum
+            if kind == "sonarr":  # Sonarr sent it as to a download client: it imports it itself
+                run.say(f"{label}: downloaded, Sonarr imports it")
+                run.step("done")
+                run.finish("downloaded", "", "Sonarr imports it")
+                notify(settings, "success", f"Downloaded: {label}", "Sonarr imports it.", batch=batch, details=episode_details(ep, show, run))
+                return
             run.step("importing")
             import_episode(ep, out, replace)
         except Kept as e:
@@ -1518,6 +1525,8 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
             out = episode_folder(ep)
             if out.exists():
                 print(f"{label}: already in the downloads folder ({out.name}), waiting for Sonarr to import it")
+                if kind == "sonarr":
+                    continue  # Sent by Sonarr: it imports what is there
                 with episode_lock(out) as mine:
                     if manual and mine:  # asked for by hand: say why nothing happens, not a silent skip
                         run = EpisodeRun(ep, show, kind, service_sxxeyy, batch)

@@ -712,6 +712,23 @@ body.gated > :not(.gate):not(.toasts) { display: none !important; }
 .pw-meter[data-score="3"] i:nth-child(-n+3) { background: #7cc36e; } .pw-meter[data-score="3"] span { color: #7cc36e; }
 .pw-meter[data-score="4"] i { background: var(--ok); } .pw-meter[data-score="4"] span { color: var(--ok); }
 .pw-match { display: block; margin-top: 6px; font-size: 12px; } .pw-match.good { color: var(--ok); } .pw-match.bad { color: var(--err); }
+.arr-card { margin: 4px 0 18px; padding: 16px 18px; border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line)); border-radius: 12px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 8%, var(--panel)), var(--panel)); }
+.arr-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; } .arr-head h3 { margin: 0; font-size: 16px; }
+.arr-mode { font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); text-decoration: none; }
+.arr-mode.on { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 50%, transparent); } .arr-mode:hover { color: var(--text); }
+.arr-lead { margin: 6px 0 14px; color: var(--muted); font-size: 13.5px; }
+.arr-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.arr-step { padding: 12px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); display: grid; gap: 6px; align-content: start; }
+.arr-step-h { display: flex; gap: 10px; align-items: center; margin-bottom: 4px; } .arr-step-h small { display: block; color: var(--muted); font-size: 12px; }
+.arr-n { display: grid; place-items: center; width: 24px; height: 24px; flex: none; border-radius: 50%; background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); font-size: 12px; }
+.arr-field { display: grid; grid-template-columns: 76px minmax(0, 1fr) 30px; gap: 8px; align-items: center; font-size: 13px; } .arr-field > span { color: var(--muted); }
+.arr-field code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 5px 8px; border-radius: 6px; background: var(--panel); font-size: 12.5px; }
+.arr-auto { display: grid; gap: 10px; margin-bottom: 12px; } .arr-auto .field { margin: 0; display: grid; gap: 5px; }
+.arr-auto .field > span { font-size: 13px; font-weight: 600; } .arr-auto small { color: var(--muted); font-size: 12px; } .arr-auto .ok-text { color: var(--ok); }
+.arr-manual > summary { cursor: pointer; font-size: 13px; color: var(--muted); margin-bottom: 10px; } .arr-manual[open] > summary { color: var(--text); }
+.linkish { border: 0; background: none; padding: 0; font: inherit; font-size: 12.5px; color: var(--accent); cursor: pointer; } .linkish.danger { color: var(--err); } .linkish:hover { text-decoration: underline; }
+.arr-foot { display: flex; justify-content: flex-end; margin-top: 8px; } .arr-note { display: block; margin-top: 8px; color: var(--muted); font-size: 12px; }
 .set-version { margin: auto 4px 0; padding-top: 18px; font-size: 11.5px; color: #6b778a; }
 .set-group > button .ico { color: var(--accent); opacity: .85; }
 .set-sec[hidden] { display: none; }
@@ -1605,6 +1622,7 @@ button.pill[aria-pressed="true"] { background: rgb(79 179 191 / .16); border-col
           <div class="sx-state" id="sx-state"><span class="dot"></span><span><b>Checking…</b><small></small></span></div>
           <div class="sx-actions"><button class="btn small" id="sonarr-test">Test the connection</button><a class="btn small" id="sx-open" target="_blank" rel="noopener" hidden>Open Sonarr ↗</a></div>
         </section>
+        <section class="arr-card" id="arr-setup" aria-labelledby="arr-title"></section>
         <section class="sx-card">
           <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 1 1 0 10h-2M8 12h8"/></svg></span><div><h3>Connection</h3><p>How Unshacklarr reaches Sonarr, to see what is missing and hand it the downloads.</p></div></div>
           <div class="sx-grid">
@@ -1637,6 +1655,12 @@ button.pill[aria-pressed="true"] { background: rgb(79 179 191 / .16); border-col
           <div class="sx-id"><h2>Automation</h2><p class="ax-lead">What Unshacklarr does on its own: look for new episodes, try them at their release time, tidy up.</p></div>
           <div class="sx-state ok" id="ax-state"><span class="dot"></span><span><b>Next sync at …</b><small></small></span></div>
           <div class="sx-actions"><button class="btn small" type="button" id="ax-sync">Run a sync now</button></div>
+        </section>
+        <section class="sx-card">
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><div><h3>Who starts downloads</h3><p>Unshacklarr on its own, or Sonarr, which then searches Unshacklarr as an indexer and sends it episodes as to a download client (Settings, Sonarr says how).</p></div></div>
+          <div class="sx-grid">
+            <div class="field"><label for="ax-trigger">Downloads started by</label><select id="ax-trigger" data-set="trigger"><option value="unshacklarr">Unshacklarr</option><option value="sonarr">Sonarr</option></select><small>With Sonarr, the automatic sync and the release-time tries stop; downloads by hand stay.</small></div>
+          </div>
         </section>
         <section class="sx-card">
           <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15 6.7L3 16M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5M3 21v-5h5"/></svg></span><div><h3>Regular sync</h3><p>Looks for the episodes Sonarr is missing, and downloads the ones their service has.</p></div></div>
@@ -4082,7 +4106,7 @@ async function refreshLog() {
    its steps, a bar per track and why it ended, with Unshackle's raw output (xterm) folded underneath. */
 const TERM_COLS = 110;
 const OUTCOME = { running: "Running", downloaded: "Downloaded", failed: "Failed", kept: "Kept", interrupted: "Interrupted", stopped: "Stopped", unavailable: "Not out yet", cancelled: "Cancelled" };
-const KIND = { auto: "automatic sync", burst: "release time", manual: "started by hand", retry: "retried by hand" };
+const KIND = { auto: "automatic sync", burst: "release time", manual: "started by hand", retry: "retried by hand", sonarr: "sent by Sonarr" };
 let term = null, termFit = null, termSocket = null, termFor = null, runsShown = 50, runsTimer = null;
 let runCards = [], picked_run = null, conFilter = "all";
 let landOnLive = false;  // the menu's Activity was clicked: the next list shows what runs
@@ -5248,6 +5272,7 @@ async function loadLate() {
   try { data = await api("/api/schedule"); }
   catch (e) { $("#next-sync").replaceChildren(failed(`Could not load the schedule: ${e.message}`, () => loadSchedule())); return; }
   const next = new Date(data.nextSync);
+  if (S.config.settings.trigger === "sonarr") return $("#next-sync").replaceChildren("Sonarr starts the downloads");
   $("#next-sync").replaceChildren("Next automatic sync at ", el("b", { textContent: time(next) }), " · in ", el("b", { textContent: until(next) }));
   const newestFirst = [...data.missing].sort((a, b) => (b.airDateUtc || "").localeCompare(a.airDateUtc || ""));
   const names = newestFirst.map((d) => `${d.series} ${d.sxxeyy}`);
@@ -6000,8 +6025,63 @@ $("#ck-form").onsubmit = async (e) => {
   } catch (err) { $("#ck-error").replaceChildren(failed(err.message)); }
 };
 
-/* The copy icon of a button with nothing else in it. */
+/* Unshacklarr in Sonarr: the indexer and the download client, what to enter for each, and the key both take. */
 const ICON_COPY = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg>';
+async function loadDownloader() {
+  const box = $("#arr-setup");
+  let d;
+  try { d = await api("/api/downloader"); } catch (e) { return box.replaceChildren(failed(e.message, loadDownloader)); }
+  const https = location.protocol === "https:", port = location.port || (https ? "443" : "80");
+  const field = (label, value, secret = false) => {
+    const copy = el("button", { type: "button", className: "jact", ariaLabel: `Copy: ${label}`,
+      onclick: () => navigator.clipboard.writeText(value).then(() => toast(`${label}: copied`), () => toast("The browser refused to copy", true)) });
+    copy.innerHTML = ICON_COPY;
+    return el("div", { className: "arr-field" }, el("span", { textContent: label }),
+      el("code", { translate: "no", textContent: secret ? "•".repeat(20) : value, title: secret ? "" : value }), copy);
+  };
+  const step = (n, name, where, ...fields) => el("div", { className: "arr-step" },
+    el("div", { className: "arr-step-h" }, el("b", { className: "arr-n", textContent: n }), el("div", {}, el("b", { textContent: name }), el("small", { textContent: where }))),
+    ...fields);
+  const renew = el("button", { type: "button", className: "linkish danger", textContent: "New key", onclick: async (e) => {
+    const b = e.currentTarget;
+    if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Sure? Sonarr will need the new one"; return; }
+    try { await api("/api/downloader/key", { method: "POST" }); toast("New key made: enter it in Sonarr"); loadDownloader(); } catch (err) { toast(err.message, true); }
+  } });
+  const bySonarr = S.config.settings.trigger === "sonarr";
+  const said = el("span", { className: "muted" });
+  const addTo = async (button, address) => {
+    button.disabled = true;
+    said.replaceChildren(loading(address ? "Sonarr tests the connection…" : "Looking for the address Sonarr reaches Unshacklarr at…"));
+    try {
+      const r = await api("/api/downloader/sonarr", { method: "POST", signal: AbortSignal.timeout(300000), body: JSON.stringify({ address, browser: location.origin }) });
+      said.replaceChildren(el("span", { className: "ok-text", textContent: `✓ Added. Sonarr reaches Unshacklarr at ${r.address}` }));
+    } catch (e) { said.replaceChildren(failed(e.message)); }
+    button.disabled = false;
+  };
+  const add = el("button", { type: "button", className: "btn primary", textContent: "Add to Sonarr", onclick: (e) => addTo(e.currentTarget, "") });
+  const address = el("input", { type: "url", spellcheck: false, placeholder: "http://unshacklarr:8788", ariaLabel: "Unshacklarr's address, as Sonarr reaches it" });
+  const auto = el("div", { className: "arr-auto" },
+    el("div", { className: "test-line" }, add, said),
+    el("details", { className: "arr-manual" }, el("summary", { textContent: "Another address" }),
+      el("label", { className: "field" }, el("span", { textContent: "Unshacklarr's address, as Sonarr reaches it" }), address,
+        el("small", { textContent: "Only when the button above finds none: Sonarr in another network, behind a proxy…" })),
+      el("div", { className: "test-line" }, el("button", { type: "button", className: "btn small", textContent: "Add at this address",
+        onclick: (e) => addTo(e.currentTarget, address.value.trim()) }))));
+  box.replaceChildren(
+    el("div", { className: "arr-head" },
+      el("h3", { id: "arr-title", textContent: "Unshacklarr in Sonarr" }),
+      el("a", { className: `arr-mode${bySonarr ? " on" : ""}`, href: "#/settings/automation",
+        textContent: bySonarr ? "Sonarr starts the downloads" : "Unshacklarr starts the downloads" })),
+    el("p", { className: "arr-lead", textContent: "One click adds Unshacklarr to Sonarr as an indexer and a download client, both named Unshacklarr: Sonarr then finds, grabs and imports the episodes of your series itself. To let Sonarr decide when, pick it in Automation." }),
+    auto,
+    el("details", { className: "arr-manual" }, el("summary", { textContent: "Or enter it by hand in Sonarr" }),
+    el("div", { className: "arr-steps" },
+      step("1", "Indexer", "In Sonarr: Settings › Indexers › + › Torznab", field("URL", `${location.origin}/torznab`), field("API key", d.key, true)),
+      step("2", "Download client", "In Sonarr: Settings › Download Clients › + › qBittorrent", field("Host", location.hostname), field("Port", port),
+        field("URL base", "/qbittorrent"), field("Password", d.key, true), field("Category", d.category))),
+      el("small", { className: "arr-note", textContent: `${https ? "Tick Use SSL. " : ""}Any username works. Sonarr in the same Docker network can use this container's name and port instead.` })),
+    el("div", { className: "arr-foot" }, renew));
+}
 
 /* CDM: Unshackle's devices (what they are, whether they still get a license) and which one each service uses. */
 let cdmData = null, cdmFilter = "all", cdmQuery = "", cdmTesting = false, cdmShowUnused = false;
@@ -6389,6 +6469,7 @@ function showSettingsSec(name, fromRoute = false) {
   if (name === "account") loadAccount();
   if (name === "notifications") { renderPush().catch(() => {}); if (S.dlOptions.length) loadSent(); }
   if (name === "automation") renderAutomation();
+  if (name === "sonarr" && S.dlOptions.length) loadDownloader();
   if (!fromRoute && currentTab === "settings") navigate(fromList);  // from the list: back returns to it
   if (fromList) scrollTo({ top: 0 });
 }
@@ -6896,6 +6977,7 @@ $("#tz-select").after(settingsZone.input, settingsZone.list);
     refreshHealth(currentTab === "settings" && settingsSec === "unshackle");
     if (currentTab === "settings" && settingsSec === "cookies") loadCookies();
     if (currentTab === "settings" && settingsSec === "cdm") loadCdm();
+    if (currentTab === "settings" && settingsSec === "sonarr") loadDownloader();
     if (currentTab === "settings" && settingsSec === "notifications") renderPush().catch(() => {});
     applyRoute();
   } catch (e) {

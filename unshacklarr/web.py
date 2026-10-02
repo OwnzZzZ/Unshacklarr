@@ -33,7 +33,7 @@ import requests
 import yaml
 from aiohttp import web
 
-from unshacklarr import __version__, cdm, cookies, i18n, options
+from unshacklarr import __version__, arr, cdm, cookies, i18n, options
 from unshacklarr.files import PRIVATE, no_credentials, read_json, write_atomic
 from unshacklarr import sync as sonarr_sync  # the schedule shows the very downloads the sync will ask for
 from unshacklarr.backend import UnshackleError
@@ -712,6 +712,7 @@ def check_settings(body: dict, previous: dict) -> dict:
     except (KeyError, ValueError):
         raise web.HTTPBadRequest(text=f"Unknown time zone {zone!r}")
     settings["timezone"] = zone
+    settings["trigger"] = "sonarr" if (body.get("trigger") or previous.get("trigger")) == "sonarr" else "unshacklarr"
     language = str(body.get("language") or previous.get("language") or "en")
     settings["language"] = language if language in i18n.languages() else "en"
     for key, (low, high) in NUMBER_SETTINGS.items():
@@ -834,7 +835,7 @@ async def run_automatic_syncs():
             if next_sync(datetime.now(timezone.utc)) < due:
                 due = next_sync(datetime.now(timezone.utc))
         try:
-            if sonarr_sync.SONARR and read_config()["auth"]:  # nothing to sync before the setup is done
+            if sonarr_sync.SONARR and read_config()["auth"] and sonarr_sync.SETTINGS.get("trigger") != "sonarr":  # set up, and not left to Sonarr
                 run_sync()
                 gone = await asyncio.to_thread(sonarr_sync.clean_leftovers)
                 if gone:
@@ -897,9 +898,9 @@ async def watch_releases():
     """At a series' release time, try its new episode every 30 s for 10 min."""
     while True:
         try:
-            if not sonarr_sync.SONARR:
+            if not sonarr_sync.SONARR or sonarr_sync.SETTINGS.get("trigger") == "sonarr":
                 await asyncio.sleep(30)
-                continue  # set up first
+                continue  # set up first; or Sonarr decides when
             for episode_id in await asyncio.to_thread(due_releases, datetime.now(timezone.utc)):
                 run = burst_runs.get(episode_id)
                 if (run is None or not run.is_alive()) and not await asyncio.to_thread(burst_failed, episode_id):  # the previous try is over
@@ -2109,6 +2110,26 @@ def title_matches(show: dict, ep: dict) -> dict[int, str]:
 sonarr_sync.find_by_title = title_matches
 
 
+RECHECK_MINUTES = 10  # an episode the service lacked is asked again after this long
+
+
+def service_has(tvdb: int, show: dict, series: dict, wanted: list[int]) -> dict[int, str]:
+    """Which of these Sonarr episodes the service has now, and under which of its numbers (found by its title,
+    it may not be the series' numbering): from the series' last check when it has them all or is recent,
+    else checked again (and kept for the page too)."""
+    lists = json.loads(SERVICE_LISTS.read_text()) if SERVICE_LISTS.exists() else {}
+    hit = lists.get(str(tvdb))
+    same = hit and hit["service"] == show.get("service") and hit["title"] == str(show.get("title"))
+    age = datetime.now(timezone.utc) - datetime.fromisoformat(hit["checked"]) if same else None
+    found = hit["available"] if same else {}
+    if not (same and (age < timedelta(minutes=RECHECK_MINUTES) or (age < timedelta(hours=SERVICE_LIST_HOURS)
+                                                                    and all(str(i) in found for i in wanted)))):
+        probed = probe_series(show, series["id"], series.get("title", ""))
+        keep_service_list(tvdb, show, probed)
+        found = json.loads(json.dumps(probed["available"]))  # its keys as the file has them: strings
+    return {i: found[str(i)]["service"] for i in wanted if str(i) in found}
+
+
 async def service_list(request):
     """The series' last check of what its service has, if recent and for the service and URL it has now."""
     tvdb = request.match_info["tvdb"]
@@ -2680,9 +2701,14 @@ async def v1_notifications(request):
         {k: i.get(k) for k in ("id", "at", "level", "title", "message")} | {"unread": i["at"] > read_at} for i in box["items"][:limit]]})
 
 
+ARR_PATHS = ("/torznab/", "/qbittorrent/")  # Sonarr's: the downloader key, not a session
+
+
 @web.middleware
 async def password_required(request, handler):
     auth = read_config()["auth"]
+    if request.path.startswith(ARR_PATHS) and auth.get("password"):
+        return await handler(request)
     if request.path in OPEN_PATHS or (request.path in SETUP_PATHS and not auth.get("password")):
         return await handler(request)
     if not auth.get("password"):
@@ -2853,6 +2879,38 @@ async def setup(request):
     return with_session(request, web.json_response({"logged_in": True}), config["auth"])
 
 
+async def downloader(request):
+    """What Sonarr needs to use Unshacklarr as its indexer and download client."""
+    if request.method == "POST":
+        await asyncio.to_thread(arr.new_key)
+    return web.json_response({"key": await asyncio.to_thread(arr.key), "category": arr.CATEGORY,
+                              "trigger": sonarr_sync.SETTINGS.get("trigger", "unshacklarr"), "sent": len(arr.stored())})
+
+
+async def downloader_to_sonarr(request):
+    """Unshacklarr added to Sonarr: at the address given, or at the first of the likely ones Sonarr reaches."""
+    body = await json_object(request)
+    given = str(body.get("address") or "").strip()
+    addresses = [given] if given else arr.candidates(int(os.environ.get("PORT", "8788")), str(body.get("browser") or ""))
+    try:
+        found = await asyncio.to_thread(arr.add_to_sonarr, addresses)
+    except (ValueError, StopIteration, requests.RequestException) as e:
+        raise web.HTTPBadRequest(text=str(e) or "Sonarr has no Torznab indexer or qBittorrent client to add") from None
+    return web.json_response({"address": found})
+
+
+async def retry_for_sonarr():
+    """Episodes Sonarr sent that were not on the service yet: tried again every few minutes."""
+    while True:
+        await asyncio.sleep(60)
+        try:
+            if sonarr_sync.SONARR:
+                for due in await asyncio.to_thread(arr.retry_due, datetime.now(timezone.utc)):
+                    run_sync(due["ids"], kind="sonarr", numbering=due["numbering"])
+        except Exception as e:  # Sonarr down for a moment: next round
+            print(f"Sonarr's downloads: {e}", flush=True)
+
+
 async def set_language(request):
     """The page's language, chosen in a browser, for the notifications too."""
     lang = str((await json_object(request)).get("language") or "")
@@ -2874,7 +2932,7 @@ async def change_password(request):
     new = str(body.get("new") or "")
     if len(new) < 8:
         raise web.HTTPBadRequest(text="Password must be at least 8 characters")
-    # A new secret too: every other open session is logged out. The API key stays.
+    # A new secret too: every other open session is logged out. The API key and the downloader key stay: Sonarr keeps working.
     config["auth"].update(password=hash_password(new), secret=secrets.token_hex(32), changed=datetime.now(timezone.utc).isoformat())
     write_config(config)
     await asyncio.to_thread(sonarr_sync.PUSH.unsubscribe_all)  # a device added by someone else stops listening too
@@ -2894,7 +2952,8 @@ async def logout_others(request):
 async def same_origin_only(request, handler):
     # A custom header cannot be sent cross-site without a CORS preflight, which this
     # server never grants: other pages open in the browser cannot change anything. X-Api-Key is one too.
-    if request.method not in ("GET", "HEAD") and request.headers.get("X-Unshackle") != "1" and API_KEY_HEADER not in request.headers:
+    if request.method not in ("GET", "HEAD") and request.headers.get("X-Unshackle") != "1" and API_KEY_HEADER not in request.headers \
+            and not request.path.startswith(ARR_PATHS):  # Sonarr's calls carry the downloader key instead
         raise web.HTTPForbidden(text="Missing X-Unshackle header")
     return await handler(request)
 
@@ -2929,6 +2988,8 @@ def background(loop):
 app = web.Application(middlewares=[same_origin_only, password_required])
 app.on_response_prepare.append(security_headers)
 app.cleanup_ctx.append(background(watch_releases))
+app.cleanup_ctx.append(background(retry_for_sonarr))
+arr.read_config, arr.write_config, arr.start, arr.available = read_config, write_config, run_sync, service_has
 app.cleanup_ctx.append(background(run_automatic_syncs))
 app.cleanup_ctx.append(stop_unshackle)
 app.cleanup_ctx.append(background(watch_health))
@@ -3006,6 +3067,11 @@ app.add_routes([
     web.post("/api/v1/downloads/{run_id}/stop", v1_stop),
     web.post("/api/v1/downloads/{run_id}/answer", answer_run),
     web.get("/api/v1/notifications", v1_notifications),
+    web.get("/api/downloader", downloader),
+    web.post("/api/downloader/key", downloader),
+    web.post("/api/downloader/sonarr", downloader_to_sonarr),
+    web.get("/torznab/api", arr.torznab),
+    web.route("*", r"/qbittorrent/api/v2/{path:.+}", arr.qbittorrent),
 ])
 
 def reset_password(password: str) -> None:

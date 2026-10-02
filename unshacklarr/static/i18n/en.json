@@ -151,8 +151,10 @@
  "Add an address": [],
  "Add an address first": [],
  "Add an option: type to search, e.g. lang, audio, atmos": [],
+ "Add at this address": [],
  "Add cookies": [],
  "Add options for a service": [],
+ "Add to Sonarr": [],
  "Add {0} series": [
   "n"
  ],
@@ -193,6 +195,7 @@
  "An e-mail address, like you@gmail.com": [],
  "An episode is downloaded and handed to Sonarr": [],
  "Android": [],
+ "Another address": [],
  "Answer in Unshacklarr, for {0} {1}.": [
   "run.card['series']",
   "run.card['sxxeyy']"
@@ -269,6 +272,7 @@
  ],
  "Cancelling": [],
  "Cancels the download going on; the queued episodes don't start": [],
+ "Category": [],
  "Certificate expires": [],
  "Certificate made": [],
  "Certificate serial": [],
@@ -354,6 +358,9 @@
  "Copy it now: it will not be shown again.": [],
  "Copy the code": [],
  "Copy the command": [],
+ "Copy: {0}": [
+  "label"
+ ],
  "Could not ask unshackle where its files are: {0}": [
   "out.stderr.strip()[-300:]"
  ],
@@ -461,6 +468,7 @@
  "Download": [],
  "Download Resolution(s), defaults to the best available resolution.": [],
  "Download audio description tracks.": [],
+ "Download client": [],
  "Download now": [],
  "Download options": [],
  "Downloaded": [],
@@ -486,6 +494,7 @@
  "Downloads kept": [],
  "Downloads left waiting": [],
  "Downloads per week, the last 8 weeks": [],
+ "Downloads started by": [],
  "Downloads them again, in this job": [],
  "Downloads wait until it is back.": [],
  "Downloads will fail unless it logs in with a username and password.": [],
@@ -627,6 +636,7 @@
   "d.series"
  ],
  "History": [],
+ "Host": [],
  "How Unshacklarr reaches Sonarr, to see what is missing and hand it the downloads.": [],
  "How it runs": [],
  "Import": [],
@@ -640,6 +650,8 @@
  "In Discord: the channel's settings, Integrations, Webhooks, New Webhook, Copy Webhook URL.": [],
  "In Gotify: Apps, Create Application, then copy its token.": [],
  "In Sonarr": [],
+ "In Sonarr: Settings › Download Clients › + › qBittorrent": [],
+ "In Sonarr: Settings › Indexers › + › Torznab": [],
  "In Sonarr: Settings, General.": [],
  "In Sonarr: Settings, General. Empty keeps the saved one; a new URL needs its key.": [],
  "In Sonarr: {0} On {1}: {2}": [
@@ -657,6 +669,7 @@
   "net.providers.map((p) => p.name).join(\", \")"
  ],
  "Include forced subtitle tracks.": [],
+ "Indexer": [],
  "Install the ntfy app and subscribe to a topic. Pick a name hard to guess: whoever knows it can read.": [],
  "Interrupted": [],
  "Interrupted: Unshacklarr stopped during it": [],
@@ -761,6 +774,7 @@
   "label"
  ],
  "Look it up on TMDB again": [],
+ "Looking for the address Sonarr reaches Unshacklarr at…": [],
  "Looking on TMDB…": [],
  "Looking up where to watch it…": [],
  "Looks for the episodes Sonarr is missing, and downloads the ones their service has.": [],
@@ -821,6 +835,8 @@
   "new Date(conf.since).toLocaleDateString(LOCALE, { day: \"numeric\", month: \"long\", year: \"numeric\" })"
  ],
  "New episodes are downloaded automatically, from the day the series gets a service.": [],
+ "New key": [],
+ "New key made: enter it in Sonarr": [],
  "New keys, from its group key": [],
  "New password": [],
  "New password:": [],
@@ -1027,12 +1043,14 @@
  "On: the logs are much longer. Turn it off once the problem is found.": [],
  "Once a day": [],
  "Once it has a service and you save, new episodes are downloaded automatically. For older ones, tick them in Episodes.": [],
+ "One click adds Unshacklarr to Sonarr as an indexer and a download client, both named Unshacklarr: Sonarr then finds, grabs and imports the episodes of your series itself. To let Sonarr decide when, pick it in Automation.": [],
  "Only download audio tracks.": [],
  "Only download chapter markers.": [],
  "Only download subtitle tracks.": [],
  "Only download video tracks.": [],
  "Only for the episodes picked now: the series keeps its own settings.": [],
  "Only use CDM, or only use Key Vaults for retrieval of Decryption Keys.": [],
+ "Only when the button above finds none: Sonarr in another network, behind a proxy…": [],
  "Open": [],
  "Open Activity": [],
  "Open Sonarr ↗": [],
@@ -1052,6 +1070,7 @@
  "Options of {0}": [
   "tag"
  ],
+ "Or enter it by hand in Sonarr": [],
  "Orange: unlike most of this season (hover it for why)": [],
  "Origin": [],
  "Other": [],
@@ -1093,6 +1112,7 @@
  "Pick what the episode list shows, and in which order.": [],
  "PlayReady": [],
  "PlayReady, remote": [],
+ "Port": [],
  "Português (Brasil)": [],
  "Previous month": [],
  "Problems": [],
@@ -1308,6 +1328,7 @@
   "number"
  ],
  "Sonarr has no TMDB ID for this series.": [],
+ "Sonarr has no Torznab indexer or qBittorrent client to add": [],
  "Sonarr has no series with TVDB id {0}": [
   "tvdb"
  ],
@@ -1316,6 +1337,8 @@
  ],
  "Sonarr import": [],
  "Sonarr imports each episode from there: the same folder, as Sonarr sees it.": [],
+ "Sonarr imports it": [],
+ "Sonarr imports it.": [],
  "Sonarr in the browser": [],
  "Sonarr is not set up": [],
  "Sonarr is unreachable: {0}": [
@@ -1343,6 +1366,8 @@
   "Path(c['path']).name",
   "c['quality']['quality']['name']"
  ],
+ "Sonarr starts the downloads": [],
+ "Sonarr tests the connection…": [],
  "Sonarr's address in your browser": [],
  "Sonarr's calendar": [],
  "Sonarr's episode = the service's, comma-separated. Wins over the settings above. Add .2 to take only part 2 of a split episode.": [],
@@ -1402,6 +1427,7 @@
  "Sure? New keys": [],
  "Sure? Programs using it stop": [],
  "Sure? Remove it from unshackle.yaml": [],
+ "Sure? Sonarr will need the new one": [],
  "Sure? They log in again": [],
  "Sync running…": [],
  "Syncs, release times, retries": [],
@@ -1600,6 +1626,7 @@
   "label"
  ],
  "Thu": [],
+ "Tick Use SSL.": [],
  "Time zone": [],
  "TimeoutError": [],
  "Timing": [],
@@ -1652,6 +1679,8 @@
  ],
  "Type your password again: it is not kept when the page reloads": [],
  "Type your password first": [],
+ "URL": [],
+ "URL base": [],
  "URL or ID of the series": [],
  "UTC": [],
  "Under the service's own number: {0}": [
@@ -1690,8 +1719,11 @@
   "tvdb"
  ],
  "Unshacklarr finds what Sonarr is missing, then hands it the downloads to import.": [],
+ "Unshacklarr in Sonarr": [],
  "Unshacklarr is set up already": [],
+ "Unshacklarr on its own, or Sonarr, which then searches Unshacklarr as an indexer and sends it episodes as to a download client (Settings, Sonarr says how).": [],
  "Unshacklarr starts it on this machine": [],
+ "Unshacklarr starts the downloads": [],
  "Unshacklarr sync stopped": [],
  "Unshacklarr test": [],
  "Unshacklarr {0}": [
@@ -1703,6 +1735,7 @@
  "Unshacklarr · Today at {0}": [
   "now"
  ],
+ "Unshacklarr's address, as Sonarr reaches it": [],
  "Unshacklarr, back to the series": [],
  "Unshackle": [],
  "Unshackle command": [],
@@ -1816,9 +1849,11 @@
  "Which series": [],
  "Which streaming services the Schedule shows, and where a series' links are looked for.": [],
  "Whichever limit comes first: older downloads go, the newest stay.": [],
+ "Who starts downloads": [],
  "Widevine": [],
  "Widevine and PlayReady devices": [],
  "Widevine, pywidevine serve": [],
+ "With Sonarr, the automatic sync and the release-time tries stop; downloads by hand stay.": [],
  "Works": [],
  "Wrong password": [],
  "Wrong setup code: Unshacklarr prints it when it starts (docker logs unshacklarr)": [],
@@ -2036,6 +2071,7 @@
  "retried by hand": [],
  "revoked": [],
  "see Activity in Sonarr": [],
+ "sent by Sonarr": [],
  "serviceWorker": [],
  "settings": [],
  "shortOffset": [],
@@ -2644,7 +2680,13 @@
   "label",
   "seen_by('sonarr_downloads', out)"
  ],
+ "{0}: copied": [
+  "label"
+ ],
  "{0}: downloaded and imported by Sonarr": [
+  "label"
+ ],
+ "{0}: downloaded, Sonarr imports it": [
   "label"
  ],
  "{0}: downloading from {1}{2}": [
@@ -2720,6 +2762,9 @@
  "{0}; nothing changed.": [
   "e"
  ],
+ "{0}Any username works. Sonarr in the same Docker network can use this container's name and port instead.": [
+  "https ? \"Tick Use SSL. \" : \"\""
+ ],
  "{0}p here, {1}p asked of {2}": [
   "e.file.height",
   "askedHeight()",
@@ -2750,6 +2795,9 @@
  ],
  "⏸ Paused: the next episode waits": [],
  "⚠ No CDM for this service": [],
+ "✓ Added. Sonarr reaches Unshacklarr at {0}": [
+  "r.address"
+ ],
  "✓ Changed": [],
  "✓ Delivered": [],
  "✓ Delivered: look for it, then Add.": [],
