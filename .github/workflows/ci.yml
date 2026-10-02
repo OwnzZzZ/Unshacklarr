@@ -1,0 +1,94 @@
+# GitHub's twin of .forgejo/workflows/ci.yml: tests on every push; on main, the image too, pushed
+# to GitHub's container registry as ghcr.io/<owner>/unshacklarr:latest and :<commit>. A version tag
+# (v0.2.0) puts :0.2.0 on the image main built for that commit (tools/ci/retag.sh), built only if
+# there is none, then its GitHub release is made, its notes from CHANGELOG.md. No secret to add:
+# the workflow's own token may write packages and releases.
+name: CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:  # a run by hand, from the Actions tab
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      # actions pinned by commit: a tag can be moved, a commit cannot
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e  # v6.8.0
+        with:
+          version: "0.12.22"
+      - name: Tests
+        run: |
+          uv sync --locked --group test
+          TZ=Europe/Paris uv run --group test pytest -q
+
+  image:
+    needs: test
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - name: Tags
+        id: tags
+        run: |
+          image="ghcr.io/$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')/unshacklarr"
+          case "$GITHUB_REF" in
+            refs/tags/v*) tags="$image:${GITHUB_REF#refs/tags/v}"  # a release: its version only
+                          echo "release=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT" ;;
+            *) tags="$image:latest,$image:${GITHUB_SHA::12}" ;;
+          esac
+          echo "image=${image#ghcr.io/}" >> "$GITHUB_OUTPUT"
+          echo "tags=$tags" >> "$GITHUB_OUTPUT"
+      - name: A release reuses its commit's image
+        id: reuse
+        if: steps.tags.outputs.release
+        env:
+          REPO: ${{ steps.tags.outputs.image }}
+          RELEASE: ${{ steps.tags.outputs.release }}
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if sh tools/ci/retag.sh ghcr.io "$REPO" "${GITHUB_SHA::12}" "$RELEASE"; then echo "done=true" >> "$GITHUB_OUTPUT"; fi
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9  # v3.7.0
+        if: steps.reuse.outputs.done != 'true'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8  # v6.19.2
+        if: steps.reuse.outputs.done != 'true'
+        with:
+          context: .
+          pull: true  # the base image's fixes too
+          push: true
+          tags: ${{ steps.tags.outputs.tags }}
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
+
+  release:  # a version tag: its GitHub release, notes from CHANGELOG.md, once its image is out
+    needs: image
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - name: Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          image="ghcr.io/$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')/unshacklarr"
+          sh tools/ci/release-notes.sh "$version" "$image" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/main/CHANGELOG.md" > notes.md
+          # a tag moved to another commit: its release is kept and its notes updated
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release edit "$GITHUB_REF_NAME" --title "Unshacklarr $version" --notes-file notes.md
+          else
+            gh release create "$GITHUB_REF_NAME" --verify-tag --title "Unshacklarr $version" --notes-file notes.md
+          fi

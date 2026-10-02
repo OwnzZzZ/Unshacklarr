@@ -1,0 +1,2893 @@
+"""Unshacklarr's web page: which Sonarr series Unshackle downloads, and with which options.
+
+It edits config.yaml, runs the syncs in the background and follows the downloads that
+unshackle serve makes. A password protects it: set with the first-run setup, then asked
+for by a login page.
+"""
+
+import asyncio
+import base64
+import copy
+import difflib
+import hashlib
+import hmac
+import html
+import ipaddress
+import json
+import ntpath
+import os
+import posixpath
+import re
+import secrets
+import shutil
+import sys
+import threading
+import time
+import unicodedata
+from datetime import date, datetime, timedelta, timezone
+from pathlib import Path
+from urllib.parse import parse_qs, urlparse
+
+import apprise
+import requests
+import yaml
+from aiohttp import web
+
+from unshacklarr import __version__, cdm, cookies, i18n, options
+from unshacklarr.files import PRIVATE, no_credentials, read_json, write_atomic
+from unshacklarr import sync as sonarr_sync  # the schedule shows the very downloads the sync will ask for
+from unshacklarr.backend import UnshackleError
+
+HERE = Path(__file__).parent
+SERIES_FILE = sonarr_sync.CONFIG_FILE
+UNSHACKLE = sonarr_sync.UNSHACKLE
+
+# Service sites that the services' own help does not name.
+EXTRA_DOMAINS = {"m6.fr": "M6", "m6plus.fr": "M6", "hbomax.com": "MAX", "primevideo.com": "AMZN", "amazon.fr": "AMZN"}
+
+sync_threads: list[threading.Thread] = []
+last_sync: datetime | None = None
+
+
+def service_tags() -> list[str]:
+    return sorted(s["tag"] for s in UNSHACKLE.services())
+
+
+def service_name(service: dict) -> str:
+    """What people call a service ("RMC+" for RMCP), from its help ("Service code for RMC+ (https://…)"),
+    else its site ("netflix.com"), else its tag."""
+    first = (service.get("help") or "").strip().split("\n")[0]
+    m = re.match(r"Service (?:code )?(?:for|pour) (.+?)(?:\s*[(\[—]|\.?$)", first)
+    name = re.sub(r"(?:'s)? streaming service$|,? streaming service$", "", m.group(1), flags=re.IGNORECASE).strip() if m else ""
+    if not name or name.startswith("http"):
+        name = (urlparse(str(service.get("url") or "").split(",")[0].strip()).hostname or "").removeprefix("www.")
+    return name or service["tag"]
+
+
+def service_domains() -> dict[str, str]:
+    """Map each service's site (from its help, e.g. "https://crave.ca") to its tag."""
+    domains = {}
+    for service in sorted(UNSHACKLE.services(), key=lambda s: s["tag"]):
+        for url in re.findall(r"https?://[^\s,]+", " ".join(filter(None, [service.get("url"), service.get("help")]))):
+            try:
+                host = (urlparse(url).hostname or "").removeprefix("www.")
+            except ValueError:  # a service's help may hold a malformed URL ("https://[…]")
+                continue
+            if host and service["tag"] != "EXAMPLE":
+                domains.setdefault(host, service["tag"])
+    return {**domains, **EXTRA_DOMAINS}
+
+
+def service_for(url: str, domains: dict[str, str]) -> str | None:
+    host = (urlparse(url).hostname or "").removeprefix("www.")
+    return next((tag for domain, tag in domains.items() if host == domain or host.endswith("." + domain)), None)
+
+
+def series_title(service: str, url: str) -> str:
+    """What the service accepts as its title argument, when the watch link is not it."""
+    query = parse_qs(urlparse(url).query)
+    if service == "ATV" and query.get("showId"):  # the link opens an episode; the show is in showId
+        return query["showId"][0]
+    if service == "ATV" and (show := re.search(r"/show/[^/]+/(umc\.cmc\.[a-z0-9]+)", url)):
+        return show.group(1)  # the same show in every country's store
+    if service == "MAX" and (show := re.search(r"/(show|movie)/([0-9a-f-]{36})", url)):
+        # …/ch/en/show/<id>/s1/e1-…: MAX wants <type>/<id> right after the domain
+        return f"https://play.hbomax.com/{show.group(1)}/{show.group(2)}"
+    if service == "CanalPlus":  # tracking and episode parameters; the /h/<id> path is what counts
+        return url.split("?")[0]
+    if service == "DSNP":  # drop the locale (/fr-fr/, /en-ca/…): one entity, one suggestion
+        return re.sub(r"(disneyplus\.com)/[a-z]{2}-[a-z]{2}/", r"\1/", url)
+    if service == "AMZN" and query.get("gti"):  # AMZN does not parse app.primevideo.com URLs
+        return query["gti"][0]
+    return url
+
+
+def unwrap(url: str) -> str:
+    """The service's own URL behind an affiliate redirect.
+
+    Disney+ links go through disneyplus.bn5x.net/c/…?u=<the real URL>, a domain no
+    service claims; without this, Disney+ never showed up in the suggestions.
+    """
+    for _ in range(3):
+        query = parse_qs(urlparse(url).query)
+        inner = next((query[k][0] for k in ("u", "url", "murl") if query.get(k) and query[k][0].startswith("http")), None)
+        if not inner:
+            break
+        url = inner
+    return url
+
+
+TMDB_PAGES = threading.Lock()  # TMDB's site answers 429 to a burst: its pages are fetched one at a time
+TMDB_GAP = 0.4  # seconds between two of them
+tmdb_last = 0.0
+
+
+def tmdb_page(url: str, params: dict) -> requests.Response:
+    """A page of TMDB's site, politely: one at a time, a short gap between them, and on a
+    429 a wait (its Retry-After, else a growing one) before asking again."""
+    global tmdb_last
+    for attempt in range(4):
+        with TMDB_PAGES:
+            time.sleep(max(0.0, tmdb_last + TMDB_GAP - time.monotonic()))
+            r = requests.get(url, params=params, headers={"User-Agent": "Mozilla/5.0"}, timeout=20)
+            tmdb_last = time.monotonic()
+            if r.status_code != 429 or attempt == 3:
+                r.raise_for_status()
+                return r
+            wait = r.headers.get("Retry-After", "")
+            time.sleep(min(float(wait), 30) if wait.replace(".", "", 1).isdigit() else 2 * (attempt + 1))
+
+
+CRAVE_LOCK = threading.Lock()
+crave_ids: dict[str, str] = {}  # series slug: id, from Crave's sitemap
+crave_read = 0.0
+
+
+def crave_sitemap() -> dict[str, str]:
+    """Crave's series, slug to id, from its sitemap: readable from anywhere, unlike its API."""
+    global crave_ids, crave_read
+    with CRAVE_LOCK:
+        if crave_ids and time.monotonic() - crave_read < 86400:
+            return crave_ids
+        try:
+            index = requests.get("https://www.crave.ca/sitemap.xml", timeout=20).text
+            found: dict[str, str] = {}
+            for part in re.findall(r"<loc>(https://www\.crave\.ca/crave-media-sitemap-\d+\.xml)</loc>", index):
+                page = requests.get(part, timeout=20)
+                page.raise_for_status()
+                for slug, id_ in re.findall(r"/en/series/([a-z0-9-]+)-(\d+)</loc>", page.text):
+                    found.setdefault(slug, id_)  # ponytail: two series with one slug take the first; none seen so far
+        except requests.RequestException:
+            return crave_ids  # the last good list, never an empty one
+        if found:
+            crave_ids, crave_read = found, time.monotonic()
+        return crave_ids
+
+
+def crave_series(url: str) -> str | None:
+    """The series page of a Crave episode link: …/play/<series>/<episode>-<id> names the series."""
+    slug = re.search(r"/play/([a-z0-9-]+)/", url)
+    series_id = slug and crave_sitemap().get(slug.group(1))
+    lang = "fr" if "/fr/" in url else "en"
+    return f"https://www.crave.ca/{lang}/series/{slug.group(1)}-{series_id}" if series_id else None
+
+
+def tmdb_links(tmdb_id: int, country: str, domains: dict[str, str]) -> list[dict]:
+    """Service URLs from TMDB's "where to watch" page: its JustWatch links carry them in `r`."""
+    r = tmdb_page(f"https://www.themoviedb.org/tv/{tmdb_id}/watch", {"locale": country})
+    links = []
+    for href in re.findall(r'href="(https://click\.justwatch\.com/[^"]+)"', r.text):
+        url = unwrap(parse_qs(urlparse(href.replace("&amp;", "&")).query).get("r", [""])[0])
+        service = service_for(url, domains)
+        if service:
+            link = {"service": service, "url": series_title(service, url), "country": country}
+            if service == "CRAVE" and "/play/" in url:
+                # Crave's link opens one episode and holds no series id (…/series/<slug>-<id>)
+                if series := crave_series(url):
+                    link["url"] = series
+                else:  # the page asks for the series URL
+                    link["needs_series_url"] = True
+            elif re.search(r"-episode-\d+|episodeId=", link["url"]):  # still an episode once normalised
+                link["episode"] = True  # dropped below when the same service also links the series
+            links.append(link)
+    return links
+
+
+YAML_LOADER = getattr(yaml, "CSafeLoader", yaml.SafeLoader)  # libyaml's, when PyYAML has it
+
+
+config_read: tuple[tuple, dict] = ((), {})
+
+
+def read_config() -> dict:
+    """The whole config, secrets included: only for the server's own use. Parsed again only when the
+    file changed (every request reads it), a copy each time: callers change what they get."""
+    global config_read
+    try:
+        st = SERIES_FILE.stat()
+        stamp = (st.st_mtime_ns, st.st_size, st.st_ino)
+    except FileNotFoundError:
+        stamp = ()
+    if not stamp or stamp != config_read[0]:
+        parsed = yaml.load(SERIES_FILE.read_text(encoding="utf8"), Loader=YAML_LOADER) if stamp else None
+        config_read = (stamp, parsed or {})
+    config = copy.deepcopy(config_read[1])
+    return {
+        "settings": config.get("settings") or {},
+        "auth": config.get("auth") or {},
+        "defaults": config.get("defaults") or {},
+        "service_defaults": config.get("service_defaults") or {},
+        "series": config.get("series") or {},
+        "notifications": config.get("notifications") or {},
+        "tmdb_countries": config.get("tmdb_countries") or [sonarr_sync.load_settings(config)["country"]],
+        "hidden_series": config.get("hidden_series") or [],
+    }
+
+
+SECRET_SETTINGS = ("sonarr_api_key", "tmdb_api_key", "unshackle_api_key")
+MASK = "•••"  # what stands for a secret the browser never gets
+OPTION_LEVELS = ("options", "service_options")
+
+
+def masked_url(url: str) -> str:
+    """A notification address as the browser gets it: its app still shows (scheme, host, first plain path
+    words), its tokens never do. Its #ref finds the real one again on save and test."""
+    ref = hashlib.sha256(url.encode()).hexdigest()[:10]
+    scheme, sep, rest = url.partition("://")
+    keep = ""
+    if sep and scheme.lower() in ("http", "https"):
+        host, _, path = rest.partition("/")
+        words = [w for w in path.split("/")[:2] if re.fullmatch(r"[a-z]{2,15}", w)]
+        keep = host.rpartition("@")[2] + "/" + "".join(w + "/" for w in words)
+    return f"{scheme}://{keep}{MASK}#{ref}" if sep else f"{MASK}#{ref}"
+
+
+def real_url(url: str, saved: list[str]) -> str:
+    """The address a masked one stands for, among those saved; a new one as typed."""
+    if MASK not in url:
+        return url
+    found = next((u for u in saved if masked_url(u) == url), None)
+    if found is None:
+        raise web.HTTPBadRequest(text="A notification address changed meanwhile: reload the page")
+    return found
+
+
+def masked_options(opts: dict) -> dict:
+    return {k: options.HIDDEN.sub(f"//{MASK}@", v) if isinstance(v, str) else v for k, v in (opts or {}).items()}
+
+
+def real_options(opts: dict, saved: dict) -> dict:
+    """Options from the browser, a proxy's masked credentials put back from the saved value."""
+    out = {}
+    for k, v in (opts or {}).items():
+        if isinstance(v, str) and f"//{MASK}@" in v:
+            old = (saved or {}).get(k)
+            if not isinstance(old, str) or masked_options({k: old})[k] != v:
+                raise web.HTTPBadRequest(text=f"Type the proxy's credentials of {k} again")
+            v = old
+        out[k] = v
+    return out
+
+
+def real_config(body: dict, saved: dict) -> None:
+    """What the browser sends back, its masked secrets replaced by the saved ones."""
+    body["defaults"] = real_options(body.get("defaults"), saved["defaults"])
+    for service, levels in (body.get("service_defaults") or {}).items():
+        for level in OPTION_LEVELS:
+            levels[level] = real_options(levels.get(level), (saved["service_defaults"].get(service) or {}).get(level))
+    for key, show in (body.get("series") or {}).items():
+        before = saved["series"].get(int(key)) if str(key).isdigit() else None
+        for level in OPTION_LEVELS:
+            show[level] = real_options(show.get(level), (before or {}).get(level))
+    notifications = body.get("notifications") or {}
+    urls = [t["url"] for t in sonarr_sync.notification_targets(saved["notifications"])]
+    for target in notifications.get("targets") or []:
+        target["url"] = real_url(str(target.get("url") or ""), urls)
+
+
+def public_config(config: dict) -> dict:
+    """What the browser gets: no password hash, and API keys only as "set" or not."""
+    settings = sonarr_sync.load_settings(config)
+    shown = {k: v for k, v in settings.items() if k not in SECRET_SETTINGS}
+    shown.update({f"{k}_set": bool(settings.get(k)) for k in SECRET_SETTINGS})
+    shown["unshackle_mode"] = UNSHACKLE.mode
+    notifications = {**config["notifications"], "targets": [{**t, "url": masked_url(t["url"])} for t in sonarr_sync.notification_targets(config["notifications"])]}
+    notifications.pop("discord_webhook", None)
+    notifications.pop("urls", None)
+    # a proxy's credentials in options stay on the server too
+    service_defaults = {svc: {**lv, **{level: masked_options(lv.get(level)) for level in OPTION_LEVELS}} for svc, lv in config["service_defaults"].items()}
+    series = {key: {**show, **{level: masked_options(show.get(level)) for level in OPTION_LEVELS if level in show}} for key, show in config["series"].items()}
+    return {**{k: v for k, v in config.items() if k not in ("auth", "settings")}, "settings": shown, "notifications": notifications,
+            "defaults": masked_options(config["defaults"]), "service_defaults": service_defaults, "series": series}
+
+
+def tmdb_error(e: requests.RequestException) -> str:
+    """A TMDB failure in words, never its URL: TMDB takes the API key in the query, and an error
+    message quoting the URL showed it in the page and the logs."""
+    status = getattr(getattr(e, "response", None), "status_code", None)
+    if status == 404:
+        return "TMDB has no series with this id: Sonarr's TMDB id may be wrong"
+    if status == 401:
+        return "TMDB refused the API key: check it in Settings, Sonarr"
+    if status:
+        return f"TMDB answered {status}"
+    return f"TMDB is unreachable ({type(e).__name__})"
+
+
+def tmdb_key() -> str:
+    return sonarr_sync.SETTINGS.get("tmdb_api_key") or ""
+
+
+def write_config(config: dict) -> None:
+    global config_read
+    config_read = ((), {})  # read afresh next time, whatever the clock says
+    # the session secret, the password hash and the API keys: its owner only, whatever it was before
+    write_atomic(SERIES_FILE, yaml.safe_dump(config, allow_unicode=True, sort_keys=False), PRIVATE)
+    sonarr_sync.apply_settings(sonarr_sync.load_settings(config))
+
+
+def sonarr_series() -> list[dict]:
+    r = requests.get(f"{sonarr_sync.SONARR}/api/v3/series", headers=sonarr_sync.HEADERS, timeout=30)
+    r.raise_for_status()
+    series = []
+    for s in r.json():
+        stats = s.get("statistics") or {}
+        poster = next((i.get("remoteUrl") for i in s.get("images", []) if i.get("coverType") == "poster"), None)
+        series.append({
+            "id": s["id"],
+            "tvdbId": s["tvdbId"],
+            "tmdbId": s.get("tmdbId"),
+            "titleSlug": s.get("titleSlug"),  # its page in Sonarr: /series/<slug>
+            "title": s["title"],
+            "year": s.get("year"),
+            "monitored": s.get("monitored"),
+            "status": s.get("status"),  # continuing, ended, upcoming: Suggest services looks at the living ones
+            "missing": max(0, stats.get("episodeCount", 0) - stats.get("episodeFileCount", 0)),
+            "poster": poster,
+        })
+    return sorted(series, key=lambda s: s["title"].lower())
+
+
+async def index(_):
+    # Always revalidated: a cached page from before a deploy misreads the new API.
+    return web.FileResponse(HERE / "static" / "index.html", headers={"Cache-Control": "no-cache"})
+
+
+async def static_file(request):
+    # Public files: the home-screen icons and the manifest (fetched before anyone logs in), the editor's code.
+    return web.FileResponse(HERE / "static" / request.path.lstrip("/"),
+                            headers={"Cache-Control": "max-age=86400", "Content-Type": STATIC[request.path]})
+
+
+FAILING_AFTER = 3  # failed downloads in a row
+
+
+def series_health(cards: list[dict]) -> dict[int, dict]:
+    """Series whose last FAILING_AFTER finished tries all failed: a dead URL, a broken service,
+    cookies gone. Tries that found nothing yet are not counted (they are not kept)."""
+    health: dict[int, dict] = {}
+    by_series: dict[int, list[dict]] = {}
+    for c in cards:  # newest first
+        if c.get("ended") and c.get("outcome") in ("downloaded", "failed", "kept"):
+            by_series.setdefault(c["tvdbId"], []).append(c)
+    for tvdb, runs in by_series.items():
+        streak = 0
+        for c in runs:
+            if c["outcome"] != "failed":
+                break
+            streak += 1
+        if streak >= FAILING_AFTER:
+            health[tvdb] = {"failing": streak, "cause": runs[0].get("cause") or "", "since": runs[streak - 1]["started"]}
+    return health
+
+
+async def state(_):
+    try:
+        series = await asyncio.to_thread(sonarr_series)
+    except requests.RequestException as e:
+        raise web.HTTPBadGateway(text=f"Sonarr is unreachable: {no_credentials(e)}")
+    try:  # the page still opens without Unshackle, to fix its settings
+        services, unshackle_error = await asyncio.to_thread(service_tags), None
+        names = {s["tag"]: service_name(s) for s in await asyncio.to_thread(UNSHACKLE.services)}
+        cdm = await asyncio.to_thread(UNSHACKLE.cdm_config)  # a service with none of its own uses the default one
+        domains = await asyncio.to_thread(service_domains)  # a link pasted on a series picks its service
+    except UnshackleError as e:
+        services, unshackle_error, names, cdm, domains = [], str(e), {}, {}, {}
+    cards = await asyncio.to_thread(run_cards) if sonarr_sync.RUNS_DIR.exists() else []
+    return web.json_response({
+        "series": series,
+        "health": {str(k): v for k, v in series_health(cards).items()},
+        "config": public_config(read_config()),
+        "services": services,
+        "service_names": names,
+        "unshackle_error": unshackle_error,
+        "version": __version__,
+        "dl_options": options.dl_specs(),
+        "cdm": {str(k): v for k, v in cdm.items()},
+        "service_domains": domains,
+    })
+
+
+def with_remote(tag: str, specs: list[dict]) -> list[dict]:
+    """A service's options, plus those its servers in remote_services declare for it (NF's
+    --server-identity, say), for a download with --remote; marked with the server's name."""
+    have = {s["flag"] for s in specs}
+    specs = list(specs)
+    for server in UNSHACKLE.remote_services():
+        entry = next((s for s in server.get("services") or [] if s.get("tag") == tag), None)
+        for spec in options.service_specs(entry) if entry else []:
+            if spec["flag"] not in have:
+                have.add(spec["flag"])
+                specs.append({**spec, "remote": server["name"], "help": f"On {server['name']} (--remote). {spec['help']}".strip()})
+    return specs
+
+
+def specs_of(tag: str) -> list[dict]:
+    entry = next((s for s in UNSHACKLE.services() if s["tag"] == tag), None)
+    specs = with_remote(tag, options.service_specs(entry) if entry else [])
+    if entry is None and not specs:
+        raise web.HTTPNotFound(text="Unknown service")
+    return specs
+
+
+async def service_options(request):
+    try:
+        return web.json_response(await asyncio.to_thread(specs_of, request.match_info["tag"]))
+    except UnshackleError as e:
+        raise web.HTTPBadGateway(text=str(e))
+
+
+def check_options(opts: dict, specs: list[dict] | None, where: str) -> dict:
+    """Only options Unshackle defines, with values of their type. None: the service's
+    options are not known (Unshackle unreachable), so only their shape is checked."""
+    by_flag = {s["flag"]: s for s in specs} if specs is not None else None
+    for flag, value in opts.items():
+        if by_flag is not None and flag not in by_flag:
+            raise web.HTTPBadRequest(text=f"Unknown option {flag} in {where}")
+        if not re.fullmatch(r"--[a-z0-9][a-z0-9-]*", flag) or not isinstance(value, (bool, str, int, float)):
+            raise web.HTTPBadRequest(text=f"Invalid option {flag} in {where}")
+    try:
+        options.to_params(opts, specs or [])
+    except ValueError as e:
+        raise web.HTTPBadRequest(text=f"{e} in {where}")
+    return opts
+
+
+def known_services() -> dict[str, list[dict]] | None:
+    try:
+        return {s["tag"]: with_remote(s["tag"], options.service_specs(s)) for s in UNSHACKLE.services()}
+    except UnshackleError:
+        return None
+
+
+def check_service(service: str, known: dict | None, where: str) -> list[dict] | None:
+    if known is None:
+        if not re.fullmatch(r"[\w-]+", service):
+            raise web.HTTPBadRequest(text=f"Unknown service {service!r} for {where}")
+        return None
+    if service not in known:
+        raise web.HTTPBadRequest(text=f"Unknown service {service!r} for {where}")
+    return known[service]
+
+
+async def save_config(request):
+    body = await json_object(request)
+    previous = read_config()
+    real_config(body, previous)  # the secrets the browser only saw masked
+    dl_specs = options.dl_specs()
+    known = await asyncio.to_thread(known_services)
+    series = {}
+    for key, show in (body.get("series") or {}).items():
+        service, title = show.get("service") or "", str(show.get("title") or "")
+        service_specs = check_service(service, known, str(key))
+        if title.startswith("-"):
+            raise web.HTTPBadRequest(text=f"The URL of {key} cannot start with '-'")
+        series[int(key)] = {
+            "service": service,
+            "title": title,
+            "options": check_options(show.get("options") or {}, dl_specs, str(key)),
+            "service_options": check_options(show.get("service_options") or {}, service_specs, str(key)),
+        }
+        series[int(key)].update(check_numbering(show, str(key)))
+        # The automatic sync only takes episodes aired from here on: see sonarr_sync.wanted_automatically.
+        series[int(key)]["since"] = str(show.get("since") or datetime.now(timezone.utc).isoformat(timespec="seconds"))
+        try:  # the day the service publishes, from the day it airs: 1 after, -N days before (up to two weeks)
+            day = int(show.get("release_day") or 0)
+        except (TypeError, ValueError):
+            raise web.HTTPBadRequest(text=f"The release day of {key} must be a whole number") from None
+        if not -sonarr_sync.EARLY_DAYS_MAX <= day <= 1:
+            raise web.HTTPBadRequest(text=f"The release day of {key} must be from {sonarr_sync.EARLY_DAYS_MAX} days before airing to the day after")
+        if release_time := str(show.get("release_time") or "").strip():
+            if not re.fullmatch(r"([01]\d|2[0-3]):[0-5]\d", release_time):
+                raise web.HTTPBadRequest(text=f"The release time of {key} must look like 23:30")
+            series[int(key)]["release_time"] = release_time
+        if day and (release_time or day < 0):  # the day after means nothing without a time; days before do
+            series[int(key)]["release_day"] = day
+        if show.get("broadcast"):
+            series[int(key)]["broadcast"] = check_broadcast(show["broadcast"], str(key))
+    notifications = body.get("notifications") or {}
+    targets = check_targets(notifications, [t["url"] for t in sonarr_sync.notification_targets(previous["notifications"])])
+    countries = [c for c in body.get("tmdb_countries") or [] if re.fullmatch(r"[A-Z]{2}", c)]
+    service_defaults = {}
+    for service, levels in (body.get("service_defaults") or {}).items():
+        service_specs = check_service(service, known, "the service defaults")
+        opts = check_options(levels.get("options") or {}, dl_specs, service)
+        own = check_options(levels.get("service_options") or {}, service_specs, service)
+        if opts or own:  # a service with nothing set is not worth a line
+            service_defaults[service] = {"options": opts, "service_options": own}
+    config = {
+        "settings": check_settings(body.get("settings") or {}, previous["settings"]),
+        "auth": previous["auth"],  # never from the browser
+        "defaults": check_options(body.get("defaults") or {}, dl_specs, "defaults"),
+        "service_defaults": service_defaults,
+        "series": series,
+        "notifications": {
+            "targets": targets,
+            **{level: bool(notifications.get(level, True)) for level in ("success", "warning", "error")},
+            "quiet": check_quiet(notifications.get("quiet")),
+            "events": {k: bool((notifications.get("events") or {}).get(k, True)) for k in EVENTS},
+        },
+        "tmdb_countries": countries or [sonarr_sync.load_settings(previous)["country"]],
+        "hidden_series": sorted({int(i) for i in body.get("hidden_series") or []}),
+    }
+    write_config(config)
+    return web.json_response(public_config(read_config()))
+
+
+NUMBER_SETTINGS = {  # name: (smallest, largest)
+    "sync_every_hours": (1, 24), "auto_days": (1, 90), "late_warning_hours": (0, 720),
+    "burst_every_seconds": (10, 600), "burst_minutes": (1, 120), "history_keep": (10, 5000), "history_days": (1, 3650),
+    "leftovers_days": (0, 365),
+}
+
+
+URL = re.compile(r"https?://[^\s/]+(/[^\s]*)?")
+
+
+def check_urls(urls, saved=()) -> list[str]:
+    """Apprise URLs (discord://…, tgram://…, a Discord webhook as is): each new one must be one it knows.
+    The message names its kind only: the rest is the address's secret."""
+    urls = [str(u).strip() for u in urls or [] if str(u).strip()]
+    for url in urls:
+        if url not in saved and not apprise.Apprise().add(url):
+            raise web.HTTPBadRequest(text=f"Not a notification URL Apprise knows: {url.partition('://')[0]}://…")
+    return urls
+
+
+def check_targets(notifications: dict, saved=()) -> list[dict]:
+    """The addresses and the messages each takes; a list of URLs alone (an older page) takes them all."""
+    given = notifications.get("targets")
+    if given is None:
+        given = [{"url": u} for u in notifications.get("urls") or []]
+    urls = check_urls([t.get("url") for t in given], saved)
+    levels = [[lv for lv in (t.get("levels") or sonarr_sync.ALL_LEVELS) if lv in sonarr_sync.ALL_LEVELS] for t in given if str(t.get("url") or "").strip()]
+    return [{"url": u, "levels": lv} for u, lv in zip(urls, levels)]
+
+
+def check_quiet(quiet) -> dict | None:
+    if not quiet or not quiet.get("from") or not quiet.get("to"):
+        return None
+    for at in (quiet["from"], quiet["to"]):
+        if not re.fullmatch(r"([01]\d|2[0-3]):[0-5]\d", str(at)):
+            raise web.HTTPBadRequest(text="Quiet hours look like 23:00")
+    return {"from": quiet["from"], "to": quiet["to"]}
+
+
+EVENTS = ("down", "cookies", "cdm")  # what else is watched and told: Unshackle or Sonarr down, cookies, CDM devices
+
+
+def check_broadcast(plan: dict, key: str) -> dict:
+    """A series' own airing schedule, as sync.broadcast_dates reads it; a clear error for anything off."""
+    bad = lambda what: web.HTTPBadRequest(text=f"The broadcast schedule of {key}: {what}")
+    first = str(plan.get("from") or "S01E01").upper()
+    if not re.fullmatch(r"S\d+E\d+", first):
+        raise bad("its first episode must look like S01E01")
+    try:
+        start = date.fromisoformat(str(plan.get("start")))
+    except ValueError:
+        raise bad("pick the day of its first episode") from None
+    if not re.fullmatch(r"([01]\d|2[0-3]):[0-5]\d", str(plan.get("time") or "")):
+        raise bad("its time must look like 20:39")
+    every = plan.get("every") if plan.get("every") in ("weekly", "daily") else "weekly"
+    days = sorted({int(d) for d in plan.get("days") or [] if str(d).isdigit() and 0 <= int(d) <= 6})
+    if every == "weekly" and not days:
+        days = [start.weekday()]  # weekly on no day: the day it starts
+    per_evening = int(plan.get("per_evening") or 1)
+    evenings = {}
+    for day, count in (plan.get("evenings") or {}).items():
+        try:
+            evenings[date.fromisoformat(str(day)).isoformat()] = int(count)
+        except (TypeError, ValueError):
+            raise bad(f"{day} is not a day with a number of episodes") from None
+    if not 1 <= per_evening <= 9 or any(not 0 <= c <= 9 for c in evenings.values()):
+        raise bad("an evening has 0 to 9 episodes")
+    return {"from": first, "start": start.isoformat(), "time": str(plan["time"]), "every": every,
+            **({"days": days} if every == "weekly" else {}), "per_evening": per_evening, **({"evenings": evenings} if evenings else {})}
+
+
+def check_numbering(show: dict, key: str) -> dict:
+    """A series' numbering and file names (season and episode maps, offset, parts, names), validated:
+    only the ones set, as config.yaml keeps them."""
+    numbering = {}
+    try:
+        season_map = {int(k): int(v) for k, v in (show.get("season_map") or {}).items()}
+    except (TypeError, ValueError):
+        raise web.HTTPBadRequest(text=f"Season numbers of {key} must be whole numbers")
+    if season_map:
+        numbering["season_map"] = season_map
+    if file_name := str(show.get("file_name") or "").strip():
+        numbering["file_name"] = file_name
+    episode_map = {}
+    for sonarr_ep, service_ep in (show.get("episode_map") or {}).items():
+        a = re.fullmatch(r"S(\d+)E(\d+)", str(sonarr_ep).strip().upper())
+        b = re.fullmatch(r"S(\d+)E(\d+)(\.\d+)?", str(service_ep).strip().upper())
+        if not a or not b:
+            raise web.HTTPBadRequest(text=f"Episode table of {key}: write S34E06=S29E05 or S34E06=S29E05.2")
+        # the sync looks episodes up as S01E06: S1E6 must find it
+        episode_map[f"S{int(a[1]):02}E{int(a[2]):02}"] = f"S{int(b[1]):02}E{int(b[2]):02}{b[3] or ''}"
+    if episode_map:
+        numbering["episode_map"] = episode_map
+    try:
+        if offset := int(show.get("episode_offset") or 0):
+            numbering["episode_offset"] = offset
+        if offset := int(show.get("season_offset") or 0):
+            numbering["season_offset"] = offset
+            if (start := int(show.get("season_offset_from") or 1)) > 1:
+                numbering["season_offset_from"] = start
+    except (TypeError, ValueError):
+        raise web.HTTPBadRequest(text=f"The offsets of {key} must be whole numbers")
+    if show.get("join_parts") is False:
+        numbering["join_parts"] = False
+    if parts := show.get("parts"):
+        if str(parts) not in ("2", "3", "4"):
+            raise web.HTTPBadRequest(text=f"The parts per episode of {key} must be 2, 3 or 4")
+        numbering["parts"] = int(parts)
+    if (name_mode := show.get("episode_name") or "joined") != "joined":
+        if name_mode not in ("keep", "always"):
+            raise web.HTTPBadRequest(text=f"Unknown episode name mode {name_mode!r}")
+        numbering["episode_name"] = name_mode
+    return numbering
+
+
+def check_settings(body: dict, previous: dict) -> dict:
+    """Validated settings; an API key left empty keeps the one already saved."""
+    settings = {}
+    for name, what in (("sonarr_url", "Sonarr"), ("sonarr_public_url", "Sonarr in the browser"), ("unshackle_url", "unshackle serve")):
+        url = str(body.get(name) or "").strip().rstrip("/")
+        if url and not URL.fullmatch(url):
+            raise web.HTTPBadRequest(text=f"The {what} URL must start with http:// or https://")
+        if "@" in urlparse(url).netloc:  # it would show in every error message: a proxy's own login stays in the proxy
+            raise web.HTTPBadRequest(text=f"The {what} URL cannot hold a user name or password")
+        settings[name] = url
+    for key in SECRET_SETTINGS:
+        settings[key] = str(body.get(key) or "").strip() or previous.get(key, "")
+    effective = sonarr_sync.load_settings({"settings": previous})  # with the keys and URLs from the environment
+    for name, key, what in (("sonarr_url", "sonarr_api_key", "Sonarr"), ("unshackle_url", "unshackle_api_key", "unshackle serve")):
+        url = settings[name]
+        if url and effective.get(key) and url != str(effective.get(name) or "").rstrip("/") and not str(body.get(key) or "").strip():
+            # The saved key belongs to the old address (or to none, once cleared): never hand it to a new one unasked.
+            raise web.HTTPBadRequest(text=f"A new {what} URL needs its API key too")
+    mode = str(body.get("unshackle_mode") or "")
+    if mode not in ("", "local", "remote"):
+        raise web.HTTPBadRequest(text="unshackle runs either here (local) or elsewhere (remote)")
+    settings["unshackle_mode"] = mode
+    for name in ("unshackle_command", "downloads", "unshackle_downloads", "sonarr_downloads", "cookies_dir", "unshackle_config_dir"):
+        settings[name] = str(body.get(name) or "").strip().rstrip("/\\")
+        folder = settings[name]
+        if name != "unshackle_command" and folder and (not (posixpath.isabs(folder) or ntpath.isabs(folder))
+                                                       or ".." in re.split(r"[\\/]", folder)):
+            raise web.HTTPBadRequest(text=f"{folder} must be a full path, from / (or a drive letter), without ..")
+    country = str(body.get("country") or "US").upper()
+    if not re.fullmatch(r"[A-Z]{2}", country):
+        raise web.HTTPBadRequest(text="The country must be a two-letter code, like US")
+    settings["country"] = country
+    zone = str(body.get("timezone") or "UTC")
+    try:
+        sonarr_sync.ZoneInfo(zone)
+    except (KeyError, ValueError):
+        raise web.HTTPBadRequest(text=f"Unknown time zone {zone!r}")
+    settings["timezone"] = zone
+    language = str(body.get("language") or previous.get("language") or "en")
+    settings["language"] = language if language in i18n.languages() else "en"
+    for key, (low, high) in NUMBER_SETTINGS.items():
+        try:
+            value = float(body.get(key, sonarr_sync.SETTINGS_DEFAULTS[key]))
+        except (TypeError, ValueError):
+            raise web.HTTPBadRequest(text=f"{key} must be a number")
+        if not low <= value <= high:
+            raise web.HTTPBadRequest(text=f"{key} must be between {low} and {high}")
+        settings[key] = int(value) if value.is_integer() else value
+    settings["debug"] = body.get("debug") is True
+    return settings
+
+
+async def hide_series(request):
+    """Hide a series from the Schedule, or show it again: saved at once, no Save needed."""
+    body = await json_object(request)
+    try:
+        tvdb_id = int(body.get("tvdbId"))
+    except (TypeError, ValueError):
+        raise web.HTTPBadRequest(text="tvdbId must be a number")
+    config = read_config()
+    hidden = set(config["hidden_series"])
+    hidden.add(tvdb_id) if body.get("hidden") else hidden.discard(tvdb_id)
+    config["hidden_series"] = sorted(hidden)
+    write_config(config)
+    return web.json_response(config["hidden_series"])
+
+
+async def test_notification(request):
+    """A test message to each address given, one by one: what each one said."""
+    saved = [t["url"] for t in sonarr_sync.notification_targets(read_config()["notifications"])]
+    urls = check_urls([real_url(str(u), saved) for u in (await json_object(request)).get("urls") or []])
+    if not urls:
+        raise web.HTTPBadRequest(text="Add a notification address first")
+    lang = sonarr_sync.SETTINGS.get("language", "en")
+    title, message = (i18n.tr_lines(t, lang) for t in ("Test: notifications work", "A downloaded episode will look like this."))
+
+    def one(url):
+        return {"app": sonarr_sync.app_of(url), "error": sonarr_sync.send_to(url, "success", title, message,
+                                                                             {"service": "RMCP", "size": "1.4 GB", "took": "38 s"})}
+    results = await asyncio.gather(*(asyncio.to_thread(one, u) for u in urls))
+    await asyncio.to_thread(sonarr_sync.note_sent, "success", title, [{"app": r["app"], "ok": not r["error"], **({"error": r["error"]} if r["error"] else {})} for r in results])
+    return web.json_response({"results": [{"ok": not r["error"], "error": r["error"]} for r in results]})
+
+
+async def sent_notifications(_):
+    return web.json_response({"sent": read_json(sonarr_sync.SENT_FILE, []), "held": len(read_json(sonarr_sync.HELD_FILE, []))})
+
+
+TMDB_CACHE = sonarr_sync.DATA / "tmdb_cache.json"
+TMDB_CACHE_DAYS = 7
+
+
+async def suggest(request):
+    """TMDB's where-to-watch links, cached a week per series: opening a series costs no request."""
+    tmdb_id = request.match_info["tmdb_id"]
+    countries = read_config()["tmdb_countries"]
+    cache = read_json(TMDB_CACHE, {})
+    hit = cache.get(tmdb_id)
+    fresh = hit and hit["countries"] == countries and (
+        datetime.now(timezone.utc) - datetime.fromisoformat(hit["checked"]) < timedelta(days=TMDB_CACHE_DAYS)
+    )
+    if not fresh or request.query.get("refresh"):
+        try:
+            domains = await asyncio.to_thread(service_domains)
+            found = await asyncio.gather(*(asyncio.to_thread(tmdb_links, int(tmdb_id), c, domains) for c in countries))
+        except UnshackleError as e:
+            if not hit:
+                raise web.HTTPBadGateway(text=str(e))
+            found = None
+        except requests.RequestException as e:
+            if not hit:
+                raise web.HTTPBadGateway(text=tmdb_error(e))
+            found = None  # keep the old links rather than show nothing
+        if found is not None:
+            unique: dict[tuple, dict] = {}
+            for link in (link for links in found for link in links):
+                seen = unique.setdefault((link["service"], link["url"]), {**link, "country": ""})
+                if link["country"] not in seen["country"].split(", "):
+                    seen["country"] = ", ".join(filter(None, [seen["country"], link["country"]]))
+            with_series = {l["service"] for l in unique.values() if not l.get("episode")}
+            links = [l for l in unique.values() if not (l.get("episode") and l["service"] in with_series)]
+            hit = {"countries": countries, "checked": datetime.now(timezone.utc).isoformat(), "links": links}
+            cache[tmdb_id] = hit
+            write_atomic(TMDB_CACHE, json.dumps(cache))
+    return web.json_response({"links": hit["links"], "checked": hit["checked"]})
+
+
+def next_sync(now: datetime) -> datetime:
+    """The next automatic sync: on the hour, every sync_every_hours of the local day."""
+    every = int(sonarr_sync.SETTINGS["sync_every_hours"])
+    local = now.astimezone(sonarr_sync.LOCAL)
+    hour = (local.hour // every + 1) * every
+    return local.replace(minute=0, second=0, microsecond=0) + timedelta(hours=hour - local.hour)
+
+
+async def run_automatic_syncs():
+    """The automatic sync, on the web container's own clock: no crontab to keep in step."""
+    while True:
+        due = next_sync(datetime.now(timezone.utc))
+        while (left := (due - datetime.now(timezone.utc)).total_seconds()) > 0:
+            await asyncio.sleep(min(left, 60))  # a new interval in Settings takes effect within a minute
+            if next_sync(datetime.now(timezone.utc)) < due:
+                due = next_sync(datetime.now(timezone.utc))
+        try:
+            if sonarr_sync.SONARR and read_config()["auth"]:  # nothing to sync before the setup is done
+                run_sync()
+                gone = await asyncio.to_thread(sonarr_sync.clean_leftovers)
+                if gone:
+                    print(f"Deleted from the downloads folder, waiting too long: {', '.join(gone)}", flush=True)
+        except Exception as e:  # one bad round must not end the automatic syncs
+            print(f"Automatic sync: {type(e).__name__}: {e}", flush=True)
+        await asyncio.sleep(1)
+
+
+def first_try(show: dict, ep: dict, aired: datetime | None, now: datetime) -> str | None:
+    slot = sonarr_sync.release_slot(show, ep)
+    if slot:
+        return slot.isoformat() if slot > now else None
+    return next_sync(aired).isoformat() if aired and aired > now else None
+
+
+burst_runs: dict[int, threading.Thread] = {}
+
+
+def due_releases(now: datetime) -> list[int]:
+    """Episodes whose release time has just come and which Sonarr still lacks."""
+    config = read_config()
+    timed = [s for s in config["series"].values() if s.get("release_time")]
+    if not timed:
+        return []  # no series has a release time: no need to ask Sonarr every 30 s
+    ahead = max(-sonarr_sync.release_day(s) for s in timed)  # a release days before airing: that far into the calendar
+    r = requests.get(
+        f"{sonarr_sync.SONARR}/api/v3/calendar",
+        headers=sonarr_sync.HEADERS,
+        params={"start": (now - timedelta(days=2)).isoformat(), "end": (now + timedelta(days=1 + max(ahead, 0))).isoformat(), "includeSeries": "true"},
+        timeout=30,
+    )
+    r.raise_for_status()
+    plans = sonarr_sync.broadcast_plans(config)
+    dated = sonarr_sync.broadcast_dated(plans)  # dated by its own schedule: Sonarr's date set aside
+    episodes = [ep for ep in r.json() if ep["id"] not in dated]
+    episodes += sonarr_sync.broadcast_episodes(config, now - timedelta(days=2), now + timedelta(days=1 + max(ahead, 0)), plans)
+    due = []
+    for ep in episodes:
+        show = config["series"].get(ep["series"]["tvdbId"])
+        slot = show and show.get("service") and show.get("release_time") and sonarr_sync.release_slot(show, ep)  # no time: no burst
+        burst_for = timedelta(minutes=float(sonarr_sync.SETTINGS["burst_minutes"]))
+        if slot and slot <= now < slot + burst_for and not ep["hasFile"] and not sonarr_sync.episode_folder(ep).exists():
+            due.append(ep["id"])
+    return due
+
+
+async def watch_releases():
+    """At a series' release time, try its new episode every 30 s for 10 min."""
+    while True:
+        try:
+            if not sonarr_sync.SONARR:
+                await asyncio.sleep(30)
+                continue  # set up first
+            for episode_id in await asyncio.to_thread(due_releases, datetime.now(timezone.utc)):
+                run = burst_runs.get(episode_id)
+                if run is None or not run.is_alive():  # the previous try is over
+                    burst_runs[episode_id] = run_sync([episode_id], kind="burst")
+        except Exception as e:  # Sonarr down for a moment: try again next round
+            print(f"Release watch: {e}", flush=True)
+        await asyncio.sleep(float(sonarr_sync.SETTINGS["burst_every_seconds"]))
+
+
+# ---- Health: Unshackle and Sonarr, checked in the background for the header's lights ----
+
+HEALTH_EVERY = 120  # seconds
+health: dict = {"unshackle": {"ok": None}, "sonarr": {"ok": None}}
+failures_in_a_row = {"unshackle": 0, "sonarr": 0}
+
+
+def unshackle_health(full: bool = False) -> dict:
+    """Whether Unshackle answers, and what the page shows about it. `full` adds the tools
+    and the queue (a tool check runs a dozen programs: only when Settings is open)."""
+    local = UNSHACKLE.mode == "local"
+    state = {"mode": UNSHACKLE.mode, "ok": False,
+             "address": sonarr_sync.SETTINGS.get("unshackle_command") or "unshackle" if local else sonarr_sync.SETTINGS.get("unshackle_url")}
+    try:
+        h = UNSHACKLE.health()
+        update = h.get("update_check") or {}
+        state.update(ok=True, version=h.get("version"), latest=update.get("latest_version") if update.get("update_available") else None,
+                     services=len(UNSHACKLE.services()))
+        if local and UNSHACKLE.local.started:
+            state["since"] = UNSHACKLE.local.started.isoformat()
+        if full:
+            jobs = UNSHACKLE.jobs()
+            state["queue"] = {s: sum(j["status"] == s for j in jobs) for s in ("downloading", "queued")}
+            state["jobs"] = [{"id": j["job_id"], "service": j.get("service"), "title": j.get("current_title") or j.get("title") or j.get("title_id"),
+                              "status": j["status"], "progress": round(float(j.get("progress") or 0))}
+                             for j in jobs if j["status"] in ("queued", "downloading")]
+            state["tools"] = UNSHACKLE.tools() + [
+                {"name": f"{name} (for Unshacklarr)", "installed": bool(shutil.which(name)), "required": True}
+                for name in ("mkvmerge", "mkvpropedit")]
+    except UnshackleError as e:
+        state["error"] = str(e)
+    return state
+
+
+def sonarr_health() -> dict:
+    if not sonarr_sync.SONARR:
+        return {"ok": False, "error": "Sonarr is not set up"}
+    try:
+        return {"ok": True, "version": sonarr_get_version()}
+    except (requests.RequestException, ValueError) as e:
+        return {"ok": False, "error": f"Sonarr is unreachable: {no_credentials(e)}"}
+
+
+def sonarr_get_version() -> str:
+    return sonarr_status(sonarr_sync.SONARR, sonarr_sync.HEADERS["X-Api-Key"])
+
+
+def check_health() -> None:
+    """Refresh both states; notify once when one goes down (two checks in a row, not a blip)
+    and once when it comes back."""
+    settings = read_config()["notifications"]
+    for name, state in (("unshackle", unshackle_health()), ("sonarr", sonarr_health())):
+        was_down = failures_in_a_row[name] >= 2
+        failures_in_a_row[name] = 0 if state["ok"] else failures_in_a_row[name] + 1
+        state["checked"] = datetime.now(timezone.utc).isoformat()
+        health[name] = state
+        label = "Unshackle" if name == "unshackle" else "Sonarr"
+        if not (settings.get("events") or {}).get("down", True):
+            continue
+        if failures_in_a_row[name] == 2:
+            sonarr_sync.notify(settings, "error", f"{label} is unreachable", f"{state.get('error')}\nDownloads wait until it is back.")
+        elif was_down and state["ok"]:
+            sonarr_sync.notify(settings, "success", f"{label} is back", "Downloads carry on.")
+
+
+async def watch_health():
+    while True:
+        try:
+            if read_config()["auth"]:  # nothing to watch before the setup is done
+                await asyncio.to_thread(check_health)
+        except Exception as e:
+            print(f"Health check: {e}", flush=True)
+        await asyncio.sleep(HEALTH_EVERY)
+
+
+ALERTS_FILE = sonarr_sync.DATA / "alerts.json"  # what was told already: {key: state}, told again only when it changes
+CDM_TEST_EVERY = timedelta(days=1)
+
+
+def check_alerts(now: datetime | None = None) -> None:
+    """Cookies about to expire or expired, and CDM devices in use that fail their test (tested once a day):
+    each told once, told again only if it changes."""
+    now = now or datetime.now(timezone.utc)
+    settings = read_config()["notifications"]
+    events = settings.get("events") or {}
+    told, problems = read_json(ALERTS_FILE, {}), {}
+    unknown = []  # what could not be checked now: what was told of it stands, never told twice
+    if events.get("cookies", True):
+        try:
+            state = cookie_state()
+        except UnshackleError:
+            state, unknown = None, unknown + ["cookies:"]
+        for service in (state or {}).get("used", []):
+            for f in state["files"].get(service, []):
+                name = f"{service} {f['profile']}".strip()
+                left = (f["expires"] - now.timestamp()) / 86400 if f.get("expires") else None
+                if f.get("expired"):
+                    problems[f"cookies:{name}"] = ("error", f"{name} cookies have expired", "Its downloads will fail: replace them in Settings, Cookies.")
+                elif left is not None and 0 <= left < 7:
+                    problems[f"cookies:{name}"] = ("warning", f"{name} cookies expire in {max(1, round(left))} days",
+                                                    "Replace them before, in Settings, Cookies.")
+    if events.get("cdm", True):
+        try:
+            state = cdm_state()
+        except UnshackleError:
+            state, unknown = None, unknown + ["cdm:"]
+        for d in (state or {}).get("devices", []):
+            if not d.get("used_by") or d.get("folder") or (d.get("info") or {}).get("unreadable"):
+                continue
+            test = d.get("test")
+            if not test or now - datetime.fromisoformat(test["at"]) > CDM_TEST_EVERY:
+                try:
+                    result = UNSHACKLE.call("POST", "/api/cdm/devices/test", json={"kind": d["kind"].lower(), "name": d["name"]})
+                except UnshackleError:
+                    unknown.append(f"cdm:{d['kind']}:{d['name']}")
+                    continue  # Unshackle down: told apart
+                test = {k: result.get(k) for k in ("ok", "revoked", "error", "keys")} | {"at": now.isoformat()}
+                note_cdm_test(f"{d['kind']}:{d['name']}", test)
+            if not test.get("ok"):
+                word = "was revoked" if test.get("revoked") else "failed its test"
+                problems[f"cdm:{d['kind']}:{d['name']}"] = ("error", f"CDM {d['name']} {word}",
+                                                             f"{test.get('error') or 'No license'}. Used by {', '.join(d['used_by'])}: see Settings, CDM.")
+    for key, (level, title, message) in problems.items():
+        if told.get(key) != title:
+            sonarr_sync.notify(settings, level, title, message)
+    kept = {key: title for key, title in told.items() if key.startswith(tuple(unknown))} if unknown else {}
+    write_atomic(ALERTS_FILE, json.dumps(kept | {key: p[1] for key, p in problems.items()}))
+
+
+async def watch_alerts():
+    """Every minute, what the quiet hours kept; every hour, cookies and CDM devices."""
+    last = None
+    while True:
+        try:
+            if read_config()["auth"] and sonarr_sync.SONARR:
+                await asyncio.to_thread(sonarr_sync.send_held, read_config()["notifications"])
+                if not last or datetime.now(timezone.utc) - last > timedelta(hours=1):
+                    last = datetime.now(timezone.utc)
+                    await asyncio.to_thread(check_alerts)
+        except Exception as e:
+            print(f"Alerts: {e}", flush=True)
+        await asyncio.sleep(60)
+
+
+async def status(request):
+    """The header's lights; ?full=1 checks Unshackle afresh, tools and queue included."""
+    if request.query.get("full"):
+        health["unshackle"] = {**await asyncio.to_thread(unshackle_health, True), "checked": datetime.now(timezone.utc).isoformat()}
+    return web.json_response(health)
+
+
+async def restart_unshackle(_):
+    try:
+        await asyncio.to_thread(UNSHACKLE.restart)
+    except UnshackleError as e:
+        raise web.HTTPBadGateway(text=str(e))
+    health["unshackle"] = {**await asyncio.to_thread(unshackle_health, True), "checked": datetime.now(timezone.utc).isoformat()}
+    return web.json_response(health["unshackle"])
+
+
+# ---- Cookies: Unshackle's cookie files, seen and replaced from the page ----
+
+def cookies_folder() -> Path:
+    if sonarr_sync.SETTINGS.get("cookies_dir"):
+        return Path(sonarr_sync.SETTINGS["cookies_dir"])
+    if sonarr_sync.SETTINGS.get("unshackle_config_dir"):  # next to unshackle.yaml, as its directories: section names it
+        return cdm.directory(Path(sonarr_sync.SETTINGS["unshackle_config_dir"]) / "unshackle.yaml", "cookies", "Cookies")
+    if UNSHACKLE.mode == "local":
+        return UNSHACKLE.local.cookies_dir(str(sonarr_sync.SETTINGS.get("unshackle_command") or ""))
+    raise UnshackleError("Unshacklarr cannot see Unshackle's Cookies folder: mount it and set its path "
+                         "in Settings, Unshackle (COOKIES_DIR with Docker)")
+
+
+def cookie_state() -> dict:
+    folder = cookies_folder()
+    files = cookies.list_all(folder)
+    used = sorted({c["service"] for c in read_config()["series"].values() if c.get("service")})
+    try:
+        wants = {s["tag"] for s in UNSHACKLE.services() if "cookies" in (s.get("auth_methods") or [])}
+    except UnshackleError:
+        wants = set()
+    return {"folder": str(folder), "files": files, "used": used, "wants": sorted(wants)}
+
+
+async def list_cookies(_):
+    try:
+        return web.json_response(await asyncio.to_thread(cookie_state))
+    except (UnshackleError, cdm.CdmError) as e:
+        return web.json_response({"folder": None, "error": str(e), "files": {}, "used": [], "wants": []})
+
+
+async def save_cookies(request):
+    body = await json_object(request)
+    try:
+        folder = await asyncio.to_thread(cookies_folder)
+        saved = await asyncio.to_thread(cookies.save, folder, str(body.get("service") or ""), str(body.get("profile") or ""), str(body.get("text") or ""))
+    except (cookies.CookieError, cdm.CdmError, UnshackleError) as e:
+        raise web.HTTPBadRequest(text=str(e))
+    except OSError as e:
+        raise web.HTTPBadGateway(text=f"Could not write the cookie file: {e}")
+    return web.json_response(saved)
+
+
+async def delete_cookies(request):
+    body = await json_object(request)
+    try:
+        folder = await asyncio.to_thread(cookies_folder)
+        await asyncio.to_thread(cookies.delete, folder, str(body.get("service") or ""), str(body.get("profile") or ""))
+    except (cookies.CookieError, cdm.CdmError, UnshackleError) as e:
+        raise web.HTTPBadRequest(text=str(e))
+    return web.json_response({"deleted": True})
+
+
+# ---- CDMs: Unshackle's Widevine and PlayReady devices, and which one each service uses ----
+
+def cdm_paths() -> tuple[Path, Path, Path]:
+    """unshackle.yaml, and the WVDs and PRDs folders, as Unshacklarr sees them."""
+    if sonarr_sync.SETTINGS.get("unshackle_config_dir"):
+        conf = Path(sonarr_sync.SETTINGS["unshackle_config_dir"]) / "unshackle.yaml"
+        return (conf, *cdm.folders(conf))
+    if UNSHACKLE.mode == "local":
+        found = UNSHACKLE.local.paths(str(sonarr_sync.SETTINGS.get("unshackle_command") or ""))
+        if str(found["config"]) not in ("", "."):
+            return found["config"], found["wvds"], found["prds"]
+        raise UnshackleError("This Unshackle has no unshackle.yaml yet")
+    raise UnshackleError("Unshacklarr cannot see Unshackle's config: mount its folder (unshackle.yaml, WVDs, PRDs) "
+                         "and set its path in Settings, Unshackle (UNSHACKLE_CONFIG_DIR with Docker)")
+
+
+CDM_TESTS = sonarr_sync.DATA / "cdm_tests.json"  # each device's last test: "Widevine:name": {at, ok, revoked, error, keys}
+cdm_tests_lock = threading.Lock()
+
+
+def cdm_tests() -> dict:
+    return read_json(CDM_TESTS, {})
+
+
+def note_cdm_test(key: str, result: dict | None) -> None:
+    with cdm_tests_lock:
+        tests = cdm_tests()
+        if result is None:
+            tests.pop(key, None)
+        else:
+            tests[key] = result
+        write_atomic(CDM_TESTS, json.dumps(tests))
+
+
+def cdm_details() -> tuple[dict, str | None]:
+    """What each device's certificate says, asked to Unshackle (it has the DRM libraries)."""
+    try:
+        found = UNSHACKLE.call("GET", "/api/cdm/devices")["devices"]
+    except UnshackleError as e:
+        if "404" in str(e) or "not found" in str(e).lower():
+            return {}, "This Unshackle cannot describe or test its devices: it needs the /api/cdm routes (a newer Unshackle)"
+        return {}, str(e)
+    return {(d["kind"], d["name"]): d for d in found}, None
+
+
+def cdm_state() -> dict:
+    conf, wvds, prds = cdm_paths()
+    try:
+        services = sorted(s["tag"] for s in UNSHACKLE.services())
+    except UnshackleError:
+        services = []
+    state = cdm.state(conf, wvds, prds)
+    details, details_error = cdm_details()
+    tests = cdm_tests()
+    for d in state["devices"]:
+        d["info"] = details.get((d["kind"].lower(), d["name"]))
+        d["test"] = tests.get(f"{d['kind']}:{d['name']}")
+    return {"folder": str(conf.parent), **state, "services": services, "details_error": details_error}
+
+
+async def cdm_test(request):
+    """A test license from the DRM's own test server, remembered for the page."""
+    body = await json_object(request)
+    kind, name = str(body.get("kind") or ""), str(body.get("name") or "")
+    if kind not in ("Widevine", "PlayReady"):
+        raise web.HTTPBadRequest(text="The kind is Widevine or PlayReady")
+    try:
+        result = await asyncio.to_thread(UNSHACKLE.call, "POST", "/api/cdm/devices/test", json={"kind": kind.lower(), "name": name})
+    except UnshackleError as e:
+        raise web.HTTPBadGateway(text=str(e))
+    result = {k: result.get(k) for k in ("ok", "revoked", "error", "keys")} | {"at": datetime.now(timezone.utc).isoformat()}
+    await asyncio.to_thread(note_cdm_test, f"{kind}:{name}", result)
+    return web.json_response(result)
+
+
+async def cdm_reprovision(request):
+    body = await json_object(request)
+    name = str(body.get("name") or "")
+    try:
+        done = await asyncio.to_thread(UNSHACKLE.call, "POST", "/api/cdm/devices/reprovision", json={"name": name})
+    except UnshackleError as e:
+        raise web.HTTPBadRequest(text=str(e))
+    await asyncio.to_thread(note_cdm_test, f"PlayReady:{name}", None)  # a new certificate: its old test says nothing now
+    return web.json_response({"backup": done.get("backup"), "state": await asyncio.to_thread(cdm_state)})
+
+
+async def list_cdm(_):
+    try:
+        return web.json_response(await asyncio.to_thread(cdm_state))
+    except UnshackleError as e:
+        return web.json_response({"folder": None, "error": str(e)})
+
+
+async def cdm_action(request):
+    body = await json_object(request)
+    action = request.match_info["action"]
+    try:
+        conf, wvds, prds = await asyncio.to_thread(cdm_paths)
+        if action == "add":
+            try:
+                content = base64.b64decode(str(body.get("data") or ""), validate=True)
+            except ValueError:
+                raise cdm.CdmError("The file did not arrive whole: pick it again") from None
+            await asyncio.to_thread(cdm.add, wvds, prds, str(body.get("filename") or ""), content)
+        elif action == "delete":
+            await asyncio.to_thread(cdm.delete, conf, wvds, prds, str(body.get("name") or ""), str(body.get("kind") or ""))
+            await asyncio.to_thread(note_cdm_test, f"{body.get('kind')}:{body.get('name')}", None)
+        elif action == "remote-save":
+            await asyncio.to_thread(cdm.remote_save, conf, body.get("form") or {}, str(body["was"]) if body.get("was") else None)
+        elif action == "remote-delete":
+            await asyncio.to_thread(cdm.remote_delete, conf, str(body.get("name") or ""))
+        else:
+            device = body.get("device")
+            await asyncio.to_thread(cdm.choose, conf, wvds, prds, str(body.get("service") or ""), str(device) if device else None)
+    except (cdm.CdmError, UnshackleError) as e:
+        raise web.HTTPBadRequest(text=str(e))
+    except OSError as e:
+        raise web.HTTPBadGateway(text=f"Could not write Unshackle's files: {e}")
+    return web.json_response(await asyncio.to_thread(cdm_state))
+
+
+# ---- unshackle.yaml, edited from the page: the password again, a check, the versions before ----
+
+CONFIG_HISTORY = sonarr_sync.DATA / "unshackle-yaml-history"  # the file before each save, its owner only
+CONFIG_KEEP = 10
+VERSION_ID = re.compile(r"\d{8}-\d{6}-\d{6}")
+
+
+async def reauth(request, password: str) -> None:
+    """The password asked again before showing or changing a file full of secrets; login's limit applies."""
+    if not await password_try(request, password):
+        raise web.HTTPForbidden(text="Wrong password")  # not 401: the page reads that as a lost session
+
+
+def fingerprint(text: str) -> str:
+    return hashlib.sha256(text.encode("utf8")).hexdigest()[:16]
+
+
+def config_versions() -> list[dict]:
+    return [{"id": p.stem, "at": datetime.fromtimestamp(p.stat().st_mtime, timezone.utc).isoformat(), "size": p.stat().st_size}
+            for p in sorted(CONFIG_HISTORY.glob("*.yaml"), reverse=True)]
+
+
+def yaml_problem(text: str) -> str | None:
+    """Why this is no unshackle.yaml, or None."""
+    try:
+        data = yaml.safe_load(text)
+    except yaml.YAMLError as e:
+        mark = getattr(e, "problem_mark", None)
+        where = f", line {mark.line + 1}, column {mark.column + 1}" if mark else ""
+        return f"Not valid YAML{where}: {getattr(e, 'problem', None) or e}"
+    if data is not None and not isinstance(data, dict):
+        return "unshackle.yaml must hold settings (key: value), not a list or a single value"
+    return None
+
+
+def save_unshackle_yaml(path: Path, old: str, new: str) -> dict:
+    """Keep the file as it was, then write the new one (with the file's own permissions)."""
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S-%f")
+    write_atomic(CONFIG_HISTORY / f"{stamp}.yaml", old, PRIVATE)
+    for extra in sorted(CONFIG_HISTORY.glob("*.yaml"), reverse=True)[CONFIG_KEEP:]:
+        extra.unlink(missing_ok=True)
+    write_atomic(path, new)
+    before, after = yaml.safe_load(old) or {}, yaml.safe_load(new) or {}
+    UNSHACKLE.configure(UNSHACKLE.settings)  # its services, servers and dl: section may have changed: asked afresh
+    return {"saved": True, "base": fingerprint(new), "versions": config_versions(),
+            "restart": before.get("serve") != after.get("serve")}
+
+
+async def unshackle_yaml(request):
+    action = request.match_info["action"]
+    body = await json_object(request)
+    await reauth(request, str(body.get("password") or ""))
+    try:
+        path = (await asyncio.to_thread(cdm_paths))[0]
+    except UnshackleError as e:
+        raise web.HTTPBadRequest(text=str(e))
+    if not path.exists():
+        raise web.HTTPNotFound(text=f"No unshackle.yaml in {path.parent}")
+    try:
+        cdm.regular(path)
+    except cdm.CdmError as e:
+        raise web.HTTPBadRequest(text=str(e))
+    text = await asyncio.to_thread(path.read_text, encoding="utf8")
+    if action == "open":
+        return web.json_response({"text": text, "base": fingerprint(text), "path": str(path), "versions": config_versions()})
+    if action == "version":
+        version = str(body.get("id") or "")
+        if not VERSION_ID.fullmatch(version) or not (CONFIG_HISTORY / f"{version}.yaml").exists():
+            raise web.HTTPNotFound(text="No such version")
+        return web.json_response({"text": (CONFIG_HISTORY / f"{version}.yaml").read_text(encoding="utf8")})
+    new = str(body.get("text") or "")
+    if len(new) > 1_000_000:
+        raise web.HTTPBadRequest(text="That is too large for unshackle.yaml")
+    if body.get("base") != fingerprint(text):
+        raise web.HTTPConflict(text="unshackle.yaml changed since you opened it (Settings, CDM writes to it too): open it again")
+    if problem := yaml_problem(new):
+        raise web.HTTPBadRequest(text=problem)
+    if new == text:
+        return web.json_response({"saved": False, "base": fingerprint(text), "versions": config_versions(), "restart": False})
+    return web.json_response(await asyncio.to_thread(save_unshackle_yaml, path, text, new))
+
+
+MAINTENANCE = {"clear-cache", "clear-temp", "refresh-services"}  # serve's own /api/maintenance actions
+
+
+async def unshackle_maintenance(request):
+    action = request.match_info["action"]
+    if action not in MAINTENANCE:
+        raise web.HTTPNotFound(text="Unknown maintenance action")
+    try:
+        result = await asyncio.to_thread(UNSHACKLE.call, "POST", f"/api/maintenance/{action}")
+    except UnshackleError as e:
+        raise web.HTTPBadGateway(text=str(e))
+    if action == "refresh-services":
+        UNSHACKLE.configure(sonarr_sync.SETTINGS)  # forget the services it listed before
+    return web.json_response(result)
+
+
+async def cancel_job(request):
+    job_id = request.match_info["job_id"]
+    if not re.fullmatch(r"[0-9a-f-]{8,64}", job_id):
+        raise web.HTTPBadRequest(text="Unknown job")
+    try:
+        await asyncio.to_thread(UNSHACKLE.cancel, job_id)
+    except UnshackleError as e:
+        raise web.HTTPBadGateway(text=str(e))
+    return web.json_response({"cancelling": True})
+
+
+async def unshackle_log(_):
+    if UNSHACKLE.mode == "remote":
+        raise web.HTTPBadRequest(text="A remote unshackle serve keeps its log where it runs")
+    return web.json_response({"log": UNSHACKLE.local.tail(400, "\n")})
+
+
+async def stop_run(request):
+    run_id = request.match_info["run_id"]
+    if not RUN_ID.fullmatch(run_id):
+        raise web.HTTPBadRequest(text="Unknown download")
+    try:
+        job_id = json.loads((sonarr_sync.RUNS_DIR / f"{run_id}.json").read_text()).get("job_id")
+    except (OSError, ValueError):
+        job_id = None
+    if not job_id or run_id not in sonarr_sync.EpisodeRun.active:
+        raise web.HTTPConflict(text="This download is not running")
+    try:
+        await asyncio.to_thread(UNSHACKLE.cancel, job_id)
+    except UnshackleError as e:
+        raise web.HTTPBadGateway(text=str(e))
+    return web.json_response({"stopping": True})
+
+
+async def stop_job(request):
+    """Stop a job: the one downloading is cancelled and its queued episodes are, as each one's cross does;
+    one being joined, named or imported finishes (half an import in Sonarr is worse than one more episode).
+    Nothing marks the job itself: an episode can be queued again in it."""
+    batch = request.match_info["batch"]
+    if not BATCH_ID.fullmatch(batch):
+        raise web.HTTPBadRequest(text="Unknown job")
+    sonarr_sync.pause_job(batch, False)  # a paused job stops too: its loop wakes to skip what was cancelled
+    for episode_id, card in list(sonarr_sync.waiting.items()):
+        if card.get("batch") == batch and sonarr_sync.waiting.pop(episode_id, None):
+            sonarr_sync.unqueued.add(episode_id)
+            await asyncio.to_thread(sonarr_sync.cancel_queued, card)
+    cancelled = 0
+    for c in await asyncio.to_thread(run_cards):
+        if c.get("batch") == batch and c["outcome"] == "running" and c.get("job_id") and c.get("step") in ("queued", "downloading"):
+            try:
+                await asyncio.to_thread(UNSHACKLE.cancel, c["job_id"])
+            except UnshackleError as e:
+                raise web.HTTPBadGateway(text=str(e))
+            cancelled += 1
+    return web.json_response({"cancelled": cancelled})
+
+
+async def unqueue(request):
+    """Take an episode out of its job's queue: it is skipped when its turn comes."""
+    episode_id = int(request.match_info["episode_id"])
+    card = sonarr_sync.waiting.pop(episode_id, None)
+    if card is None:
+        raise web.HTTPConflict(text="This episode has already started")
+    sonarr_sync.unqueued.add(episode_id)
+    await asyncio.to_thread(sonarr_sync.cancel_queued, card)
+    return web.json_response({"unqueued": episode_id})
+
+
+async def pause_job(request):
+    """Pause a job (the download going on ends, the next one waits) or let it go on."""
+    batch = request.match_info["batch"]
+    if not BATCH_ID.fullmatch(batch):
+        raise web.HTTPBadRequest(text="Unknown job")
+    if batch not in sonarr_sync.running_jobs:
+        raise web.HTTPConflict(text="This job is over")
+    sonarr_sync.pause_job(batch, request.match_info["action"] == "pause")
+    return web.json_response({"paused": batch in sonarr_sync.paused_jobs})
+
+
+async def join_job(batch: str, episode_id: int) -> bool:
+    """The episode at the end of its running job's queue (or in its place, if cancelled before its turn)."""
+    if batch not in sonarr_sync.running_jobs:
+        return False
+    try:
+        ep = (await asyncio.to_thread(sonarr_sync.chosen_episodes, [episode_id]))[0]
+    except (requests.RequestException, IndexError):
+        return False
+    show = read_config()["series"].get(ep["series"]["tvdbId"]) or {}
+    return bool(show.get("service")) and sonarr_sync.add_to_job(batch, ep, show)
+
+
+async def requeue(request):
+    """A cancelled episode queued again: back in its job's queue while the job takes episodes, else it starts
+    on its own in that job."""
+    episode_id = int(request.match_info["episode_id"])
+    body = await json_object(request)
+    batch, run_id = str(body.get("batch") or ""), str(body.get("run") or "")
+    if not BATCH_ID.fullmatch(batch) or not RUN_ID.fullmatch(run_id):
+        raise web.HTTPBadRequest(text="Unknown job")
+    card = sonarr_sync.RUNS_DIR / f"{run_id}.json"
+    try:
+        cancelled = json.loads(card.read_text())
+    except (OSError, ValueError):
+        raise web.HTTPConflict(text="This episode is not cancelled any more")
+    if cancelled.get("outcome") != "cancelled" or cancelled.get("episodeId") != episode_id or cancelled.get("batch") != batch:
+        raise web.HTTPConflict(text="This episode is not cancelled any more")
+    card.unlink(missing_ok=True)  # queued again: its "cancelled" card goes
+    if not await join_job(batch, episode_id):  # its job took its last episode: it starts on its own, in that job
+        run_sync([episode_id], kind="manual", batch=batch)
+    return web.json_response({"queued": episode_id})
+
+
+def forget_runs(keep) -> int:
+    """Delete finished attempts from the history (card and log), all but those `keep` says; never a running one."""
+    gone = 0
+    for card in sonarr_sync.RUNS_DIR.glob("*.json"):
+        try:
+            c = json.loads(card.read_text())
+        except (OSError, ValueError):
+            continue
+        if card.stem in sonarr_sync.EpisodeRun.active or not c.get("ended") or keep(c):
+            continue
+        for path in sonarr_sync.RUNS_DIR.glob(f"{card.stem}.*"):
+            path.unlink(missing_ok=True)
+        gone += 1
+    return gone
+
+
+async def answer_run(request):
+    """The person's answer to the question a running download asks (its input_prompt), passed to Unshackle."""
+    run_id = request.match_info["run_id"]
+    if not RUN_ID.fullmatch(run_id):
+        raise web.HTTPBadRequest(text="Unknown download")
+    answer = str((await json_object(request)).get("response") or "").strip()
+    if not answer or len(answer) > 200:
+        raise web.HTTPBadRequest(text="Type the answer first")
+    try:
+        card = json.loads((sonarr_sync.RUNS_DIR / f"{run_id}.json").read_text())
+    except (OSError, ValueError):
+        raise web.HTTPNotFound(text="No such download") from None
+    if run_id not in sonarr_sync.EpisodeRun.active or not card.get("prompt") or not card.get("job_id"):
+        raise web.HTTPConflict(text="This download asks nothing now")
+    try:
+        await asyncio.to_thread(UNSHACKLE.call, "POST", f"/api/download/jobs/{card['job_id']}/input", json={"response": answer})
+    except UnshackleError as e:
+        raise web.HTTPBadGateway(text=str(e))
+    return web.json_response({"sent": True})
+
+
+async def delete_run(request):
+    run_id = request.match_info["run_id"]
+    if not RUN_ID.fullmatch(run_id):
+        raise web.HTTPBadRequest(text="Unknown download")
+    if run_id in sonarr_sync.EpisodeRun.active:
+        raise web.HTTPConflict(text="This download is running: stop it first")
+    if not await asyncio.to_thread(forget_runs, lambda c: c["id"] != run_id):
+        raise web.HTTPNotFound(text="No such download in the history")
+    return web.json_response({"deleted": 1})
+
+
+async def clear_runs(request):
+    what = (await json_object(request)).get("what")
+    if what not in ("failed", "all"):
+        raise web.HTTPBadRequest(text="Clear either the failed downloads or all of them")
+    keep = (lambda c: c.get("outcome") != "failed") if what == "failed" else (lambda c: False)
+    return web.json_response({"deleted": await asyncio.to_thread(forget_runs, keep)})
+
+
+def latest_runs() -> dict[tuple[int, str], str]:
+    """Each episode's latest download attempt, (tvdbId, "S01E02") -> its id: the Schedule's way to it in Activity."""
+    latest: dict[tuple[int, str], str] = {}
+    for card in run_cards() if sonarr_sync.RUNS_DIR.exists() else []:  # newest first
+        if not card.get("waiting"):  # a stub waiting its turn has no detail yet
+            latest.setdefault((card["tvdbId"], card["sxxeyy"]), card["id"])
+    return latest
+
+
+def describe_episode(ep: dict, config: dict, now: datetime, all_series: bool = False, runs: dict | None = None) -> dict | None:
+    """An episode as the Schedule shows it; for Unshackle's series, with the command it will run."""
+    show = config["series"].get(ep["series"]["tvdbId"])
+    base = {
+        "episodeId": ep.get("id"),  # for the Schedule's Download now
+        "tvdbId": ep["series"]["tvdbId"],
+        "series": ep["series"]["title"],
+        "sxxeyy": f"S{ep['seasonNumber']:02}E{ep['episodeNumber']:02}",
+        "title": ep.get("title"),
+        "airDateUtc": ep.get("airDateUtc"),
+        "hasFile": ep.get("hasFile"),
+    }
+    if not show or not show.get("service") or not show.get("title"):
+        # Sonarr's calendar: shown too, so the series can be added to Unshackle from there.
+        return {**base, "managed": False} if all_series else None
+    service_sxxeyy = sonarr_sync.service_episode(show, ep["seasonNumber"], ep["episodeNumber"])
+    folder = sonarr_sync.episode_folder(ep)
+    aired = sonarr_sync.parse_time(ep["airDateUtc"]) if ep.get("airDateUtc") else None
+    return {
+        **base,
+        "managed": True,
+        "service": show["service"],
+        "serviceEpisode": service_sxxeyy,
+        "waitingImport": folder.exists(),
+        "firstTry": first_try(show, ep, aired, now),
+        "release": (slot := sonarr_sync.release_slot(show, ep)) and slot.isoformat(),  # past or not: the Schedule's order
+        "command": sonarr_sync.unshackle_command(show, config, service_sxxeyy, folder) if service_sxxeyy else None,
+        "run": (runs or {}).get((base["tvdbId"], base["sxxeyy"])),  # its latest attempt, to see in Activity
+    }
+
+
+async def schedule(_):
+    """When the next sync runs, and the late episodes it will retry."""
+    config = read_config()
+    now = datetime.now(timezone.utc)
+    def wanted():
+        plans = sonarr_sync.broadcast_plans(config)
+        dated = sonarr_sync.broadcast_dated(plans)  # dated by its own schedule: Sonarr's date set aside
+        return [ep for ep in sonarr_sync.missing_episodes() if ep["id"] not in dated] + [
+            ep for ep in sonarr_sync.broadcast_episodes(config, now - timedelta(days=sonarr_sync.AUTO_DAYS + 1), now, plans)
+            if not ep.get("hasFile") and ep.get("monitored", True) and ep["series"].get("monitored", True)]
+    try:
+        missing = await asyncio.to_thread(wanted)
+    except requests.RequestException as e:
+        raise web.HTTPBadGateway(text=f"Sonarr is unreachable: {no_credentials(e)}")
+    runs = await asyncio.to_thread(latest_runs)
+    return web.json_response({
+        "nextSync": next_sync(now).isoformat(),
+        "missing": await asyncio.to_thread(lambda: [  # each looks for its folder on the downloads mount
+            d for ep in missing
+            if sonarr_sync.wanted_automatically(config["series"].get(ep["series"]["tvdbId"]) or {}, ep, now)
+            and (d := describe_episode(ep, config, now, runs=runs))
+        ]),
+    })
+
+
+async def calendar(request):
+    """Sonarr's calendar from a day (local time) for some days: the Schedule pages through it."""
+    try:
+        first = datetime.fromisoformat(request.query.get("start", "")).date()
+        days = min(max(int(request.query.get("days", "14")), 1), 62)
+    except ValueError:
+        raise web.HTTPBadRequest(text="start must be a YYYY-MM-DD date and days a number")
+    start = datetime.combine(first, datetime.min.time(), sonarr_sync.LOCAL)
+    config = read_config()
+    now = datetime.now(timezone.utc)
+    try:
+        plans = await asyncio.to_thread(sonarr_sync.broadcast_plans, config)
+        dated = sonarr_sync.broadcast_dated(plans)  # dated by its own schedule: Sonarr's date set aside
+        episodes = [ep for ep in await asyncio.to_thread(
+            sonarr_sync.sonarr_get, "calendar",
+            start=start.isoformat(), end=(start + timedelta(days=days)).isoformat(), includeSeries="true",
+        ) if ep["id"] not in dated]
+        episodes += sonarr_sync.broadcast_episodes(config, start, start + timedelta(days=days), plans)
+    except requests.RequestException as e:
+        raise web.HTTPBadGateway(text=f"Sonarr is unreachable: {no_credentials(e)}")
+    runs = await asyncio.to_thread(latest_runs)
+    return web.json_response(await asyncio.to_thread(lambda: [  # each looks for its folder on the downloads mount
+        d for ep in sorted(episodes, key=lambda e: e.get("airDateUtc") or "")
+        if (d := describe_episode(ep, config, now, all_series=True, runs=runs))
+    ]))
+
+
+NETWORKS_CACHE = sonarr_sync.DATA / "tmdb_networks.json"
+NETWORKS_DAYS = 7  # streaming catalogues move faster than networks
+
+
+def logo_url(path: str | None) -> str | None:
+    return f"https://image.tmdb.org/t/p/w92{path}" if path else None
+
+
+def tmdb_network(tmdb_id: int) -> dict:
+    """The series' original network on TMDB (FX, Apple TV+…) and, per country, the
+    subscription services that carry it: one request with append_to_response."""
+    r = requests.get(
+        f"https://api.themoviedb.org/3/tv/{tmdb_id}",
+        params={"api_key": tmdb_key(), "append_to_response": "watch/providers"},
+        timeout=15,
+    )
+    r.raise_for_status()
+    data = r.json()
+    first = (data.get("networks") or [{}])[0]
+    by_country = (data.get("watch/providers") or {}).get("results") or {}
+    return {
+        "name": first.get("name"),
+        "logo": logo_url(first.get("logo_path")),
+        "network_country": first.get("origin_country") or "",  # M6: FR, a channel watched there anyway
+        "providers": {
+            country: [{"name": p["provider_name"], "logo": logo_url(p.get("logo_path"))}
+                      for p in (offers.get("flatrate") or []) + (offers.get("free") or []) + (offers.get("ads") or [])]
+            for country, offers in by_country.items()
+        },
+    }
+
+
+async def networks(request):
+    """Network and local services of the series asked for, cached a week: TMDB is asked once per series."""
+    try:
+        ids = sorted({int(i) for i in request.query.get("tmdb", "").split(",") if i})[:200]
+    except ValueError:
+        raise web.HTTPBadRequest(text="tmdb must be comma-separated numbers")
+    country = sonarr_sync.SETTINGS["country"]
+    cache = read_json(NETWORKS_CACHE, {})
+    fresh_after = (datetime.now(timezone.utc) - timedelta(days=NETWORKS_DAYS)).isoformat()
+    todo = [i for i in ids if (cache.get(str(i)) or {}).get("checked", "") < fresh_after
+            or "providers" not in cache[str(i)] or "network_country" not in cache[str(i)]]  # kept before it was asked
+    if todo and tmdb_key():
+        limit = asyncio.Semaphore(8)  # polite to TMDB when a new calendar brings many series
+
+        async def one(tmdb_id):
+            async with limit:
+                try:
+                    found = await asyncio.to_thread(tmdb_network, tmdb_id)
+                except requests.RequestException:
+                    return  # try again next time
+                cache[str(tmdb_id)] = {**found, "checked": datetime.now(timezone.utc).isoformat()}
+
+        await asyncio.gather(*(one(i) for i in todo))
+        write_atomic(NETWORKS_CACHE, json.dumps(cache))
+    return web.json_response({
+        i: {"name": cache[str(i)].get("name"), "logo": cache[str(i)].get("logo"), "country": country,
+            "network_country": cache[str(i)].get("network_country") or "",
+            "providers": (cache[str(i)].get("providers") or {}).get(country, [])}
+        for i in ids if str(i) in cache and "providers" in cache[str(i)]
+    })
+
+
+def running() -> bool:
+    sync_threads[:] = [t for t in sync_threads if t.is_alive()]
+    return bool(sync_threads)
+
+
+ASKED_AT_ONCE = 20  # downloads asked by hand or by the API and not over yet: each is a thread
+
+
+def room_for_one_more() -> None:
+    """Refuse a download asked on top of too many still going: a thread each, a client in a loop would pile them up."""
+    if running() and len(sync_threads) >= ASKED_AT_ONCE:
+        raise web.HTTPTooManyRequests(text="Too many downloads asked at once: wait for some to end")
+
+
+def run_sync(episode_ids: list[int] | None = None, replace: bool = False, kind: str = "manual", numbering: dict | None = None,
+             batch: str | None = None) -> threading.Thread:
+    """A sync in the background: every missing episode, or the ones given. Each episode has
+    its own lock, so these runs never download the same one twice."""
+    def work():
+        global last_sync
+        try:
+            sonarr_sync.main(episode_ids, replace=replace, kind=kind, numbering=numbering, batch=batch)
+        except Exception as e:  # notified already; the page shows the history
+            print(f"Sync stopped: {type(e).__name__}: {e}", flush=True)
+        finally:
+            last_sync = datetime.now(timezone.utc)
+
+    thread = threading.Thread(target=work, daemon=True)
+    thread.start()
+    sync_threads.append(thread)
+    return thread
+
+
+async def start_sync(_):
+    if running():
+        raise web.HTTPConflict(text="A sync is already running")
+    run_sync()
+    return web.json_response({"running": True})
+
+
+CODECS = {"h264": "H.264", "x264": "H.264", "avc": "H.264", "h265": "H.265", "x265": "H.265", "hevc": "H.265",
+          "av1": "AV1", "vp9": "VP9", "mpeg2": "MPEG-2", "eac3": "E-AC-3", "ac3": "AC-3", "dts": "DTS", "truehd": "TrueHD"}
+def seconds(run_time: str) -> int:
+    """Sonarr's run time, "2:03:22" or "43:10", in seconds."""
+    total = 0
+    for part in (run_time or "").split(":"):
+        total = total * 60 + int(part) if part.isdigit() else total
+    return total
+
+
+STANDARD_HEIGHTS = (4320, 2160, 1440, 1080, 720, 576, 480, 360)
+
+
+def resolution_height(width: int, height: int) -> int | None:
+    """The height a picture counts as: a wide one (Apple TV+'s 1920x960, a film's 1920x800) is 1080p all the
+    same, as its width says; within 5% of a standard height, that height (1916x1036: 1080)."""
+    effective = max(height, round(width * 9 / 16))
+    return next((s for s in STANDARD_HEIGHTS if effective >= s * 0.95), effective) or None
+
+
+def file_summary(f: dict) -> dict:
+    """What the page shows under an episode on disk: from Sonarr's media info. Its bitrates are
+    often 0 (a tag the MKV lacks), so the file's average bitrate stands in for the video's."""
+    mi = f.get("mediaInfo") or {}
+    langs = lambda text: [sonarr_sync.LANGS.get(x.strip().lower(), x.strip().lower()) for x in (text or "").split("/") if x.strip() and x.strip().lower() != "und"]
+    width, _, height = str(mi.get("resolution") or "").partition("x")
+    length = seconds(mi.get("runTime"))
+    return {
+        "resolution": mi.get("resolution") or "",
+        "height": resolution_height(int(width) if width.isdigit() else 0, int(height) if height.isdigit() else 0),  # its class: 1920x960 is 1080
+        "video": CODECS.get(str(mi.get("videoCodec") or "").lower(), mi.get("videoCodec") or ""),
+        "videoBitrate": mi.get("videoBitrate") or None,
+        "averageBitrate": round(f["size"] * 8 / length) if f.get("size") and length else None,
+        "audio": CODECS.get(str(mi.get("audioCodec") or "").lower(), mi.get("audioCodec") or ""),
+        "channels": mi.get("audioChannels") or None,
+        "audioLanguages": list(dict.fromkeys(langs(mi.get("audioLanguages")))),
+        "subtitles": list(dict.fromkeys(langs(mi.get("subtitles")))),
+        "size": f.get("size"),
+        "runTime": mi.get("runTime") or "",
+        "quality": ((f.get("quality") or {}).get("quality") or {}).get("name", ""),
+        "releaseGroup": f.get("releaseGroup") or "",
+    }
+
+
+async def episodes(request):
+    series_id = request.match_info["series_id"]
+    try:
+        eps, files = await asyncio.gather(
+            asyncio.to_thread(sonarr_sync.sonarr_get, "episode", seriesId=series_id),
+            asyncio.to_thread(sonarr_sync.sonarr_get, "episodefile", seriesId=series_id),
+        )
+    except requests.RequestException as e:
+        raise web.HTTPBadGateway(text=f"Sonarr is unreachable: {no_credentials(e)}")
+    by_id = {f["id"]: file_summary(f) for f in files}
+    return web.json_response([
+        {**{k: e.get(k) for k in ("id", "seasonNumber", "episodeNumber", "title", "airDateUtc", "hasFile", "monitored")},
+         "file": by_id.get(e.get("episodeFileId")) if e.get("hasFile") else None}
+        for e in sorted(eps, key=lambda e: (e["seasonNumber"], e["episodeNumber"]))
+    ])
+
+
+# ---- Test a series: what the service lists, set against Sonarr, before a release night ----
+
+def suggest_season_map(sonarr_eps: list[dict], service_eps: list[dict]) -> dict[int, int]:
+    """Sonarr season -> the service's, where they differ. By air dates when the service gives
+    them (the season sharing the most dates, within 2 days); else the latest seasons in order."""
+    from datetime import date
+    def days(eps, key):
+        by = {}
+        for e in eps:
+            try:
+                by.setdefault(e["season"], set()).add(date.fromisoformat(str(e[key])[:10]).toordinal())
+            except (KeyError, TypeError, ValueError):
+                continue
+        return by
+    ours, theirs = days(sonarr_eps, "air_date"), days(service_eps, "air_date")
+    service_seasons = sorted({e["season"] for e in service_eps if e.get("season") is not None})
+    found: dict[int, int] = {}
+    if theirs:
+        for season, dates in ours.items():
+            scores = {t: sum(any(abs(d - x) <= 2 for x in xs) for d in dates) for t, xs in theirs.items()}
+            best = max(scores, key=scores.get, default=None)
+            if best is not None and scores[best] >= min(2, len(dates)) and best != season:
+                found[season] = best
+    if not found and service_seasons:
+        mine = sorted({e["season"] for e in sonarr_eps if e["season"] > 0 and e.get("air_date")})
+        if mine and mine[-1] not in service_seasons:  # numbered apart: pair the latest ones, newest first
+            for a, b in zip(reversed(mine), reversed(service_seasons)):
+                if a != b:
+                    found[a] = b
+    return found
+
+
+# ponytail: the main language where you watch; a country missing here reads its services' titles in English
+COUNTRY_LANGUAGE = {"FR": "fr", "BE": "fr", "CH": "fr", "LU": "fr", "CA": "fr", "DE": "de", "AT": "de", "ES": "es",
+                    "MX": "es", "AR": "es", "IT": "it", "NL": "nl", "PT": "pt", "BR": "pt", "PL": "pl", "SE": "sv",
+                    "DK": "da", "NO": "no", "FI": "fi", "JP": "ja", "KR": "ko"}
+
+
+def tmdb_episodes(tmdb_id: int) -> list[dict]:
+    """The series' episodes on TMDB, each named in every language that may meet: the series' own, the one where
+    you watch (a service names episodes in it: Disney+ France gives Futurama French titles) and English
+    (Sonarr's). [{"names": [...], "air_date", "season", "number"}]: TMDB's episode ties its names together, its date
+    (and, for two aired the same day, its number) to Sonarr's."""
+    get = lambda **params: requests.get(f"https://api.themoviedb.org/3/tv/{tmdb_id}", params={"api_key": tmdb_key(), **params}, timeout=20)
+    r = get()
+    r.raise_for_status()
+    show = r.json()
+    seasons = [x["season_number"] for x in show.get("seasons") or []]
+    languages = dict.fromkeys([show.get("original_language") or "en", COUNTRY_LANGUAGE.get(sonarr_sync.SETTINGS.get("country", ""), "en"), "en"])
+    episodes: dict[tuple, dict] = {}
+    for language in languages:
+        for i in range(0, len(seasons), 20):  # TMDB appends 20 seasons at most to one request
+            r = get(language=language, append_to_response=",".join(f"season/{n}" for n in seasons[i:i + 20]))
+            r.raise_for_status()
+            for n in seasons[i:i + 20]:
+                for e in (r.json().get(f"season/{n}") or {}).get("episodes") or []:
+                    ep = episodes.setdefault((n, e.get("episode_number")), {"names": [], "air_date": e.get("air_date"),
+                                                                            "season": n, "number": e.get("episode_number")})
+                    if e.get("name") and e["name"] not in ep["names"]:
+                        ep["names"].append(e["name"])
+    return list(episodes.values())
+
+
+def plain_title(text: str) -> str:
+    """A title to compare: no accents, case, punctuation or "(1/2)"."""
+    text = unicodedata.normalize("NFKD", text or "").encode("ascii", "ignore").decode().lower()
+    return re.sub(r"[^a-z0-9]+", " ", re.sub(r"\(\s*\d+\s*/\s*\d+\s*\)", "", text)).strip()
+
+
+GENERIC_TITLE = re.compile(r"(tba|tbd|episode|episodio|folge|aflevering)( \d+)?")
+
+
+def usable_title(text: str | None) -> str:
+    """A title worth comparing, plain; "" for none or a placeholder ("TBA", "Episode 3"). An episode
+    number ahead of the name goes (Molotov's "E6 Franck Dubosc")."""
+    plain = plain_title(text or "")
+    if GENERIC_TITLE.fullmatch(plain):
+        return ""
+    return re.sub(r"^e\d+ (?=\w)", "", plain)
+
+
+TVDB_TITLES = sonarr_sync.DATA / "tvdb_titles.json"
+TVDB_TITLES_DAYS = 7
+TVDB_LANGUAGES = {"fr": "fra", "de": "deu", "es": "spa", "it": "ita", "nl": "nld", "pt": "por", "pl": "pol", "sv": "swe",
+                  "da": "dan", "no": "nor", "fi": "fin", "ja": "jpn", "ko": "kor"}
+EPISODE_ROW = re.compile(r'episode-label">\s*(S\d+E\d+)\s*</span>\s*<a href="[^"]+">\s*(.*?)\s*</a>', re.S)
+
+
+def tvdb_titles(tvdb_id: int) -> dict[str, str]:
+    """The episode titles TheTVDB's website gives in the language where you watch ("S04E04": "Orelsan"), kept a
+    week; no API key. Sonarr's come in English only, "TBA" for a series TVDB names in French alone. A page
+    TVDB changes finds nothing: never worse than without."""
+    language = TVDB_LANGUAGES.get(COUNTRY_LANGUAGE.get(sonarr_sync.SETTINGS.get("country", ""), ""))
+    if not language:
+        return {}
+    cache = read_json(TVDB_TITLES, {})
+    key, hit = f"{tvdb_id}:{language}", None
+    hit = cache.get(key)
+    if hit and datetime.now(timezone.utc) - datetime.fromisoformat(hit["checked"]) < timedelta(days=TVDB_TITLES_DAYS):
+        return hit["titles"]
+    get = lambda url, **params: requests.get(url, params=params, timeout=20, headers={"User-Agent": "Mozilla/5.0 Unshacklarr"})
+    series = get(f"https://thetvdb.com/dereferrer/series/{int(tvdb_id)}")  # to its page, /series/<slug>
+    series.raise_for_status()
+    page = get(series.url.rstrip("/") + "/allseasons/official", lang=language)
+    page.raise_for_status()
+    titles = {code: html.unescape(re.sub(r"\s+", " ", name)).strip() for code, name in EPISODE_ROW.findall(page.text)}
+    cache[key] = {"checked": datetime.now(timezone.utc).isoformat(), "titles": titles}
+    write_atomic(TVDB_TITLES, json.dumps(cache))
+    return titles
+
+
+def same_title(a: str, b: str) -> bool:
+    """Two plain titles naming the same episode: a longer one when close (accents, a typo) or one holds the
+    other; a short one (a country, under 8 letters) when the same, or spelt alike from the same start (Serbie,
+    Serbia) but never merely close (Mali, Malibu; Chili, Chine)."""
+    ratio = difflib.SequenceMatcher(None, a, b).ratio()
+    if min(len(a), len(b)) < 8:
+        return a == b or (a[:4] == b[:4] and ratio >= 0.82)
+    return a in b or b in a or ratio >= 0.85
+
+
+def titles_of(sonarr_eps: list[dict], tmdb_eps: list[dict], own: bool = True) -> dict[int, set]:
+    """Every title a Sonarr episode goes by, plain: Sonarr's (unless own is false), and TMDB's in each language
+    for the episode TMDB airs that day; two aired the same day (Futurama's S11E01 and E02) are told apart by
+    TMDB's number."""
+    by_date: dict[str, list[dict]] = {}
+    for e in sonarr_eps:
+        if e.get("airDate"):
+            by_date.setdefault(e["airDate"], []).append(e)
+    titles = {e["id"]: {usable_title(e.get("title"))} if own else set() for e in sonarr_eps}
+    for t in tmdb_eps:
+        if t.get("episodeId") in titles:  # a title for that very episode (TVDB's website, in your language)
+            titles[t["episodeId"]] |= {usable_title(n) for n in t.get("names") or []}
+            continue
+        same_day = by_date.get(t.get("air_date") or "") or []
+        if len(same_day) > 1:
+            same_day = [e for e in same_day if (e.get("seasonNumber"), e.get("episodeNumber")) == (t.get("season"), t.get("number"))]
+        if len(same_day) == 1:
+            titles[same_day[0]["id"]] |= {usable_title(n) for n in t.get("names") or [t.get("name")]}
+    return {id_: {t for t in names if t} for id_, names in titles.items()}
+
+
+def match_by_title(service_eps: list[dict], sonarr_eps: list[dict], tmdb_eps: list[dict]) -> dict[str, dict]:
+    """The service's episodes found in Sonarr by their title: service episode ("S26E11", or "S26E12" for all
+    its parts) -> {"episodeId", "name"}. The title is looked for in Sonarr's own titles (TVDB's) and in TMDB's,
+    whose air date gives the episode in Sonarr. A title that fits two episodes, or that two of the service's
+    episodes share, finds nothing."""
+    named = [(title, id_) for id_, titles in titles_of(sonarr_eps, tmdb_eps).items() for title in titles]
+    key = lambda t: f"S{t['season']:02}E{t['number']:02}"
+    keys_by_name: dict[str, set] = {}
+    for t in service_eps:
+        keys_by_name.setdefault(usable_title(t.get("name")), set()).add(key(t))
+    found: dict[str, list] = {}
+    for t in service_eps:
+        name = usable_title(t.get("name"))
+        if not name or len(keys_by_name[name]) > 1:
+            continue
+        ids = {id_ for other, id_ in named if same_title(name, other)}
+        if len(ids) == 1:
+            found.setdefault(key(t), []).append((t.get("part"), ids.pop(), t.get("name")))
+    matches = {}
+    for k, hits in found.items():
+        if len({h[1] for h in hits}) == 1:  # every part of it: the same Sonarr episode, taken whole
+            matches[k] = {"episodeId": hits[0][1], "name": re.sub(r"\s*\(\s*\d+\s*/\s*\d+\s*\)$", "", (hits[0][2] or "")[:300].rstrip())}
+    claims: dict[int, int] = {}
+    for m in matches.values():
+        claims[m["episodeId"]] = claims.get(m["episodeId"], 0) + 1
+    return {k: m for k, m in matches.items() if claims[m["episodeId"]] == 1}  # one Sonarr episode, two of theirs: neither
+
+
+def probe_series(show: dict, series_id: int, title: str = "") -> dict:
+    """List the series on its service (nothing downloaded) and check the next episodes against Sonarr."""
+    config = read_config()
+    dl, own = sonarr_sync.stacked(show, config)
+    params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy")}
+    params.update(options.to_params(own, options.service_specs(sonarr_sync.service_entry(show["service"]))))
+    titles = UNSHACKLE.call("POST", "/api/list-titles", json={**params, "service": show["service"], "title_id": str(show["title"])})["titles"]
+    service_eps = [t for t in titles if t.get("type") == "episode"]
+    by_key = {}
+    for t in service_eps:
+        key = f"S{t['season']:02}E{t['number']:02}" + (f".{t['part']}" if t.get("part") else "")
+        by_key[key] = t
+        by_key.setdefault(f"S{t['season']:02}E{t['number']:02}", t)  # a split episode answers to its plain number too
+    every = sonarr_sync.sonarr_get("episode", seriesId=series_id) if series_id else []
+    sonarr = [e for e in every if e["seasonNumber"] > 0]
+    sonarr_eps = [{"season": e["seasonNumber"], "air_date": (e.get("airDateUtc") or "")[:10] or None} for e in sonarr]
+    now = datetime.now(timezone.utc).isoformat()
+    aired = sorted((e for e in sonarr if e.get("airDateUtc") and e["airDateUtc"] <= now), key=lambda e: e["airDateUtc"])
+    coming = sorted((e for e in sonarr if e.get("airDateUtc") and e["airDateUtc"] > now), key=lambda e: e["airDateUtc"])
+    name = show.get("file_name") or title
+    dots = lambda text: re.sub(r"[^\w-]+", ".", text).strip(".")
+    checks = []
+    for e in aired[-3:] + coming[:1]:
+        sxxeyy = f"S{e['seasonNumber']:02}E{e['episodeNumber']:02}"
+        theirs = sonarr_sync.service_episode(show, e["seasonNumber"], e["episodeNumber"])
+        hit = by_key.get(theirs or "")
+        checks.append({
+            "sxxeyy": sxxeyy, "service": theirs, "aired": e["airDateUtc"] <= now, "air": e["airDateUtc"], "hasFile": e.get("hasFile"),
+            "found": bool(hit), "name": (hit or {}).get("name"), "file": f"{dots(name)}.{sxxeyy}….mkv" if name else None,
+        })
+    seasons = {}
+    for t in service_eps:
+        seasons[t["season"]] = seasons.get(t["season"], 0) + 1
+    tmdb_eps = []  # with a TMDB key, its titles too; Sonarr's own always count
+    info = sonarr_sync.sonarr_get(f"series/{series_id}") if series_id else {}
+    if tmdb_key() and (tmdb_id := info.get("tmdbId")):
+        try:
+            tmdb_eps = tmdb_episodes(tmdb_id)
+        except requests.RequestException as e:
+            print(f"TMDB: no titles for {title}: {tmdb_error(e)}", flush=True)
+    local = {}  # TVDB's titles in your language, by Sonarr's episode: its own numbering, so no date is needed
+    if info.get("tvdbId"):
+        try:
+            names = tvdb_titles(info["tvdbId"])
+            local = {e["id"]: names[k] for e in every if (k := f"S{e['seasonNumber']:02}E{e['episodeNumber']:02}") in names}
+        except requests.RequestException as e:
+            print(f"TVDB: no titles for {title}: {type(e).__name__}", flush=True)
+    tmdb_eps = tmdb_eps + [{"episodeId": i, "names": [n]} for i, n in local.items()]
+    by_title = match_by_title(service_eps, every, tmdb_eps)  # the service's episodes found by their title, whatever their number
+    titled = {m["episodeId"]: key for key, m in by_title.items()}
+    # The service's titles meet ours often enough (a language in common): one that meets none of an episode's
+    # titles then says another episode, whatever its number (RMC+'s S01E03 "France" is not TVDB's "Mali").
+    names = [n for t in service_eps if (n := usable_title(t.get("name")))]
+    enough = lambda hits: hits >= 3 and hits >= len(names) / 4
+    comparable = enough(len(by_title))
+    # Sonarr's own titles weigh only in the service's language (French, J'irai dormir), not in English against
+    # a French Disney+ (Futurama): there, an episode with no French title from TMDB has nothing to contradict.
+    ours = {usable_title(e.get("title")) for e in every} - {""}
+    known = titles_of(every, tmdb_eps, own=enough(sum(any(same_title(n, o) for o in ours) for n in names)))
+    mapped = show.get("episode_map") or {}
+    available = {}  # every Sonarr episode the service has, for the Episodes tab: by number and title, by title, by number
+    for e in every:
+        sxxeyy = f"S{e['seasonNumber']:02}E{e['episodeNumber']:02}"
+        theirs = sonarr_sync.service_episode(show, e["seasonNumber"], e["episodeNumber"])
+        hit = by_key.get(theirs or "")
+        if e["id"] in titled:
+            key = titled[e["id"]]
+            available[e["id"]] = {"service": key, "name": by_title[key]["name"], "match": "title"}
+        elif hit and (theirs or "").split(".")[0] not in by_title:  # a number the title gives to another episode is not this one
+            theirs_name = usable_title(hit.get("name"))
+            clash = comparable and theirs_name and known[e["id"]] and not any(same_title(theirs_name, t) for t in known[e["id"]])
+            if sxxeyy in mapped or not clash:
+                available[e["id"]] = {"service": theirs, "name": hit.get("name")}
+    return {
+        "available": available,
+        "local_titles": local,  # TVDB's titles in your language, for the page to show over Sonarr's "TBA"
+        # everything the service lists, as it numbers it: what a download's own numbering can ask for
+        "titles": [{"key": f"S{t['season']:02}E{t['number']:02}", "part": t.get("part"), "name": t.get("name")} for t in service_eps],
+        "series": service_eps[0].get("series_title") if service_eps else None,
+        "count": len(service_eps),
+        "seasons": [{"season": k, "episodes": v} for k, v in sorted(seasons.items())],
+        "checks": checks,
+        "season_map": {str(k): v for k, v in suggest_season_map(sonarr_eps, service_eps).items()
+                       if (show.get("season_map") or {}).get(k) != v},
+    }
+
+
+SERVICE_LISTS = sonarr_sync.DATA / "service_lists.json"  # the last "What's on <service>?" of each series
+SERVICE_LIST_HOURS = 12
+
+
+def keep_service_list(tvdb: int, show: dict, found: dict) -> None:
+    lists = read_json(SERVICE_LISTS, {})
+    lists[str(tvdb)] = {"checked": datetime.now(timezone.utc).isoformat(), "service": show["service"], "title": str(show["title"]),
+                        "available": found["available"], "titles": found["titles"], "local_titles": found.get("local_titles") or {}}
+    write_atomic(SERVICE_LISTS, json.dumps(lists))
+
+
+async def service_list(request):
+    """The series' last check of what its service has, if recent and for the service and URL it has now."""
+    tvdb = request.match_info["tvdb"]
+    lists = read_json(SERVICE_LISTS, {})
+    hit, show = lists.get(tvdb), read_config()["series"].get(int(tvdb)) or {}
+    fresh = hit and hit["service"] == show.get("service") and hit["title"] == str(show.get("title")) and (
+        datetime.now(timezone.utc) - datetime.fromisoformat(hit["checked"]) < timedelta(hours=SERVICE_LIST_HOURS))
+    return web.json_response(hit if fresh else None)
+
+
+async def probe(request):
+    body = await json_object(request)
+    show = body.get("show") or {}
+    if not show.get("service") or not show.get("title"):
+        raise web.HTTPBadRequest(text="Pick a service and its URL first")
+    show = {**show, "season_map": {int(k): int(v) for k, v in (show.get("season_map") or {}).items()}}
+    try:
+        found = await asyncio.to_thread(probe_series, show, int(body.get("seriesId") or 0), str(body.get("title") or ""))
+        if body.get("tvdbId"):
+            await asyncio.to_thread(keep_service_list, int(body["tvdbId"]), show, found)
+        return web.json_response({**found, "checked": datetime.now(timezone.utc).isoformat()})
+    except UnshackleError as e:
+        raise web.HTTPBadGateway(text=str(e))
+    except requests.RequestException as e:
+        raise web.HTTPBadGateway(text=f"Sonarr is unreachable: {no_credentials(e)}")
+
+
+async def release_seen(request):
+    """When this series' episodes were seen coming out on the service, and the time that suggests."""
+    tvdb = int(request.match_info["tvdb"])
+    seen = read_json(sonarr_sync.SEEN_FILE, {})
+    entries = [e for e in seen.values() if e.get("tvdbId") == tvdb]
+    return web.json_response({"suggestion": sonarr_sync.suggest_release(entries), "seen": len(entries)})
+
+
+async def list_leftovers(_):
+    """What waits in the downloads folder, with why: the last run of that episode says it."""
+    items = await asyncio.to_thread(sonarr_sync.leftovers)
+    cards = await asyncio.to_thread(run_cards) if sonarr_sync.RUNS_DIR.exists() else []
+    for item in items:
+        last = next((c for c in cards if c.get("tvdbId") == item["tvdbId"] and c.get("sxxeyy") == item["sxxeyy"] and c.get("ended")), None)
+        item.update(series=(last or {}).get("series"), outcome=(last or {}).get("outcome"), cause=(last or {}).get("cause"),
+                    sonarr_path=sonarr_sync.seen_by("sonarr_downloads", sonarr_sync.DOWNLOADS / item["folder"]))
+    return web.json_response({"items": items, "days": sonarr_sync.SETTINGS.get("leftovers_days")})
+
+
+async def leftover_action(request):
+    body = await json_object(request)
+    folder = str(body.get("folder") or "")
+    try:
+        path = sonarr_sync.leftover_path(folder)
+        if request.match_info["action"] == "delete":
+            await asyncio.to_thread(sonarr_sync.shutil.rmtree, path, True)
+        else:
+            await asyncio.to_thread(sonarr_sync.import_leftover, folder)
+    except (RuntimeError, requests.RequestException) as e:
+        raise web.HTTPBadRequest(text=str(e))
+    return web.json_response({"done": True})
+
+
+# ---- Web Push: this device's notifications ----
+
+async def push_key(_):
+    return web.json_response({"key": await asyncio.to_thread(sonarr_sync.PUSH.public_key),
+                              "devices": len(sonarr_sync.PUSH.subscriptions())})
+
+
+async def push_subscribe(request):
+    body = await json_object(request)
+    try:
+        await asyncio.to_thread(sonarr_sync.PUSH.subscribe, body.get("subscription") or {}, str(body.get("label") or ""))
+    except ValueError as e:
+        raise web.HTTPBadRequest(text=str(e))
+    return web.json_response({"devices": len(sonarr_sync.PUSH.subscriptions())})
+
+
+async def push_unsubscribe(request):
+    await asyncio.to_thread(sonarr_sync.PUSH.unsubscribe, str((await json_object(request)).get("endpoint") or ""))
+    return web.json_response({"devices": len(sonarr_sync.PUSH.subscriptions())})
+
+
+# ---- The bell: every notification, the actions waiting for the person first ----
+
+async def inbox(_):
+    box = await asyncio.to_thread(sonarr_sync.read_inbox)
+    read_at = box.get("read_at") or ""
+    return web.json_response({"items": box["items"], "read_at": read_at, "unread": sum(1 for i in box["items"] if i["at"] > read_at)})
+
+
+async def inbox_action(request):
+    if request.match_info["action"] == "read":
+        change = lambda box: box.update(read_at=datetime.now(timezone.utc).isoformat())
+    else:  # clear
+        change = lambda box: box.update(items=[i for i in box["items"] if (i.get("action") and not i["action"].get("done"))])
+    await asyncio.to_thread(sonarr_sync.change_inbox, change)
+    return await inbox(request)
+
+
+async def push_test(request):
+    endpoint = str((await json_object(request)).get("endpoint") or "")
+    sent = await asyncio.to_thread(sonarr_sync.PUSH.send, "Unshacklarr test", "Notifications will show up here.", endpoint or None)
+    if not sent:
+        raise web.HTTPBadGateway(text=f"The message did not go through ({sonarr_sync.PUSH.last_error or 'this device is no longer subscribed'}): turn notifications off and on again")
+    return web.json_response({"sent": sent})
+
+
+def cdm_refusal(ids: list[int]) -> str:
+    """Why these episodes can't be downloaded: a service among theirs has no CDM at all. Sonarr is asked
+    which series they belong to only when a series' service lacks one."""
+    shows = {tvdb: s for tvdb, s in read_config()["series"].items() if s.get("service")}
+    lacking = {s["service"]: why for s in shows.values() if (why := sonarr_sync.no_cdm(s["service"]))}
+    if not lacking:
+        return ""
+    try:
+        episodes = sonarr_sync.chosen_episodes(ids)
+    except requests.RequestException as e:
+        raise web.HTTPBadGateway(text=f"Sonarr is unreachable: {no_credentials(e)}")
+    return next((lacking[show["service"]] for ep in episodes
+                 if (show := shows.get(ep["series"]["tvdbId"])) and show["service"] in lacking), "")
+
+
+async def download(request):
+    body = await json_object(request)
+    ids = body.get("episodeIds") or []
+    if not ids or not all(isinstance(i, int) and i > 0 for i in ids):
+        raise web.HTTPBadRequest(text="Pick at least one episode")
+    replace = body.get("replace") is True
+    # For this download only: numbering and file names that stand in for the series' own, not saved
+    numbering = check_numbering(body["numbering"], "this download") if isinstance(body.get("numbering"), dict) else None
+    print(f"Download asked for {len(ids)} episode{'s' if len(ids) > 1 else ''}{', replacing files on disk' if replace else ''}"
+          f"{', with its own numbering' if numbering is not None else ''}", flush=True)
+    batch = str(body.get("batch") or "")  # a retry from a job: it stays in that job
+    if batch and not BATCH_ID.fullmatch(batch):
+        raise web.HTTPBadRequest(text="Unknown job")
+    if why := await asyncio.to_thread(cdm_refusal, ids):
+        raise web.HTTPBadRequest(text=why)
+    if batch and len(ids) == 1 and await join_job(batch, ids[0]):
+        return web.json_response({"running": True})  # the job still runs: at the end of its queue, one download at a time
+    room_for_one_more()
+    run_sync(ids, replace=replace, kind="retry" if body.get("retry") is True else "manual", numbering=numbering, batch=batch or None)
+    return web.json_response({"running": True})
+
+
+RUN_ID = re.compile(r"\d{8}-\d{6}-\d{6}-\d+-S\d+E\d+")
+
+
+cards_read: tuple[int, list[dict]] = (0, [])
+
+
+def cards_on_disk() -> list[dict]:
+    """Every card in the history, newest first. Read again only once the folder changed (each card is
+    written whole and renamed in, which changes it), and always within 2 s of a change: a coarse clock
+    may not tell two saves apart. The page and the job terminal ask for them every few seconds."""
+    global cards_read
+    stamp = sonarr_sync.RUNS_DIR.stat().st_mtime_ns
+    if stamp != cards_read[0] or time.time_ns() - stamp < 2_000_000_000:
+        cards = []
+        for path in sorted(sonarr_sync.RUNS_DIR.glob("*.json"), reverse=True):
+            try:
+                cards.append(json.loads(path.read_text()))
+            except (OSError, ValueError):
+                continue  # gone meanwhile
+        cards_read = (stamp, cards)
+    return cards_read[1]
+
+
+def run_cards() -> list[dict]:
+    """Download attempts, newest first; one without an end that no run follows was cut off."""
+    cards = [card if card.get("ended") else {**card, "outcome": "running" if card["id"] in sonarr_sync.EpisodeRun.active else "interrupted"}
+             for card in cards_on_disk()]
+    return list(sonarr_sync.waiting.values()) + cards  # picked with others, waiting their turn
+
+
+def stats_of(cards: list[dict], now: datetime) -> dict:
+    """What the history adds up to: the last 30 days, 8 weeks of downloads, and each service."""
+    def when(c):
+        return datetime.fromisoformat(c["started"])
+    ended = [c for c in cards if c.get("ended") and c.get("outcome") in ("downloaded", "failed", "kept")]
+    recent = [c for c in ended if now - when(c) <= timedelta(days=30)]
+    took = lambda c: (datetime.fromisoformat(c["ended"]) - when(c)).total_seconds()
+    week0 = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
+    weeks = []
+    for i in range(7, -1, -1):
+        start = week0 - timedelta(weeks=i)
+        these = [c for c in ended if start <= when(c) < start + timedelta(weeks=1)]
+        weeks.append({"start": start.date().isoformat(), **{o: sum(c["outcome"] == o for c in these) for o in ("downloaded", "failed", "kept")}})
+    services = {}
+    for c in ended:
+        sv = services.setdefault(c["service"], {"service": c["service"], "downloaded": 0, "failed": 0, "kept": 0, "last_success": None, "took": []})
+        sv[c["outcome"]] += 1
+        if c["outcome"] == "downloaded":
+            sv["took"].append(took(c))
+            sv["last_success"] = max(sv["last_success"] or "", c["ended"])
+    for sv in services.values():
+        tries = sv["downloaded"] + sv["failed"]
+        sv["success"] = round(100 * sv["downloaded"] / tries) if tries else None
+        sv["average"] = round(sum(sv["took"]) / len(sv["took"])) if sv["took"] else None
+        del sv["took"]
+    done = [c for c in recent if c["outcome"] == "downloaded"]
+    tries = sum(c["outcome"] in ("downloaded", "failed") for c in recent)
+    return {
+        "month": {"downloaded": len(done), "failed": sum(c["outcome"] == "failed" for c in recent),
+                  "kept": sum(c["outcome"] == "kept" for c in recent),
+                  "success": round(100 * len(done) / tries) if tries else None,
+                  "average": round(sum(map(took, done)) / len(done)) if done else None},
+        "weeks": weeks,
+        "services": sorted(services.values(), key=lambda v: -(v["downloaded"] + v["failed"] + v["kept"])),
+        "since": min((c["started"] for c in ended), default=None),
+    }
+
+
+async def stats(_):
+    cards = await asyncio.to_thread(run_cards) if sonarr_sync.RUNS_DIR.exists() else []
+    return web.json_response(stats_of(cards, datetime.now(timezone.utc)))
+
+
+async def busy(_):
+    """How many downloads run and wait now: the menu's Activity says so, whatever page is open."""
+    return web.json_response({"running": len(sonarr_sync.EpisodeRun.active), "queued": len(sonarr_sync.waiting)})
+
+
+async def runs(_):
+    return web.json_response(await asyncio.to_thread(run_cards) if sonarr_sync.RUNS_DIR.exists() else [])
+
+
+async def runs_live(request):
+    """The downloads going on now, pushed as they change (server-sent events): Activity's bars move in real time."""
+    response = web.StreamResponse(headers={"Content-Type": "text/event-stream", "Cache-Control": "no-cache",
+                                           "X-Accel-Buffering": "no"})  # a reverse proxy must not hold it back
+    await response.prepare(request)
+    last, quiet = None, 0.0
+    try:
+        while True:
+            live = await asyncio.to_thread(live_cards)
+            data = json.dumps(live)
+            if data != last:
+                await response.write(f"data: {data}\n\n".encode())
+                last, quiet = data, 0.0
+            elif quiet >= 15:
+                await response.write(b": still here\n\n")  # keeps proxies from closing an idle stream
+                quiet = 0.0
+            await asyncio.sleep(0.5)
+            quiet += 0.5
+    except (ConnectionResetError, asyncio.CancelledError):
+        pass
+    return response
+
+
+def live_cards() -> list[dict]:
+    cards = []
+    for run_id in sorted(sonarr_sync.EpisodeRun.active, reverse=True):
+        try:
+            cards.append({**json.loads((sonarr_sync.RUNS_DIR / f"{run_id}.json").read_text()), "outcome": "running"})
+        except (OSError, ValueError):
+            continue  # being written: the next tick
+    return cards
+
+
+async def send_log(ws, run_id: str) -> None:
+    """One attempt's log down the socket, raw ANSI and all: live while it runs, whole once done."""
+    log, card = sonarr_sync.RUNS_DIR / f"{run_id}.log", sonarr_sync.RUNS_DIR / f"{run_id}.json"
+    pos = max(0, log.stat().st_size - 3_000_000) if log.exists() else 0  # a long progress log: its end
+    while not ws.closed:
+        size = log.stat().st_size if log.exists() else 0
+        if size > pos:
+            with log.open("rb") as f:
+                f.seek(pos)
+                data = f.read(min(size - pos, 1_000_000))
+            pos += len(data)
+            await ws.send_bytes(data)
+            continue
+        try:
+            ended = json.loads(card.read_text()).get("ended")
+        except (OSError, ValueError):
+            ended = None
+        if ended or not log.exists() or run_id not in sonarr_sync.EpisodeRun.active:
+            return  # all of it sent (an attempt cut off by a restart never ends: its log is all there is)
+        await asyncio.sleep(0.25)
+
+
+BATCH_ID = re.compile(r"\d{8}-\d{6}-[0-9a-f]{6}")
+
+
+async def terminal(request):
+    """Stream an attempt's log (?run=), or a job's: the logs of the episodes picked together (?batch=),
+    one after the other as they come, until the last is done."""
+    origin = urlparse(request.headers.get("Origin", "")).netloc
+    if origin != request.host:  # other sites open in the browser must not read it
+        raise web.HTTPForbidden(text="Cross-origin terminal refused")
+    run_id, batch = request.query.get("run", ""), request.query.get("batch", "")
+    if not (RUN_ID.fullmatch(run_id) or BATCH_ID.fullmatch(batch)):
+        raise web.HTTPBadRequest(text="Unknown download")
+    ws = web.WebSocketResponse(heartbeat=30)
+    await ws.prepare(request)
+    if run_id:
+        await send_log(ws, run_id)
+    sent: set[str] = set()
+    while batch and not ws.closed:
+        cards = sorted((c for c in await asyncio.to_thread(run_cards) if c.get("batch") == batch and not c.get("waiting") and c["outcome"] != "cancelled"), key=lambda c: c["id"])
+        todo = [c for c in cards if c["id"] not in sent]
+        if todo:
+            c = todo[0]
+            await ws.send_bytes(f"\r\n\x1b[1;36m━━━ {c['series']} {c['sxxeyy']} ━━━\x1b[0m\r\n".encode())
+            await send_log(ws, c["id"])
+            sent.add(c["id"])
+        elif any(w.get("batch") == batch for w in list(sonarr_sync.waiting.values())):
+            await asyncio.sleep(0.5)  # the next one has not started yet
+        else:
+            break
+    await ws.close()
+    return ws
+
+
+async def sync_log(_):
+    return web.json_response({"running": running(), "updated": last_sync.isoformat() if last_sync else None})
+
+
+# ---- Password, session and first-run setup ----
+
+SESSION_COOKIE = "unshackle_session"
+SESSION_DAYS = 30
+STATIC = {"/apple-touch-icon.png": "image/png", "/icon-192.png": "image/png", "/icon-512.png": "image/png",
+          "/manifest.webmanifest": "application/manifest+json", "/sw.js": "text/javascript",  # what a phone fetches to install the app, logged in or not
+          "/codemirror.js": "text/javascript", "/unshackle-keys.json": "application/json",  # the unshackle.yaml editor: public code and docs
+          "/xterm.js": "text/javascript", "/xterm-fit.js": "text/javascript", "/xterm.css": "text/css"}  # Activity's terminal, served here: no CDN
+STATIC |= {f"/i18n/{f.name}": "application/json" for f in (HERE / "static" / "i18n").glob("*.json")}  # the page's languages, the login's too
+OPEN_PATHS = {"/", "/api/session", "/api/login", "/api/logout", *STATIC}
+SETUP_PATHS = {"/api/setup", "/api/setup/found", "/api/sonarr/test", "/api/unshackle/test"}  # open only until a password exists
+failed_logins: dict[str, list[float]] = {}
+
+
+def hash_password(password: str, salt: str | None = None) -> str:
+    salt = salt or secrets.token_hex(16)
+    digest = hashlib.scrypt(password.encode(), salt=bytes.fromhex(salt), n=2**14, r=8, p=1, dklen=32).hex()
+    return f"scrypt${salt}${digest}"
+
+
+def password_ok(password: str, stored: str) -> bool:
+    try:
+        salt = stored.split("$")[1]
+    except IndexError:
+        return False
+    return hmac.compare_digest(hash_password(password, salt), stored)
+
+
+def session_value(auth: dict) -> str:
+    expires = int(time.time()) + SESSION_DAYS * 86400
+    return f"{expires}.{hmac.new(auth['secret'].encode(), str(expires).encode(), 'sha256').hexdigest()}"
+
+
+def logged_in(request, auth: dict) -> bool:
+    expires, _, signature = request.cookies.get(SESSION_COOKIE, "").partition(".")
+    if not expires.isdigit() or int(expires) < time.time() or not auth.get("secret"):
+        return False
+    expected = hmac.new(auth["secret"].encode(), expires.encode(), "sha256").hexdigest()
+    return hmac.compare_digest(signature, expected) and signature not in read_json(LOGGED_OUT_FILE, {})
+
+
+LOGGED_OUT_FILE = sonarr_sync.DATA / "logged_out.json"  # sessions closed before their end: {signature: expires}
+
+
+def forget_session(value: str) -> None:
+    """Log out for good: the cookie, copied before, is refused until it would have expired."""
+    expires, _, signature = value.partition(".")
+    if not expires.isdigit() or not signature:
+        return
+    closed = {sig: until for sig, until in read_json(LOGGED_OUT_FILE, {}).items() if until > time.time()}  # the expired ones go
+    write_atomic(LOGGED_OUT_FILE, json.dumps({**closed, signature: int(expires)}), PRIVATE)
+
+
+def with_session(request, response, auth: dict):
+    https = request.secure or request.headers.get("X-Forwarded-Proto") == "https"
+    response.set_cookie(SESSION_COOKIE, session_value(auth), max_age=SESSION_DAYS * 86400,
+                        httponly=True, samesite="Strict", secure=https, path="/")
+    return response
+
+
+LOGIN_TRIES = 5  # per address, in 5 minutes
+LOGIN_TRIES_ALL = 30  # every address together: rotating X-Real-IP from the LAN gains nothing past it
+
+
+def recent_failures(ip: str, now: float) -> list[float]:
+    """This address's wrong passwords of the last 5 minutes, or a 429 when there were too many, from it or from all."""
+    for key in [k for k, times in failed_logins.items() if not any(now - t < 300 for t in times)]:
+        failed_logins.pop(key, None)  # forgotten after 5 minutes: the table never grows
+    recent = [t for t in failed_logins.get(ip, []) if now - t < 300]
+    if len(recent) >= LOGIN_TRIES or sum(now - t < 300 for v in failed_logins.values() for t in v) >= LOGIN_TRIES_ALL:
+        raise web.HTTPTooManyRequests(text="Too many wrong passwords: wait 5 minutes")
+    return recent
+
+
+password_slots = asyncio.Semaphore(2)  # scrypt takes 16 MiB and a thread: a burst of tries waits its turn on the loop
+
+
+async def password_try(request, password: str) -> bool:
+    """One password check under login's limits. The try is counted before scrypt runs, so tries sent all at
+    once count all the same, and a right password forgives this address's tries."""
+    ip, now = client_ip(request), time.time()
+    recent_failures(ip, now)  # 429 when there were too many
+    failed_logins.setdefault(ip, []).append(now)  # no await since the check: nothing slips in between
+    stored = read_config()["auth"].get("password")
+    async with password_slots:
+        ok = bool(stored) and await asyncio.to_thread(password_ok, password, stored)
+    if ok:
+        failed_logins.pop(ip, None)
+    return ok
+
+
+def client_ip(request) -> str:
+    """Who is trying to log in. X-Real-IP is believed only from a private address, i.e. the
+    reverse proxy, which sets it itself; X-Forwarded-For never: its first entry is the client's
+    to write, which would let anyone dodge the attempt limit."""
+    remote = request.remote or "?"
+    try:
+        behind_proxy = ipaddress.ip_address(remote).is_private
+    except ValueError:
+        behind_proxy = False
+    return (request.headers.get("X-Real-IP") if behind_proxy else None) or remote
+
+
+# ---- The API for other programs: /api/v1, with an API key; its answers keep their shape (docs/API.md) ----
+
+API_KEY_HEADER = "X-Api-Key"
+
+
+def api_key_ok(request, auth: dict) -> bool:
+    """The key opens /api/v1 only: the password, cookies, CDM and unshackle.yaml stay behind the login.
+    Only its hash is kept, so the config file never holds it."""
+    given = request.headers.get(API_KEY_HEADER, "")
+    return bool(given and auth.get("api_key") and request.path.startswith("/api/v1/")
+                and hmac.compare_digest(hashlib.sha256(given.encode()).hexdigest(), auth["api_key"]))
+
+
+async def json_object(request) -> dict:
+    """The request's JSON body, an object, or a 400 saying so."""
+    try:
+        body = await request.json()
+    except ValueError:
+        body = None
+    if not isinstance(body, dict):
+        raise web.HTTPBadRequest(text="Send a JSON object")
+    return body
+
+
+async def api_key_action(request):
+    """A new key (shown this once, the old one stops working) or none at all. A new one needs the password
+    again: a session left open somewhere must not be enough to mint lasting access."""
+    if request.match_info["action"] == "new":
+        await reauth(request, str((await json_object(request)).get("password") or ""))
+    config = read_config()
+    for k in ("api_key", "api_key_created"):
+        config["auth"].pop(k, None)
+    key = None
+    if request.match_info["action"] == "new":
+        key = secrets.token_urlsafe(32)
+        config["auth"].update(api_key=hashlib.sha256(key.encode()).hexdigest(), api_key_created=datetime.now(timezone.utc).isoformat())
+    write_config(config)
+    return web.json_response({"key": key, "created": config["auth"].get("api_key_created")})
+
+
+def v1_download(card: dict) -> dict:
+    state = "queued" if card.get("waiting") else card.get("outcome") or "running"
+    return {"id": card["id"], "series": card["series"], "tvdbId": card["tvdbId"], "episode": card["sxxeyy"],
+            "episodeId": card.get("episodeId"), "service": card.get("service"), "state": state,
+            "step": card.get("step") if state == "running" else None,
+            "question": (card.get("prompt") or {}).get("text") if state == "running" else None,
+            "started": card.get("started"), "ended": card.get("ended"), "error": card.get("cause") or None}
+
+
+async def v1_status(_):
+    box = await asyncio.to_thread(sonarr_sync.read_inbox)
+    read_at = box.get("read_at") or ""
+    return web.json_response({
+        "version": __version__,
+        **{name: {"ok": health[name].get("ok"), "error": health[name].get("error")} for name in ("sonarr", "unshackle")},
+        "sync": {"running": running(), "last": last_sync.isoformat() if last_sync else None},
+        "downloads": {"running": len(sonarr_sync.EpisodeRun.active), "queued": len(sonarr_sync.waiting)},
+        "unread": sum(1 for i in box["items"] if i["at"] > read_at),
+    })
+
+
+def limit_of(request, default: int = 50) -> int:
+    value = request.query.get("limit", str(default))
+    if not (value.isascii() and value.isdigit()) or not 1 <= int(value) <= 500:
+        raise web.HTTPBadRequest(text="limit must be from 1 to 500")
+    return int(value)
+
+
+async def v1_downloads(request):
+    limit = limit_of(request)
+    cards = await asyncio.to_thread(run_cards) if sonarr_sync.RUNS_DIR.exists() else list(sonarr_sync.waiting.values())
+    return web.json_response([v1_download(c) for c in cards[:limit]])
+
+
+def episode_ids_of(tvdb: int, episodes: list[str]) -> list[int]:
+    """Sonarr's ids for a series' episodes named S01E02."""
+    series = sonarr_sync.sonarr_get("series", tvdbId=tvdb)
+    if not series:
+        raise web.HTTPNotFound(text=f"Sonarr has no series with TVDB id {tvdb}")
+    known = {f"S{e['seasonNumber']:02}E{e['episodeNumber']:02}": e["id"] for e in sonarr_sync.sonarr_get("episode", seriesId=series[0]["id"])}
+    missing = [x for x in episodes if x not in known]
+    if missing:
+        raise web.HTTPNotFound(text=f"Sonarr has no {', '.join(missing)} for this series")
+    return [known[x] for x in episodes]
+
+
+async def v1_start_download(request):
+    """Episodes by Sonarr's ids, or by the series' TVDB id and S01E02: downloaded as the page's Download does,
+    a file Sonarr has replaced only by a better one."""
+    body = await json_object(request)
+    ids, tvdb = body.get("episodeIds"), body.get("tvdbId")
+    names = [str(x).upper() for x in body.get("episodes") or []] if isinstance(body.get("episodes"), list) else []
+    if type(tvdb) is int and names and all(re.fullmatch(r"S\d+E\d+", x) for x in names):
+        if not (read_config()["series"].get(tvdb) or {}).get("service"):
+            raise web.HTTPNotFound(text=f"Unshacklarr downloads no series with TVDB id {tvdb}: set it up on its page first")
+        names = [f"S{int(m[1]):02}E{int(m[2]):02}" for m in (re.fullmatch(r"S(\d+)E(\d+)", x) for x in names)]
+        try:
+            ids = await asyncio.to_thread(episode_ids_of, tvdb, names)
+        except requests.RequestException as e:
+            raise web.HTTPBadGateway(text=f"Sonarr is unreachable: {no_credentials(e)}")
+    if not ids or not isinstance(ids, list) or not all(type(i) is int and i > 0 for i in ids):
+        raise web.HTTPBadRequest(text='Give "episodeIds", or "tvdbId" and "episodes" such as ["S01E02"]')
+    if len(ids) > 100:
+        raise web.HTTPBadRequest(text="At most 100 episodes at a time")
+    if why := await asyncio.to_thread(cdm_refusal, ids):
+        raise web.HTTPBadRequest(text=why)
+    room_for_one_more()
+    # never "replace": a key kept in another program must not be able to swap the library's files
+    run_sync(ids)
+    return web.json_response({"queued": len(ids)})
+
+
+async def v1_stop(request):
+    """Stop a download: one running is cancelled, one still queued leaves the queue."""
+    if m := re.fullmatch(r"waiting-(\d+)", request.match_info["run_id"]):
+        card = sonarr_sync.waiting.pop(int(m[1]), None)
+        if card is None:
+            raise web.HTTPConflict(text="This download has already started")
+        sonarr_sync.unqueued.add(int(m[1]))
+        await asyncio.to_thread(sonarr_sync.cancel_queued, card)
+        return web.json_response({"stopping": True})
+    return await stop_run(request)
+
+
+async def v1_notifications(request):
+    limit = limit_of(request)
+    box = await asyncio.to_thread(sonarr_sync.read_inbox)
+    read_at = box.get("read_at") or ""
+    return web.json_response({"unread": sum(1 for i in box["items"] if i["at"] > read_at), "items": [
+        {k: i.get(k) for k in ("id", "at", "level", "title", "message")} | {"unread": i["at"] > read_at} for i in box["items"][:limit]]})
+
+
+@web.middleware
+async def password_required(request, handler):
+    auth = read_config()["auth"]
+    if request.path in OPEN_PATHS or (request.path in SETUP_PATHS and not auth.get("password")):
+        return await handler(request)
+    if not auth.get("password"):
+        raise web.HTTPForbidden(text="Set Unshackle up first")
+    if not (logged_in(request, auth) or api_key_ok(request, auth)):
+        raise web.HTTPUnauthorized(text="Log in first")
+    return await handler(request)
+
+
+async def session(request):
+    """What the page must show first: the setup, the login, or the app."""
+    config = read_config()
+    auth, settings = config["auth"], sonarr_sync.load_settings(config)
+    body = {"configured": bool(auth.get("password")), "logged_in": logged_in(request, auth)}
+    if body["logged_in"]:  # for Settings, Account: until when, and since when the password is the same
+        body["expires"] = int(request.cookies[SESSION_COOKIE].partition(".")[0])
+        body["password_changed"] = auth.get("changed")
+        body["api_key"] = {"set": bool(auth.get("api_key")), "created": auth.get("api_key_created")}
+    if not body["configured"]:  # what the setup starts from; addresses and paths only with the setup code
+        body["setup"] = {"country": settings["country"], "timezone": settings["timezone"], "unshackle_mode": UNSHACKLE.mode}
+    return web.json_response(body)
+
+
+async def setup_found(request):
+    """What the environment already says for the setup (a key only as "found"), once the setup code is
+    given: before, anyone who reaches a fresh install would learn its addresses and folders."""
+    body = await json_object(request)
+    if read_config()["auth"].get("password"):
+        raise web.HTTPForbidden(text="Unshacklarr is set up already")
+    if not trusted(request, body):
+        raise web.HTTPForbidden(text="Wrong setup code: it is in Unshacklarr's log")
+    settings = sonarr_sync.load_settings(read_config())
+    return web.json_response({
+        **{k: settings[k] for k in ("sonarr_url", "sonarr_downloads", "unshackle_url", "unshackle_command", "downloads", "unshackle_downloads")},
+        "sonarr_api_key_set": bool(settings["sonarr_api_key"]),
+        "unshackle_api_key_set": bool(settings["unshackle_api_key"]),
+    })
+
+
+async def login(request):
+    password = str((await json_object(request)).get("password") or "")
+    if not await password_try(request, password):
+        raise web.HTTPUnauthorized(text="Wrong password")
+    return with_session(request, web.json_response({"logged_in": True}), read_config()["auth"])
+
+
+async def logout(request):
+    if logged_in(request, read_config()["auth"]):
+        await asyncio.to_thread(forget_session, request.cookies[SESSION_COOKIE])
+    response = web.json_response({"logged_in": False})
+    response.del_cookie(SESSION_COOKIE, path="/")
+    return response
+
+
+def sonarr_status(url: str, key: str) -> str:
+    r = requests.get(f"{url.rstrip('/')}/api/v3/system/status", headers={"X-Api-Key": key}, timeout=10)
+    if r.status_code == 401:
+        raise ValueError("Sonarr refused the API key")
+    r.raise_for_status()
+    return r.json().get("version", "?")
+
+
+def stored_key_for(url: str, what: str = "sonarr") -> str:
+    """The saved (or environment) key of Sonarr or unshackle serve, but only for the address it
+    belongs to: a key is never sent to a URL someone typed, or the first request to a test
+    could carry it off to any server."""
+    settings = sonarr_sync.load_settings()
+    saved = str(settings[f"{what}_url"]).strip().rstrip("/")
+    return settings[f"{what}_api_key"] if saved and url.strip().rstrip("/") == saved else ""
+
+
+def trusted(request, body: dict) -> bool:
+    return logged_in(request, read_config()["auth"]) or hmac.compare_digest(str(body.get("setup_code") or "").strip(), SETUP_CODE)
+
+
+async def test_sonarr(request):
+    body = await json_object(request)
+    if not trusted(request, body):  # before the setup, no stranger makes this server fetch URLs
+        raise web.HTTPForbidden(text="Enter the setup code first")
+    url = str(body.get("sonarr_url") or "").strip()
+    if not URL.fullmatch(url.rstrip("/")):
+        raise web.HTTPBadRequest(text="The address must start with http:// or https://")
+    key = str(body.get("sonarr_api_key") or "").strip() or stored_key_for(url)
+    if not key:
+        raise web.HTTPBadRequest(text="Enter the API key to test this Sonarr")
+    try:
+        version = await asyncio.to_thread(sonarr_status, url, key)
+    except (requests.RequestException, ValueError) as e:
+        raise web.HTTPBadGateway(text=f"Could not reach Sonarr: {e}")
+    return web.json_response({"version": version})
+
+
+def check_unshackle(settings: dict) -> int:
+    """Reach Unshackle with these settings (starting a local serve if need be): its service
+    count, its EXAMPLE left out."""
+    from unshacklarr.backend import Unshackle
+    probe = UNSHACKLE if settings.get("unshackle_mode", "local") != "remote" else Unshackle(sonarr_sync.DATA)
+    if probe is UNSHACKLE and sonarr_sync.EpisodeRun.active and \
+            settings.get("unshackle_command", "") != str(sonarr_sync.SETTINGS.get("unshackle_command") or ""):
+        raise UnshackleError("Downloads are running on the current command: test another one once they are over")
+    probe.configure({**sonarr_sync.SETTINGS, **settings})
+    try:
+        return sum(s["tag"] != "EXAMPLE" for s in probe.services())
+    finally:
+        if probe is UNSHACKLE:
+            UNSHACKLE.configure(sonarr_sync.SETTINGS)  # the saved settings again, until a save
+
+
+async def test_unshackle(request):
+    body = await json_object(request)
+    if not trusted(request, body):  # a local test starts a program: never for a stranger before the setup
+        raise web.HTTPForbidden(text="Enter the setup code first")
+    settings = {k: str(body.get(k) or "").strip() for k in ("unshackle_mode", "unshackle_command", "unshackle_url", "unshackle_api_key")}
+    if settings["unshackle_mode"] == "remote":
+        if not URL.fullmatch(settings["unshackle_url"]):
+            raise web.HTTPBadRequest(text="Enter the address of unshackle serve, like http://unshackle:8786")
+        if not settings["unshackle_api_key"] and trusted(request, body):
+            settings["unshackle_api_key"] = stored_key_for(settings["unshackle_url"], "unshackle")
+    try:
+        count = await asyncio.to_thread(check_unshackle, settings)
+    except UnshackleError as e:
+        raise web.HTTPBadGateway(text=str(e))
+    if not count:
+        raise web.HTTPBadGateway(text="unshackle answers, but has no services: add yours to its services folder")
+    return web.json_response({"services": count})
+
+
+# First-run setup needs this code, so whoever finds the page before its owner cannot claim
+# it. From SETUP_TOKEN, else made at start and printed to the container's log.
+SETUP_CODE = os.environ.get("SETUP_TOKEN") or secrets.token_urlsafe(9)
+
+
+def announce_setup_code() -> None:
+    if not read_config()["auth"].get("password") and not os.environ.get("SETUP_TOKEN"):
+        print(f"Unshacklarr is not set up yet. Setup code: {SETUP_CODE}", flush=True)
+
+
+async def setup(request):
+    """First run: the password, Unshackle and Sonarr, in one go."""
+    config = read_config()
+    if config["auth"].get("password"):
+        raise web.HTTPForbidden(text="Already set up")
+    body = await json_object(request)
+    if not hmac.compare_digest(str(body.get("setup_code") or "").strip(), SETUP_CODE):
+        raise web.HTTPForbidden(text="Wrong setup code: Unshacklarr prints it when it starts (docker logs unshacklarr)")
+    password = str(body.get("password") or "")
+    if len(password) < 8:
+        raise web.HTTPBadRequest(text="Password must be at least 8 characters")
+    typed = {k: str(body.get(k) or "").strip() for k in ("sonarr_api_key", "unshackle_api_key")}
+    settings = check_settings({**sonarr_sync.load_settings(config), **body, **typed}, {})
+    settings["sonarr_api_key"] = typed["sonarr_api_key"] or stored_key_for(settings["sonarr_url"])
+    settings["unshackle_api_key"] = typed["unshackle_api_key"] or stored_key_for(settings["unshackle_url"], "unshackle")
+    if not settings["sonarr_api_key"]:
+        raise web.HTTPBadRequest(text="Enter Sonarr's API key")
+    try:
+        await asyncio.to_thread(check_unshackle, settings)
+    except UnshackleError as e:
+        raise web.HTTPBadRequest(text=f"Could not reach Unshackle with these settings: {e}")
+    try:
+        await asyncio.to_thread(sonarr_status, settings["sonarr_url"], settings["sonarr_api_key"])
+    except (requests.RequestException, ValueError) as e:
+        raise web.HTTPBadRequest(text=f"Could not reach Sonarr with these settings: {e}")
+    if not settings["sonarr_downloads"]:
+        raise web.HTTPBadRequest(text="Enter the downloads folder as Sonarr sees it")
+    config["settings"] = settings
+    config["auth"] = {"password": hash_password(password), "secret": secrets.token_hex(32), "changed": datetime.now(timezone.utc).isoformat()}
+    write_config(config)
+    return with_session(request, web.json_response({"logged_in": True}), config["auth"])
+
+
+async def set_language(request):
+    """The page's language, chosen in a browser, for the notifications too."""
+    lang = str((await json_object(request)).get("language") or "")
+    if lang not in i18n.languages():
+        raise web.HTTPBadRequest(text=f"No translation for {lang!r}")
+    config = read_config()
+    config.setdefault("settings", {})["language"] = lang
+    write_config(config)
+    return web.json_response({"ok": True})
+
+
+async def change_password(request):
+    body = await json_object(request)
+    try:
+        await reauth(request, str(body.get("current") or ""))  # login's limit on tries
+    except web.HTTPForbidden:
+        raise web.HTTPForbidden(text="The current password is wrong") from None  # not 401: the page reads that as a lost session
+    config = read_config()
+    new = str(body.get("new") or "")
+    if len(new) < 8:
+        raise web.HTTPBadRequest(text="Password must be at least 8 characters")
+    # A new secret too: every other open session is logged out. The API key stays.
+    config["auth"].update(password=hash_password(new), secret=secrets.token_hex(32), changed=datetime.now(timezone.utc).isoformat())
+    write_config(config)
+    await asyncio.to_thread(sonarr_sync.PUSH.unsubscribe_all)  # a device added by someone else stops listening too
+    return with_session(request, web.json_response({"ok": True}), config["auth"])
+
+
+async def logout_others(request):
+    """A new session secret, the password kept: every device but this one logs in again."""
+    config = read_config()
+    config["auth"] = {**config["auth"], "secret": secrets.token_hex(32)}
+    write_config(config)
+    await asyncio.to_thread(sonarr_sync.PUSH.unsubscribe_all)  # their push notifications too: turn them on again on yours
+    return with_session(request, web.json_response({"ok": True}), config["auth"])
+
+
+@web.middleware
+async def same_origin_only(request, handler):
+    # A custom header cannot be sent cross-site without a CORS preflight, which this
+    # server never grants: other pages open in the browser cannot change anything. X-Api-Key is one too.
+    if request.method not in ("GET", "HEAD") and request.headers.get("X-Unshackle") != "1" and API_KEY_HEADER not in request.headers:
+        raise web.HTTPForbidden(text="Missing X-Unshackle header")
+    return await handler(request)
+
+
+async def stop_unshackle(app):
+    yield
+    await asyncio.to_thread(UNSHACKLE.stop)  # a local serve goes with us
+
+
+SECURITY_HEADERS = {
+    "X-Frame-Options": "DENY",  # never inside another site's frame: no clickjacking
+    "Content-Security-Policy": "frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "same-origin",
+}
+
+
+async def security_headers(request, response):
+    for name, value in SECURITY_HEADERS.items():
+        response.headers.setdefault(name, value)
+
+
+def background(loop):
+    """A loop that runs for as long as the server does, as aiohttp's cleanup context."""
+    async def context(app):
+        task = asyncio.create_task(loop())
+        yield
+        task.cancel()
+    return context
+
+
+app = web.Application(middlewares=[same_origin_only, password_required])
+app.on_response_prepare.append(security_headers)
+app.cleanup_ctx.append(background(watch_releases))
+app.cleanup_ctx.append(background(run_automatic_syncs))
+app.cleanup_ctx.append(stop_unshackle)
+app.cleanup_ctx.append(background(watch_health))
+app.cleanup_ctx.append(background(watch_alerts))
+app.add_routes([
+    web.get("/", index),
+    *[web.get(path, static_file) for path in STATIC],
+    web.get("/api/state", state),
+    web.get("/api/services/{tag}", service_options),
+    web.get(r"/api/suggest/{tmdb_id:\d+}", suggest),
+    web.put("/api/config", save_config),
+    web.post("/api/hidden", hide_series),
+    web.post("/api/notifications/test", test_notification),
+    web.get("/api/notifications/sent", sent_notifications),
+    web.post("/api/sync", start_sync),
+    web.get(r"/api/series/{series_id:\d+}/episodes", episodes),
+    web.post("/api/download", download),
+    web.post("/api/probe", probe),
+    web.get(r"/api/probe/{tvdb:\d+}", service_list),
+    web.get("/api/push/key", push_key),
+    web.post("/api/push/subscribe", push_subscribe),
+    web.post("/api/push/unsubscribe", push_unsubscribe),
+    web.post("/api/push/test", push_test),
+    web.get("/api/leftovers", list_leftovers),
+    web.post(r"/api/leftovers/{action:import|delete}", leftover_action),
+    web.get(r"/api/series/{tvdb:\d+}/release", release_seen),
+    web.get("/api/log", sync_log),
+    web.get("/api/terminal", terminal),
+    web.get("/api/runs", runs),
+    web.get("/api/busy", busy),
+    web.get("/api/runs/live", runs_live),
+    web.get("/api/stats", stats),
+    web.get("/api/networks", networks),
+    web.get("/api/schedule", schedule),
+    web.get("/api/calendar", calendar),
+    web.get("/api/session", session),
+    web.post("/api/login", login),
+    web.post("/api/logout", logout),
+    web.post("/api/setup", setup),
+    web.post("/api/setup/found", setup_found),
+    web.post("/api/sonarr/test", test_sonarr),
+    web.post("/api/unshackle/test", test_unshackle),
+    web.get("/api/status", status),
+    web.post("/api/unshackle/restart", restart_unshackle),
+    web.get("/api/unshackle/log", unshackle_log),
+    web.post(r"/api/unshackle/maintenance/{action}", unshackle_maintenance),
+    web.post(r"/api/unshackle/jobs/{job_id}/cancel", cancel_job),
+    web.get("/api/cookies", list_cookies),
+    web.post("/api/cookies", save_cookies),
+    web.post("/api/cookies/delete", delete_cookies),
+    web.post(r"/api/unshackle/config-file/{action:open|version|save}", unshackle_yaml),
+    web.get("/api/cdm", list_cdm),
+    web.post(r"/api/cdm/{action:add|delete|choose|remote-save|remote-delete}", cdm_action),
+    web.post("/api/cdm/test", cdm_test),
+    web.get("/api/inbox", inbox),
+    web.post(r"/api/inbox/{action:read|clear}", inbox_action),
+    web.post("/api/cdm/reprovision", cdm_reprovision),
+    web.post(r"/api/runs/{run_id}/stop", stop_run),
+    web.post(r"/api/jobs/{batch}/stop", stop_job),
+    web.post(r"/api/jobs/{batch}/{action:pause|resume}", pause_job),
+    web.post(r"/api/queue/{episode_id:\d+}/remove", unqueue),
+    web.post(r"/api/queue/{episode_id:\d+}/add", requeue),
+    web.delete(r"/api/runs/{run_id}", delete_run),
+    web.post(r"/api/runs/{run_id}/input", answer_run),
+    web.post("/api/runs/clear", clear_runs),
+    web.post("/api/password", change_password),
+    web.post("/api/logout-others", logout_others),
+    web.post("/api/language", set_language),
+    web.post(r"/api/api-key/{action:new|delete}", api_key_action),
+    web.get("/api/v1/status", v1_status),
+    web.post("/api/v1/sync", start_sync),
+    web.get("/api/v1/downloads", v1_downloads),
+    web.post("/api/v1/downloads", v1_start_download),
+    web.post("/api/v1/downloads/{run_id}/stop", v1_stop),
+    web.post("/api/v1/downloads/{run_id}/answer", answer_run),
+    web.get("/api/v1/notifications", v1_notifications),
+])
+
+def reset_password(password: str) -> None:
+    """A new password, from the command line: the lost one cannot be read back, only replaced.
+    Every open session is logged out; settings and series stay as they are."""
+    if len(password) < 8:
+        raise ValueError("Password must be at least 8 characters")
+    config = read_config()
+    config["auth"].update(password=hash_password(password), secret=secrets.token_hex(32), changed=datetime.now(timezone.utc).isoformat())
+    write_config(config)
+    sonarr_sync.PUSH.unsubscribe_all()
+
+
+def main() -> None:
+    if sys.argv[1:] == ["reset-password"]:  # unshacklarr reset-password (docker exec -it unshacklarr …)
+        import getpass
+        new = getpass.getpass("New password: ")
+        if new != getpass.getpass("Again: "):
+            sys.exit("The two passwords differ; nothing changed.")
+        try:
+            reset_password(new)
+        except ValueError as e:
+            sys.exit(f"{e}; nothing changed.")
+        print("Password changed. Log in again on every device.")
+        return
+    announce_setup_code()
+    print(f"Unshacklarr keeps its settings in {sonarr_sync.DATA}", flush=True)
+    web.run_app(app, host=os.environ.get("HOST", "0.0.0.0"), port=int(os.environ.get("PORT", "8788")), print=None)
+
+
+if __name__ == "__main__":
+    main()

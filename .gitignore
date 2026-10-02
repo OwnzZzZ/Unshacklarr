@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+.playwright-mcp/
+.pytest_cache/
+# made by the install (README): settings, secrets and Unshackle's own files, never committed
+.env
+data/
+unshackle/
+unshackle-data/
+services/
+docker-compose.yml
+.DS_Store
+demo/site/

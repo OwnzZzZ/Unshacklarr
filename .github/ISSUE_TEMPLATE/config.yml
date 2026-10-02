@@ -1,0 +1,13 @@
+# What GitHub's "New issue" page offers next to a blank issue: questions go to the Discord, Unshackle's
+# own problems to Unshackle, security flaws to a private advisory.
+blank_issues_enabled: true
+contact_links:
+  - name: 💬 Questions and help
+    url: https://discord.gg/5HmNgaGASy
+    about: "Questions, help with Unshacklarr, ideas: ask on the Discord."
+  - name: 🧩 A problem with Unshackle itself
+    url: https://github.com/unshackle-dl/unshackle/issues
+    about: "A service, a login, a CDM, a download Unshackle fails: Unshacklarr only drives unshackle serve, ask Unshackle (GitHub, or its Discord: https://discord.gg/mHYyPaCbFK)."
+  - name: 🔒 A security flaw
+    url: https://github.com/OwnzZzZ/Unshacklarr/security/advisories/new
+    about: "Report it privately, never in a public issue."

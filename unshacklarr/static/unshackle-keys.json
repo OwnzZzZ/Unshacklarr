@@ -1,0 +1,666 @@
+{
+ "anilist_title_language": {
+  "info": "Which AniList title variant to use: english, romaji, or native.",
+  "type": "str"
+ },
+ "audio": {
+  "info": "Audio handling options.",
+  "type": "dict"
+ },
+ "cdm": {
+  "info": "Maps a service tag to the CDM (Widevine/PlayReady device) to use, with a default fallback.",
+  "type": "dict"
+ },
+ "chapter_fallback_name": {
+  "info": "Fallback template for chapter names, e.g.",
+  "type": "str"
+ },
+ "continue_downloads": {
+  "info": "Keep a failed download's completed segment files so the next download resumes from where it",
+  "type": "bool"
+ },
+ "credentials": {
+  "info": "Per-service login credentials.",
+  "type": "dict"
+ },
+ "curl_impersonate": {
+  "info": "Emits a DeprecationWarning; still honoured only if network is absent."
+ },
+ "debug": {
+  "info": "Global debug mode.",
+  "type": "bool"
+ },
+ "debug_keys": {
+  "info": "Log decryption keys.",
+  "type": "bool"
+ },
+ "debug_requests": {
+  "info": "Log HTTP requests.",
+  "type": "bool"
+ },
+ "decrypt_labs_api_key": {
+  "info": "Global Decrypt Labs API key (used by remote CDM / vault).",
+  "type": "str"
+ },
+ "decrypt_segments": {
+  "info": "Decrypts each fragmented MP4 segment as it arrives, instead of decrypting the whole track",
+  "type": "bool"
+ },
+ "decryption": {
+  "info": "Selects the tool that physically decrypts CENC-encrypted tracks.",
+  "type": "str"
+ },
+ "directories": {
+  "keys": {
+   "app_dirs": {
+    "info": "Internal AppDirs instance.",
+    "type": "-"
+   },
+   "cache": {
+    "info": "Generic cache, title cache, and the update-check store.",
+    "type": "path"
+   },
+   "commands": {
+    "info": "CLI command modules.",
+    "type": "path"
+   },
+   "cookies": {
+    "info": "Per-service cookie files (and VPN cookie files).",
+    "type": "path"
+   },
+   "core_dir": {
+    "info": "Package core.",
+    "type": "path"
+   },
+   "data": {
+    "info": "Base for the data subdirectories above.",
+    "type": "path"
+   },
+   "dcsl": {
+    "info": "DCSL data.",
+    "type": "path"
+   },
+   "downloads": {
+    "info": "Default output directory for finished files.",
+    "type": "path"
+   },
+   "exports": {
+    "info": "Export JSON files.",
+    "type": "path"
+   },
+   "fonts": {
+    "info": "Bundled fonts.",
+    "type": "path"
+   },
+   "logs": {
+    "info": "Log files.",
+    "type": "path"
+   },
+   "namespace_dir": {
+    "info": "Package root.",
+    "type": "path"
+   },
+   "prds": {
+    "info": "PlayReady device files (.prd).",
+    "type": "path"
+   },
+   "services": {
+    "info": "Service search paths and/or remote repo specs (see below).",
+    "type": "list \\"
+   },
+   "temp": {
+    "info": "Temporary working files during download/decrypt/mux.",
+    "type": "path"
+   },
+   "user_configs": {
+    "info": "Where unshackle.yaml lives.",
+    "type": "path"
+   },
+   "vaults": {
+    "info": "Vault backend modules.",
+    "type": "path"
+   },
+   "wvds": {
+    "info": "Widevine device files (.wvd).",
+    "type": "path"
+   }
+  }
+ },
+ "disable_metadata": {
+  "info": "Set to true to stop all automatic metadata lookups.",
+  "type": "bool"
+ },
+ "dl": {
+  "info": "Persistent defaults for the dl command.",
+  "keys": {
+   "acodec": {
+    "info": "Audio codec(s), e.g.",
+    "type": "list"
+   },
+   "best_available": {
+    "info": "Warn instead of failing when a requested resolution, range, or language is missing.",
+    "type": "bool"
+   },
+   "channels": {
+    "info": "Audio channels, e.g.",
+    "type": "float"
+   },
+   "downloads": {
+    "info": "Tracks downloaded concurrently.",
+    "type": "int"
+   },
+   "forced_s_lang": {
+    "info": "Forced subtitle language(s); implies forced_subs.",
+    "type": "list"
+   },
+   "forced_subs": {
+    "info": "Include forced subtitle tracks.",
+    "type": "bool"
+   },
+   "lang": {
+    "info": "Video/audio language(s); orig = original language.",
+    "type": "list"
+   },
+   "no_folder": {
+    "info": "Do not create a per-title folder.",
+    "type": "bool"
+   },
+   "proxy": {
+    "info": "Default proxy URI or 2-letter country.",
+    "type": "str"
+   },
+   "quality": {
+    "info": "Resolution(s), e.g.",
+    "type": "list"
+   },
+   "range": {
+    "info": "Colour range(s): SDR, HLG, HDR10, HDR10P, DV, HYBRID.",
+    "type": "list"
+   },
+   "s_lang": {
+    "info": "Subtitle language(s).",
+    "type": "list"
+   },
+   "slow": {
+    "info": "Inter-title delay, e.g.",
+    "type": "str"
+   },
+   "speed_limit": {
+    "info": "Total download speed cap across all downloads combined, e.g.",
+    "type": "str"
+   },
+   "sub_format": {
+    "info": "Convert subtitles to this format (srt, vtt, original, ...).",
+    "type": "str"
+   },
+   "vcodec": {
+    "info": "Video codec(s), e.g.",
+    "type": "list"
+   },
+   "workers": {
+    "info": "Threads per track.",
+    "type": "int"
+   }
+  },
+  "type": "dict"
+ },
+ "downloader": {
+  "info": "Any value other than \"requests\" emits a DeprecationWarning; the value is otherwise ignored (the unified requests downloader is always used)."
+ },
+ "dual_multi_mode": {
+  "info": "Rule set for the {dual}, {multi}, and {dubbed} filename variables.",
+  "type": "str"
+ },
+ "filenames": {},
+ "firefox_cookies": {
+  "info": "Settings for extracting cookies directly from a local Firefox profile.",
+  "type": "dict"
+ },
+ "headers": {
+  "info": "Default HTTP headers merged into every HTTP session unshackle makes.",
+  "type": "dict"
+ },
+ "ipinfo_api_key": {
+  "info": "ipinfo.io API key for IP/region lookups.",
+  "type": "str"
+ },
+ "key_vaults": {
+  "info": "An ordered list of key-vault backends.",
+  "type": "list[dict]"
+ },
+ "language_tags": {
+  "info": "Language-tag remapping and the rule engine behind the {lang_tag} filename variable.",
+  "keys": {
+   "audio": {
+    "info": "At least one audio language matches."
+   },
+   "subs_contain": {
+    "info": "At least one subtitle language matches."
+   },
+   "subs_contain_all": {
+    "info": "Every listed language must be present."
+   }
+  },
+  "type": "dict"
+ },
+ "merge_segments": {
+  "info": "Appends each segment to the output file as soon as it and every segment before it have",
+  "type": "bool"
+ },
+ "metadata_providers": {
+  "info": "Metadata providers to use, in the order they are tried.",
+  "type": "list or map"
+ },
+ "muxing": {
+  "info": "Matroska (MKV) muxing options.",
+  "keys": {
+   "concurrency": {
+    "info": "How many mkvmerge processes run at the same time when a title muxes more than one output file (one per video variant or audio codec).",
+    "type": "int"
+   },
+   "default_language": {
+    "info": "Force which language is flagged default per track type, e.g.",
+    "type": "dict"
+   },
+   "merge_audio": {
+    "info": "Merge all audio into one file.",
+    "type": "bool"
+   },
+   "merge_video": {
+    "info": "Merge video tracks that share height, range, and codec into one file, so only language varies inside a file.",
+    "type": "bool"
+   },
+   "set_title": {
+    "info": "Write a human-readable title into the MKV container.",
+    "type": "bool"
+   }
+  },
+  "type": "dict"
+ },
+ "network": {
+  "info": "TLS-fingerprinting and HTTP client settings for the rnet-based HTTP session.",
+  "keys": {
+   "allow_redirects": {
+    "info": "Follow redirects automatically (rnet client default when unset).",
+    "type": "bool"
+   },
+   "browser": {
+    "info": "Impersonation preset.",
+    "type": "str"
+   },
+   "connect_timeout": {
+    "info": "Connect timeout in seconds.",
+    "type": "int"
+   },
+   "http1_only": {
+    "info": "Force HTTP/1.1.",
+    "type": "bool"
+   },
+   "http2_only": {
+    "info": "Force HTTP/2.",
+    "type": "bool"
+   },
+   "pool_idle_timeout": {
+    "info": "Seconds an idle pooled connection is kept (default stays under typical ~60s CDN idle kills).",
+    "type": "int"
+   },
+   "pool_max_idle_per_host": {
+    "info": "Max idle connections kept per host.",
+    "type": "int"
+   },
+   "pool_max_size": {
+    "info": "Max total connections in the pool.",
+    "type": "int"
+   },
+   "read_timeout": {
+    "info": "Read timeout in seconds (max gap between response chunks).",
+    "type": "int"
+   },
+   "tcp_keepalive": {
+    "info": "TCP keepalive time in seconds.",
+    "type": "int"
+   },
+   "tcp_keepalive_interval": {
+    "info": "TCP keepalive probe interval in seconds.",
+    "type": "int"
+   },
+   "tcp_keepalive_retries": {
+    "info": "TCP keepalive probe retry count.",
+    "type": "int"
+   },
+   "tcp_nodelay": {
+    "info": "Disable Nagle's algorithm.",
+    "type": "bool"
+   },
+   "timeout": {
+    "info": "Total request timeout in seconds.",
+    "type": "int"
+   }
+  },
+  "type": "dict"
+ },
+ "omdb_api_key": {
+  "info": "OMDb API key for IMDb metadata lookups; a fallback for when the keyless imdb provider has no answer.",
+  "type": "str"
+ },
+ "output_template": {
+  "info": "Filename templates keyed by media kind, using {variable} placeholders.",
+  "type": "dict"
+ },
+ "post_scripts": {
+  "info": "Every entry that matches the event and mode runs, so one download can feed an uploader and",
+  "keys": {
+   "command": {
+    "info": "The command to run, with {variable} placeholders"
+   },
+   "event": {
+    "info": "success when a file was written, failure when the download failed"
+   },
+   "mode": {
+    "info": "file, season, or run."
+   },
+   "wait": {
+    "info": "true makes unshackle wait for the script to exit before carrying on."
+   }
+  },
+  "type": "list[dict]"
+ },
+ "proxy_providers": {
+  "info": "Proxy/VPN provider configuration.",
+  "keys": {
+   "max_profiles": {
+    "info": "The most profiles unshackle uses: your pairs plus the unshackle- endpoints on the account.",
+    "type": "int"
+   },
+   "profile": {
+    "info": "Optional.",
+    "type": "str"
+   },
+   "profiles": {
+    "info": "Optional.",
+    "type": "list"
+   },
+   "resolver": {
+    "info": "Optional.",
+    "type": "str"
+   },
+   "token": {
+    "info": "A Control D API token of type Write.",
+    "type": "str"
+   }
+  },
+  "type": "dict"
+ },
+ "redact_paths": {
+  "info": "Mask install-root / venv / home prefixes in logged paths (<unshackle>, <venv>, ~).",
+  "type": "bool"
+ },
+ "remote_cdm": {
+  "info": "A list of remote CDM definitions.",
+  "keys": {
+   "auth": {
+    "info": "type (default header): header uses header_name (default Authorization) and key; bearer uses bearer_token or key; basic uses username and password.",
+    "type": "dict"
+   },
+   "caching": {
+    "info": "enabled, use_vaults, check_cached_first",
+    "type": "dict"
+   },
+   "custom_api": {
+    "info": "host (required), device, auth, endpoints, request_mapping, response_mapping, caching, timeout (fields)"
+   },
+   "decrypt_labs": {
+    "info": "host, device_name, secret (fields)"
+   },
+   "device": {
+    "info": "name, type (CHROME, ANDROID, PLAYREADY), system_id, security_level",
+    "type": "dict"
+   },
+   "device_name": {
+    "info": "ChromeCDM, L1, L2 (Widevine) or SL2, SL3 (PlayReady)"
+   },
+   "endpoints": {
+    "info": "get_request and decrypt_response, each {path, method, timeout}",
+    "type": "dict"
+   },
+   "host": {
+    "info": ""
+   },
+   "legacy": {
+    "info": "Legacy mode options.",
+    "type": "dict"
+   },
+   "request_mapping": {
+    "info": "Per endpoint: param_names, static_params, conditional_params, transforms, nested_params, exclude_params",
+    "type": "dict"
+   },
+   "response_mapping": {
+    "info": "Per endpoint: fields, transforms, response_types, success_conditions, error_fields, key_fields",
+    "type": "dict"
+   },
+   "secret": {
+    "info": "Sent as the decrypt-labs-api-key header."
+   },
+   "security_level": {
+    "info": ""
+   },
+   "system_id": {
+    "info": ""
+   },
+   "timeout": {
+    "info": "Default 30.",
+    "type": "int"
+   }
+  },
+  "type": "list[dict]"
+ },
+ "remote_services": {
+  "info": "Definitions of remote unshackle service servers, used by the --remote mode.",
+  "type": "dict"
+ },
+ "scene_naming": {
+  "info": "If set to any non-null value, unshackle exits with an error directing you to configure output_template instead."
+ },
+ "series_year": {},
+ "serve": {
+  "info": "Configuration for the serve command (the built-in REST API server).",
+  "keys": {
+   "allow_job_credentials": {
+    "info": "Permit clients to supply credentials per job.",
+    "type": "bool"
+   },
+   "api_secret": {
+    "info": "Master secret the server accepts in the X-Secret-Key header.",
+    "type": "str"
+   },
+   "cdm_overrides": {
+    "info": "Allowed per-request CDM overrides: a list of permitted device names, or true for any.",
+    "type": "list or bool"
+   },
+   "compression_level": {
+    "info": "gzip level for responses.",
+    "type": "int"
+   },
+   "dashboard": {
+    "info": "Developer dashboard: key is the API key for the read-only /api/dashboard/ endpoints (status, remote sessions, remote session logs, jobs, keys, services, health, logs, SSE events).",
+    "type": "dict"
+   },
+   "devices": {
+    "info": "Widevine devices offered; auto-filled from directories.wvds.",
+    "type": "list"
+   },
+   "global_speed_limit": {
+    "info": "Server-wide download speed cap, e.g.",
+    "type": "str"
+   },
+   "history_limit": {
+    "info": "How many finished jobs to retain in history.",
+    "type": "int"
+   },
+   "max_sessions": {
+    "info": "Maximum concurrent remote sessions; at the cap the server evicts the oldest.",
+    "type": "int or null"
+   },
+   "playready_devices": {
+    "info": "PlayReady devices; auto-filled from directories.prds.",
+    "type": "list"
+   },
+   "remote_only": {
+    "info": "Expose only the remote service session endpoints (health, services, search, session) and disable the rest of the REST API.",
+    "type": "bool"
+   },
+   "server_accounts": {
+    "info": "Services whose remote sessions use the server's own credentials and cookie files instead of the client's (see below).",
+    "type": "dict"
+   },
+   "services": {
+    "info": "Global service allowlist.",
+    "type": "list"
+   },
+   "services_refresh_interval": {
+    "info": "How often the server pulls the git-backed service repositories in directories.services and hot-reloads the services that changed.",
+    "type": "int (s)"
+   },
+   "services_staged_max_age": {
+    "info": "How long a staged service waits for its jobs and sessions before the server swaps it in anyway.",
+    "type": "int (s)"
+   },
+   "session_ttl": {
+    "info": "Seconds a remote session can stay idle before it expires.",
+    "type": "int (s)"
+   },
+   "tiers": {
+    "info": "Named settings that users entries reference by name (see below).",
+    "type": "dict"
+   },
+   "users": {
+    "info": "Per-user API keys and their allowlists (see below).",
+    "type": "dict"
+   }
+  },
+  "type": "dict"
+ },
+ "services": {
+  "info": "Per-service configuration, keyed by the canonical service tag (for example EXAMPLE1, EXAMPLE2,",
+  "type": "dict"
+ },
+ "services_repo_force": {},
+ "set_terminal_bg": {
+  "info": "Append the theme's background colour to output styling.",
+  "type": "bool"
+ },
+ "simkl_client_id": {
+  "info": "SIMKL client ID for metadata lookups; an alternative/fallback source to TMDB.",
+  "type": "str"
+ },
+ "subtitle": {
+  "info": "Subtitle handling: SDH stripping, format conversion, and whether unshackle muxes the subtitles",
+  "keys": {
+   "conversion_method": {
+    "info": "Subtitle conversion backend.",
+    "type": "str"
+   },
+   "convert_before_strip": {
+    "info": "Convert to the working format before stripping SDH.",
+    "type": "bool"
+   },
+   "group_by": {
+    "info": "Which key groups the subtitle tracks.",
+    "type": "str"
+   },
+   "language_priority": {
+    "info": "Languages to sort to the top, in the order you give.",
+    "type": "list"
+   },
+   "output_mode": {
+    "info": "mux embeds subtitles in the MKV; sidecar writes separate files; both writes sidecars and still muxes.",
+    "type": "str"
+   },
+   "preserve_formatting": {
+    "info": "Pass WebVTT cue text through as written.",
+    "type": "bool"
+   },
+   "sdh_method": {
+    "info": "SDH-stripping backend to use.",
+    "type": "str"
+   },
+   "sidecar_format": {
+    "info": "Format for sidecar files when output_mode is sidecar or both.",
+    "type": "str"
+   },
+   "strip_sdh": {
+    "info": "Strip SDH/CC cues (hearing-impaired annotations) into a clean track.",
+    "type": "bool"
+   },
+   "type_priority": {
+    "info": "Ordered ranking of subtitle types (forced, normal, sdh; CC counts as SDH).",
+    "type": "list"
+   }
+  },
+  "type": "dict"
+ },
+ "tag": {
+  "info": "Release-group tag.",
+  "type": "str"
+ },
+ "tag_group_name": {
+  "info": "Include the group name (tag) in the MKV Group tag.",
+  "type": "bool"
+ },
+ "tag_imdb_tmdb": {
+  "info": "Write IMDb/TMDB/TVDB external-ID tags into the MKV (needs metadata providers).",
+  "type": "bool"
+ },
+ "tag_rules": {
+  "info": "Conditionally replaces tag for a given download.",
+  "type": "list"
+ },
+ "theme": {
+  "info": "Named colour theme for all CLI output: banner, logs, progress bars, and help screens.",
+  "type": "str"
+ },
+ "title_cache_enabled": {
+  "info": "Master switch for the title cache.",
+  "type": "bool"
+ },
+ "title_cache_max_retention": {
+  "info": "Total retention window for a cached title, counted from when it was cached.",
+  "type": "int (seconds)"
+ },
+ "title_cache_time": {
+  "info": "Lifetime of fresh cached titles.",
+  "type": "int (seconds)"
+ },
+ "tmdb_api_key": {
+  "info": "TMDB API key for metadata enrichment and external-ID tags.",
+  "type": "str"
+ },
+ "tvdb_api_key": {
+  "info": "TheTVDB v4 API key; a fallback source to TMDB, strongest on TV series.",
+  "type": "str"
+ },
+ "tvdb_order": {
+  "info": "Default for --tvdb-order: renumber episodes to a TVDB season order (official, dvd, absolute, alternate, regional).",
+  "type": "str"
+ },
+ "tvdb_pin": {
+  "info": "Subscriber PIN, only needed for a user-supported TVDB key.",
+  "type": "str"
+ },
+ "unicode_filenames": {
+  "info": "Allow Unicode in filenames; when false, names are ASCII-sanitised.",
+  "type": "bool"
+ },
+ "update_check_interval": {
+  "info": "Minimum hours between update checks.",
+  "type": "int (hours)"
+ },
+ "update_checks": {
+  "info": "Whether to check for new unshackle releases.",
+  "type": "bool"
+ },
+ "vault_timeout": {
+  "info": "Timeout in seconds for vault operations.",
+  "type": "float"
+ }
+}

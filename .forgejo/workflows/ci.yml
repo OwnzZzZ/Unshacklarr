@@ -1,0 +1,53 @@
+# Tests on every push; on main, the image too, pushed to this Forgejo's container registry as
+# <server>/<owner>/unshacklarr:latest and :<commit>. A version tag (v0.2.0) puts :0.2.0 on the image
+# main built for that commit (tools/ci/retag.sh), built only if there is none.
+# The push needs a REGISTRY_TOKEN secret: a Forgejo token with the write:package scope.
+name: CI
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: docker
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - name: Tests
+        run: |
+          # uv at a pinned version, its archive checked against the sum its release publishes
+          curl -fsSLo /tmp/uv.tgz https://github.com/astral-sh/uv/releases/download/0.12.22/uv-x86_64-unknown-linux-gnu.tar.gz
+          echo "b9980552309f09c15172b8be828555e375097f16deb459795ce7bfd200380f0b  /tmp/uv.tgz" | sha256sum -c -
+          tar xzf /tmp/uv.tgz -C /tmp && export PATH="/tmp/uv-x86_64-unknown-linux-gnu:$PATH"
+          uv sync --locked --group test
+          TZ=Europe/Paris uv run --group test pytest -q
+
+  image:
+    needs: test
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    runs-on: docker
+    env:
+      REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - name: Build and push
+        run: |
+          if [ -z "$REGISTRY_TOKEN" ]; then echo "No REGISTRY_TOKEN secret: the image is not built"; exit 0; fi
+          host="${GITHUB_SERVER_URL#https://}"; host="${host%/}"
+          owner="$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')"
+          case "$GITHUB_REF" in  # a release: the image main built for its commit, if there is one
+            refs/tags/v*) REGISTRY_USER="$GITHUB_ACTOR" REGISTRY_PASSWORD="$REGISTRY_TOKEN" \
+                            sh tools/ci/retag.sh "$host" "$owner/unshacklarr" "${GITHUB_SHA::12}" "${GITHUB_REF#refs/tags/v}" && exit 0 ;;
+          esac
+          # the docker client, checked against the sum it had when pinned: it runs with the registry token
+          curl -fsSLo /tmp/docker.tgz https://download.docker.com/linux/static/stable/x86_64/docker-27.5.1.tgz
+          echo "4f798b3ee1e0140eab5bf30b0edc4e84f4cdb53255a429dc3bbae9524845d640  /tmp/docker.tgz" | sha256sum -c -
+          tar xzf /tmp/docker.tgz -C /tmp
+          docker=/tmp/docker/docker
+          image="$host/$owner/unshacklarr"
+          echo "$REGISTRY_TOKEN" | $docker login "$host" -u "$GITHUB_ACTOR" --password-stdin
+          case "$GITHUB_REF" in
+            refs/tags/v*) tags="${GITHUB_REF#refs/tags/v}" ;;  # a release: its version only
+            *) tags="latest ${GITHUB_SHA::12}" ;;
+          esac
+          $docker build --pull $(for t in $tags; do printf -- '-t %s:%s ' "$image" "$t"; done) .  # --pull: the base image's fixes too
+          for t in $tags; do $docker push "$image:$t"; done

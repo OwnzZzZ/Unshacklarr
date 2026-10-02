@@ -1,0 +1,64 @@
+# Unshacklarr next to Sonarr, with unshackle serve in its own container.
+#   1. Save this file as docker-compose.yml and .env.example as .env next to it, then fill in .env
+#      (nothing else of the repository is needed: see the README's Quick start).
+#   2. Put your Unshackle config in ./unshackle (unshackle.yaml, Cookies/, WVDs/, PRDs/), your
+#      services in ./services (one folder per service, as in unshackle/services), and give
+#      unshackle.yaml an API key:   serve: {api_secret: <the UNSHACKLE_API_KEY of .env>}
+#      and its folders as this container sees them (the README's Quick start has the lines):
+#      directories: {cookies: /config/unshackle/Cookies, wvds: /config/unshackle/WVDs,
+#                    prds: /config/unshackle/PRDs, cache: /data/cache, temp: /data/temp}
+#   3. docker compose up -d (the first time, it builds unshackle serve), then open
+#      http://<this host>:8788. The setup code is in docker logs unshacklarr.
+#
+# Updating: docker compose pull && docker compose up -d for Unshacklarr; for Unshackle,
+# docker compose build --pull unshackle && docker compose up -d.
+#
+# The downloads folder is mounted in both containers at the same path, /downloads.
+# SONARR_DOWNLOADS is that same folder as Sonarr sees it.
+name: unshacklarr
+
+services:
+  unshackle:
+    # Unshackle has no published image: it is built here, once, from its own source
+    build:
+      context: https://github.com/OwnzZzZ/Unshacklarr.git#main:docker
+      dockerfile: unshackle.Dockerfile
+    image: unshackle-serve:latest
+    container_name: unshackle
+    restart: unless-stopped
+    user: "${PUID:-1000}:${PGID:-1000}"   # the owner Sonarr expects on downloaded files
+    environment:
+      - TZ=${TZ:-UTC}
+    volumes:
+      - ./unshackle:/config/unshackle
+      - ./services:/app/unshackle/services     # Unshackle itself ships only an EXAMPLE service
+      - ./unshackle-data:/data                 # its cache and key vault
+      - ${DOWNLOADS_DIR}:/downloads
+    # no ports: only Unshacklarr talks to it, on the Docker network
+
+  unshacklarr:
+    image: ghcr.io/ownzzzz/unshacklarr:latest  # built by the project's CI: nothing to build here
+    container_name: unshacklarr
+    restart: unless-stopped
+    user: "${PUID:-1000}:${PGID:-1000}"
+    depends_on: [unshackle]
+    environment:
+      - TZ=${TZ:-UTC}
+      - UNSHACKLE_URL=http://unshackle:8786
+      - UNSHACKLE_API_KEY=${UNSHACKLE_API_KEY}
+      - SONARR_URL=${SONARR_URL:-http://sonarr:8989}   # starting values: the setup and Settings take over
+      - SONARR_DOWNLOADS=${SONARR_DOWNLOADS:-}
+      - UNSHACKLE_CONFIG_DIR=/unshackle-config  # its cookies and CDMs, managed from Settings
+    volumes:
+      - ./data:/data                           # config.yaml, history, caches
+      - ./unshackle:/unshackle-config          # the same folder as Unshackle's: unshackle.yaml, Cookies, WVDs, PRDs
+      - ${DOWNLOADS_DIR}:/downloads
+    ports:
+      - 8788:8788
+    # To reach Sonarr by name, join its network:
+    # networks: [default, sonarr]
+
+# networks:
+#   sonarr:
+#     external: true
+#     name: <the network of your Sonarr container>
