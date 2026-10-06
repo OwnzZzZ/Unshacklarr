@@ -174,6 +174,8 @@ class Local:
 
 
 class Unshackle:
+    name = ""  # another serve's name in Settings; the main one has none
+
     def __init__(self, data_dir: Path):
         self.local = Local(data_dir / "unshackle-serve.log")
         self.settings: dict = {}

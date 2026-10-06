@@ -1,5 +1,6 @@
 import importlib
 import json
+import re
 
 
 def test_unreachable_is_notified_once_after_two_checks_then_back(tmp_path, monkeypatch):
@@ -154,10 +155,16 @@ def test_the_page_script_parses(tmp_path):
     import pytest
     if not shutil.which("node"):
         pytest.skip("node is not installed")
-    page = (Path(__file__).parents[1] / "unshacklarr" / "static" / "index.html").read_text()
-    script = tmp_path / "page.js"
-    script.write_text(page[page.rindex("<script>") + 8 : page.rindex("</script>")])
-    check = subprocess.run(["node", "--check", str(script)], capture_output=True, text=True)
+    static = Path(__file__).parents[1] / "unshacklarr" / "static"
+    page = (static / "index.html").read_text()
+    scripts = re.findall(r'<script src="/js/([\w-]+\.js)"></script>', page)
+    assert sorted(scripts) == sorted(f.name for f in (static / "js").glob("*.js"))  # each file loaded, none forgotten
+    for name in scripts:
+        check = subprocess.run(["node", "--check", str(static / "js" / name)], capture_output=True, text=True)
+        assert check.returncode == 0, f"{name}: {check.stderr}"
+    whole = tmp_path / "page.js"  # in their order, one scope as the browser runs them: no name declared twice
+    whole.write_text("".join((static / "js" / name).read_text() for name in scripts))
+    check = subprocess.run(["node", "--check", str(whole)], capture_output=True, text=True)
     assert check.returncode == 0, check.stderr
 
 
@@ -974,3 +981,258 @@ def test_a_streaming_site_maps_to_the_code_this_unshackle_has_for_it(tmp_path, m
     monkeypatch.setattr(web, "service_domains", down)
     assert web.installed_links(kept) == kept  # Unshackle out of reach: as kept
     assert web.TMDB_HEADERS["User-Agent"].startswith("Unshacklarr/")  # TMDB's site refuses a fake browser (PR #2)
+
+
+def test_accepted_audio_languages_are_language_codes(tmp_path, monkeypatch):
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    assert web.check_audio_accept(" FR,en-US  de ", "x") == "fr, en-us, de" and web.check_audio_accept(None, "x") == ""
+    for bad in ("orig", "fr;en", "français", "e"):
+        try:
+            web.check_audio_accept(bad, "x")
+            raise AssertionError(f"expected {bad!r} to be refused")
+        except web.web.HTTPBadRequest as e:
+            assert "language code" in e.text
+
+
+def test_a_series_is_checked_hours_before_its_release_and_told_once(tmp_path, monkeypatch):
+    from datetime import datetime, timedelta, timezone
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    now = datetime(2026, 10, 5, 18, tzinfo=timezone.utc)
+    series = {1: {"service": "TF1", "title": "a", "release_time": "21:00"}, 2: {"service": "MAX", "title": "b", "release_time": "20:30"},
+              3: {"service": "NF", "title": "c", "release_time": "20:00"}, 4: {"service": "ATV", "title": "d", "release_time": "23:59"}}
+    config = {"auth": {"password": "x"}, "series": series, "notifications": {}}
+    monkeypatch.setattr(web, "read_config", lambda: config)
+    monkeypatch.setattr(web.sonarr_sync, "LOCAL", timezone.utc)
+    ep = lambda i, tvdb: {"id": i, "seasonNumber": 1, "episodeNumber": i, "airDateUtc": "2026-10-05T19:00:00Z", "hasFile": False,
+                          "series": {"tvdbId": tvdb, "title": f"Show{tvdb}"}}
+    monkeypatch.setattr(web, "calendar_episodes", lambda config, start, end: [ep(1, 1), ep(2, 2), ep(3, 3), ep(4, 4)])
+    monkeypatch.setattr(web.sonarr_sync, "no_cdm", lambda tag, config=None: "No CDM for MAX" if tag == "MAX" else "")
+
+    def titles(show):
+        if show["service"] == "TF1":
+            raise web.UnshackleError("unshackle serve: login refused")
+        return [{"type": "episode"}]
+    listed = []
+    monkeypatch.setattr(web, "list_titles", lambda show: listed.append(show["service"]) or titles(show))
+    sent = []
+    monkeypatch.setattr(web.sonarr_sync, "notify", lambda settings, level, title, message, **k: sent.append((title, message)))
+    assert web.precheck(now) == ["Not ready for its release: Show1 S01E01", "Not ready for its release: Show2 S01E02"]
+    assert "login refused" in sent[0][1] and "at 21:00" in sent[0][1] and "No CDM" in sent[1][1]
+    assert sorted(listed) == ["NF", "TF1"]  # ATV comes out at 23:59: later; MAX has no CDM: not listed for nothing
+    assert web.precheck(now + timedelta(minutes=10)) == [] and sorted(listed) == ["NF", "TF1"]  # each checked once
+    config["notifications"]["events"] = {"precheck": False}
+    assert web.precheck(now + timedelta(hours=3)) == []  # turned off
+
+
+def test_a_reverse_proxy_lets_in_only_from_its_own_address(tmp_path, monkeypatch):
+    import asyncio
+    from aiohttp.test_utils import TestClient, TestServer
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    assert web.check_proxy_auth(" Remote-User ", "172.18.0.5/16, 10.0.0.1") == ("Remote-User", "172.18.0.0/16, 10.0.0.1/32")
+    assert web.check_proxy_auth("", "") == ("", "")
+    for header, sources in (("Remote-User", ""), ("Remote User", "10.0.0.1"), ("Remote-User", "anywhere")):
+        try:
+            web.check_proxy_auth(header, sources)
+            raise AssertionError(f"expected {header!r}, {sources!r} to be refused")
+        except web.web.HTTPBadRequest:
+            pass
+
+    def proxied(sources):
+        web.sonarr_sync.SETTINGS.update(proxy_auth_header="Remote-User", proxy_auth_from=sources)
+
+    user = {"Remote-User": "alice"}
+
+    async def go():
+        async with TestClient(TestServer(web.app)) as client:  # the test client connects from 127.0.0.1
+            async def visit(headers):
+                session = await (await client.get("/api/session", headers=headers)).json()
+                return session.get("logged_in"), session.get("proxy_user"), (await client.get("/api/inbox", headers=headers)).status
+
+            proxied("127.0.0.1/32")
+            assert (await visit(user))[2] == 403  # not set up yet: the proxy opens nothing before the password exists
+            web.write_config({**web.read_config(), "auth": {"password": web.hash_password("password1"), "secret": "s1"}})
+            proxied("127.0.0.1/32")  # writing the config read the settings again
+            assert await visit(user) == (True, "alice", 200)  # from the proxy's address, with its header: in
+            assert (await visit({}))[2] == 401  # from the proxy, without the header: who is it? out
+            proxied("10.0.0.0/8")
+            assert (await visit({**user, "X-Real-IP": "10.0.0.2", "X-Forwarded-For": "10.0.0.2"}))[2] == 401  # anyone else: out, whatever it claims
+            proxied("")
+            assert (await visit(user))[2] == 401  # turned off
+
+    asyncio.run(go())
+
+
+def test_the_page_style_and_scripts_are_served_like_the_page(tmp_path, monkeypatch):
+    import asyncio
+    from aiohttp.test_utils import TestClient, TestServer
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    web.write_config({**web.read_config(), "auth": {"password": web.hash_password("password1"), "secret": "s1"}})
+
+    async def go():
+        async with TestClient(TestServer(web.app)) as client:  # not logged in: the page itself is public too
+            got = {}
+            html = await (await client.get("/")).text()
+            got["page"] = html
+            for path in ("/app.css", "/js/core.js", "/js/setup.js", "/js/nope.js", "/js/../web.py", "/app.css?v=abc"):
+                r = await client.get(path)
+                got[path] = (r.status, r.headers.get("Cache-Control"), r.headers.get("Content-Type", "").split(";")[0])
+            return got
+
+    got = asyncio.run(go())
+    assert got["/app.css"] == (200, "no-cache", "text/css") and got["/js/core.js"] == (200, "no-cache", "text/javascript")
+    assert got["/js/setup.js"][0] == 200 and got["/js/nope.js"][0] in (401, 404) and got["/js/../web.py"][0] in (401, 404)
+    import re
+    assert re.search(r'href="/app\.css\?v=[0-9a-f]{10}"', got["page"]) and re.search(r'src="/js/core\.js\?v=[0-9a-f]{10}"', got["page"])
+    assert got["/app.css?v=abc"][0] == 200  # the version is for the browser's cache only: any serves the file
+
+
+def test_the_settings_are_backed_up_and_restored_but_never_the_password(tmp_path, monkeypatch):
+    import asyncio
+    import yaml
+    from aiohttp.test_utils import TestClient, TestServer
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    auth = {"password": web.hash_password("password1"), "secret": "s1"}
+    web.write_config({**web.read_config(), "auth": auth, "series": {111: {"service": "TF1", "title": "https://tf1/a"}},
+                      "settings": {"sonarr_api_key": "sonarr-secret"}})
+    web.app._middlewares = type(web.app._middlewares)([web.same_origin_only])  # logged in, for this test
+    h = {"X-Unshackle": "1"}
+
+    async def go():
+        async with TestClient(TestServer(web.app)) as client:
+            wrong = (await client.post("/api/backup", json={"password": "nope"}, headers=h)).status
+            r = await client.post("/api/backup", json={"password": "password1"}, headers=h)
+            saved = await r.json()
+            data = yaml.safe_load(saved["text"])
+            assert "auth" not in data and "scrypt" not in saved["text"] and data["settings"]["sonarr_api_key"] == "sonarr-secret"
+            data["series"] = {222: {"service": "MAX", "title": "https://max/b"}}
+            bad = [(await client.post("/api/restore", json={"password": "password1", "text": text}, headers=h)).status
+                   for text in ("- a list", "series: [1, 2]", "series: {abc: {}}", "{unclosed", "other: 1")]
+            ok = await client.post("/api/restore", json={"password": "password1", "text": yaml.safe_dump(data)}, headers=h)
+            return wrong, bad, ok.status, await ok.json()
+
+    wrong, bad, status, body = asyncio.run(go())
+    assert wrong == 403 and bad == [400] * 5 and status == 200 and body == {"series": 1}
+    config = web.read_config()
+    assert list(config["series"]) == [222] and config["auth"] == auth  # restored, the password and session kept
+    assert "111" in (tmp_path / "config-before-restore.yaml").read_text()  # what it replaced, kept aside
+
+
+def test_an_episode_without_its_preferred_audio_is_got_again_once_it_comes(tmp_path, monkeypatch):
+    import json
+    from datetime import datetime, timedelta, timezone
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    sync = importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    config = {"series": {111: {"service": "TF1", "title": "a", "audio_prefer": "fr"}, 222: {"service": "MAX", "title": "b"}}, "notifications": {}}
+    monkeypatch.setattr(web, "read_config", lambda: config)
+    ep = lambda i, tvdb: {"id": i, "seasonNumber": 1, "episodeNumber": i, "series": {"tvdbId": tvdb, "title": f"Show{tvdb}"}}
+    assert sync.preferred_audio(config["series"][111], config) == "fr" and sync.preferred_audio(config["series"][222], config) == ""
+    sync.note_upgrade(ep(1, 111), config["series"][111], "S01E01", "fr")  # imported in English: watched
+    sync.note_upgrade(ep(2, 222), config["series"][222], "S01E02", "fr")
+    now = datetime.now(timezone.utc)
+    later = now + timedelta(days=1)
+    monkeypatch.setattr(web.sonarr_sync, "download_request", lambda show, config, wanted, out: {"service": show["service"], "wanted": [wanted]})
+    monkeypatch.setattr(web.sonarr_sync, "tracks_on_service", lambda show, config, request: {"audio": {"fr"} if request["service"] == "TF1" else {"en"}, "subtitles": set()})
+    started, told = [], []
+    monkeypatch.setattr(web, "run_sync", lambda ids, replace=False, kind="manual": started.append((ids, replace, kind)))
+    monkeypatch.setattr(web.sonarr_sync, "notify", lambda settings, level, title, *a, **k: told.append(title))
+    assert web.check_upgrades(now) == [] and started == []  # checked at its download, a day ago at most: not again yet
+    assert web.check_upgrades(later) == ["Show111 S01E01"] and started == [([1], True, "upgrade")]  # French on TF1: got again, in place
+    assert web.check_upgrades(later + timedelta(hours=1)) == []  # once a day
+    sync.note_upgrade(ep(1, 111), config["series"][111], "S01E01", "")  # imported in French: off the list
+    assert list(json.loads(sync.UPGRADES_FILE.read_text())) == ["2"]
+    web.check_upgrades(now + timedelta(days=31))
+    assert told == ["Kept without fr audio: Show222 S01E02"] and json.loads(sync.UPGRADES_FILE.read_text()) == {}  # past its days: kept, told once
+
+
+def test_a_series_is_found_by_name_on_its_service(tmp_path, monkeypatch):
+    import asyncio
+    from aiohttp.test_utils import TestClient, TestServer
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    asked = []
+
+    def serve(method, path, json=None, **_):
+        asked.append(json)
+        if json["service"] == "NF":
+            raise web.UnshackleError("unshackle serve: Search is not supported by NF")
+        return {"results": [{"id": "123", "title": "Show", "label": "SERIES", "description": "x" * 500, "url": "https://tf1/show"}, {"title": "no id"}]}
+    monkeypatch.setattr(web.UNSHACKLE, "call", serve)
+    web.app._middlewares = type(web.app._middlewares)([web.same_origin_only])  # logged in, for this test
+
+    async def go():
+        async with TestClient(TestServer(web.app)) as client:
+            async def find(show, query="Show"):
+                r = await client.post("/api/series/search", json={"show": show, "query": query}, headers={"X-Unshackle": "1"})
+                return r.status, await (r.json() if r.status == 200 else r.text())
+            return [await find({"service": "TF1", "options": {"--profile": "alt"}}), await find({"service": "NF"}), await find({"service": "TF1"}, "")]
+
+    found, unsupported, empty = asyncio.run(go())
+    assert found[0] == 200 and found[1]["results"] == [{"id": "123", "title": "Show", "label": "SERIES", "description": "x" * 240, "url": "https://tf1/show"}]
+    assert asked[0] == {"profile": "alt", "service": "TF1", "query": "Show"}  # the series' own profile
+    assert unsupported == (400, "NF can't be searched: paste the series' URL instead") and empty[0] == 400
+
+
+def test_other_servers_keep_their_key_hidden_and_ladders_are_checked(tmp_path, monkeypatch):
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    from aiohttp import web as aioweb
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    saved = [{"name": "vpn", "url": "http://vpn:8786", "api_key": "secret-key", "downloads": "/dl"}]
+    kept = web.check_backends([{"name": "vpn", "url": "http://vpn:8786/", "downloads": "/dl/"}], saved)
+    assert kept == saved  # an empty key keeps the saved one, for the same address
+    for bad in ([{"name": "vpn", "url": "http://elsewhere:8786"}],  # a new address never gets the old key
+                [{"name": "", "url": "http://vpn:8786"}], [{"name": "a", "url": "ftp://x"}],
+                [{"name": "a", "url": "http://x"}, {"name": "a", "url": "http://y"}]):
+        try:
+            web.check_backends(bad, saved)
+            raise AssertionError(bad)
+        except aioweb.HTTPBadRequest:
+            pass
+    shown = web.public_config({**web.read_config(), "settings": {"backends": saved}})["settings"]["backends"]
+    assert shown == [{"name": "vpn", "url": "http://vpn:8786", "downloads": "/dl", "api_key_set": True}]
+    assert web.stored_key_for("http://vpn:8786", "unshackle") == "" and "secret-key" not in json.dumps(shown)
+
+    assert [lad["name"] for lad in web.check_ladders(None)] == ["1080p", "4K, then 1080p", "Archival"]  # the built-in ones
+    ladders = web.check_ladders([{"name": "Mine", "steps": [{"codec": "HEVC", "range": "DV", "min": "2160", "max": ""}]}])
+    assert ladders == [{"name": "Mine", "steps": [{"codec": "HEVC", "range": "DV", "min": 2160, "max": 0}]}]
+    assert web.check_ladder_name("off", ladders, "x") == "off" and web.check_ladder_name("", ladders, "x") == ""
+    for bad in ([{"name": "A", "steps": []}], [{"name": "A", "steps": [{"codec": "MPEG2"}]}],
+                [{"name": "A", "steps": [{"min": 1080, "max": 720}]}], [{"name": "off", "steps": [{}]}]):
+        try:
+            web.check_ladders(bad)
+            raise AssertionError(bad)
+        except aioweb.HTTPBadRequest:
+            pass
+    try:
+        web.check_ladder_name("Gone", ladders, "S")
+        raise AssertionError("a deleted ladder")
+    except aioweb.HTTPBadRequest:
+        pass

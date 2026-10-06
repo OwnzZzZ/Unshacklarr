@@ -7,7 +7,7 @@ command line; a flag set to true is on, false or empty is left out:
     defaults:                    # Unshackle options for every series
       --quality: "1080"
     service_defaults:            # then per service, before the series' own
-      ATV: {options: {--profile: alt}, service_options: {}}
+      ATV: {options: {--profile: alt}, service_options: {}, backend: vpn, ladder: 1080p}  # its serve, its ladder
     series:
       123456:
         service: M6
@@ -36,6 +36,10 @@ command line; a flag set to true is on, false or empty is left out:
         join_parts: true         # join an episode's parts into one file (default)
         parts: 2                 # each episode comes in 2 parts: wait for all of them (default: any)
         episode_name: joined     # drop it from file names: keep, always, or joined (default)
+        ladder: 1080p            # its quality ladder (off: none); else its service's, else the settings'
+        download_only: true      # never imported: it waits for an import by hand; else the settings'
+    quality_ladders:             # steps tried in order against the episode's tracks (BUILTIN_LADDERS until set)
+      - {name: 1080p, steps: [{codec: AVC, range: SDR, min: 1080, max: 1080}]}
     notifications:
       urls: [discord://…, tgram://…]  # Apprise URLs: https://github.com/caronc/apprise#supported-notifications
       success: true              # episode downloaded and handed to Sonarr
@@ -133,7 +137,17 @@ SETTINGS_DEFAULTS = {
     "leftovers_days": 14,        # what waits in the downloads folder goes after this long (0: never)
     "history_keep": 300,
     "history_days": 60,
+    "proxy_auth_header": "",     # a reverse proxy's login: this header names the user (Remote-User), believed only
+    "proxy_auth_from": "",       # from these addresses (172.18.0.0/16, 10.0.0.5): the proxy's own; both, or none
+    "min_free_gb": 0,            # nothing is downloaded while the downloads folder has less room (GB); 0: never checked
+    "audio_accept": "",          # a download must have one of these audio languages ("fr, en"); empty: the first asked for
+    "audio_prefer": "",          # the audio language to upgrade to: an episode without it is got again once it comes
+    "upgrade_days": 30,          # for so many days after its download, checked once a day
+    "subs_accept": "",           # and one of these subtitle languages, forced ones aside ("fr"); empty: not checked
     "debug": False,              # Activity's output says more: Unshackle's debug log, every call to Sonarr
+    "download_only": False,      # downloaded and tidied, never handed to Sonarr: imported by hand (a series can say otherwise)
+    "backends": [],              # other unshackle serve: [{name, url, api_key, downloads (as that serve sees the folder)}]
+    "quality_ladder": "",        # the quality ladder every series downloads by (a service or a series can pick another)
 }
 SETTINGS_FROM_ENV = {
     "unshackle_url": "UNSHACKLE_URL", "unshackle_api_key": "UNSHACKLE_API_KEY", "downloads": "DOWNLOADS",
@@ -172,14 +186,61 @@ def apply_settings(settings: dict) -> None:
     AUTO_DAYS = float(settings["auto_days"])
     RUNS_KEEP, RUNS_MAX_DAYS = int(settings["history_keep"]), int(settings["history_days"])
     UNSHACKLE.configure(settings)
+    BACKENDS.clear()
+    for b in settings.get("backends") or []:
+        other = Unshackle(DATA)
+        other.name = b["name"]
+        other.configure({"unshackle_mode": "remote", "unshackle_url": b.get("url"), "unshackle_api_key": b.get("api_key"),
+                         "unshackle_downloads": b.get("downloads")})
+        BACKENDS[b["name"]] = other
+
+
+BACKENDS: dict[str, Unshackle] = {}  # the other unshackle serve, by name
+
+
+def backend_named(name: str | None) -> Unshackle:
+    return BACKENDS.get(name or "", UNSHACKLE)
+
+
+def has_service(backend: Unshackle, tag: str) -> bool:
+    try:
+        return any(s["tag"] == tag for s in backend.services())
+    except UnshackleError:
+        return False
+
+
+def backend_for(tag: str, config: dict | None = None) -> Unshackle:
+    """The unshackle serve a service downloads with: the one Per service picks for it, else the main one, else
+    the first other one that has it."""
+    config = read_file() if config is None else config
+    chosen = ((config.get("service_defaults") or {}).get(tag) or {}).get("backend")
+    if chosen in BACKENDS:
+        return BACKENDS[chosen]
+    if BACKENDS and not has_service(UNSHACKLE, tag):
+        return next((b for b in BACKENDS.values() if has_service(b, tag)), UNSHACKLE)
+    return UNSHACKLE
+
+
+def all_services() -> list[dict]:
+    """Every service a series can pick: the main unshackle serve's, then those only another one has (with its name)."""
+    services = list(UNSHACKLE.services())
+    have = {s["tag"] for s in services}
+    for name, other in BACKENDS.items():
+        try:
+            extra = other.services()
+        except UnshackleError:
+            continue
+        services += [{**s, "backend": name} for s in extra if s["tag"] not in have]
+        have |= {s["tag"] for s in extra}
+    return services
 
 
 apply_settings(load_settings())
 
 
-def seen_by(setting: str, folder: Path) -> str:
-    """A folder of the downloads folder, as Unshackle or Sonarr sees it."""
-    base = str(SETTINGS.get(setting) or "").rstrip("/\\")
+def seen_by(setting: str, folder: Path, settings: dict | None = None) -> str:
+    """A folder of the downloads folder, as Unshackle (its settings: another serve's) or Sonarr sees it."""
+    base = str((SETTINGS if settings is None else settings).get(setting) or "").rstrip("/\\")
     return f"{base}/{folder.name}" if base else str(folder)
 
 
@@ -373,14 +434,13 @@ def send_held(settings: dict) -> bool:
     return deliver(settings, worst, i18n.tr_lines(title, SETTINGS.get("language", "en")), "\n".join(lines) + more)
 
 
-def missing_episodes():
-    page = 1
-    while True:
-        data = sonarr_get("wanted/missing", page=page, pageSize=250, includeSeries="true", monitored="true")
-        yield from data["records"]
-        if page * data["pageSize"] >= data["totalRecords"]:
-            return
-        page += 1
+def missing_episodes(now: datetime | None = None) -> list[dict]:
+    """Monitored episodes without a file that aired within the automatic sync's reach (AUTO_DAYS): Sonarr's
+    calendar for those days, not its whole wanted list, which runs to the library's every gap."""
+    now = now or datetime.now(timezone.utc)
+    episodes = sonarr_get("calendar", start=(now - timedelta(days=AUTO_DAYS + 1)).isoformat(), end=now.isoformat(),
+                          includeSeries="true", unmonitored="false")
+    return [ep for ep in episodes if not ep.get("hasFile") and ep.get("monitored", True) and ep["series"].get("monitored", True)]
 
 
 def chosen_episodes(ids: list[int]):
@@ -655,10 +715,11 @@ def ask_for_input(run: EpisodeRun, prompt: str | None) -> None:
 
 
 def run_job(payload: dict, run: EpisodeRun | None = None, poll: float = 0.5) -> list[str]:
-    """Hand the download to unshackle serve and follow it to the end, drawing its progress
-    in the run's log (the web page's terminal). Returns the files it made."""
-    job_id = UNSHACKLE.download(payload)
-    trace(f"unshackle serve took it as job {job_id}")
+    """Hand the download to unshackle serve (the run's own, when another one has its service) and follow it to
+    the end, drawing its progress in the run's log (the web page's terminal). Returns the files it made."""
+    backend = backend_named(run.card.get("backend") if run else None)
+    job_id = backend.download(payload)
+    trace(f"unshackle serve{f' {backend.name}' if backend.name else ''} took it as job {job_id}")
     if run:  # what Activity's Stop button cancels
         run.card["job_id"] = job_id
         run.save()
@@ -670,7 +731,7 @@ def run_job(payload: dict, run: EpisodeRun | None = None, poll: float = 0.5) -> 
     misses = 0
     while True:
         try:
-            job = UNSHACKLE.job(job_id)
+            job = backend.job(job_id)
             misses = 0
         except UnshackleError as e:
             # One status that didn't come is not a failed download: the job still runs on serve, and a
@@ -678,7 +739,7 @@ def run_job(payload: dict, run: EpisodeRun | None = None, poll: float = 0.5) -> 
             misses += 1
             if misses >= POLL_MISSES or not TRANSIENT.search(str(e)):
                 try:
-                    UNSHACKLE.cancel(job_id)  # gone for good: nothing of it may go on behind a retry
+                    backend.cancel(job_id)  # gone for good: nothing of it may go on behind a retry
                 except UnshackleError:
                     pass
                 raise
@@ -837,11 +898,26 @@ def broadcast_plans(config: dict) -> list[tuple[dict, list[dict], dict[int, date
     if not shows:
         return []
     plans = []
-    for serie in sonarr_get("series"):
-        if serie.get("tvdbId") in shows:
+    for tvdb, serie in sonarr_series(set(shows)).items():
+        if tvdb in shows:
             episodes = sonarr_get("episode", seriesId=serie["id"])
-            plans.append((serie, episodes, broadcast_dates(shows[serie["tvdbId"]], episodes)))
+            plans.append((serie, episodes, broadcast_dates(shows[tvdb], episodes)))
     return plans
+
+
+_series_by_tvdb: tuple[float, dict] = (0.0, {})
+
+
+def sonarr_series(wanted: set) -> dict[int, dict]:
+    """Sonarr's series by TVDB id, kept an hour: the whole library is one big answer, asked again sooner
+    only for a series it did not have (added since), at most once a minute."""
+    global _series_by_tvdb
+    fetched, known = _series_by_tvdb
+    age = time.monotonic() - fetched
+    if not fetched or age > 3600 or (age > 60 and not wanted <= set(known)):
+        known = {s["tvdbId"]: s for s in sonarr_get("series") if s.get("tvdbId")}
+        _series_by_tvdb = (time.monotonic(), known)
+    return known
 
 
 def broadcast_dated(plans: list) -> set[int]:
@@ -967,20 +1043,21 @@ def to_args(opts: dict) -> list[str]:
 def unshackle_command(show: dict, config: dict, service_sxxeyy: str, out: Path) -> list[str]:
     """The `unshackle dl` command line the download amounts to, as the Schedule shows it."""
     dl, own = stacked(show, config)
-    return ["unshackle", "dl", "-o", seen_by("unshackle_downloads", out), "-w", service_sxxeyy,
+    where = seen_by("unshackle_downloads", out, backend_for(show["service"], config).settings)
+    return ["unshackle", "dl", "-o", where, "-w", service_sxxeyy,
             *to_args(dl), show["service"], *to_args(own), str(show["title"])]
 
 
-def service_entry(tag: str) -> dict:
-    return next((s for s in UNSHACKLE.services() if s["tag"] == tag), {})
+def service_entry(tag: str, config: dict | None = None) -> dict:
+    return next((s for s in backend_for(tag, config).services() if s["tag"] == tag), {})
 
 
-def no_cdm(tag: str) -> str:
+def no_cdm(tag: str, config: dict | None = None) -> str:
     """Why a service cannot be downloaded for want of a CDM: unshackle.yaml gives it no device and has no
     default one, so Unshackle would fail on its first license. Empty when a device decrypts it, when it is
     set to none (no DRM), or when it can't be told (Unshackle unreachable, no cdm: section read)."""
     try:
-        cdm = UNSHACKLE.cdm_config()
+        cdm = backend_for(tag, config).cdm_config()
     except UnshackleError:
         return ""
     if not cdm or any(str(k).lower() in ("default", tag.lower()) and v for k, v in cdm.items()):
@@ -991,28 +1068,31 @@ def no_cdm(tag: str) -> str:
 
 def download_request(show: dict, config: dict, service_sxxeyy: str, out: Path) -> dict:
     """The same download, as unshackle serve's /api/download takes it."""
-    if why := no_cdm(show["service"]):
+    if why := no_cdm(show["service"], config):
         raise ValueError(why)
     dl, own = stacked(show, config)
+    backend = backend_for(show["service"], config)
     return {
         # unshackle.yaml's dl: section first, as on the command line: serve does not apply it
-        **options.from_dl_config(UNSHACKLE.dl_config(), show["service"]),
-        **options.to_params(own, options.service_specs(service_entry(show["service"]))),
+        **options.from_dl_config(backend.dl_config(), show["service"]),
+        **options.to_params(own, options.service_specs(service_entry(show["service"], config))),
         **options.to_params(dl, options.dl_specs()),
         "service": show["service"],
         "title_id": str(show["title"]),
         "wanted": [service_sxxeyy],
-        "output_dir": seen_by("unshackle_downloads", out),
+        "output_dir": seen_by("unshackle_downloads", out, backend.settings),
         **({"debug": True} if DEBUG else {}),  # the job's log at DEBUG
     }
 
 
-def setup_of(request: dict) -> dict:
+def setup_of(request: dict, backend: Unshackle | None = None) -> dict:
     """What Activity shows of a download before serve says more: where it runs, the proxy asked, the same as a command."""
+    backend = backend or UNSHACKLE
     if request.get("remote"):
         via = f"remote server {request['server']}" if request.get("server") else "remote server"
-    elif UNSHACKLE.mode == "remote":
-        via = urlparse(str(UNSHACKLE.settings.get("unshackle_url") or "")).hostname or "elsewhere"
+    elif backend.mode == "remote":
+        host = urlparse(str(backend.settings.get("unshackle_url") or "")).hostname or "elsewhere"
+        via = f"{backend.name} ({host})" if backend.name else host
     else:
         via = "this computer"
     proxy = "none" if request.get("no_proxy") else options.HIDDEN.sub("//***@", str(request.get("proxy") or "")) or None
@@ -1124,12 +1204,200 @@ def wanted_audio(show: dict, config: dict) -> str | None:
     return None
 
 
-def audio_languages(path: Path) -> set[str]:
+def free_space_problem() -> str:
+    """Why nothing may be downloaded now: the downloads folder has less room than the settings keep free. Empty
+    when there is room, when it is not checked (0), or when the folder can't be read (its own error tells)."""
+    keep = float(SETTINGS.get("min_free_gb") or 0)
+    try:
+        free = shutil.disk_usage(DOWNLOADS).free / 1e9
+    except OSError:
+        return ""
+    if not keep or free >= keep:
+        return ""
+    return f"Only {free:.1f} GB free in the downloads folder, under the {keep:g} GB kept free: nothing is downloaded until there is room"
+
+
+def fallback_profiles(show: dict, config: dict) -> list[str]:
+    """The profiles to log in with when the series' own is refused (its fallback_profiles, in order), never its own."""
+    dl, _ = stacked(show, config)
+    own = str(dl.get("--profile") or "default")
+    return [p for p in re.split(r"[,\s]+", str(show.get("fallback_profiles") or "")) if p and p != own]
+
+
+def accepted_audio(show: dict, config: dict) -> list[str]:
+    """The audio languages a download must have one of (fr, en): the series' own, else the settings'; none
+    set, the language asked for first, as before."""
+    raw = show.get("audio_accept") or (config.get("settings") or {}).get("audio_accept") or ""
+    accepted = [c.strip().lower() for c in re.split(r"[,\s]+", str(raw)) if c.strip()]
+    return accepted or [want for want in [wanted_audio(show, config)] if want]
+
+
+def preferred_audio(show: dict, config: dict) -> str:
+    """The audio language an episode is got again in once it comes (fr): the series' own, else the settings'."""
+    return str(show.get("audio_prefer") or (config.get("settings") or {}).get("audio_prefer") or "").strip().lower()
+
+
+def lacks_preferred(out: Path, show: dict, config: dict) -> str:
+    """The preferred audio language when the download lacks it (read before Sonarr moves the file), else ""."""
+    prefer = preferred_audio(show, config)
+    if not prefer:
+        return ""
+    langs = set().union(*(audio_languages(f) for f in out.rglob("*.mkv")))
+    return prefer if langs and not speaks(langs, [prefer]) else ""
+
+
+UPGRADES_FILE = DATA / "upgrades.json"  # episode id -> the preferred language it waits for, since when
+upgrades_lock = threading.Lock()
+
+
+def note_upgrade(ep: dict, show: dict, service_sxxeyy: str, lacking: str) -> None:
+    """An episode imported without its preferred language is watched for it; one with it is no longer."""
+    with upgrades_lock:
+        watched = read_json(UPGRADES_FILE, {})
+        key = str(ep["id"])
+        if not lacking:
+            if watched.pop(key, None) is None:
+                return
+        else:
+            since = (watched.get(key) or {}).get("since") or datetime.now(timezone.utc).isoformat()  # a try again keeps its start
+            watched[key] = {"tvdb": ep["series"]["tvdbId"], "label": f"{ep['series']['title']} S{ep['seasonNumber']:02}E{ep['episodeNumber']:02}",
+                            "service": show["service"], "serviceEpisode": service_sxxeyy, "want": lacking, "since": since,
+                            "checked": datetime.now(timezone.utc).isoformat()}
+        write_atomic(UPGRADES_FILE, json.dumps(watched))
+
+
+def accepted_subs(show: dict, config: dict) -> list[str]:
+    """The subtitle languages a download must have one of (fr): the series' own, else the settings'; none: not checked."""
+    raw = show.get("subs_accept") or (config.get("settings") or {}).get("subs_accept") or ""
+    return [c.strip().lower() for c in re.split(r"[,\s]+", str(raw)) if c.strip()]
+
+
+def speaks(tags, accepted: list[str]) -> bool:
+    """Whether a track language among `tags` is one accepted: fr takes fr-FR and fr-CA; fr-CA takes fr-CA, and a
+    plain fr too (a file's tag says no region: it may be it), never fr-FR."""
+    have = {LANGS.get(t.lower(), t.lower()) for t in tags if t}
+    return any(a == h or (a.split("-")[0] == h.split("-")[0] and ("-" not in a or "-" not in h)) for a in accepted for h in have)
+
+
+NOT_LISTED = re.compile(r"No (available )?episodes found", re.IGNORECASE)  # list-tracks: the episode is not on the service
+
+
+def list_tracks(show: dict, config: dict, request: dict, ladder: dict | None = None) -> list[dict]:
+    """The episode's tracks on the service, nothing downloaded: one entry per part ([] when the service has no such
+    episode). For a quality ladder, the ranges and codecs of its steps are asked for: a service lists only those."""
+    _, own = stacked(show, config)
+    keep = {"service", "title_id", "profile", "proxy", "no_proxy", "cdm_type",
+            *options.to_params(own, options.service_specs(service_entry(show["service"], config)))}
+    asked = {k: v for k, v in request.items() if k in keep}
+    if ladder:
+        ranges = {step.get("range") or "" for step in ladder["steps"]}
+        codecs = {step.get("codec") or "" for step in ladder["steps"]}
+        asked["range_"] = sorted(RANGES if "" in ranges else ranges)
+        if "" not in codecs:
+            asked["vcodec"] = sorted(codecs)
+    try:  # list-tracks as the official serve has it: the same episode, profile, proxy and service options
+        found = backend_for(show["service"], config).call("POST", "/api/list-tracks", json={**asked, "wanted": request["wanted"]})
+    except UnshackleError as e:
+        if NOT_LISTED.search(str(e)):
+            return []
+        raise
+    return found.get("episodes") if "episodes" in found else [found]
+
+
+def tracks_on_service(show: dict, config: dict, request: dict) -> dict[str, set[str]] | None:
+    """The audio and subtitle languages the service offers for the episode, nothing downloaded (forced subtitles,
+    a few lines only, left out); None when it can't tell (a remote service, an error, no answer): the download then
+    goes on, checked once it is in."""
+    if request.get("remote"):
+        return None
+    try:
+        episodes = list_tracks(show, config, request)
+    except UnshackleError as e:
+        trace(f"tracks before the download: not told ({e})")
+        return None
+    if not episodes:
+        return None
+    langs = lambda kind: {str(t.get("language")) for ep in episodes for t in ep.get(kind) or []  # noqa: E731
+                          if t.get("language") and not t.get("forced")}
+    return {"audio": langs("audio"), "subtitles": langs("subtitles")}
+
+
+# Quality ladders: steps tried in order against the episode's video tracks; the first one a track fits is downloaded,
+# nothing outside them. A step: a codec and a range (empty: any), a height from min to max (0: no limit).
+CODECS = ("AVC", "HEVC", "AV1", "VP9", "VP8", "VC1")  # Unshackle's names: H.264, H.265…
+RANGES = ("SDR", "HDR10", "HDR10P", "DV", "HLG")
+BUILTIN_LADDERS = [
+    {"name": "1080p", "steps": [{"codec": "AVC", "range": "SDR", "min": 1080, "max": 1080}, {"codec": "HEVC", "range": "SDR", "min": 1080, "max": 1080},
+                                {"codec": "AVC", "range": "SDR", "min": 720, "max": 720}, {"codec": "HEVC", "range": "SDR", "min": 720, "max": 720}]},
+    {"name": "4K, then 1080p", "steps": [{"codec": "", "range": "DV", "min": 2160, "max": 0}, {"codec": "", "range": "HDR10", "min": 2160, "max": 0},
+                                         {"codec": "", "range": "SDR", "min": 2160, "max": 0}, {"codec": "", "range": "SDR", "min": 1080, "max": 1080}]},
+    {"name": "Archival", "steps": [{"codec": "", "range": "", "min": 0, "max": 0}]},
+]
+
+
+def ladders(config: dict) -> list[dict]:
+    return config["quality_ladders"] if "quality_ladders" in config else BUILTIN_LADDERS
+
+
+def ladder_of(show: dict, config: dict) -> dict | None:
+    """The series' ladder, else its service's, else the settings' one; "off" at a level: none."""
+    name = (show.get("ladder") or ((config.get("service_defaults") or {}).get(show["service"]) or {}).get("ladder")
+            or (config.get("settings") or {}).get("quality_ladder") or "")
+    return next((lad for lad in ladders(config) if lad["name"] == name), None) if name != "off" else None
+
+
+def fits(step: dict, track: dict) -> bool:
+    height = int(track.get("height") or 0)
+    return ((not step.get("codec") or track.get("codec") == step["codec"]) and (not step.get("range") or track.get("range") == step["range"])
+            and height >= int(step.get("min") or 0) and (not step.get("max") or height <= int(step["max"])))
+
+
+def climb(ladder: dict, episodes: list[dict]) -> tuple[int, dict] | None:
+    """The first step every part of the episode has a track for, and its best track there (height, then bitrate)."""
+    for number, step in enumerate(ladder["steps"], 1):
+        found = [[t for t in ep.get("video") or [] if fits(step, t)] for ep in episodes]
+        if found and all(found):
+            return number, max(found[0], key=lambda t: (int(t.get("height") or 0), int(t.get("bitrate") or 0)))
+    return None
+
+
+def step_label(step: dict) -> str:
+    height = f"{step.get('min') or 0}-{step['max']}p" if step.get("max") and step.get("max") != step.get("min") else \
+        f"{step['max']}p" if step.get("max") else f"{step['min']}p and up" if step.get("min") else "any height"
+    return " ".join(filter(None, [height, step.get("codec") or "any codec", step.get("range") or "any range"]))
+
+
+def track_label(t: dict) -> str:
+    return f"{t.get('height') or '?'}p {t.get('codec') or '?'} {t.get('range') or '?'}"
+
+
+def apply_ladder(show: dict, config: dict, request: dict) -> None:
+    """The series' quality ladder, resolved against the episode's real tracks: the first step that has one sets
+    the quality, codec and range asked for. None does: the episode fails, nothing outside the ladder downloaded."""
+    ladder = ladder_of(show, config)
+    if not ladder:
+        return
+    if request.get("remote"):
+        raise ValueError(f"The quality ladder {ladder['name']} needs the episode's tracks, which a --remote download does not list")
+    episodes = list_tracks(show, config, request, ladder)
+    if not episodes:  # ponytail: not on the service (yet): the download finds nothing either, and says so as usual
+        return
+    found = climb(ladder, episodes)
+    if not found:
+        have = sorted({track_label(t) for ep in episodes for t in ep.get("video") or []})
+        raise ValueError(f"None of the quality ladder {ladder['name']}'s steps is on {show['service']} (it has {', '.join(have) or 'no video'})")
+    number, track = found
+    request.update(quality=[int(track["height"])], vcodec=[track["codec"]], **({"range": [track["range"]]} if track.get("range") else {}))
+    trace(f"quality ladder {ladder['name']}: step {number} ({step_label(ladder['steps'][number - 1])}), {track_label(track)}")
+
+
+def audio_languages(path: Path, kind: str = "audio") -> set[str]:
+    """The languages of a file's audio (or subtitles: forced ones left out), as mkvmerge reads them."""
     info = subprocess.run(["mkvmerge", "-J", str(path)], stdout=subprocess.PIPE, text=True)
     tracks = json.loads(info.stdout or "{}").get("tracks") or []
     found = set()
     for t in tracks:
-        if t.get("type") == "audio":
+        if t.get("type") == kind and not (t.get("properties") or {}).get("forced_track"):
             props = t.get("properties") or {}
             for code in (props.get("language_ietf"), props.get("language")):
                 if code:
@@ -1137,17 +1405,36 @@ def audio_languages(path: Path) -> set[str]:
     return found
 
 
-def check_audio(out: Path, want: str | None) -> None:
-    """Refuse a download without the language asked for first: a VO-only file in the library is
+def check_audio(out: Path, accepted: list[str]) -> None:
+    """Refuse a download with none of the accepted audio languages: a VO-only file in the library is
     worse than no file (best_available lets unshackle take what there is)."""
-    if not want:
+    if not accepted:
         trace("audio: no language asked for, not checked")
         return
     for f in out.rglob("*.mkv"):
         langs = audio_languages(f)
-        trace(f"audio of {f.name}: {', '.join(sorted(langs)) or 'no language tag'} (wanted: {want})")
-        if langs and want.split("-")[0] not in {LANGS.get(c, c) for c in langs}:  # a file without language tags says nothing either way
-            raise RuntimeError(f"No {want} audio in the download (it has {', '.join(sorted(langs))}): not imported")
+        trace(f"audio of {f.name}: {', '.join(sorted(langs)) or 'no language tag'} (accepted: {', '.join(accepted)})")
+        if langs and not speaks(langs, accepted):  # a file without language tags says nothing either way
+            raise RuntimeError(f"No {' or '.join(accepted)} audio in the download (it has {', '.join(sorted(langs))}): not imported")
+
+
+def check_subs(out: Path, accepted: list[str]) -> None:
+    """Refuse a download with none of the accepted subtitle languages (forced ones do not count)."""
+    if not accepted:
+        return
+    for f in out.rglob("*.mkv"):
+        langs = audio_languages(f, "subtitles")
+        trace(f"subtitles of {f.name}: {', '.join(sorted(langs)) or 'none'} (accepted: {', '.join(accepted)})")
+        if not speaks(langs, accepted):
+            raise RuntimeError(f"No {' or '.join(accepted)} subtitles in the download (it has {', '.join(sorted(langs)) or 'none'}): not imported")
+
+
+class Missing(Exception):
+    """The service has the episode, in none of the audio (or subtitle) languages accepted."""
+
+    def __init__(self, kind: str, accepted: list[str], found: set[str]):
+        super().__init__(kind)
+        self.kind, self.accepted, self.found = kind, accepted, found
 
 
 class Kept(Exception):
@@ -1336,20 +1623,34 @@ def import_leftover(folder: str) -> None:
     for card in sorted(RUNS_DIR.glob(f"*-{tvdb}-S{season:02}E{number:02}.json"), reverse=True):
         c = json.loads(card.read_text())
         if c.get("outcome") == "kept":  # its history line: imported after all
-            c.update(outcome="downloaded", detail="Imported anyway: it replaced the library's file")
+            by_hand = str(c.get("cause") or "").startswith("Download only")
+            c.update(outcome="downloaded", detail="Imported by hand" if by_hand else "Imported anyway: it replaced the library's file")
             write_atomic(card, json.dumps(c))
         break
     if not videos_in(out):
         shutil.rmtree(out, ignore_errors=True)
 
 
+def download_only(show: dict, config: dict) -> bool:
+    """Downloaded but never imported: the series says so (true or false), else the settings."""
+    own = show.get("download_only")
+    return bool(own if own is not None else (config.get("settings") or {}).get("download_only"))
+
+
+def waits_for_hand(tvdb: int, config: dict) -> bool:
+    """A series downloaded only: what waits of it is for an import by hand, never deleted on its own."""
+    show = (config.get("series") or {}).get(tvdb)
+    return bool(show) and download_only(show, config)
+
+
 def clean_leftovers(now: float | None = None) -> list[str]:
-    """Delete what has waited longer than leftovers_days: a kept file nobody came back for."""
+    """Delete what has waited longer than leftovers_days: a kept file nobody came back for. A download only
+    series' episodes wait for an import by hand: kept."""
     days = float(SETTINGS.get("leftovers_days") or 0)
     if days <= 0:
         return []
-    now = now or time.time()
-    gone = [l["folder"] for l in leftovers() if now - l["since"] > days * 86400]
+    now, config = now or time.time(), read_file()
+    gone = [l["folder"] for l in leftovers() if now - l["since"] > days * 86400 and not waits_for_hand(l["tvdbId"], config)]
     for folder in gone:
         shutil.rmtree(DOWNLOADS / folder, ignore_errors=True)
     return gone
@@ -1445,8 +1746,19 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                 show.get("episode_name") or "joined",
                 on_step,
             )
-            check_audio(out, wanted_audio(show, config))
+            check_audio(out, accepted_audio(show, config))
+            check_subs(out, accepted_subs(show, config))
+            lacking = lacks_preferred(out, show, config)  # read now: Sonarr moves the file away
             run.card["size"] = sum(f.stat().st_size for f in videos_in(out))  # for the job's sum
+            if download_only(show, config):
+                where = seen_by("sonarr_downloads", out)
+                run.say(f"{label}: downloaded, not imported (download only): it waits in {where}")
+                run.step("done")
+                run.finish("kept", "Download only: not imported", f"The download waits in {where}")
+                notify(settings, "success", f"Downloaded, not imported: {label}",
+                       f"Download only: it waits in {where}; import it or delete it in Activity, Waiting in downloads.",
+                       batch=batch, details=episode_details(ep, show, run))
+                return
             run.step("importing")
             import_episode(ep, out, replace)
         except Kept as e:
@@ -1466,6 +1778,9 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
             return
         if not videos_in(out):
             shutil.rmtree(out, ignore_errors=True)  # Sonarr moved the file: nothing left to keep
+        note_upgrade(ep, show, run.card.get("serviceEpisode") or sxxeyy, lacking)
+        if lacking:
+            run.say(f"{label}: no {lacking} audio yet: it is checked once a day, and got again when it comes")
         run.say(f"{label}: downloaded and imported by Sonarr")
         run.step("done")
         imported_at[ep["id"]] = time.monotonic()
@@ -1536,18 +1851,50 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                 if imported_at.get(ep["id"], 0) > started and not replace:  # a release burst got it since the list was made
                     print(f"{label}: imported meanwhile, nothing to download")
                     continue
+                if full := free_space_problem():  # the health alert tells it once; a click says why nothing happens
+                    print(f"{label}: {full}", flush=True)
+                    if manual:
+                        run = EpisodeRun(ep, show, kind, service_sxxeyy, batch)
+                        run.finish("failed", full, "Make room in the downloads folder, or lower the room kept free in Settings")
+                    continue
                 run = EpisodeRun(ep, show, kind, service_sxxeyy, batch)
                 if numbering is not None:  # this download's own numbering: a retry asks the service the same again
                     run.card["numbering"] = numbering
                     run.save()
                 on_service = f" as {service_sxxeyy}" if service_sxxeyy != sxxeyy else ""
                 run.say(f"{label}: downloading from {show['service']}{on_service}")
-                def ask(wanted: str) -> None:
+                wanted_langs = {"audio": accepted_audio(show, config) if show.get("audio_accept") or (config.get("settings") or {}).get("audio_accept") else [],
+                                "subtitles": accepted_subs(show, config)}
+
+                def no_language(e: "Missing") -> None:
+                    """Out, but in none of the languages accepted: not downloaded, tried again like an episode not out yet."""
+                    langs, found = " or ".join(e.accepted), ", ".join(sorted(e.found)) or "none"
+                    if e.kind == "audio":  # whole sentences, each its own: they are translated as they are
+                        why, title = f"No {langs} audio on {show['service']} yet (it has {found})", f"No {langs} audio yet: {label}"
+                    else:
+                        why, title = f"No {langs} subtitles on {show['service']} yet (it has {found})", f"No {langs} subtitles yet: {label}"
+                    run.say(f"{label}: {why}, not downloaded")
+                    run.finish("unavailable", why)
+                    if first_warning(f"{out.name}:{e.kind}"):
+                        notify(settings, "warning", title,
+                               f"{why}. It is tried again at each sync, and downloaded once one comes.", batch=batch, details=episode_details(ep, show))
+
+                def ask(wanted: str, profile: str = "") -> None:
                     request = download_request(show, config, wanted, out)
+                    if profile:  # a fallback profile, its login refused with the series' own
+                        request["profile"] = profile
+                    if any(wanted_langs.values()) and (tracks := tracks_on_service(show, config, request)) is not None:
+                        for kind, accepted in wanted_langs.items():
+                            if accepted and not speaks(tracks[kind], accepted):
+                                raise Missing(kind, accepted, tracks[kind])
+                    apply_ladder(show, config, request)
                     asked = {k: v for k, v in request.items() if k not in ("service", "title_id", "wanted", "output_dir", "debug")}
                     trace(f"asking for {request['service']} {request['title_id']} {wanted}, into {request['output_dir']}")
                     trace("options: " + (", ".join(f"{k}={options.HIDDEN.sub('//***@', str(v))}" for k, v in asked.items()) or "none"))  # no proxy password in the log
-                    run.card["setup"] = setup_of(request)
+                    backend = backend_for(show["service"], config)
+                    run.card["setup"] = setup_of(request, backend)
+                    if backend.name:  # the serve run_job hands it to, and Activity's Stop cancels it on
+                        run.card["backend"] = backend.name
                     run.save()
                     run_job_retrying(request, run)
 
@@ -1563,6 +1910,9 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                         own = {k: show[k] for k in NUMBERING if k in show}  # a retry asks the same again
                         run.card.update(serviceEpisode=other, numbering={**own, "episode_map": {**(own.get("episode_map") or {}), sxxeyy: other}})
                         ask(other)
+                except Missing as e:
+                    no_language(e)
+                    continue
                 except JobFailed as e:
                     if e.status == "cancelled":  # stopped from Activity: not a failure, nothing to import
                         shutil.rmtree(out, ignore_errors=True)
@@ -1572,6 +1922,37 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                     error, cause = str(e), e.cause
                 except (UnshackleError, ValueError) as e:
                     error = cause = str(e)
+
+                # Its login refused and nothing came: the series' fallback profiles, in their order, until one logs in
+                stopped = waits = False
+                for profile in fallback_profiles(show, config) if error and LOGIN.search(cause or "") and not videos_in(out) else []:
+                    run.say(f"{label}: {show['service']} refused the login, trying the profile {profile}")
+                    try:
+                        ask(service_sxxeyy, profile)
+                        error = cause = None
+                        run.card["profile"] = profile
+                        run.say(f"{label}: logged in with the profile {profile}")
+                        break
+                    except Missing as e:  # logged in: the episode has none of the languages accepted yet
+                        no_language(e)
+                        waits = True
+                        break
+                    except JobFailed as e:
+                        if e.status == "cancelled":
+                            stopped = True
+                            break
+                        error, cause = str(e), e.cause
+                    except (UnshackleError, ValueError) as e:
+                        error = cause = str(e)
+                    if not LOGIN.search(cause or ""):
+                        break  # another failure than a login: another profile would not help
+                if waits:
+                    continue
+                if stopped:
+                    shutil.rmtree(out, ignore_errors=True)
+                    run.say(f"\r\n{label}: stopped")
+                    run.finish("stopped")
+                    continue
 
                 # A series whose episodes come in parts: one part out of two is not the episode.
                 # Nothing is imported, and it is tried again like an episode not out yet.

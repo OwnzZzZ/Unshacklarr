@@ -1,6 +1,6 @@
 """The English texts a person sees, for translating: python tools/i18n/extract.py
 
-Reads unshacklarr/static/index.html (its markup, then its script's string literals) and the server's
+Reads unshacklarr/static/index.html (its markup, then its scripts' string literals, js/*.js) and the server's
 messages (its strings and f-strings), and writes
 unshacklarr/static/i18n/en.json: every text a user may see, as the page shows it. A template
 literal's ${…} parts become {0}, {1}…, as the page matches them. The translations,
@@ -253,8 +253,18 @@ def server_texts(source: str) -> dict[str, list[str]]:
     return found
 
 
+def whole_page() -> str:
+    """The page as one file again: its stylesheet and its scripts (app.css, js/*.js) put back in place."""
+    page = PAGE.read_text()
+    page = page.replace('<link rel="stylesheet" href="/app.css">', f"<style>{(PAGE.parent / 'app.css').read_text()}</style>")
+    tags = re.findall(r'<script src="/js/([\w-]+\.js)"></script>\n?', page)
+    script = "".join((PAGE.parent / "js" / name).read_text() for name in tags)
+    page = re.sub(r'<script src="/js/[\w-]+\.js"></script>\n?', "", page)
+    return page.replace("</body>", f"<script>{script}</script>\n</body>", 1)
+
+
 def main():
-    texts = extract(PAGE.read_text())
+    texts = extract(whole_page())
     for name in SERVER:
         for text, holes in server_texts((ROOT / "unshacklarr" / name).read_text()).items():
             texts.setdefault(text, holes)

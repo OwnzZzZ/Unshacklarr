@@ -195,6 +195,10 @@
       if (!hit) throw new Refused(502, "In the demo, only the series already set up can be looked up on their service.");
       return { ...copy(hit), checked: now() };
     }
+    if (p.startsWith("/api/profiles/")) return { profiles: ["alt", "default", "family"] };  // a made-up account or three
+    if (p === "/api/series/search") return { results: [  // what a service's search gives: the series, and others like it
+      { id: "demo-1", title: body.query, label: "SERIES", description: "The one you look for.", url: `https://example.com/series/${encodeURIComponent(body.query.toLowerCase().replace(/\s+/g, "-"))}` },
+      { id: "demo-2", title: `${body.query}: the documentary`, label: "MOVIE", description: "Another title with the same name.", url: "https://example.com/movie/demo-2" }] };
     if (p === "/api/status") return copy(R[url.searchParams.get("full") ? "/api/status?full=1" : "/api/status"]);
     if (p.startsWith("/api/cdm") && method === "POST") {
       if (p === "/api/cdm/test") return { ok: true, revoked: null, error: null, keys: 1, at: now() };

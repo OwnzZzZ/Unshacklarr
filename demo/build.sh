@@ -11,7 +11,7 @@ cp demo/demo.js demo/site/
 uv run python demo/record.py demo/site/data.json
 # its files by relative paths (a host may serve it in a folder), and demo.js before the page's own script
 sed -i.bak -E \
-  -e 's#(["`])/(apple-touch-icon|manifest|xterm|codemirror|unshackle-keys|icon-|i18n/)#\1\2#g' \
+  -e 's#(["`])/(apple-touch-icon|manifest|xterm|codemirror|unshackle-keys|icon-|i18n/|app\.css|js/)#\1\2#g' \
   -e 's#<head>#<head>\n<script src="demo.js"></script>#' \
   demo/site/index.html
 rm demo/site/index.html.bak demo/site/sw.js

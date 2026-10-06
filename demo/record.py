@@ -177,9 +177,6 @@ def sonarr_get(path, **params):
                  "mediaInfo": {"resolution": "1920x1080", "videoCodec": "h264", "audioCodec": "EAC3", "audioChannels": 5.1,
                                "audioLanguages": "eng", "subtitles": "eng/fre/spa", "runTime": "44:12"}}
                 for e in EPISODES[int(params["seriesId"])] if e["hasFile"]]
-    if path == "wanted/missing":
-        records = [with_series(e) for eps in EPISODES.values() for e in eps if not e["hasFile"] and e["airDateUtc"] <= NOW.isoformat()]
-        return {"records": records, "pageSize": 250, "totalRecords": len(records)}
     if path == "calendar":
         start, end = sync.parse_time(params["start"]), sync.parse_time(params["end"])
         return [with_series(e) for eps in EPISODES.values() for e in eps if start <= sync.parse_time(e["airDateUtc"]) < end]

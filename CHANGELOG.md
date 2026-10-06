@@ -4,6 +4,50 @@ Every change worth knowing, newest first. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/): until 1.0.0, a minor version may change how things work.
 
+## [1.3.0] - 2026-10-06
+
+### Added
+
+**Downloads**
+- **Accepted languages.** An episode with none of the audio languages accepted (fr, en), or without full
+  subtitles in a required one, is not downloaded: it waits and is tried again, for every series or one.
+- **The French dub once it comes.** An episode got in English is got again, in place, once the service has
+  the language you prefer, checked once a day for a month.
+- **Profiles to fall back on.** A refused login is tried again with another account before failing.
+- **Ready for the release.** Three hours before an episode comes out, its series is checked on its service:
+  a refused login, no CDM or a dead URL is told while there is time to fix it.
+- **Room kept free.** Once set, nothing is downloaded while the downloads folder runs short, and you are told.
+- **Quality ladders.** An ordered list of steps (a codec, a range, a height from… to…), tried against the
+  episode's real tracks just before the download: the first step it has a track for sets the quality, codec
+  and range; when none does, the episode fails with the tracks it has, and nothing outside the ladder comes.
+  Made and ordered in Settings › Quality (three built in: 1080p, 4K then 1080p, Archival), picked for every
+  series there, per service in Download options › Per service, or on a series' page (Off turns it off). (#8)
+- **Download only.** An episode is downloaded, joined, named and checked, then waits in Activity › Waiting
+  in downloads for you to import or delete it, never deleted on its own. For every series in Settings ›
+  Automation › After the download, or on a series' page. (#6)
+- **More than one Unshackle.** Other unshackle serve (one behind a VPN, say), each with its address, API
+  key and downloads folder as it sees it, in Settings › Unshackle › Other Unshackle servers. A service
+  downloads with the one picked for it in Download options › Per service; a service only one of them has
+  goes to it. Stopping a download or answering its question reaches the right one. (#7)
+
+**Series**
+- **Find a series on its service** by name, instead of copying its URL.
+- **Change several series at once**: their service, release time, languages or options.
+
+**Everywhere**
+- **Back up and restore the settings** from Account, the password and the session kept.
+- **Sign in through a reverse proxy.** Authelia, Authentik or another proxy's sign-in opens Unshacklarr,
+  from the proxy's own addresses only.
+
+### Fixed
+
+- **What's on the service?** shows as soon as a series gets its link, without reloading the page.
+
+### Changed
+
+- **A lighter sync.** The episodes to get come from the days the sync looks at, not from the whole
+  library's gaps, and the Schedule opens faster.
+
 ## [1.2.3] - 2026-10-05
 
 ### Fixed
@@ -217,6 +261,7 @@ A full audit found nothing critical nor high; what it found is fixed:
 - **Dependencies.** oauthlib 4.0.0, for two advisories on OAuth servers that never reached Unshacklarr
   (Apprise only uses it as a client).
 
+[1.3.0]: https://github.com/OwnzZzZ/Unshacklarr/releases/tag/v1.3.0
 [1.2.3]: https://github.com/OwnzZzZ/Unshacklarr/releases/tag/v1.2.3
 [1.2.2]: https://github.com/OwnzZzZ/Unshacklarr/releases/tag/v1.2.2
 [1.2.1]: https://github.com/OwnzZzZ/Unshacklarr/releases/tag/v1.2.1

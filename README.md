@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version 1.2.3" src="https://img.shields.io/badge/version-1.2.3-26a69a">
+  <img alt="Version 1.3.0" src="https://img.shields.io/badge/version-1.3.0-26a69a">
   <img alt="License GPL-3.0" src="https://img.shields.io/badge/license-GPL--3.0-blue">
   <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-3776ab">
   <img alt="Sonarr v3 and v4" src="https://img.shields.io/badge/sonarr-v3%20%7C%20v4-35c5f4">
@@ -248,6 +248,10 @@ Behind a reverse proxy:
   the session cookie is marked `Secure` over HTTPS. Nginx Proxy Manager sends both.
 - **Let WebSockets and streams through**: Activity's output is a WebSocket and its live view a
   stream (in Nginx Proxy Manager, turn on *Websockets Support*).
+- **Sign in once, at the proxy** (optional): when Authelia or Authentik already asks who you are,
+  Settings, Account, *Sign in through a reverse proxy* takes the header that names you (`Remote-User`)
+  and the proxy's addresses. The header is believed from those addresses only; the password is still
+  asked again before the most sensitive changes.
 
 <a name="configuration"></a>
 
@@ -279,12 +283,27 @@ mounts its parent folder at `/downloads` sees it as `/downloads/unshacklarr`, th
 > in Activity › Waiting in downloads, to import anyway or delete. After 14 days it is deleted
 > (Settings › Automation › Delete them after; 0 keeps them).
 
+**Download only** (Settings › Automation › After the download, or a series' own page): the episode is
+downloaded, checked and named, then waits in Activity › Waiting in downloads for you to import it by
+hand. Those folders are never deleted on their own.
+
+**Other Unshackle servers** (Settings › Unshackle): more `unshackle serve`, one behind a VPN say, each
+with its address, API key and the downloads folder as it sees it. A service downloads with the one
+picked for it in Settings › Download options › Per service; a service only one of them has goes to it.
+
 ### 🎛️ Download options
 
 Options are Unshackle's own, written as on its command line (`--quality 1080`, `--a-lang fr`).
 They stack in three levels, each overriding the one before: **defaults** for every series, **per
 service** (`--proxy ca` for one service), then **per series**. The Schedule shows each download as
 the `unshackle dl` command it amounts to.
+
+**Quality ladders** (Settings › Quality) go further than a fixed `--quality`: an ordered list of steps
+(a codec, a range, a height from… to…), tried against the episode's real tracks just before the
+download. The first step it has a track for sets the quality, codec and range asked for; when none does,
+the episode fails with the tracks it has, and nothing outside the ladder is downloaded. Three come
+built in (1080p, 4K then 1080p, Archival). A ladder is picked for every series, per service, or per
+series, the same three levels as the options.
 
 ### 🔑 Cookies and CDMs
 
