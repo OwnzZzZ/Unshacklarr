@@ -4,6 +4,14 @@ Every change worth knowing, newest first. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/): until 1.0.0, a minor version may change how things work.
 
+## [1.3.2] - 2026-10-07
+
+### Fixed
+
+- **The resolution stays in the file name.** A file with no episode title after its number lost it on
+  renaming (`S17E03.1080p` became `S17E03p`), and a title starting with a number lost that number
+  (`S02E01.1000.Days`). Reported, with its cause, by mj23au (#9).
+
 ## [1.3.1] - 2026-10-06
 
 ### Fixed
@@ -272,6 +280,7 @@ A full audit found nothing critical nor high; what it found is fixed:
 - **Dependencies.** oauthlib 4.0.0, for two advisories on OAuth servers that never reached Unshacklarr
   (Apprise only uses it as a client).
 
+[1.3.2]: https://github.com/OwnzZzZ/Unshacklarr/releases/tag/v1.3.2
 [1.3.1]: https://github.com/OwnzZzZ/Unshacklarr/releases/tag/v1.3.1
 [1.3.0]: https://github.com/OwnzZzZ/Unshacklarr/releases/tag/v1.3.0
 [1.2.3]: https://github.com/OwnzZzZ/Unshacklarr/releases/tag/v1.2.3

@@ -1501,3 +1501,19 @@ def test_each_service_downloads_with_its_own_unshackle_server(tmp_path, monkeypa
     run = sync.EpisodeRun(episode(111, 2, 5), {"service": "CRAVE"}, "manual")
     run.card["backend"] = "vpn"
     assert sync.run_job(request, run) == [] and len(started) == 1
+
+
+def test_the_rename_keeps_the_resolution_and_a_title_starting_with_a_number(tmp_path, monkeypatch):
+    # From #9, by mj23au: S17E03.1080p was read as part 1080 of S17E03, and renamed S17E03p
+    sync = load(tmp_path, monkeypatch)
+    found = lambda name: sync.SXXEYY.search(name).group()  # noqa: E731
+    assert found("Show.S17E03.1080p.ALL4.WEB-DL.mkv") == "S17E03"
+    assert found("Show.S01E01.576i.mkv") == "S01E01"
+    assert found("Show.S02E01.1000.Days.1080p.mkv") == "S02E01"  # a title, not a part
+    assert found("Show.S29E05.Part.2.1080p.mkv") == "S29E05.Part.2"  # a part is still one
+    out = tmp_path / "ep"
+    out.mkdir()
+    (out / "Bake.Off.S17E03.1080p.ALL4.WEB-DL.mkv").touch()
+    use_tools(monkeypatch, sync, fake_tools([], lambda *a: None, {}))
+    sync.finalize(out, "S17E03", "Bake Off")
+    assert [f.name for f in out.iterdir()] == ["Bake.Off.S17E03.1080p.ALL4.WEB-DL.mkv"]

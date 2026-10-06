@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version 1.3.1" src="https://img.shields.io/badge/version-1.3.1-26a69a">
+  <img alt="Version 1.3.2" src="https://img.shields.io/badge/version-1.3.2-26a69a">
   <img alt="License GPL-3.0" src="https://img.shields.io/badge/license-GPL--3.0-blue">
   <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-3776ab">
   <img alt="Sonarr v3 and v4" src="https://img.shields.io/badge/sonarr-v3%20%7C%20v4-35c5f4">

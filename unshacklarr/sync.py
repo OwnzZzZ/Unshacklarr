@@ -838,7 +838,11 @@ VIDEO = (".mkv", ".mp4")
 
 def videos_in(folder: Path) -> list[Path]:
     return [f for f in folder.rglob("*") if f.suffix.lower() in VIDEO]
-SXXEYY = re.compile(r"S\d{2,}E\d{2,}(?:\.(?:Part\.)?\d+)?", re.IGNORECASE)
+# In a file name, Unshackle writes a part .Part.N: a bare number after the episode is its resolution
+# (S17E03.1080p) or the start of its title (S02E01.1000.Days), never a part.
+SXXEYY = re.compile(r"S\d{2,}E\d{2,}(?:\.Part\.\d+)?", re.IGNORECASE)
+# In an MKV title (Show S29E05.1 All Stars), it writes a part .N, and spaces around the rest.
+TITLE_SXXEYY = re.compile(r"S\d{2,}E\d{2,}(?:\.\d+)?", re.IGNORECASE)
 
 
 def parse_time(value: str) -> datetime:
@@ -1172,7 +1176,7 @@ def finalize(out: Path, sxxeyy: str, name: str, join_parts: bool = True, episode
             continue
         info = subprocess.run(["mkvmerge", "-J", str(f)], stdout=subprocess.PIPE, text=True)
         title = json.loads(info.stdout or "{}").get("container", {}).get("properties", {}).get("title", "")
-        episode = title[m.end():].strip() if (m := SXXEYY.search(title)) else ""
+        episode = title[m.end():].strip() if (m := TITLE_SXXEYY.search(title)) else ""
         rest = f.name[match.end():]
         if episode_name == "always" or (episode_name == "joined" and len(parts) > 1):
             if episode and rest.lower().startswith(f".{dots(episode)}.".lower()):

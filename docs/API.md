@@ -42,7 +42,7 @@ Whether everything works, and what is going on.
 
 ```json
 {
-  "version": "1.3.1",
+  "version": "1.3.2",
   "sonarr": {"ok": true, "error": null},
   "unshackle": {"ok": false, "error": "Unshackle is unreachable: …"},
   "sync": {"running": false, "last": "2026-10-01T18:00:04+00:00"},
