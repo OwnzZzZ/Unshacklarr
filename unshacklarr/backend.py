@@ -7,6 +7,7 @@ and set in memory, so the user's unshackle.yaml is never touched.
 """
 
 import os
+import re
 import secrets
 import shutil
 import socket
@@ -277,6 +278,18 @@ class Unshackle:
         return config
 
     def download(self, payload: dict) -> str:
+        if not payload.get("remote"):
+            # A service that failed to import is in serve's load_errors (Unshackle after 5.4.0; none before): told
+            # now, not once the job fails. Asked afresh each time, not the cached list: serve may have restarted.
+            catalogue = self.call("GET", "/api/services")
+            tag = str(payload.get("service") or "")
+            for error in catalogue.get("load_errors") or []:
+                if isinstance(error, str) and error.partition(":")[0].casefold() == tag.casefold():
+                    # its own words stay out: the error may quote a secret; a missing module is safe to name
+                    if module := re.search(r"No module named '([A-Za-z0-9_.]+)'", error):
+                        raise UnshackleError(f"{tag} did not load in unshackle serve: the Python module {module[1]} is missing "
+                                             "where it runs. Its startup log says more")
+                    raise UnshackleError(f"{tag} did not load in unshackle serve: its startup log says why")
         return self.call("POST", "/api/download", json=payload)["job_id"]
 
     def job(self, job_id: str) -> dict:

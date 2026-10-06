@@ -1764,5 +1764,7 @@
  "{0}: downloaded, not imported (download only): it waits in {1}": "{0}: скачан, не импортирован (только скачать): ждёт в {1}",
  "{0}p and up": "от {0}p",
  "✓ Reached: 1 service": "✓ Доступен: 1 сервис",
- "✓ Reached: {0} services": "✓ Доступно сервисов: {0}"
+ "✓ Reached: {0} services": "✓ Доступно сервисов: {0}",
+ "{0} did not load in unshackle serve: its startup log says why": "{0} не загрузился в unshackle serve: причина в его журнале запуска",
+ "{0} did not load in unshackle serve: the Python module {1} is missing where it runs. Its startup log says more": "{0} не загрузился в unshackle serve: там, где он работает, нет модуля Python {1}. Подробнее в журнале запуска"
 }

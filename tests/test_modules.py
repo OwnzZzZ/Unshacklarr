@@ -6,6 +6,10 @@ import stat
 import threading
 from pathlib import Path
 
+import pytest
+import responses
+
+from unshacklarr.backend import Unshackle, UnshackleError
 from unshacklarr.cdm import CdmError, NO_CDM, add, choose, delete, folders, read, remote_delete, remote_save, state
 from unshacklarr.cookies import CookieError, list_all, normalise, parse, save
 from unshacklarr.files import PRIVATE, shared_or_private, write_atomic
@@ -235,3 +239,37 @@ def test_a_local_serve_gets_its_socket_and_key_without_the_command_line(tmp_path
         assert str(local.url.rsplit(":", 1)[1]) not in " ".join(seen["argv"])  # nor the port on the command line
     finally:
         local.stop()
+
+
+# From #5, by Artic0din: serve's load_errors (Unshackle after 5.4.0)
+@responses.activate
+def test_a_service_that_failed_to_load_is_refused_before_the_job_others_go_on(tmp_path):
+    backend = Unshackle(tmp_path)
+    backend.configure({"unshackle_url": "http://backend:8786", "unshackle_api_key": "test-api-secret"})
+    responses.get("http://backend:8786/api/health", json={"status": "ok"})
+    error = "AMZN: failed to import - ModuleNotFoundError: No module named 'tldextract'"
+    responses.get("http://backend:8786/api/services", json={"services": [{"tag": "BINGE"}], "load_errors": [error]})
+    responses.post("http://backend:8786/api/download", json={"job_id": "queued"})
+
+    assert backend.health()["status"] == "ok"
+    with pytest.raises(UnshackleError, match="AMZN.*tldextract.*is missing"):
+        backend.download({"service": "AMZN"})
+    assert not any(call.request.method == "POST" for call in responses.calls)
+    assert backend.download({"service": "BINGE"}) == "queued"
+    assert backend.download({"service": "AMZN", "remote": True}) == "queued"
+
+    responses.replace(responses.GET, "http://backend:8786/api/services",
+                      json={"services": [{"tag": "AMZN"}], "load_errors": []})
+    assert backend.download({"service": "AMZN"}) == "queued"
+
+
+@responses.activate
+def test_a_load_error_s_own_words_stay_out_of_the_message(tmp_path):
+    backend = Unshackle(tmp_path)
+    backend.configure({"unshackle_url": "http://backend:8786", "unshackle_api_key": "test-api-secret"})
+    responses.get("http://backend:8786/api/services", json={"services": [],
+                  "load_errors": ["AMZN: failed to import - RuntimeError: password=private-value"]})
+    with pytest.raises(UnshackleError) as caught:
+        backend.download({"service": "AMZN"})
+    assert "private-value" not in str(caught.value)
+    assert "startup log says why" in str(caught.value)

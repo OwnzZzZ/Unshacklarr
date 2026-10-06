@@ -1773,5 +1773,7 @@
  "{0}: downloaded, not imported (download only): it waits in {1}": "{0}：已下载，未导入（仅下载）：在 {1} 中等待",
  "{0}p and up": "{0}p 及以上",
  "✓ Reached: 1 service": "✓ 已连通：1 个服务",
- "✓ Reached: {0} services": "✓ 已连通：{0} 个服务"
+ "✓ Reached: {0} services": "✓ 已连通：{0} 个服务",
+ "{0} did not load in unshackle serve: its startup log says why": "{0} 未能在 unshackle serve 中加载：原因见其启动日志",
+ "{0} did not load in unshackle serve: the Python module {1} is missing where it runs. Its startup log says more": "{0} 未能在 unshackle serve 中加载：其运行环境缺少 Python 模块 {1}。详情见其启动日志"
 }

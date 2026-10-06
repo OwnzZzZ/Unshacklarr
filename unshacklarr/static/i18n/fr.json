@@ -1752,5 +1752,7 @@
  "{0}: downloaded, not imported (download only): it waits in {1}": "{0} : téléchargé, non importé (téléchargement seul) : il attend dans {1}",
  "{0}p and up": "{0}p et plus",
  "✓ Reached: 1 service": "✓ Joint : 1 service",
- "✓ Reached: {0} services": "✓ Joint : {0} services"
+ "✓ Reached: {0} services": "✓ Joint : {0} services",
+ "{0} did not load in unshackle serve: its startup log says why": "{0} ne s'est pas chargé dans unshackle serve : son journal de démarrage dit pourquoi",
+ "{0} did not load in unshackle serve: the Python module {1} is missing where it runs. Its startup log says more": "{0} ne s'est pas chargé dans unshackle serve : le module Python {1} manque là où il tourne. Son journal de démarrage en dit plus"
 }

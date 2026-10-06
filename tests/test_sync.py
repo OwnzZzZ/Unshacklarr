@@ -37,6 +37,7 @@ def load(tmp_path, monkeypatch):
     module = importlib.reload(unshacklarr.sync)
     monkeypatch.setattr(module.UNSHACKLE, "services", lambda: SERVICES)
     monkeypatch.setattr(module.UNSHACKLE, "dl_config", lambda: {})
+    monkeypatch.setattr(module.UNSHACKLE, "cdm_config", lambda: {})
     return module
 
 

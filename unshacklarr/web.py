@@ -2792,22 +2792,26 @@ async def terminal(request):
         raise web.HTTPBadRequest(text="Unknown download")
     ws = web.WebSocketResponse(heartbeat=30)
     await ws.prepare(request)
-    if run_id:
-        await send_log(ws, run_id)
-    sent: set[str] = set()
-    while batch and not ws.closed:
-        cards = sorted((c for c in await asyncio.to_thread(run_cards) if c.get("batch") == batch and not c.get("waiting") and c["outcome"] != "cancelled"), key=lambda c: c["id"])
-        todo = [c for c in cards if c["id"] not in sent]
-        if todo:
-            c = todo[0]
-            await ws.send_bytes(f"\r\n\x1b[1;36m━━━ {c['series']} {c['sxxeyy']} ━━━\x1b[0m\r\n".encode())
-            await send_log(ws, c["id"])
-            sent.add(c["id"])
-        elif any(w.get("batch") == batch for w in list(sonarr_sync.waiting.values())):
-            await asyncio.sleep(0.5)  # the next one has not started yet
-        else:
-            break
-    await ws.close()
+    try:
+        if run_id:
+            await send_log(ws, run_id)
+        sent: set[str] = set()
+        while batch and not ws.closed:
+            cards = sorted((c for c in await asyncio.to_thread(run_cards) if c.get("batch") == batch and not c.get("waiting") and c["outcome"] != "cancelled"), key=lambda c: c["id"])
+            todo = [c for c in cards if c["id"] not in sent]
+            if todo:
+                c = todo[0]
+                await ws.send_bytes(f"\r\n\x1b[1;36m━━━ {c['series']} {c['sxxeyy']} ━━━\x1b[0m\r\n".encode())
+                await send_log(ws, c["id"])
+                sent.add(c["id"])
+            elif any(w.get("batch") == batch for w in list(sonarr_sync.waiting.values())):
+                await asyncio.sleep(0.5)  # the next one has not started yet
+            else:
+                break
+        await ws.close()
+    except ConnectionResetError:
+        # A viewer can disconnect after ws.closed was checked; its job still runs.
+        pass
     return ws
 
 

@@ -2565,6 +2565,13 @@
  "{0} did not answer as unshackle serve does (no JSON): is the address right?": [
   "url"
  ],
+ "{0} did not load in unshackle serve: its startup log says why": [
+  "tag"
+ ],
+ "{0} did not load in unshackle serve: the Python module {1} is missing where it runs. Its startup log says more": [
+  "tag",
+  "module[1]"
+ ],
  "{0} done": [
   "n.done"
  ],

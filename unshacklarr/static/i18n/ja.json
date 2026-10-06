@@ -1769,5 +1769,7 @@
  "{0}: downloaded, not imported (download only): it waits in {1}": "{0}：ダウンロード済み、未インポート（ダウンロードのみ）：{1} で待機中",
  "{0}p and up": "{0}p 以上",
  "✓ Reached: 1 service": "✓ 接続OK：1 サービス",
- "✓ Reached: {0} services": "✓ 接続OK：{0} サービス"
+ "✓ Reached: {0} services": "✓ 接続OK：{0} サービス",
+ "{0} did not load in unshackle serve: its startup log says why": "{0} は unshackle serve で読み込まれませんでした。理由は起動ログを確認してください",
+ "{0} did not load in unshackle serve: the Python module {1} is missing where it runs. Its startup log says more": "{0} は unshackle serve で読み込まれませんでした。実行環境に Python モジュール {1} がありません。詳細は起動ログを確認してください"
 }
