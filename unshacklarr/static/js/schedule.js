@@ -373,6 +373,7 @@ function renderHealth(h) {
   renderSonarrState(h.sonarr);
   renderUnshackleState(h.unshackle);
   paintServers(h.servers);
+  paintSonarrs(h.sonarrs);
 }
 function renderUnshackleState(st = S.health?.unshackle || {}, tested = false) {
   const set = S.config.settings || {}, box = $("#ux-state");

@@ -26,13 +26,15 @@ function stepText(st) {
 function renameRefs(key, from, to) {
   const set = S.config.settings;
   if (key === "ladder" && set.quality_ladder === from) set.quality_ladder = to;
+  if (key === "ladder") for (const other of set.sonarrs || []) if (other.quality_ladder === from) other.quality_ladder = to;  // "" : each series' own
   for (const level of [...Object.values(S.config.service_defaults || {}), ...(key === "ladder" ? Object.values(S.config.series || {}) : [])])
     if (level[key] === from) { if (to) level[key] = to; else delete level[key]; }
 }
 function ladderUse(name) {
   const services = Object.entries(S.config.service_defaults || {}).filter(([, l]) => l.ladder === name).map(([t]) => t);
   const series = Object.values(S.config.series || {}).filter((c) => c.service && c.ladder === name).length;
-  return [S.config.settings.quality_ladder === name ? "every series" : "", ...services.map(svcName), series ? `${series} series` : ""].filter(Boolean);
+  const others = (S.config.settings.sonarrs || []).filter((i) => i.quality_ladder === name).map((i) => `Sonarr ${i.name}`);
+  return [S.config.settings.quality_ladder === name ? "every series" : "", ...services.map(svcName), series ? `${series} series` : "", ...others].filter(Boolean);
 }
 
 /* A ladder picker: "" is the level before (named in its label), off is none. */
@@ -249,6 +251,90 @@ $("#ub-add").onclick = () => {
   list.push({ name: `server${n}`, url: "", downloads: "" });
   dirty(); renderBackends(); renderServiceDefaults();
   $("#ub-list .ub-block:last-child input[type=url]")?.focus();
+};
+
+/* Settings, Sonarr: other instances (a 4K one), each with its address, key, downloads folder as it sees it, and its
+   own ladder and import over the series'. */
+function renderSonarrs() {
+  const list = (S.config.settings.sonarrs ??= []);
+  $("#sn-list").replaceChildren(...(list.length ? list.map(sonarrBlock)
+    : [el("p", { className: "dx-empty", textContent: "None: every series downloads for the Sonarr above only." })]));
+  paintSonarrs();
+}
+function sonarrBlock(i) {
+  const list = S.config.settings.sonarrs;
+  const state = el("span", { className: "ub-state", dataset: { sonarr: i.name || "" } });
+  const check = (input, why) => {
+    input.classList.toggle("bad", !!why);
+    input.nextElementSibling.classList.toggle("bad", !!why);
+    input.nextElementSibling.textContent = why || input.dataset.help;
+  };
+  const text = (key, opts, help, validate) => el("input", { type: "text", spellcheck: false, value: i[key] || "", dataset: { help }, ...opts, oninput: (e) => {
+    const v = e.target.value.trim(), why = validate ? validate(v) : "";
+    check(e.target, why);
+    if (key === "name" && !why) head.textContent = v;
+    if (!why) i[key] = v;
+    dirty();
+  } });
+  const name = text("name", {}, "It starts the folders of its downloads: sonarr-4k.", (v) => !v ? "Give it a name"
+    : list.some((o) => o !== i && o.name === v) ? "Another Sonarr has this name" : !/^[A-Za-z][A-Za-z0-9-]{0,23}$/.test(v) ? "A letter, then letters, digits or dashes" : "");
+  const url = text("url", { type: "url", placeholder: "http://sonarr-4k:8989" }, "Where Unshacklarr reaches it.",
+    (v) => !URL_OK.test(v) ? "An address starting with http:// or https://, without a user name"
+      : v.replace(/\/+$/, "") === (S.config.settings.sonarr_url || "").replace(/\/+$/, "") ? "That is the Sonarr above" : "");
+  const key = el("input", { type: "password", autocomplete: "off", placeholder: i.api_key_set ? "Type a new key to replace it" : "",
+    oninput: (e) => { i.api_key = e.target.value.trim() || undefined; dirty(); } });
+  const dl = text("downloads", { placeholder: S.config.settings.sonarr_downloads || "As the main one" }, "The downloads folder, as this Sonarr sees it. Empty: as the main Sonarr sees it.",
+    (v) => !v || /^(\/|[A-Za-z]:[\\/])/.test(v) && !/(^|[\\/])\.\.([\\/]|$)/.test(v) ? "" : "A full path, from / (or a drive letter), without ..");
+  const ladder = el("select", { onchange: (e) => { i.quality_ladder = e.target.value; dirty(); } },
+    el("option", { value: "", textContent: "Each series' own" }), el("option", { value: "off", textContent: "Off" }),
+    ...ladders().map((l) => el("option", { value: l.name, textContent: l.name })));
+  ladder.value = i.quality_ladder || "";
+  const after = el("select", { onchange: (e) => { i.download_only = e.target.value === "" ? null : e.target.value === "only"; dirty(); } },
+    el("option", { value: "", textContent: "Each series' own" }), el("option", { value: "import", textContent: "Sonarr imports it" }),
+    el("option", { value: "only", textContent: "Download only" }));
+  after.value = i.download_only === true ? "only" : i.download_only === false ? "import" : "";
+  const head = el("b", { textContent: i.name || "New Sonarr" });
+  const test = el("button", { type: "button", className: "btn small", textContent: "Test", onclick: async () => {
+    if (!URL_OK.test(i.url || "")) return check(url, "An address starting with http:// or https://, without a user name");
+    state.className = "ub-state"; state.textContent = "Testing…";
+    try {
+      const { version } = await api("/api/sonarr/test", { method: "POST", body: JSON.stringify({ sonarr_url: i.url, sonarr_api_key: i.api_key || "" }) });
+      state.className = "ub-state ok"; state.textContent = `✓ Reached: Sonarr ${version}`;
+    } catch (err) { state.className = "ub-state bad"; state.textContent = err.message; }
+    state.dataset.tested = "1";
+  } });
+  const remove = el("button", { type: "button", className: "btn small danger", textContent: "Remove", onclick: (e) => {
+    if (e.target.dataset.sure !== "1") { e.target.dataset.sure = "1"; e.target.textContent = "Sure?"; return; }
+    list.splice(list.indexOf(i), 1);
+    dirty(); renderSonarrs();
+  } });
+  const withHelp = (label, input, saved, help) => el("div", { className: "field" },
+    el("label", { htmlFor: input.id ||= `sn-${++fieldIds}` }, label, ...(saved ? [" ", el("span", { className: "sx-saved", textContent: "✓ Saved" })] : [])),
+    input, el("small", { textContent: help || input.dataset.help || "In Sonarr: Settings, General. Empty keeps the saved one." }));
+  return el("div", { className: "svc-block ub-block" },
+    el("div", { className: "svc-block-head" }, head, el("span", { className: "ub-acts" }, state, test, remove)),
+    el("div", { className: "sx-grid" }, withHelp("Name", name), withHelp("Address", url), withHelp("API key", key, i.api_key_set),
+      withHelp("Downloads folder, as it sees it", dl),
+      withHelp("Quality ladder", ladder, false, "For every series it downloads, over the series' own (4K for a 4K Sonarr)."),
+      withHelp("After the download", after, false, "For every series it downloads, over the series' own.")));
+}
+let sonarrStates = {};
+function paintSonarrs(states = sonarrStates) {
+  sonarrStates = states || {};
+  document.querySelectorAll(".ub-state[data-sonarr]").forEach((box) => {
+    const st = sonarrStates[box.dataset.sonarr];
+    if (!st || box.dataset.tested) return;
+    box.className = st.ok ? "ub-state ok" : "ub-state bad";
+    box.textContent = st.ok ? `● Connected${st.version ? ` · Sonarr ${st.version}` : ""}` : `● ${st.error || "Unreachable"}`;
+  });
+}
+$("#sn-add").onclick = () => {
+  const list = (S.config.settings.sonarrs ??= []);
+  let n = list.length + 1;
+  while (list.some((o) => o.name === `sonarr${n}`)) n++;
+  list.push({ name: list.length ? `sonarr${n}` : "sonarr-4k", url: "", downloads: "", quality_ladder: "", download_only: null });
+  dirty(); renderSonarrs();
+  $("#sn-list .ub-block:last-child input[type=url]")?.focus();
 };
 
 /* Settings, Automation: Sonarr imports each download, or it waits for an import by hand. */

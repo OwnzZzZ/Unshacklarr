@@ -49,7 +49,10 @@ $("#hist-clear").onclick = () => {
   }, { once: true });
 };
 /* A job's failed episodes, again, in one go: in the same job. */
+// Another Sonarr's copy is not retried from here yet: its episode ids are its own, the main Sonarr would get another one
+const otherSonarr = (cards) => cards.some((c) => c.instance) && (toast("This copy is for another Sonarr: the next sync tries it again.", true), true);
 async function retryJob(j, cards, button) {
+  if (otherSonarr(cards)) return;
   button.disabled = true;
   try {
     await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: cards.map((c) => c.episodeId), retry: true, batch: j.job }) });
@@ -59,6 +62,7 @@ async function retryJob(j, cards, button) {
   } catch (e) { button.disabled = false; toast(e.message, true); }
 }
 async function retryRun(c, button) {
+  if (otherSonarr([c])) return;
   button.disabled = true;
   try {
     await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: [c.episodeId], retry: true, ...(c.batch ? { batch: c.batch } : {}) }) });

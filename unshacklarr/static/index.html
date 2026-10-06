@@ -206,6 +206,11 @@
           </div>
         </section>
         <section class="sx-card">
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/><path d="M6 6.5h.01M6 17.5h.01"/></svg></span><div><h3>Other Sonarr instances</h3><p>A second Sonarr, a 4K one for example. The series set up here are also downloaded for it when it has them, with its own quality ladder. Only the automatic sync downloads for it: release times and episodes you pick by hand stay with the Sonarr above.</p></div>
+            <button class="btn small dx-add" id="sn-add" type="button">Add a Sonarr</button></div>
+          <div id="sn-list"></div>
+        </section>
+        <section class="sx-card">
           <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></span><div><h3>In your browser</h3><p>Used for the links from a series to its page in Sonarr.</p></div></div>
           <div class="sx-grid">
             <div class="field"><label for="sx-web">Sonarr's address in your browser</label><input id="sx-web" type="url" data-set="sonarr_public_url" placeholder="https://sonarr.example.com"><small>Empty: the URL above, if your browser can open it.</small></div>

@@ -293,6 +293,12 @@ picked for it in Settings › Download options › Per service; a service only o
 Its downloads folder left empty is the main server's. Each one is watched: its state shows in Settings, and you
 are told when it goes down and when it is back.
 
+**Other Sonarr instances** (Settings › Sonarr): a 4K Sonarr beside the 1080p one, each with its address, API key,
+the downloads folder as it sees it, and its own quality ladder and After the download. The series set up in
+Unshacklarr are downloaded for each instance that has them (by TVDB id), into folders named after it
+(`unshackle-sonarr-4k-<tvdb>-SxxEyy`), and imported into it. The automatic sync covers them; release times,
+episodes picked by hand and Catch up work with the main Sonarr only.
+
 **Catch up** (Activity): the automatic sync only takes new episodes. The aired episodes your series still miss
 (those from before a series got its service, or that the sync gave up on) are listed there, within 7, 30 or 90
 days or all, and downloaded together.

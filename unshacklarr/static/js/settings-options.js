@@ -92,6 +92,7 @@ function renderSettings() {
   renderUnshackleState();
   renderAutomation();
   renderBackends();
+  renderSonarrs();
   renderQuality();
   renderImportMode();
   $("#sx-tmdb-saved").hidden = !set.tmdb_api_key_set;

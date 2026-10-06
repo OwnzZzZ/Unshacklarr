@@ -1588,3 +1588,44 @@ def test_a_number_its_title_gives_to_another_episode_is_not_downloaded(tmp_path,
     listing.update(available={}, titled=set())  # its title merely differs (no translation yet): downloaded by its number
     sync.sync(sync.read_file(), {}, [episode(111, 2, 5)], manual=True, kind="manual")
     assert asked == ["S03E01", "S02E05", "S02E05"]
+
+@responses.activate
+def test_another_sonarr_gets_its_own_copy_with_its_own_ladder(tmp_path, monkeypatch):
+    # From #10, by mj23au: sonarr for 1080p, sonarr-4k for 4K, the same series set up once
+    sync = load(tmp_path, monkeypatch)
+    sync.apply_settings({**sync.SETTINGS, "sonarrs": [{"name": "sonarr-4k", "url": "http://sonarr-4k:8989", "api_key": "k4",
+                                                        "downloads": "/4k-sees", "quality_ladder": "4K, then 1080p"}]})
+    responses.get(f"{SONARR}/api/v3/calendar", json=[episode(111, 2, 5)])
+    responses.get("http://sonarr-4k:8989/api/v3/calendar", json=[{**episode(111, 2, 5), "id": 9905}, episode(999, 1, 1)])  # 999: not set up here
+    responses.post(re.compile(re.escape(WEBHOOK)))
+    asked, imported = [], []
+
+    def dl(out, wanted):
+        out.mkdir(parents=True)
+        (out / "Show.S02E05.mkv").write_bytes(b"x")
+
+    def fake_import(ep, out, replace=False):
+        imported.append((sync.sonarr_url(), sync.seen_by("sonarr_downloads", out), ep["id"]))
+        for f in out.rglob("*.mkv"):
+            f.unlink()
+
+    listed = []
+
+    def listing(show, ep):  # each Sonarr's episode ids are its own: one listing each
+        listed.append(ep["id"])
+        return {"available": {ep["id"]: {"service": "S02E05"}}, "listed": {"S02E05"}, "titled": {"S02E05"}}
+
+    use_tools(monkeypatch, sync, fake_tools([], dl, {}))
+    monkeypatch.setattr(sync, "find_by_title", listing)
+    monkeypatch.setattr(sync, "import_episode", fake_import)
+    monkeypatch.setattr(sync, "apply_ladder", lambda show, config, request: asked.append((sync.instance() or {}).get("name"), ) or
+                        asked.append(sync.ladder_of(show, config) and sync.ladder_of(show, config)["name"]))
+    assert sync.main() == 0
+    assert imported == [(SONARR, str(tmp_path / "unshackle-111-S02E05"), 205),
+                        ("http://sonarr-4k:8989", "/4k-sees/unshackle-sonarr-4k-111-S02E05", 9905)]  # each into its own Sonarr
+    assert asked == [None, None, "sonarr-4k", "4K, then 1080p"]  # its ladder over the series' (none here)
+    assert listed == [205, 9905]  # the main Sonarr's list never answers for the other's ids
+    cards = sorted((json.loads(p.read_text()) for p in (tmp_path / "runs").glob("*.json")), key=lambda c: c["id"])
+    assert [(c.get("instance"), c["series"], c["outcome"]) for c in cards] == [(None, "Show", "downloaded"), ("sonarr-4k", "Show · sonarr-4k", "downloaded")]
+    m = sync.FOLDER.fullmatch("unshackle-sonarr-4k-111-S02E05")
+    assert m.groups() == ("sonarr-4k", "111", "02", "05") and sync.FOLDER.fullmatch("unshackle-111-S02E05").group(1) is None

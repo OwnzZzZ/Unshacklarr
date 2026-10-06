@@ -4,6 +4,15 @@ Every change worth knowing, newest first. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/): until 1.0.0, a minor version may change how things work.
 
+## [Unreleased]
+
+### Added
+
+- **More than one Sonarr** (a 4K one beside the 1080p one), in Settings › Sonarr › Other Sonarr instances: the
+  series set up here are downloaded for each one that has them, with its own quality ladder and After the
+  download, and imported into it. Its automatic sync follows the main one's; release times, episodes picked by
+  hand and Catch up stay with the main Sonarr for now. (#10)
+
 ## [1.4.0] - 2026-10-07
 
 ### Added
