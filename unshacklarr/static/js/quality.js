@@ -298,8 +298,8 @@ function renderUpgradeMode() {
   $("#dx-upmode").querySelectorAll("button").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.mode === mode)));
   $("#dx-library").hidden = mode !== "add_track";
   $("#dx-upmode-say").textContent = mode === "add_track"
-    ? "Only the audio track is downloaded and added to the file in the library, which Sonarr then imports again. Unshacklarr must read the library: give its folder below. If the file can't be reached, the episode is downloaded again."
-    : "The whole episode is downloaded again with that audio, and replaces the file in the library.";
+    ? "Only the new audio track is downloaded and added to the existing file. Unshacklarr needs access to your library: set its folder below. If the file can't be found, the whole episode is downloaded instead."
+    : "The whole episode is downloaded again and replaces the existing file.";
 }
 $("#dx-upmode").querySelectorAll("button").forEach((b) => b.onclick = () => {
   S.config.settings.upgrade_mode = b.dataset.mode;
@@ -311,16 +311,16 @@ function renderLearnWindow() {
   const set = S.config.settings;
   $("#ax-learn").checked = set.release_learn === true;
   $("#ax-learn-say").textContent = set.release_learn
-    ? "On: a series without a release time gets one after 3 episodes came out at the same time. A time you set yourself is never changed."
-    : "Off: release times are only suggested on each series' page.";
+    ? "On. Release times you set yourself are never changed."
+    : "Off. Release times are only suggested on each series page.";
   $("#ax-window-bursts").checked = set.download_window_bursts === true;
   const from = $("#ax-from").value, to = $("#ax-to").value, half = !from !== !to;
   [$("#ax-from"), $("#ax-to")].forEach((x) => x.classList.toggle("bad", half && !x.value));
   $("#ax-window-say").className = half ? "rt-who status-err" : "rt-who";
-  $("#ax-window-say").textContent = half ? "Give both a start and an end, or neither."
-    : from ? (set.download_window_bursts ? `The automatic sync and the release-time tries download only from ${from} to ${to}.`
-      : `The automatic sync downloads only from ${from} to ${to}. The release-time tries go at once.`)
-      : "Any time: no window.";
+  $("#ax-window-say").textContent = half ? "Set both a start and an end time, or neither."
+    : from ? (set.download_window_bursts ? `Automatic and release-time downloads only run from ${from} to ${to}.`
+      : `Automatic downloads only run from ${from} to ${to}. Release-time downloads are not affected.`)
+      : "No limit: downloads run at any time.";
 }
 $("#ax-learn").onchange = (e) => { S.config.settings.release_learn = e.target.checked; dirty(); renderLearnWindow(); };
 $("#ax-window-bursts").onchange = (e) => { S.config.settings.download_window_bursts = e.target.checked; dirty(); renderLearnWindow(); };
@@ -341,8 +341,8 @@ function checkFallback(conf) {
   $("#d-fb-url").classList.toggle("bad", half && !alt.title);
   $("#d-fb-service").classList.toggle("bad", half && !alt.service);
   $("#d-fb-say").className = half ? "status-err" : "";
-  $("#d-fb-say").textContent = half ? "Give both its service and the series' URL there, or neither."
-    : "Its numbering is the service's own: set it in config.yaml when it differs.";
+  $("#d-fb-say").textContent = half ? "Set both the service and the series URL, or neither."
+    : "If this service numbers episodes differently, set its numbering in config.yaml.";
 }
 const setFallback = (key, value) => {
   const conf = S.config.series[current.tvdbId];

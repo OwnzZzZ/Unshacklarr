@@ -1360,7 +1360,7 @@ def add_track(episode_id: int, want: str) -> bool:
             run.say(f"{label}: {want} audio added, the file imported again")
             run.step("done")
             run.finish("downloaded", "", f"{want} audio added to the file")
-            notify(config.get("notifications") or {}, "success", f"Audio added: {label}", f"The {want} audio is in the file now.")
+            notify(config.get("notifications") or {}, "success", f"Audio added: {label}", f"The {want} audio track was added to the file.")
             return True
         except (RuntimeError, JobFailed, UnshackleError, ValueError, subprocess.CalledProcessError, requests.RequestException) as e:
             run.say(f"{label}: {e}")
@@ -1732,8 +1732,8 @@ def learn_release(ep: dict, show: dict, settings: dict) -> None:
     on_release_learned(tvdb, found["time"], found["day"])
     when = {0: "the day it airs", 1: "the day after"}.get(found["day"], f"{-found['day']} days before")
     notify(settings, "success", f"Release time set: {ep['series']['title']}",
-           f"{found['episodes']} episodes came out on {show['service']} by {found['time']}, {when}: Unshackle now tries it then. "
-           "Change it on the series' page.")
+           f"{found['episodes']} episodes came out on {show['service']} at {found['time']}, {when}. New episodes are now downloaded at that time. "
+           "You can change it on the series page.")
 
 
 def note_availability(ep: dict, out: Path, found: bool, when: datetime) -> None:

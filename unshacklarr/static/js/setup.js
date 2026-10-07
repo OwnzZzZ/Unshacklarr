@@ -453,7 +453,7 @@ $("#tz-select").after(settingsZone.input, settingsZone.list);
   if (!session.logged_in) return showLogin();
   try {
     const data = await api("/api/state");
-    S = { series: data.series, config: data.config, services: data.services, serviceNames: data.service_names || {}, dlOptions: data.dl_options, health: data.health || {}, cdm: data.cdm || {}, domains: data.service_domains || {}, builtinLadders: data.builtin_ladders || [], networkServices: data.network_services || {}, backups: data.backups || null };
+    S = { series: data.series, config: data.config, services: data.services, serviceNames: data.service_names || {}, dlOptions: data.dl_options, health: data.health || {}, cdm: data.cdm || {}, domains: data.service_domains || {}, builtinLadders: data.builtin_ladders || [], networkServices: data.network_services || {}, backups: data.backups || null, news: data.news || {} };
     savedConfig = configKey(S.config);
     $("#set-version").textContent = data.version ? `Unshacklarr ${data.version}` : "";
     const update = $("#update");  // a newer release: in sight on every page, its notes one click away
@@ -468,6 +468,7 @@ $("#tz-select").after(settingsZone.input, settingsZone.list);
     renderWall();
     optionsEditor($("#defaults"), S.dlOptions, S.config.defaults);
     renderSettings();
+    renderNews();
     refreshLog();
     refreshInbox();
     if (!busyStarted) { busyStarted = true; refreshBusy(); }  // one loop, however often the page reloads its state

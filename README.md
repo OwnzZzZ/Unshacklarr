@@ -344,19 +344,22 @@ change that.
 
 ## 🧰 Options worth knowing
 
-All off until you turn them on:
+These are off until you turn them on:
 
-- **Add the audio to the file** (Settings › Download options › Languages): when *Upgrade the audio to* finds its
-  language on the service, only that audio track is downloaded and joined to the library's file, which Sonarr then
-  imports again. Unshacklarr must read the library: give its folder as Sonarr sees it and as Unshacklarr sees it.
-  A file out of reach is downloaded again whole, as before.
-- **Fallback service** (a series' page, Source): another service and its URL, tried when the series' own has no
-  episode yet, or not in a language you accept. Its numbering is the service's own (`fallback:` in `config.yaml`
-  takes `season_map`, `episode_offset`… when it differs).
-- **Learn release times** (Settings › Automation): a series without a release time gets one once 3 of its episodes
-  came out at the same time. A time you set is never changed.
-- **Download window** (Settings › Automation): the automatic sync downloads only between two hours, over
-  midnight or not; the release-time tries keep to it too if you choose. Episodes picked by hand always go at once.
+- **Add the audio track to the existing file** (Settings › Download options › Languages). When your preferred audio
+  language becomes available, only that audio track is downloaded and added to the file in your library. Sonarr then
+  imports the updated file. Unshacklarr needs access to your library: set its folder as Sonarr sees it and as
+  Unshacklarr sees it. If the file can't be found, the whole episode is downloaded instead.
+- **Fallback service** (on a series page, in Source). A second service and the series URL on it, used when the main
+  service doesn't have the episode yet, or not in an accepted language. If that service numbers episodes
+  differently, set its `season_map` or `episode_offset` under `fallback:` in `config.yaml`.
+- **Learn release times** (Settings › Automation). When 3 episodes of a series come out at the same time, that time
+  becomes its release time. Release times you set yourself are never changed.
+- **Download window** (Settings › Automation). Automatic downloads only run between two times, which can span
+  midnight. Release-time downloads can follow it too. Episodes you start by hand are not affected.
+
+After an update, the **What's new** button in the header lists the new options, and each one shows a "New" badge
+until you have seen it.
 
 ## 💾 Backups
 

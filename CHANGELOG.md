@@ -8,17 +8,19 @@ Every change worth knowing, newest first. The format follows
 
 ### Added
 
-- **Add the audio to the file.** When an episode's preferred audio comes on its service, its audio track alone can be
-  downloaded and added to the library's file, instead of the whole episode again. Settings › Download options ›
-  Languages, with the library folder as Sonarr and as Unshacklarr see it.
-- **A fallback service per series**, tried when its own has no episode yet or not in an accepted language: on the
-  series' page, Source.
-- **Release times learnt.** A series without one gets it once 3 episodes came out at the same time, and you are
-  told: Settings › Automation › Learn release times.
-- **A download window.** The automatic sync downloads only between two hours, the release-time tries too if you
-  choose: Settings › Automation › Download window.
+- **Add the audio track to the existing file.** When your preferred audio language becomes available, Unshacklarr
+  can download only that audio track and add it to the file in your library, instead of downloading the whole
+  episode again. In Settings › Download options › Languages, with your library folder as Sonarr and Unshacklarr see it.
+- **Fallback service.** Each series can have a second service, used when the main one doesn't have the episode yet
+  or not in an accepted language. On the series page, in Source.
+- **Learn release times.** When 3 episodes of a series come out at the same time, that time becomes its release
+  time, and you get a notification. Only for series without a release time. In Settings › Automation.
+- **Download window.** Automatic downloads only run between two times you choose, at night for example. Release-time
+  downloads can follow it too. In Settings › Automation.
+- **What's new.** After an update, a button in the header lists the new options, with a link to each. Each new option
+  shows a "New" badge until you have seen it, on every device.
 
-All four are off until you turn them on.
+The first four options are off until you turn them on.
 
 ## [1.4.0] - 2026-10-07
 

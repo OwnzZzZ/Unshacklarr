@@ -46,6 +46,7 @@
     <button data-health="unshackle"><i class="dot"></i><span>Unshackle</span></button>
     <button data-health="sonarr"><i class="dot"></i><span>Sonarr</span></button>
   </span>
+  <button class="news-pill" id="news" type="button" aria-label="What's new" hidden><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z"/></svg><span>What's new</span><b></b></button>
   <a class="update-pill" id="update" target="_blank" rel="noopener" hidden><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg><span></span></a>
   <span class="last-sync" id="last-sync"></span>
   <button class="btn" id="bell" aria-label="Notifications"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg><b class="count" id="bell-count" hidden></b></button>
@@ -258,17 +259,17 @@
           <p class="rt-who" id="ax-import-say"></p>
         </section>
         <section class="sx-card" id="ax-learn-card">
-          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/><path d="M17 3l3 3"/></svg></span><div><h3>Learn release times</h3><p>A series without a release time gets one once 3 of its episodes came out at the same time. You are told, and you can change it on its page.</p></div>
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/><path d="M17 3l3 3"/></svg></span><div><h3>Learn release times</h3><p>When 3 episodes of a series come out at the same time, that time becomes its release time. Only for series without one. You get a notification and can change it on the series page.</p></div>
             <input type="checkbox" class="switch" id="ax-learn" aria-label="Learn release times"></div>
           <p class="rt-who" id="ax-learn-say"></p>
         </section>
-        <section class="sx-card">
-          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span><div><h3>Download window</h3><p>The automatic sync downloads only in these hours, the night say. Episodes you pick by hand always go at once.</p></div></div>
+        <section class="sx-card" id="ax-window-card">
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span><div><h3>Download window</h3><p>Automatic downloads only run between these times, at night for example. Episodes you start by hand are not affected.</p></div></div>
           <div class="sx-grid ax-grid">
-            <div class="field"><label for="ax-from">From</label><input id="ax-from" type="time" data-set="download_from"><small>Empty: any time.</small></div>
-            <div class="field"><label for="ax-to">To</label><input id="ax-to" type="time" data-set="download_to"><small>It can go over midnight: 23:00 to 06:00.</small></div>
+            <div class="field"><label for="ax-from">From</label><input id="ax-from" type="time" data-set="download_from"><small>Leave empty for no limit.</small></div>
+            <div class="field"><label for="ax-to">To</label><input id="ax-to" type="time" data-set="download_to"><small>It can span midnight, for example 23:00 to 06:00.</small></div>
           </div>
-          <label class="check ax-bursts"><input type="checkbox" id="ax-window-bursts"> The tries at a release time keep to it too</label>
+          <label class="check ax-bursts"><input type="checkbox" id="ax-window-bursts"> Also apply to release-time downloads</label>
           <p class="rt-who" id="ax-window-say"></p>
         </section>
         <section class="sx-card">
@@ -327,12 +328,12 @@
             <div class="field"><label for="dx-subs">Required subtitle languages</label><input id="dx-subs" type="text" data-set="subs_accept" placeholder="Example: fr" spellcheck="false"><small>The episode must have full subtitles in at least one of them. Forced subtitles (only a few lines) do not count. Empty: not checked. A series can set its own.</small></div>
           </div>
           <div class="up-mode">
-            <span class="sub">When the preferred audio comes</span>
-            <div class="ax-seg" id="dx-upmode" role="radiogroup" aria-label="When the preferred audio comes"><button type="button" role="radio" data-mode="redownload">Download the episode again</button><button type="button" role="radio" data-mode="add_track">Add the audio to its file</button></div>
+            <span class="sub">When the preferred audio language becomes available</span>
+            <div class="ax-seg" id="dx-upmode" role="radiogroup" aria-label="When the preferred audio language becomes available"><button type="button" role="radio" data-mode="redownload">Download the episode again</button><button type="button" role="radio" data-mode="add_track">Add the audio track to the existing file</button></div>
             <p class="rt-who" id="dx-upmode-say"></p>
             <div class="sx-grid" id="dx-library">
-              <div class="field"><label for="dx-lib-sonarr">Library folder, as Sonarr sees it</label><input id="dx-lib-sonarr" type="text" data-set="library_sonarr_root" placeholder="Example: /tv" spellcheck="false"><small>The start of the paths Sonarr gives its files.</small></div>
-              <div class="field"><label for="dx-lib-local">Library folder, as Unshacklarr sees it</label><input id="dx-lib-local" type="text" data-set="library_local_root" placeholder="Example: /mnt/tv" spellcheck="false"><small>The same folder, mounted here. Both empty: the same path.</small></div>
+              <div class="field"><label for="dx-lib-sonarr">Library folder, as Sonarr sees it</label><input id="dx-lib-sonarr" type="text" data-set="library_sonarr_root" placeholder="Example: /tv" spellcheck="false"><small>The path Sonarr uses for your library.</small></div>
+              <div class="field"><label for="dx-lib-local">Library folder, as Unshacklarr sees it</label><input id="dx-lib-local" type="text" data-set="library_local_root" placeholder="Example: /mnt/tv" spellcheck="false"><small>The same folder as Unshacklarr sees it. Leave both empty if the paths are the same.</small></div>
             </div>
           </div>
         </section>
@@ -610,10 +611,10 @@
       </div>
       <div id="d-probe-out"></div>
       <details class="ds-sub" id="d-fb">
-        <summary><b>Fallback service</b><small>Tried when this service has no episode yet, or not in a language you accept.</small></summary>
+        <summary><b>Fallback service</b><small>Used when the main service doesn't have the episode yet, or not in an accepted language.</small></summary>
         <div class="sx-grid ds-svc">
           <div class="field"><label for="d-fb-service">Service</label><select id="d-fb-service"></select></div>
-          <div class="field"><label for="d-fb-url">Series URL on it</label><input type="text" id="d-fb-url" placeholder="URL or ID of the series" spellcheck="false"><small id="d-fb-say">Its numbering is the service's own: set it in config.yaml when it differs.</small></div>
+          <div class="field"><label for="d-fb-url">Series URL on that service</label><input type="text" id="d-fb-url" placeholder="URL or ID of the series" spellcheck="false"><small id="d-fb-say">If this service numbers episodes differently, set its numbering in config.yaml.</small></div>
         </div>
       </details>
       <div class="card-foot"><button class="btn danger" id="d-stop" hidden>Stop downloading this series</button></div>
@@ -783,6 +784,12 @@
   <div class="inbox-filters" id="inbox-filters" role="group" aria-label="Show"></div>
   <div id="inbox-list"></div>
 </dialog>
+<dialog class="modal" id="news-dlg" aria-labelledby="news-title">
+  <h2 id="news-title">What's new</h2>
+  <p>New options you haven't seen yet. Each one keeps its "New" badge until you have seen it.</p>
+  <ul class="news-list" id="news-list"></ul>
+  <div class="modal-actions"><button class="btn" id="news-close" type="button">Close</button></div>
+</dialog>
 <dialog class="modal" id="clear-dialog" aria-labelledby="clear-title">
   <form method="dialog">
     <h2 id="clear-title">Clear the history</h2>
@@ -929,6 +936,7 @@
 <script src="/js/bulk.js"></script>
 <script src="/js/settings-options.js"></script>
 <script src="/js/quality.js"></script>
+<script src="/js/news.js"></script>
 <script src="/js/activity.js"></script>
 <script src="/js/yaml-editor.js"></script>
 <script src="/js/inbox.js"></script>

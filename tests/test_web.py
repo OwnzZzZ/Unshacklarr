@@ -1473,3 +1473,27 @@ def test_episode_links_are_taken_back_to_their_series(tmp_path, monkeypatch):
     assert web.episode_link(kept)  # still one episode: a series link of the same service is preferred
     assert web.episode_link("https://play.hbomax.com/video/watch/7656258d-aaaa/x") and web.episode_link("https://www.bbc.co.uk/iplayer/episode/b0abc123")
     assert not web.episode_link("https://play.hbomax.com/show/86bc816f-aaaa")
+
+
+def test_news_seen_is_kept_for_the_account_and_a_new_install_starts_with_none(tmp_path, monkeypatch):
+    import asyncio
+    from aiohttp.test_utils import TestClient, TestServer
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    web.app._middlewares = type(web.app._middlewares)([web.same_origin_only])  # logged in, for this test
+    h = {"X-Unshackle": "1"}
+
+    async def go():
+        async with TestClient(TestServer(web.app)) as client:
+            a = await (await client.post("/api/news/seen", json={"ids": ["download-window", "../bad", 5]}, headers=h)).json()
+            b = await (await client.post("/api/news/seen", json={"ids": ["fallback-service"], "list": True}, headers=h)).json()
+            return a, b
+
+    a, b = asyncio.run(go())
+    assert a["seen"] == ["download-window"]  # only ids, never anything else
+    assert b["seen"] == ["download-window", "fallback-service"] and b["list_read"] == web.__version__
+    web.news_installed()
+    assert web.read_json(web.NEWS_FILE, {})["installed"] == web.__version__ and web.read_json(web.NEWS_FILE, {})["seen"]

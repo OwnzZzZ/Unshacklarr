@@ -519,6 +519,7 @@ async def state(_):
         "cdm": {str(k): v for k, v in cdm.items()},
         "service_domains": domains,
         "builtin_ladders": sonarr_sync.BUILTIN_LADDERS,
+        "news": read_json(NEWS_FILE, {}),
         "backups": backups_info(),
         "network_services": {str(s["tvdbId"]): tag for s in series if (tag := service_for_network(s.get("network"), set(services)))},
     })
@@ -722,7 +723,7 @@ def check_fallback(alt: dict, known: dict | None, dl_specs: list[dict], key: str
     """A series' fallback service: its service and URL, its own options and numbering (only the ones set)."""
     service, title = str(alt.get("service") or ""), str(alt.get("title") or "").strip()
     if not service or not title:
-        raise web.HTTPBadRequest(text=f"The fallback of {key} needs both a service and its URL")
+        raise web.HTTPBadRequest(text=f"The fallback service of {key} needs both a service and a series URL")
     specs = check_service(service, known, f"the fallback of {key}")
     if title.startswith("-"):
         raise web.HTTPBadRequest(text=f"The fallback URL of {key} cannot start with '-'")
@@ -1016,22 +1017,22 @@ def check_settings(body: dict, previous: dict) -> dict:
     settings["debug"] = body.get("debug") is True
     mode = str(body.get("upgrade_mode") or "redownload")
     if mode not in ("redownload", "add_track"):
-        raise web.HTTPBadRequest(text="Upgrading the audio either downloads the episode again or adds the audio to its file")
+        raise web.HTTPBadRequest(text="Choose whether to download the episode again or to add the audio track to the existing file")
     settings["upgrade_mode"] = mode
     for name in ("library_sonarr_root", "library_local_root"):
         settings[name] = folder = str(body.get(name) or "").strip().rstrip("/\\")
         if folder and (not (posixpath.isabs(folder) or ntpath.isabs(folder)) or ".." in re.split(r"[\\/]", folder)):
             raise web.HTTPBadRequest(text=f"{folder} must be a full path, from / (or a drive letter), without ..")
     if bool(settings["library_sonarr_root"]) != bool(settings["library_local_root"]):
-        raise web.HTTPBadRequest(text="Give the library folder both as Sonarr sees it and as Unshacklarr sees it, or neither")
+        raise web.HTTPBadRequest(text="Set the library folder both as Sonarr sees it and as Unshacklarr sees it, or neither")
     settings["release_learn"] = body.get("release_learn") is True
     for name in ("download_from", "download_to"):
         at = str(body.get(name) or "").strip()
         if at and not re.fullmatch(r"([01]\d|2[0-3]):[0-5]\d", at):
-            raise web.HTTPBadRequest(text="The download window's hours look like 01:00")
+            raise web.HTTPBadRequest(text="Download window times look like 01:00")
         settings[name] = at
     if bool(settings["download_from"]) != bool(settings["download_to"]):
-        raise web.HTTPBadRequest(text="Give the download window both a start and an end, or neither")
+        raise web.HTTPBadRequest(text="Set both a start and an end time for the download window, or neither")
     settings["download_window_bursts"] = body.get("download_window_bursts") is True
     settings["download_only"] = body.get("download_only") is True
     settings["quality_ladder"] = str(body.get("quality_ladder") or "")  # checked against the ladders by save_config
@@ -3483,6 +3484,28 @@ async def setup_found(request):
     })
 
 
+# What's new: the new options a person has seen (their "New" badges gone), for the account, on every device.
+# A fresh install starts with every one seen: on a new install, everything is new.
+NEWS_FILE = sonarr_sync.DATA / "news_seen.json"  # {"seen": [ids], "installed": the version set up with, "list_read": a version}
+NEWS_ID = re.compile(r"[a-z0-9-]{1,40}")
+
+
+def news_installed() -> None:
+    write_atomic(NEWS_FILE, json.dumps({**read_json(NEWS_FILE, {}), "installed": __version__}))
+
+
+async def news_seen(request):
+    """Mark news items seen ({"ids": [...]}), or the What's new list read ({"list": true})."""
+    body = await json_object(request)
+    ids = [i for i in body.get("ids") or [] if isinstance(i, str) and NEWS_ID.fullmatch(i)][:50]
+    news = read_json(NEWS_FILE, {})
+    news["seen"] = sorted(set(news.get("seen") or []) | set(ids))
+    if body.get("list") is True:
+        news["list_read"] = __version__
+    write_atomic(NEWS_FILE, json.dumps(news))
+    return web.json_response(news)
+
+
 async def setup_backups(request):
     """The setup of a new install: the backups found in its data folder, once the setup code is given."""
     body = await json_object(request)
@@ -3510,6 +3533,7 @@ async def setup_restore(request):
     data = backup_data(text)
     auth = {"password": hash_password(password), "secret": secrets.token_hex(32), "changed": datetime.now(timezone.utc).isoformat()}
     write_config({**{k: data[k] for k in BACKUP_KEYS if data.get(k) is not None}, "auth": auth})
+    news_installed()
     settings = sonarr_sync.load_settings(read_config())
     checks = {}
     try:
@@ -3656,6 +3680,7 @@ async def setup(request):
     config["settings"] = settings
     config["auth"] = {"password": hash_password(password), "secret": secrets.token_hex(32), "changed": datetime.now(timezone.utc).isoformat()}
     write_config(config)
+    news_installed()  # a new install: nothing is "new" to it
     return with_session(request, web.json_response({"logged_in": True}), config["auth"])
 
 
@@ -3798,6 +3823,7 @@ app.add_routes([
     web.post("/api/backups/download", backup_download),
     web.post("/api/setup/backups", setup_backups),
     web.post("/api/setup/restore", setup_restore),
+    web.post("/api/news/seen", news_seen),
     web.post("/api/cookies", save_cookies),
     web.post("/api/cookies/delete", delete_cookies),
     web.post(r"/api/unshackle/config-file/{action:open|version|save}", unshackle_yaml),
