@@ -209,9 +209,9 @@ function renderJob(j) {
   $("#cd-top-title").textContent = title;
   const acts = [series ? el("button", { className: "btn small", textContent: "Open series", onclick: () => openDrawer(series) }) : "",
     st.live && st.n.queued ? el("button", { className: `btn small${st.paused ? " primary" : ""}`, textContent: st.paused ? "Resume" : "Pause",
-      title: st.paused ? "The next episode starts" : "The download going on ends; the next one waits",
+      title: st.paused ? "The next episode starts" : "The current download finishes; the next one waits",
       onclick: (e) => pauseJob(j, !st.paused, e.target) }) : "",
-    st.live ? el("button", { className: "btn small danger", textContent: "Stop the job", title: "Cancels the download going on; the queued episodes don't start",
+    st.live ? el("button", { className: "btn small danger", textContent: "Stop the job", title: "Stops the current download. The queued episodes don't start",
       onclick: (e) => stopJob(j, e.target) }) : "",
     !st.live && retryable.length ? el("button", { className: "btn small primary", textContent: `Retry ${retryable.length} failed`,
       title: "Downloads them again, in this job", onclick: (e) => retryJob(j, retryable, e.target) }) : ""].filter(Boolean);
@@ -361,6 +361,94 @@ async function showLeftovers() {
     ...(rows.length ? [el("div", {}, ...rows)] : [el("p", { className: "muted", textContent: "Nothing waits: every download went to Sonarr." })])));
 }
 $("#con-left").onclick = showLeftovers;
+
+/* Catch up: the aired episodes Unshacklarr's series still miss (those before a series got its service, or the
+   automatic sync gave up on), downloaded together as one job. Within so many days, or all. */
+let missingDays = 30;
+async function showMissing() {
+  picked_run = "missing";
+  $("#con").classList.add("open");
+  document.querySelectorAll(".crow").forEach((r) => r.classList.toggle("sel", r.id === "con-missing"));
+  $("#cd-top-title").textContent = "Catch up";
+  $("#cd-raw").hidden = true;
+  $("#cd-foot").replaceChildren();
+  $("#cd-main").replaceChildren(loading("Asking Sonarr what your series miss…"));
+  let r;
+  try { r = await api(`/api/missing${missingDays ? `?days=${missingDays}` : ""}`); } catch (e) { return $("#cd-main").replaceChildren(failed(e.message, showMissing)); }
+  if (picked_run !== "missing") return;
+  const ages = el("div", { className: "ax-seg", role: "radiogroup", ariaLabel: "Aired within" }, ...[[7, "7 days"], [30, "30 days"], [90, "90 days"], [0, "All"]].map(([d, label]) =>
+    el("button", { type: "button", role: "radio", textContent: label, ariaChecked: String(missingDays === d), onclick: () => { missingDays = d; showMissing(); } })));
+  const go = el("button", { className: "btn primary", textContent: r.items.length === 1 ? "Download it" : `Download the ${r.items.length}`, hidden: !r.items.length,
+    onclick: async (e) => {
+      e.target.disabled = true;
+      try {
+        await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: r.items.map((x) => x.episodeId) }) });
+        toast(r.items.length === 1 ? "1 episode queued" : `${r.items.length} episodes queued, one after the other`);
+      } catch (err) { e.target.disabled = false; toast(err.message, true); }
+    } });
+  const rows = r.items.map((it) => {
+    const poster = S.series.find((x) => x.tvdbId === it.tvdbId)?.poster || "";
+    return el("div", { className: "left-row" }, el("img", { alt: "", src: poster }),
+      el("div", {}, el("b", { textContent: `${it.series} ${it.sxxeyy}` }),
+        el("small", { textContent: [it.title, `aired ${ago(it.aired)}`].filter(Boolean).join(" · ") })));
+  });
+  $("#cd-main").replaceChildren(el("div", { style: "display:grid;gap:14px" },
+    el("div", { className: "cd-head" }, el("div", {}, el("h3", { textContent: "Catch up" }),
+      el("small", { className: "line1", textContent: "Episodes that aired, are monitored and have no file in Sonarr, for the series Unshackle downloads. The automatic sync only looks at recent ones." }))),
+    el("div", { className: "miss-bar" }, ages, go),
+    ...(rows.length ? [el("div", {}, ...rows)] : [el("p", { className: "muted", textContent: missingDays ? `Nothing missing from the last ${missingDays} days.` : "Nothing missing: every aired episode has its file." })])));
+}
+$("#con-missing").onclick = showMissing;
+
+/* Upgrades: the files of the series with a quality ladder that are not on its first step, checked against the
+   service's tracks (one episode at a time, in the background); those it has on an earlier step are replaced. */
+let upgradeTimer = null, upgradeSkip = new Set();
+async function showUpgrades() {
+  picked_run = "upgrades";
+  clearTimeout(upgradeTimer);
+  $("#con").classList.add("open");
+  document.querySelectorAll(".crow").forEach((r) => r.classList.toggle("sel", r.id === "con-upgrades"));
+  $("#cd-top-title").textContent = "Upgrades";
+  $("#cd-raw").hidden = true;
+  $("#cd-foot").replaceChildren();
+  let r;
+  try { r = await api("/api/upgrades"); } catch (e) { return $("#cd-main").replaceChildren(failed(e.message, showUpgrades)); }
+  if (picked_run !== "upgrades") return;
+  const scan = r.scan, picked = r.items.filter((i) => !upgradeSkip.has(i.episodeId) && !i.running);
+  const check = el("button", { className: "btn" + (scan.running ? " danger" : ""), textContent: scan.running ? "Stop the check" : r.checked ? "Check again" : "Check now",
+    onclick: async (e) => {
+      e.target.disabled = true;
+      try { await api(scan.running ? "/api/upgrades/stop" : "/api/upgrades/check", { method: "POST" }); } catch (err) { toast(err.message, true); }
+      showUpgrades();
+    } });
+  const go = el("button", { className: "btn primary", hidden: !picked.length || scan.running,
+    textContent: picked.length === 1 ? "Replace it" : `Replace the ${picked.length}`, onclick: async (e) => {
+      e.target.disabled = true;
+      try {
+        await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: picked.map((i) => i.episodeId), replace: true }) });
+        toast(picked.length === 1 ? "1 episode queued, replacing its file" : `${picked.length} episodes queued, replacing their files`);
+        showUpgrades();
+      } catch (err) { e.target.disabled = false; toast(err.message, true); }
+    } });
+  const state = scan.running ? `Checking ${scan.done} of ${scan.total}${scan.series ? ` · ${scan.series}` : ""}…`
+    : r.checked ? `Checked ${ago(r.checked)}${r.stopped ? ", stopped before the end" : ""}${scan.errors ? ` · ${scan.errors} could not be asked` : ""}` : "Not checked yet.";
+  const rows = r.items.map((it) => {
+    const poster = S.series.find((x) => x.tvdbId === it.tvdbId)?.poster || "";
+    const box = el("input", { type: "checkbox", checked: !upgradeSkip.has(it.episodeId), disabled: it.running, ariaLabel: `Replace ${it.series} ${it.sxxeyy}`,
+      onchange: (e) => { if (e.target.checked) upgradeSkip.delete(it.episodeId); else upgradeSkip.add(it.episodeId); showUpgrades(); } });
+    return el("label", { className: "left-row up-row" }, box, el("img", { alt: "", src: poster }),
+      el("div", {}, el("b", { textContent: `${it.series} ${it.sxxeyy}` }),
+        el("small", { textContent: `${it.file} here${it.fileStep ? ` (step ${it.fileStep})` : " (outside the ladder)"} → ${it.better} on the service (step ${it.betterStep} of ${it.ladder})` }),
+        ...(it.running ? [el("small", { className: "left-hand", textContent: "Being replaced now" })] : [])));
+  });
+  $("#cd-main").replaceChildren(el("div", { style: "display:grid;gap:14px" },
+    el("div", { className: "cd-head" }, el("div", {}, el("h3", { textContent: "Upgrades" }),
+      el("small", { className: "line1", textContent: "Files your quality ladder says could be better. Check now asks each service, one episode at a time, what it has. Replace downloads the better ones over your files, even when Sonarr ranks both the same (H.264 and H.265 in 1080p)." }))),
+    el("div", { className: "miss-bar" }, el("span", { className: "muted", textContent: state }), el("span", { className: "up-acts" }, check, go)),
+    ...(rows.length ? [el("div", {}, ...rows)] : [el("p", { className: "muted", textContent: scan.running ? "Nothing better found yet." : r.checked ? "Nothing better on the services: every file is already on the best step they have." : "Check now asks each service what it has, one episode at a time." })])));
+  if (scan.running) upgradeTimer = setTimeout(() => picked_run === "upgrades" && showUpgrades(), 3000);
+}
+$("#con-upgrades").onclick = showUpgrades;
 
 /* Stats: what the history adds up to, in the detail pane. */
 async function showStats() {
@@ -629,7 +717,7 @@ async function pauseJob(j, pause, button) {
   renderConsole();
   try {
     await api(`/api/jobs/${encodeURIComponent(j.job)}/${pause ? "pause" : "resume"}`, { method: "POST" });
-    toast(pause ? "Job paused: the download going on ends, then it waits" : "Job resumed");
+    toast(pause ? "Job paused: the current download finishes, then the job waits" : "Job resumed");
   } catch (e) { toast(e.message, true); }
   openActivity();
 }

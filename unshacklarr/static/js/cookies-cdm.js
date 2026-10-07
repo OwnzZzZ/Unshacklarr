@@ -5,7 +5,7 @@ function cookieStatus(f) {
   const left = f.expires ? Math.floor((f.expires * 1000 - Date.now()) / 86400000) : null;
   if (f.expired) return ["bad", "Expired", "The service will refuse them: replace them with fresh ones"];
   // Session cookies carry no date: how long they log in is the service's secret
-  if (left === null || left < 0) return ["mut", "Session only", "Session cookies have no date: a failed login is what tells they are over"];
+  if (left === null || left < 0) return ["mut", "Session only", "Session cookies have no expiry date: only a failed login shows they are over"];
   const days = `${left} day${left === 1 ? "" : "s"}`;
   return left < 7 ? ["warn", `Expires in ${days}`, "Replace them soon"] : ["ok", `Valid · ${days} left`, "Nothing to do"];
 }
@@ -22,6 +22,9 @@ async function loadCookies() {
   $("#ck-add").hidden = !data.folder;
   const state = $("#ck-state");
   const show = (cls, b, small) => { state.className = `sx-state ${cls}`; state.querySelector("b").textContent = b; state.querySelector("small").textContent = small; };
+  // A remote serve with no folder mounted here: its cookies are kept where it runs, on purpose or not, downloads go on
+  if (!data.folder && S.config.settings.unshackle_mode === "remote") { show("", "Managed where unshackle serve runs", "");
+    return $("#ck-list").replaceChildren(el("p", { className: "muted", textContent: "To manage them here too, mount its Cookies folder and set its path in Settings, Unshackle, Folders." })); }
   if (!data.folder) { show("down", "No cookie folder", ""); return $("#ck-list").replaceChildren(el("p", { className: "status-err", textContent: data.error })); }
   const usedBy = (tag) => Object.values(S.config.series).filter((c) => c.service === tag).length;
   const rank = { bad: 0, warn: 1, mut: 2, ok: 3 };
@@ -108,7 +111,7 @@ function cdmStatus(d) {
   const t = d.test;
   if (!t) return ["mut", "Not tested", "Test asks the DRM's own test server for a license"];
   const when = tr(`tested ${ago(t.at)}`);  // translated here: glued to the server's own words below
-  if (t.ok) return ["ok", "Works", `Got a license (${t.keys} key${t.keys === 1 ? "" : "s"}), ${when}. A service can still refuse it on its own.`];
+  if (t.ok) return ["ok", "Works", `Got a license (${t.keys} key${t.keys === 1 ? "" : "s"}), ${when}. A service may still refuse this device.`];
   if (t.revoked) return ["bad", "Revoked", `${t.error}, ${when}`];
   return ["warn", "Failed", `${t.error}, ${when}`];
 }
@@ -227,6 +230,8 @@ function renderCdm() {
   $("#cdm-add").hidden = !data.folder;
   const state = $("#cdm-state");
   const show = (cls, b, small) => { state.className = `sx-state ${cls}`; state.querySelector("b").textContent = b; state.querySelector("small").textContent = small; };
+  if (!data.folder && S.config.settings.unshackle_mode === "remote") { show("", "Managed where unshackle serve runs", ""); $("#cdm-alerts").replaceChildren(); $("#cdm-hero-test").replaceChildren();
+    return $("#cdm-list").replaceChildren(el("p", { className: "muted", textContent: "To manage its devices here too, mount the folder of its unshackle.yaml and set its path in Settings, Unshackle, Folders." })); }
   if (!data.folder) { show("down", "No CDM folder", ""); $("#cdm-alerts").replaceChildren(); $("#cdm-hero-test").replaceChildren(); return $("#cdm-list").replaceChildren(el("p", { className: "status-err", textContent: data.error })); }
   const all = [...data.devices, ...data.remote.map((r) => ({ ...r, remote: true }))];
   const deviceOf = (name) => all.find((d) => d.name === name);
@@ -270,7 +275,7 @@ function renderCdm() {
     ...(onDefault.length ? [el("div", { className: "cdm-grp cdm-fold" }, el("span", { className: "cdm-chips" }, ...onDefault.map((svc) => chip(svc, ""))),
       el("span", { className: "cdm-to" }, el("small", { textContent: onDefault.length === 1 ? "uses the default device" : "use the default device" })))] : []),
     ...rules.map(([svc, v]) => el("div", { className: "cdm-grp" }, el("span", { className: "cdm-chips" }, el("span", { className: "cdm-chip static", textContent: svc })),
-      el("span", { className: "cdm-to" }, el("small", { textContent: `A rule by profile, quality or DRM (${v.rule.join(", ")}): in unshackle.yaml` })))),
+      el("span", { className: "cdm-to" }, el("small", { textContent: `Set by a rule by profile, quality or DRM (${v.rule.join(", ")}): edit it in unshackle.yaml` })))),
     ...(others.length ? [el("div", { className: "cdm-add-svc" }, addSvc)] : []));
   // What needs you: a service on a device that is not there, a device in use that failed its test
   const alerts = [

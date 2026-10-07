@@ -191,8 +191,6 @@ body.drawer-open .savebar { display: none; }
 .d-tabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 14px; cursor: pointer; color: var(--muted); font-weight: 600; }
 .d-tabs button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
 .d-pane[hidden] { display: none; }
-.settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 0 16px; align-items: start; }
-.sg-col { min-width: 0; }  /* two columns stacking on their own: a tall card leaves no hole beside the next */
 /* Episodes: one season at a time, picked from a strip, so 35 seasons stay usable. */
 .seasons { display: flex; gap: 6px; overflow-x: auto; padding: 16px 0 10px; scrollbar-width: thin; }
 .seasons button { flex: none; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px;
@@ -1305,7 +1303,6 @@ button.pill[aria-pressed="true"] { background: rgb(79 179 191 / .16); border-col
   .d-tabs button { flex: 1; padding: 12px; }
   .d-body { padding: 0 12px 24px; }
   .card { padding: 14px; border-radius: 12px; }
-  .settings-grid { grid-template-columns: 1fr; }
   .set-layout { grid-template-columns: 1fr; gap: 12px; }
   /* Settings on a phone: a list first, then one section with a way back (as a phone's own settings) */
   .set-layout:not(.at-list) .set-nav, .set-layout.at-list .set-body { display: none; }
@@ -1383,7 +1380,7 @@ button.pill[aria-pressed="true"] { background: rgb(79 179 191 / .16); border-col
   /* The phone's detail: a title bar with back, the service line by a small poster, short steps,
      the figures on one line, and the actions at the bottom. */
   .con-detail { gap: 14px; }
-  .cd-top { display: flex; align-items: center; gap: 6px; margin: 0 -4px; }
+  .cd-top { display: flex; align-items: center; gap: 6px; margin: 0 0 0 -4px; }  /* the back arrow on the edge; the right side inside, or the pane scrolls sideways */
   .cd-top h3 { margin: 0; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .cd-back { display: grid; place-items: center; width: 36px; height: 36px; border: 0; background: none; color: var(--accent);
     font-size: 26px; line-height: 1; cursor: pointer; border-radius: 50%; }
@@ -1442,15 +1439,44 @@ body:has(.sel-bar:not([hidden])) #wall { padding-bottom: 96px; }
 .sel-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; margin: 12px 0; }
 @media (max-width: 700px) { .sel-grid { grid-template-columns: 1fr; } }
 .status-warn { color: var(--warn); font-size: 13px; margin: 0 0 8px; }
-.ds-nav { grid-column: 1 / -1; position: sticky; top: 0; z-index: 2; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none;
-  margin: 0 0 12px; padding: 8px 0; background: var(--bg); }
+/* The series' settings shortcuts: a bar of its own, each card's icon, the card in view lit */
+.ds-nav { position: sticky; top: 0; z-index: 2; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
+  margin: 0 0 4px; padding: 8px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel);
+  box-shadow: 0 6px 16px -10px rgb(0 0 0 / .6); }
 .ds-nav::-webkit-scrollbar { display: none; }
-.ds-nav a { flex: none; font-size: 12.5px; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); text-decoration: none; }
-.ds-nav a:hover, .ds-nav a:focus-visible { color: var(--text); border-color: var(--accent); }
+.ds-nav a { flex: none; display: inline-flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 600; padding: 8px 14px;
+  border-radius: 10px; border: 1px solid transparent; color: var(--text); text-decoration: none; transition: background .15s, border-color .15s, color .15s; }
+.ds-nav a svg { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; color: var(--accent); }
+.ds-nav a:hover, .ds-nav a:focus-visible { background: rgb(79 179 191 / .08); border-color: rgb(79 179 191 / .35); }
+.ds-nav a[aria-current="true"] { background: rgb(79 179 191 / .16); border-color: var(--accent); color: var(--accent); }
 #dt-settings .card { scroll-margin-top: 56px; }
+/* A series' settings: where it stands, then one card per subject in the Settings look, most used first. */
+.ds:not([hidden]) { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding-bottom: 8px; }
+.ds-state { grid-area: auto; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+.ds-state > span { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; min-width: 0; }
+.ds-state small { margin-left: 0; } .ds-state .dot { margin-top: 5px; } .ds-state:not(.ok, .down, .warn) b { color: var(--muted); }
+#dt-settings .sx-card { margin: 0; padding: 20px 24px 22px; border-radius: 16px; }
+.ds .sx-head { margin-bottom: 0; } .ds .sx-grid { margin-top: var(--gap-field); }
+.ds .sx-grid select { width: 100%; min-height: 40px; border-radius: 9px; }
+.sx-grid input[type=checkbox]:not(.switch) { width: auto; min-height: 0; } .sx-grid .field > label.check { display: inline-flex; font-weight: 400; }
+.ds .sx-grid .ax-seg { margin-bottom: 0; } .ds .ds-tmdb { margin-top: var(--gap-field); }
+.ds .d-sick { margin: 16px 0 0; } .ds .card-foot { margin-top: 18px; }
+.ds-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-top: 14px; } .ds-tools .muted { font-size: 13px; }
+.ds-inline { display: flex; align-items: center; gap: 10px; } .ds-inline small { margin: 0 !important; }
+.sx-grid .ds-inline input { flex: 0 0 90px; width: 90px; }
+details.sx-card > summary.sx-head { padding-right: 28px; } details.sx-card > summary.sx-head::after { top: 9px; }
+.ds-sub { margin-top: var(--gap-field); padding-top: 14px; border-top: 1px solid var(--line); }
+.ds-sub summary { position: relative; display: grid; gap: 2px; padding-right: 24px; cursor: pointer; list-style: none; }
+.ds-sub summary::-webkit-details-marker { display: none; }
+.ds-sub summary::after { content: "▸"; position: absolute; right: 0; top: 0; color: var(--muted); transition: transform .15s; }
+.ds-sub[open] summary::after { transform: rotate(90deg); }
+.ds-sub summary b { font-size: 14px; } .ds-sub summary small { color: var(--muted); font-size: 12.5px; }
+.inh-list[hidden] { display: none; }
+@media (min-width: 901px) { .ds .ds-svc { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); } }
 @media (max-width: 700px) {  /* the page scrolls under the series' sticky head: the shortcuts stay just below it */
   .ds-nav { top: var(--d-head, 118px); }
   #dt-settings .card { scroll-margin-top: calc(var(--d-head, 118px) + 56px); }
+  #dt-settings .sx-card { padding: 16px; border-radius: 12px; }
 }
 /* Pull to reload (the installed app): a badge that follows the finger down from the top, its ring filling up. */
 .ptr { position: fixed; left: 50%; top: calc(env(safe-area-inset-top) - 56px); z-index: 1000; display: flex; flex-direction: column; align-items: center; gap: 8px;
@@ -1512,3 +1538,19 @@ input.bad, select.bad { border-color: var(--err) !important; box-shadow: 0 0 0 3
   .ql-step { grid-template-columns: 28px minmax(0, 1fr) minmax(0, 1fr); }
   .ql-h { grid-column: 2 / -1; flex-wrap: wrap; } .ql-h input { width: 84px; } .ql-h .ql-btns { margin-left: auto; }
 }
+.probe-warn { margin: 8px 0; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--warn) 45%, var(--line)); border-radius: 10px; background: color-mix(in srgb, var(--warn) 8%, transparent); font-size: 13px; } .probe-warn b { color: var(--warn); }
+.ql-langs { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); } .ql-langs .field small.bad { color: var(--err); }
+.miss-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; } .miss-bar .ax-seg { margin: 0; }
+.up-row { cursor: pointer; grid-template-columns: 18px 30px minmax(0, 1fr); } .up-row input { flex: none; width: 18px; height: 18px; accent-color: var(--accent); } .up-acts { display: flex; gap: 8px; flex-wrap: wrap; }
+/* Account, the automatic backups: the saved ones under the buttons */
+.bk-pass-row { margin-top: var(--gap-field); }
+.bk-saved { display: grid; gap: 6px; margin-top: var(--gap-field); max-width: calc(50% - 12px); padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; }
+.bk-saved[hidden] { display: none; } .bk-saved > b { font-size: 13px; } .bk-saved > b small { color: var(--muted); font-weight: 400; overflow-wrap: anywhere; }
+.bk-row { display: flex; align-items: center; gap: 10px; } .bk-row span { flex: 1; font-size: 13px; } .bk-row small { color: var(--muted); font-size: 12px; }
+@media (max-width: 900px) { .bk-saved { max-width: none; } }
+/* The setup: a rebuild from a backup, under the password */
+.wz-restore { display: grid; gap: 8px; margin-top: var(--gap-field); padding: 12px 14px; border: 1px dashed var(--line); border-radius: 12px; font-size: 13px; }
+.wz-restore > .btn, .wz-restore-say > .btn { justify-self: start; } .wz-restore-say { display: grid; gap: 6px; } .wz-restore-say:empty { display: none; }
+.wz-restore-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--field-bg); color: var(--text); font: inherit; cursor: pointer; text-align: left; }
+.wz-restore-row:hover { border-color: var(--accent); } .wz-restore-row b { flex: 1; font-weight: 600; } .wz-restore-row small { color: var(--muted); } .wz-restore-row span { color: var(--accent); font-weight: 600; }
+.wz-sum li.wz-bad { color: var(--err); }

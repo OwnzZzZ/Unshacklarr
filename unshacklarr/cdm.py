@@ -38,7 +38,7 @@ def directory(yaml_file: Path, key: str, default: str) -> Path:
     named = (read(yaml_file).get("directories") or {}).get(key) or default
     name = Path(str(named)).name
     if name in ("", ".", ".."):  # "..", "/" or ".": not a folder next to unshackle.yaml
-        raise CdmError(f"unshackle.yaml's directories: {key}: {named!r} is no folder next to it")
+        raise CdmError(f"unshackle.yaml's directories: {key}: {named!r} is not a folder next to it")
     return yaml_file.parent / name
 
 
@@ -207,7 +207,7 @@ def remote_save(yaml_file: Path, form: dict, was: str | None) -> None:
     if not NAME.fullmatch(name):
         raise CdmError("A remote CDM's name: letters, digits, _ . - @")
     if kind not in REMOTE_KINDS:
-        raise CdmError("A remote CDM is Widevine (pywidevine serve), PlayReady or Decrypt Labs here; others in unshackle.yaml")
+        raise CdmError("Here, a remote CDM can be Widevine (pywidevine serve), PlayReady or Decrypt Labs. Add other kinds in unshackle.yaml")
     old = next((e for e in entries if str(e.get("name")) == was), None) if was else None
     if was and old is None:
         raise CdmError(f"No remote CDM called {was!r}")
@@ -227,7 +227,7 @@ def remote_save(yaml_file: Path, form: dict, was: str | None) -> None:
     secret = str(form.get("secret") or "")
     if not secret and old is not None:  # kept only for the same server: a saved key never follows a new address
         if host.rstrip("/") != str(field(old, "host") or "").rstrip("/") or kind != remote_kind(old):
-            raise CdmError("Type its secret again: a saved secret never goes to a new address")
+            raise CdmError("Type its secret again: a saved secret is never sent to a new address")
         secret = str(field(old, "secret") or "")
     if kind != "decrypt_labs" and not secret:
         raise CdmError("Its secret (API key)")

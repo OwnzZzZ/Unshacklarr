@@ -11,7 +11,7 @@ function renderAutomation() {
   // How many a day, said in words
   const hours = Array.from({ length: Math.ceil(24 / every) }, (_, k) => k * every);
   $("#rs-sum").replaceChildren(el("b", { textContent: every === 24 ? "Once a day" : `${hours.length} syncs a day` }),
-    el("span", { textContent: `on the hour; an episode is tried from the first sync after it airs, next at ${time(next)}` }));
+    el("span", { textContent: `on the hour. An episode is tried at the first sync after it airs. Next sync at ${time(next)}` }));
 
   renderReleaseTries();
 }
@@ -34,7 +34,7 @@ function renderReleaseTries() {
   const secs = (d) => d.toLocaleTimeString(LOCALE, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   const dot = (i) => {  // each try: which one, when; the first and the last, what they mean
     const n = ticks > 1 ? Math.round(i * (tries - 1) / (ticks - 1)) : 0, at = new Date(start.getTime() + n * every * 1000);
-    const why = n === 0 ? "The release time: the first try" : n === tries - 1 ? "The last one: then the regular syncs take over" : "";
+    const why = n === 0 ? "The release time: the first try" : n === tries - 1 ? "The last try: after it, the regular syncs take over" : "";
     return hoverTip(el("i", { style: `left:${ticks > 1 ? i / (ticks - 1) * 100 : 0}%` }),
       () => [el("b", { textContent: `Try ${n + 1} of ${tries} · ${secs(at)}` }), ...(why ? [el("br"), why] : [])]);
   };
@@ -49,7 +49,7 @@ function renderReleaseTries() {
   });
   const timed = S.series.filter((x) => S.config.series?.[x.tvdbId]?.release_time).map((x) => `${x.title} (${S.config.series[x.tvdbId].release_time})`);
   $("#rt-who").textContent = timed.length > 1 ? `${timed.length} series have a release time: ${timed.join(", ")}` : timed.length ? `1 series has a release time: ${timed[0]}`
-    : "No series has a release time yet: set one on a series' page, Settings.";
+    : "No series has a release time yet. Set one on a series' page, in its Settings tab.";
 }
 document.querySelectorAll(".rt-seg button").forEach((b) => b.onclick = () => {
   const input = $(`#${b.closest(".rt-seg").dataset.for}`);
@@ -111,7 +111,8 @@ function renderUnshackleStatus(st) {
         maint("refresh-services", "Reload services", "After adding or updating a service in its services folder"),
         maint("clear-temp", "Clear temp", "Deletes the leftovers of interrupted downloads"),
         maint("clear-cache", "Clear cache", "Deletes Unshackle's cache, logins included: services log in again next time"))),
-    ...(local ? [] : [el("div", { className: "st-sect" }, el("b", { textContent: "Restart it or read its log where it runs" }),
+    // the commands name the bundled compose's container: shown only for its address (http://unshackle:8786)
+    ...(local || !/^https?:\/\/unshackle(:\d+)?\/?$/.test(S.config.settings.unshackle_url || "") ? [] : [el("div", { className: "st-sect" }, el("b", { textContent: "Restart it or read its log where it runs" }),
       el("div", { className: "st-cmds" }, copyCmd("docker compose restart unshackle"), copyCmd("docker logs -f --tail 200 unshackle")))]),
   ] : [];
   $("#u-status").replaceChildren(
@@ -210,7 +211,7 @@ async function showReleaseSeen(s) {
   if (!sg || current?.tvdbId !== s.tvdbId) return;
   const same = conf?.release_time === sg.time && Number(conf?.release_day || 0) === sg.day;
   const when = sg.between[0] ? `between ${sg.between[0]} and ${sg.between[1]}` : `by ${sg.between[1]}`;
-  box.replaceChildren(el("span", { textContent: `Seen out on the service ${when}${sg.day ? `, ${releaseDayLabel(sg.day)} airing` : ""} (${sg.episodes} episode${sg.episodes > 1 ? "s" : ""}): ${sg.time}` }),
+  box.replaceChildren(el("span", { textContent: `${sg.episodes} episode${sg.episodes > 1 ? "s" : ""} came out on the service ${when}${sg.day ? `, ${releaseDayLabel(sg.day)} airing` : ""}. Suggested release time: ${sg.time}` }),
     same ? el("span", { className: "muted", textContent: "· in use" }) : el("button", { type: "button", className: "btn small primary", textContent: "Use it", onclick: () => {
       $("#d-release").value = sg.time;
       $("#d-release-day").value = String(sg.day);
@@ -252,9 +253,12 @@ $("#d-probe").onclick = async () => {
         dirty();
         toast("Season map set: save, then test again");
       } }))] : [];
+    const single = r.count > 0 && r.count < 3 ? [el("div", { className: "probe-warn" },
+      el("b", { textContent: "This link may be an episode, not the series." }),
+      el("span", { textContent: " On the service, open the series' own page (all its episodes) and paste that link instead." }))] : [];
     out.replaceChildren(el("div", { className: "probe-out" },
       el("div", { className: "head" }, "Found ", el("b", { textContent: r.series || "the series" }), `: ${r.count} episodes${seasons ? ` · ${seasons}` : ""}`),
-      ...apply, ...rows));
+      ...single, ...apply, ...rows));
   } catch (e) { state.replaceChildren(failed(e.message)); }
   finally { $("#d-probe").disabled = false; }
 };
@@ -281,7 +285,7 @@ async function renderPush() {
     try { await fn(); } catch (err) { toast(err.message || String(err), true); }
     renderPush();
   } });
-  said.textContent = sub ? "On · gets every message turned on below" : "Off: notifications from the app itself, no other service needed";
+  said.textContent = sub ? "On · gets every message turned on below" : "Off. Notifications come from the app itself, no other service needed";
   said.className = sub ? "ok" : "";
   line.replaceChildren(...(sub ? [
     btn("Test", "", async () => { await api("/api/push/test", { method: "POST", body: JSON.stringify({ endpoint: sub.endpoint }) }); toast("Test sent to this device"); }),

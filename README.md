@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version 1.3.2" src="https://img.shields.io/badge/version-1.3.2-26a69a">
+  <img alt="Version 1.4.0" src="https://img.shields.io/badge/version-1.4.0-26a69a">
   <img alt="License GPL-3.0" src="https://img.shields.io/badge/license-GPL--3.0-blue">
   <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-3776ab">
   <img alt="Sonarr v3 and v4" src="https://img.shields.io/badge/sonarr-v3%20%7C%20v4-35c5f4">
@@ -290,6 +290,12 @@ hand. Those folders are never deleted on their own.
 **Other Unshackle servers** (Settings › Unshackle): more `unshackle serve`, one behind a VPN say, each
 with its address, API key and the downloads folder as it sees it. A service downloads with the one
 picked for it in Settings › Download options › Per service; a service only one of them has goes to it.
+Its downloads folder left empty is the main server's. Each one is watched: its state shows in Settings, and you
+are told when it goes down and when it is back.
+
+**Catch up** (Activity): the automatic sync only takes new episodes. The aired episodes your series still miss
+(those from before a series got its service, or that the sync gave up on) are listed there, within 7, 30 or 90
+days or all, and downloaded together.
 
 ### 🎛️ Download options
 
@@ -303,7 +309,9 @@ the `unshackle dl` command it amounts to.
 download. The first step it has a track for sets the quality, codec and range asked for; when none does,
 the episode fails with the tracks it has, and nothing outside the ladder is downloaded. Three come
 built in (1080p, 4K then 1080p, Archival). A ladder is picked for every series, per service, or per
-series, the same three levels as the options.
+series, the same three levels as the options. A track is measured as Unshackle's `--quality` does, by its
+16:9 height (a 1920x800 film is 1080p). A ladder can also hold an audio and a subtitle language order (en-AU,
+then en), used unless the series or its service sets `--a-lang` or `--s-lang`.
 
 ### 🔑 Cookies and CDMs
 
@@ -333,6 +341,14 @@ libraries.
 change that.
 
 <a name="api"></a>
+
+## 💾 Backups
+
+Settings › Account › *Back up the settings* downloads every setting but the password (the series, their options,
+the ladders, the notifications, the API keys: keep the file private), and *Restore from a file* puts one back.
+Set *Back up automatically every N days*, and a backup is also saved in the data folder's `backups` folder, the
+newest few kept. To rebuild an install, put a backup in that folder (or keep the file at hand), start
+Unshacklarr, and choose *Restore from a backup* in the setup: the setup code and a new password are enough.
 
 ## 🔌 API
 

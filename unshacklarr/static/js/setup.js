@@ -138,13 +138,13 @@ function showSetup(found) {
     confirm: input({ type: "password", autocomplete: "new-password" }),
     sonarr_url: input({ type: "url", value: found.sonarr_url, placeholder: "http://sonarr:8989" }),
     sonarr_api_key: apiKey({
-      placeholder: found.sonarr_api_key_set ? "Found in the environment, for the URL above: leave empty to use it" : "" }),
+      placeholder: found.sonarr_api_key_set ? "Found in the environment for the URL above. Leave empty to use it" : "" }),
     sonarr_downloads: input({ value: found.sonarr_downloads, placeholder: "/downloads" }),
     unshackle_mode: el("select", {}, el("option", { value: "local", textContent: "Local" }), el("option", { value: "remote", textContent: "Remote" })),
     unshackle_command: input({ value: found.unshackle_command, placeholder: "unshackle", spellcheck: false }),
     unshackle_url: input({ type: "url", value: found.unshackle_url, placeholder: "http://unshackle:8786" }),
     unshackle_api_key: apiKey({
-      placeholder: found.unshackle_api_key_set ? "Found in the environment, for the address above: leave empty to use it" : "" }),
+      placeholder: found.unshackle_api_key_set ? "Found in the environment for the address above. Leave empty to use it" : "" }),
     downloads: input({ value: found.downloads, placeholder: "In Unshacklarr's settings folder", spellcheck: false }),
     unshackle_downloads: input({ value: found.unshackle_downloads, placeholder: "Same path", spellcheck: false }),
     country: input({ value: found.country }),
@@ -179,6 +179,7 @@ function showSetup(found) {
     unshackle: '<path d="M12 3v12m-5-5 5 5 5-5"/><path d="M5 21h14"/>',
     sonarr: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="m17 2-5 5-5-5"/>',
     region: '<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/>',
+    alert: '<circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5h.01"/>',
     check: '<path d="M20 6 9 17l-5-5"/>',
     local: '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',
     remote: '<rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><path d="M6 6h.01M6 18h.01"/>',
@@ -202,7 +203,7 @@ function showSetup(found) {
     el("div", { className: "only-remote" }, field("Address of unshackle serve", f.unshackle_url),
       field("API key", f.unshackle_api_key, "The serve: api_secret of its unshackle.yaml.")),
     field("Downloads folder", f.downloads, "Where episodes land before Sonarr imports them, as Unshacklarr sees it."),
-    el("div", { className: "only-remote" }, field("Downloads folder, as Unshackle sees it", f.unshackle_downloads, "Its path where unshackle serve runs. Empty: the same path.")));
+    el("div", { className: "only-remote" }, field("Downloads folder, as Unshackle sees it", f.unshackle_downloads, "Its path on the machine where unshackle serve runs. Empty: the same path as above.")));
   const showMode = () => {
     uPanel.dataset.mode = f.unshackle_mode.value;
     tiles.querySelectorAll(".wz-tile").forEach((t) => t.setAttribute("aria-checked", String(t.dataset.value === f.unshackle_mode.value)));
@@ -210,11 +211,67 @@ function showSetup(found) {
   f.unshackle_mode.onchange = showMode;
   showMode();
 
+  /* A rebuild: the settings from a backup (one found in the data folder's backups folder, or a file), with the
+     setup code and a new password; Sonarr and Unshackle are tested with its addresses, and the restore is done
+     either way (one of them may not be back yet). */
+  const restoreBox = el("div", { className: "wz-restore" });
+  const restoreFile = el("input", { type: "file", accept: ".yaml,.yml,text/yaml", hidden: true });
+  const restoreSay = el("div", { className: "wz-restore-say" });
+  const restoreFrom = async (pick) => {
+    const bad = !f.setup_code.value.trim() ? wrong("Enter the setup code", f.setup_code)
+      : f.password.value.length < 8 ? wrong("Password must be at least 8 characters", f.password)
+      : f.password.value !== f.confirm.value ? wrong("Passwords do not match", f.confirm) : null;
+    if (bad) return showWrong(bad);
+    restoreSay.replaceChildren(loading("Restoring, then testing Sonarr and Unshackle…"));
+    try {
+      const r = await api("/api/setup/restore", { method: "POST", signal: AbortSignal.timeout(180000),
+        body: JSON.stringify({ setup_code: f.setup_code.value, password: f.password.value, ...pick }) });
+      try { sessionStorage.removeItem("setup-draft"); } catch {}
+      restored(r);
+    } catch (e) { restoreSay.replaceChildren(failed(e.message)); }
+  };
+  restoreFile.onchange = async () => { const file = restoreFile.files[0]; restoreFile.value = ""; if (file) restoreFrom({ text: await file.text() }); };
+  const openRestore = async () => {
+    if (!f.setup_code.value.trim()) return showWrong(wrong("Enter the setup code first: it opens the backups", f.setup_code));
+    restoreSay.replaceChildren(loading("Looking for backups…"));
+    let saved = [];
+    try { saved = (await api("/api/setup/backups", { method: "POST", body: JSON.stringify({ setup_code: f.setup_code.value }) })).saved; }
+    catch (e) { return restoreSay.replaceChildren(failed(e.message)); }
+    const when = (at) => new Date(at).toLocaleString(LOCALE, { dateStyle: "medium", timeStyle: "short" });
+    restoreSay.replaceChildren(
+      el("p", { className: "muted", textContent: saved.length ? "Backups found in the data folder, newest first. The password above becomes yours." : "No backup in the data folder's backups folder. Pick a backup file instead." }),
+      ...saved.map((b) => el("button", { type: "button", className: "wz-restore-row", onclick: () => restoreFrom({ name: b.name }) },
+        el("b", { textContent: when(b.at) }), el("small", { textContent: `${Math.max(1, Math.round(b.size / 1024))} KB` }), el("span", { textContent: "Restore" }))),
+      el("button", { type: "button", className: "btn small", textContent: "Restore from a file…", onclick: () => restoreFile.click() }));
+  };
+  restoreBox.append(el("b", { textContent: "Rebuilding an install?" }),
+    el("span", { className: "muted", textContent: " Restore its settings from a backup instead of setting it up again." }),
+    el("button", { type: "button", className: "btn small", textContent: "Restore from a backup", onclick: openRestore }), restoreFile, restoreSay);
+  function restored(r) {
+    reached = steps.length;
+    drawRail(null);
+    progress.firstChild.textContent = "Done";
+    progress.querySelector("b").style.width = "100%";
+    const line = (ok, text) => el("li", { className: ok ? "" : "wz-bad" }, ico(ok ? "check" : "alert", ""), el("span", { textContent: text }));
+    panel.replaceChildren(el("div", { className: "wiz-step wz-done fwd" }, ico("check", "wz-done-ico"),
+      el("h2", { textContent: "Settings restored" }),
+      el("p", { className: "lead", textContent: r.series === 1 ? "1 series is back, with its options." : `${r.series} series are back, with their options.` }),
+      el("ul", { className: "wz-sum" },
+        line(r.sonarr.ok, r.sonarr.ok ? "Sonarr answers" : r.sonarr.error),
+        line(r.unshackle.ok, r.unshackle.ok ? "Unshackle answers" : r.unshackle.error))));
+    note.replaceChildren(r.sonarr.ok && r.unshackle.ok ? "" : el("p", { className: "muted", textContent: "Fix what does not answer in Settings: the restore is done." }));
+    back.hidden = true;
+    next.type = "button";
+    next.disabled = false;
+    next.replaceChildren("Open Unshacklarr", el("span", { className: "arr", textContent: "→", ariaHidden: "true" }));
+    next.onclick = () => location.reload();
+    next.focus();
+  }
   const steps = [
     { name: "Welcome", icon: "key", title: "Welcome to Unshacklarr", sub: "Setup code and password",
       lead: "Enter the setup code, then choose the password you will sign in with.",
       body: [field("Setup code", f.setup_code, "Shown in Unshacklarr's log when it starts (docker logs unshacklarr), or the SETUP_TOKEN you set."),
-        field("Password", f.password, "At least 8 characters.", meter), field("Confirm password", f.confirm, "", match)],
+        field("Password", f.password, "At least 8 characters.", meter), field("Confirm password", f.confirm, "", match), restoreBox],
       check: async () => {
         if (!f.setup_code.value.trim()) return wrong("Enter the setup code", f.setup_code);
         if (!f.password.value && draft.step) return wrong("Type your password again: it is not kept when the page reloads", f.password);
@@ -227,8 +284,8 @@ function showSetup(found) {
         for (const k of ["sonarr_url", "sonarr_downloads", "unshackle_command", "unshackle_url", "downloads", "unshackle_downloads"]) {
           if (!f[k].value && more[k]) f[k].value = more[k];
         }
-        if (more.sonarr_api_key_set) f.sonarr_api_key.placeholder = "Found in the environment, for the URL above: leave empty to use it";
-        if (more.unshackle_api_key_set) f.unshackle_api_key.placeholder = "Found in the environment, for the address above: leave empty to use it";
+        if (more.sonarr_api_key_set) f.sonarr_api_key.placeholder = "Found in the environment for the URL above. Leave empty to use it";
+        if (more.unshackle_api_key_set) f.unshackle_api_key.placeholder = "Found in the environment for the address above. Leave empty to use it";
       } },
     { name: "Unshackle", icon: "unshackle", title: "Connect Unshackle", sub: "What downloads the episodes",
       lead: "Unshackle downloads the episodes: here, started by Unshacklarr, or elsewhere, as unshackle serve.",
@@ -244,9 +301,9 @@ function showSetup(found) {
       }, checking: "Testing… (a first start of Unshackle takes a few seconds)" },
     { name: "Sonarr", icon: "sonarr", title: "Connect Sonarr", sub: "Your library",
       lead: "Unshacklarr finds what Sonarr is missing, then hands it the downloads to import.",
-      body: [field("Sonarr URL", f.sonarr_url, "As Unshacklarr reaches it, e.g. http://sonarr:8989 on a shared Docker network."),
+      body: [field("Sonarr URL", f.sonarr_url, "The address Unshacklarr uses to reach Sonarr, e.g. http://sonarr:8989 on a shared Docker network."),
         field("API key", f.sonarr_api_key, "In Sonarr: Settings, General."),
-        field("Downloads folder, as Sonarr sees it", f.sonarr_downloads, "Its path where Sonarr runs, e.g. inside Sonarr's container."),
+        field("Downloads folder, as Sonarr sees it", f.sonarr_downloads, "Its path on Sonarr's side, e.g. inside Sonarr's container."),
         field("TMDB API key", f.tmdb_api_key, tmdbHint())],
       fields: () => [f.sonarr_url, f.sonarr_api_key],
       check: async () => {
@@ -396,7 +453,7 @@ $("#tz-select").after(settingsZone.input, settingsZone.list);
   if (!session.logged_in) return showLogin();
   try {
     const data = await api("/api/state");
-    S = { series: data.series, config: data.config, services: data.services, serviceNames: data.service_names || {}, dlOptions: data.dl_options, health: data.health || {}, cdm: data.cdm || {}, domains: data.service_domains || {}, builtinLadders: data.builtin_ladders || [] };
+    S = { series: data.series, config: data.config, services: data.services, serviceNames: data.service_names || {}, dlOptions: data.dl_options, health: data.health || {}, cdm: data.cdm || {}, domains: data.service_domains || {}, builtinLadders: data.builtin_ladders || [], networkServices: data.network_services || {}, backups: data.backups || null };
     savedConfig = configKey(S.config);
     $("#set-version").textContent = data.version ? `Unshacklarr ${data.version}` : "";
     const update = $("#update");  // a newer release: in sight on every page, its notes one click away

@@ -185,6 +185,7 @@ function showDrawerTab(name, fromRoute = false) {
   $("#dt-episodes").hidden = name !== "episodes";
   $("#dt-settings").hidden = name !== "settings";
   $("#ep-bar").classList.toggle("off", name !== "episodes");
+  if (name === "settings") { dsPicked = null; requestAnimationFrame(dsLight); }  // measured once shown: hidden, every card is at 0
 }
 document.querySelectorAll(".d-tabs button").forEach((b) => b.onclick = () => showDrawerTab(b.dataset.dtab));
 $("#d-save").onclick = () => saveHere($("#d-save"));
@@ -239,7 +240,7 @@ async function loadEpisodes(s, keep = false) {  // keep: a reload after a downlo
           el("span", { textContent: "Select" }),
           el("button", { type: "button", textContent: "Missing", title: "Every missing episode of this season", onclick: () => selectSeason((e) => state(e) === "miss") }),
           el("button", { type: "button", textContent: "All", onclick: () => selectSeason(() => true) }),
-          el("button", { type: "button", id: "ep-odd", hidden: true, className: "odd", title: "The episodes in orange: to download again, replacing Sonarr's file",
+          el("button", { type: "button", id: "ep-odd", hidden: true, className: "odd", title: "Episodes in orange can be downloaded again to replace Sonarr's file",
             onclick: () => selectSeason(isOutlier) })),
         el("div", { className: "ep-view" },
           el("label", { className: "pill" }, el("input", { type: "checkbox", checked: hideOnDisk,
@@ -261,7 +262,7 @@ function renderCheck(s, changed = false) {
   const svc = svcName(conf.service);
   const pick = el("button", { type: "button", id: "ep-avail", className: "svc", hidden: !epAvail,
     title: `The missing episodes ${svc} has`, onclick: () => selectSeason((e) => state(e) === "miss" && epAvail?.[e.id]) });
-  const check = el("button", { className: "btn ep-check", title: `List what ${svc} has of this series, and mark it on the episodes`,
+  const check = el("button", { className: "btn ep-check", title: `Ask ${svc} which episodes of this series it has, and mark them in the list`,
     onclick: () => askService(s).then((r) => r && toast(`${svc} has ${Object.keys(r.available).length} of this series' episodes`)) });
   $(".ep-top").append(check);
   checkLabel(epAvail ? `Refresh what's on ${svc}` : `What's on ${svc}?`);
@@ -493,7 +494,11 @@ function askedHeight() {
   const heights = String(q ?? "").match(/\d{3,4}/g)?.map(Number) || [];
   return heights.length ? Math.max(...heights) : 1080;
 }
-const belowAsked = (e) => e.file?.height && e.file.height < askedHeight() * 0.9;  // 1072 or 1040 lines are 1080p all the same
+// With a quality ladder: a file not on its first step. Without: under --quality (1072 or 1040 lines are 1080p all the same)
+const belowAsked = (e) => {
+  const lad = ladderOfSeries(S.config.series[current.tvdbId]);
+  return lad ? !!e.file?.track && stepOf(lad, e.file.track) > 0 : e.file?.height && e.file.height < askedHeight() * 0.9;
+};
 /* Once the service was asked, every aired episode says where it stands there: on it (maybe under another
    number, or better than the file on disk) or not; one not aired yet says nothing. */
 function serviceBadge(e) {
@@ -502,7 +507,14 @@ function serviceBadge(e) {
 }
 /* On disk under the resolution asked of the service, and on the service: worth downloading again. */
 function upgradeBadge(e) {
-  const svc = svcName(S.config.series[current.tvdbId]?.service);
+  const svc = svcName(S.config.series[current.tvdbId]?.service), lad = ladderOfSeries(S.config.series[current.tvdbId]);
+  if (lad) {
+    const at = stepOf(lad, e.file.track);
+    return hoverTip(el("em", { className: "ep-up", textContent: `upgrade on ${svc}` }), () => [
+      el("b", { textContent: at < lad.steps.length ? `${trackText(e.file.track)} here: step ${at + 1} of the ladder ${lad.name}` : `${trackText(e.file.track)} here: outside the ladder ${lad.name}` }),
+      el("small", { textContent: `${svc} may have it in better quality. Activity, Upgrades checks this and can replace the file.` }),
+    ]);
+  }
   return hoverTip(el("em", { className: "ep-up", textContent: `upgrade on ${svc}` }), () => [
     el("b", { textContent: `${e.file.height}p here, ${askedHeight()}p asked of ${svc}` }),
     el("small", { textContent: `${svc} has this episode. Downloaded again, it replaces the file only if it ranks higher in Sonarr.` }),
@@ -516,9 +528,9 @@ function onBadge(e) {
   return hoverTip(el("em", { className: "ep-on" + (other ? " other" : ""), textContent: other ? `on ${svc} as ${found.service}` : `on ${svc}` }), () => [
     el("b", { textContent: found.name || `On ${svc}` }),
     el("small", {}, `${svc} lists it as `, el("code", { textContent: found.service })),
-    ...(found.match === "title" ? [el("small", { className: "diff", textContent: `Found by its title, whatever its number: a Download asks for it as ${found.service}` })]
-      : found.match === "absolute" ? [el("small", { className: "diff", textContent: `Numbered there from the series' first episode, as Sonarr's absolute number: a Download asks for it as ${found.service}` })]
-      : found.service !== sxxeyy ? [el("small", { className: "diff", textContent: `Sonarr numbers it ${sxxeyy}: this series' numbering maps it there` })] : []),
+    ...(found.match === "title" ? [el("small", { className: "diff", textContent: `Found by its title, under another number: Download asks the service for ${found.service}` })]
+      : found.match === "absolute" ? [el("small", { className: "diff", textContent: `The service numbers episodes from the series' start, like Sonarr's absolute number: Download asks it for ${found.service}` })]
+      : found.service !== sxxeyy ? [el("small", { className: "diff", textContent: `Sonarr numbers it ${sxxeyy}: this series' Numbering settings map it there` })] : []),
   ]);
 }
 function checkLabel(text) {
@@ -547,14 +559,14 @@ function renderCatchUp() {
   const renumbered = there.filter((e) => epAvail[e.id].service !== `S${pad2(e.seasonNumber)}E${pad2(e.episodeNumber)}`).length;
   box.classList.toggle("none", !there.length && !upgrades.length);
   box.replaceChildren(
-    el("div", {}, el("b", { textContent: !missing.length ? `${upgrades.length} episode${upgrades.length > 1 ? "s" : ""} could be better from ${svc}`
+    el("div", {}, el("b", { textContent: !missing.length ? `${upgrades.length} episode${upgrades.length > 1 ? "s" : ""} may be better on ${svc}`
       : there.length ? `${svc} has ${there.length} of your ${missing.length} missing episode${missing.length > 1 ? "s" : ""}` : `${svc} has none of your ${missing.length} missing episode${missing.length > 1 ? "s" : ""}` }),
       ...(bySeason.length ? [el("small", { textContent: bySeason.map(([n, list]) => `${Number(n) === 0 ? "Specials" : `S${pad2(n)}`} (${list.length})`).join(" · ") })] : []),
-      ...(upgrades.length && missing.length ? [el("small", { className: "renum", textContent: `${upgrades.length} on disk in a lower resolution than asked could be better from ${svc}` })] : []),
-      ...(renumbered ? [el("small", { className: "renum", textContent: renumbered > 1 ? `${renumbered} under another number on ${svc}: Download handles them` : `1 under another number on ${svc}: Download handles it` })] : []),),
+      ...(upgrades.length && missing.length ? [el("small", { className: "renum", textContent: `${upgrades.length} on disk in a lower resolution than asked: ${svc} may have better` })] : []),
+      ...(renumbered ? [el("small", { className: "renum", textContent: renumbered > 1 ? `${renumbered} episodes have another number on ${svc}: Download takes care of them` : `1 episode has another number on ${svc}: Download takes care of it` })] : []),),
     el("div", { className: "catchup-acts" },
       ...(upgrades.length ? [el("button", { className: "btn small", type: "button", textContent: `Select ${upgrades.length} upgrade${upgrades.length > 1 ? "s" : ""}`,
-        title: `On disk under the resolution asked of ${svc}, and on ${svc}`, onclick: () => { upgrades.forEach((e) => picked.add(e.id)); renderSeason(); updateEpBar(); } })] : []),
+        title: `On disk in a lower resolution than asked of ${svc}, and available on ${svc}`, onclick: () => { upgrades.forEach((e) => picked.add(e.id)); renderSeason(); updateEpBar(); } })] : []),
       ...(free.length ? [el("button", { className: "btn primary small", type: "button", textContent: `Select all ${free.length}`,
         onclick: () => { free.forEach((e) => picked.add(e.id)); renderSeason(); updateEpBar(); } })] : [])));
 }
@@ -618,7 +630,7 @@ function renderSeason() {
   }
   $("#ep-title").replaceChildren(el("span", { textContent: epSeason === 0 ? "Specials" : `Season ${epSeason}` }),
     el("small", { textContent: `${list.filter((e) => e.hasFile).length} of ${list.length} on disk` }),
-    ...(flagged ? [el("small", { className: "odd-legend", textContent: "Orange: unlike most of this season (hover it for why)" })] : []));
+    ...(flagged ? [el("small", { className: "odd-legend", textContent: "Orange: different from most of this season (hover for details)" })] : []));
   $("#ep-list").replaceChildren(...(rows.length ? [head, ...rows] : [el("li", { className: "none", textContent: "Every episode of this season is on disk." })]));
   epFit.observe($("#ep-list"));  // on a resize; now, for new rows or columns
   fitEpList($("#ep-list"));
@@ -630,10 +642,10 @@ function cdmMissing(tag) {
   const cdm = S.cdm || {};
   if (!tag || !Object.keys(cdm).length) return "";  // Unshackle unreachable: nothing to say
   if (Object.keys(cdm).some((k) => k !== "default" && k.toLowerCase() === tag.toLowerCase())) return "";
-  if (!cdm.default) return "unshackle.yaml gives it no device and has no default one: its downloads are refused. "
+  if (!cdm.default) return "unshackle.yaml sets no device for it and no default device: its downloads are refused. "
     + "Pick one in Settings, CDM, or No CDM if it has no DRM.";
-  return `unshackle.yaml gives it none, so the default one${cdm.default ? ` (${cdm.default})` : ""} decrypts it: a download fails `
-    + "if the service wants the other DRM (Widevine or PlayReady). Set one under cdm: in Settings, unshackle.yaml.";
+  return `unshackle.yaml sets no device for it, so the default one${cdm.default ? ` (${cdm.default})` : ""} is used. A download fails `
+    + "if the service needs the other DRM (Widevine or PlayReady). Set one under cdm: in Settings, unshackle.yaml.";
 }
 function cdmNote(tag) {
   const text = cdmMissing(tag);
@@ -817,6 +829,28 @@ $(".ds-nav").onclick = (e) => {
   e.preventDefault();
   const card = $(`#${a.dataset.to}`);
   if (card.tagName === "DETAILS") card.open = true;
+  dsPicked = a.dataset.to;  // lit at the click, and kept while the page glides there (the last card may not reach the top)
+  dsLight();
   card.scrollIntoView({ behavior: "smooth", block: "start" });
 };
+// each shortcut wears its card's icon, and the card in view lights its shortcut
+document.querySelectorAll(".ds-nav a[data-to]").forEach((a) => {
+  const icon = document.querySelector(`#${a.dataset.to} .sx-ico svg`);
+  if (icon) a.prepend(Object.assign(icon.cloneNode(true), { ariaHidden: "true" }));
+});
+let dsPicked = null;  // the shortcut clicked: lit until the person scrolls on their own
+function dsLight() {  // the card in view: the last one whose top went under the bar
+  if ($("#dt-settings").hidden) return;  // the episodes scrolling, or the drawer closed: nothing to light
+  const links = [...document.querySelectorAll(".ds-nav a[data-to]")], bar = $(".ds-nav").getBoundingClientRect().bottom + 24;
+  let on = dsPicked || links[0]?.dataset.to;
+  if (!dsPicked) for (const a of links) if ($(`#${a.dataset.to}`)?.getBoundingClientRect().top <= bar) on = a.dataset.to;
+  links.forEach((a) => {
+    const lit = a.dataset.to === on;
+    if (lit && a.getAttribute("aria-current") !== "true") a.scrollIntoView({ block: "nearest", inline: "nearest" });  // a phone's bar scrolls sideways
+    a.setAttribute("aria-current", String(lit));
+  });
+}
+addEventListener("scroll", dsLight, { passive: true, capture: true });  // the drawer scrolls, or the page on a phone
+// scrolled by hand (wheel, finger, keys): the card in view leads again
+for (const type of ["wheel", "touchmove", "keydown"]) addEventListener(type, () => { if (dsPicked) { dsPicked = null; dsLight(); } }, { passive: true, capture: true });
 new ResizeObserver(([e]) => document.documentElement.style.setProperty("--d-head", `${Math.round(e.target.getBoundingClientRect().height)}px`)).observe($(".d-head"));

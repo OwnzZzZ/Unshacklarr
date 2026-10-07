@@ -23,8 +23,8 @@ async function loadLate() {
   const names = newestFirst.map((d) => `${d.series} ${d.sxxeyy}`);
   $("#late-n").textContent = `${names.length} late`;
   const who = `${names.slice(0, 2).join(", ")}${names.length > 2 ? ` and ${names.length - 2} more` : ""}`;
-  $("#late-sum").textContent = names.length > 1 ? `${who} aired but are not on the service yet. Retried at every sync for 14 days.`
-    : `${who} aired but is not on the service yet. Retried at every sync for 14 days.`;
+  $("#late-sum").textContent = names.length > 1 ? `${who} aired but are not on the service yet. They are tried again at every sync for 14 days.`
+    : `${who} aired but is not on the service yet. It is tried again at every sync for 14 days.`;
   $("#sched-missing").replaceChildren(...newestFirst.map((d) => schedRow({ ...d, fromLate: true }, d.airDateUtc ? day(new Date(d.airDateUtc)) : "")));
   $("#sched-late").hidden = !newestFirst.length;
   $("#late-toggle").onclick = () => {
@@ -304,7 +304,7 @@ function schedRow(d, when) {
       command ? el("div", { className: "cmd" }, el("code", { textContent: command }), copy)
         : el("p", { className: "muted", style: "margin:0", textContent: "Skipped: the episode offset puts it before the service's first episode." }),
       el("div", { className: "btns" }, ...(d.episodeId && !d.hasFile && command ? [now] : []),
-        d.run ? el("button", { className: "btn small", textContent: "See in Activity", title: "Its last download: the history, its steps and output",
+        d.run ? el("button", { className: "btn small", textContent: "See in Activity", title: "Open its last download: its steps and output",
           onclick: () => { showTab("log"); pickRun(d.run); } }) : "",
         series ? el("button", { className: "btn small", textContent: "Open the series", onclick: () => openDrawer(series) }) : "")));
 }
@@ -372,6 +372,7 @@ function renderHealth(h) {
   if (h.unshackle && ("tools" in h.unshackle || h.unshackle.ok === false)) renderUnshackleStatus(h.unshackle);  // down: its actions and why
   renderSonarrState(h.sonarr);
   renderUnshackleState(h.unshackle);
+  paintServers(h.servers);
 }
 function renderUnshackleState(st = S.health?.unshackle || {}, tested = false) {
   const set = S.config.settings || {}, box = $("#ux-state");

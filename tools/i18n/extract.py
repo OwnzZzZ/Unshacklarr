@@ -198,7 +198,7 @@ def said(text: str) -> bool:
     return wanted(text) and not re.fullmatch(r"[a-z]+[A-Z]\w*|[A-Z0-9_]+", text) and "\x1b" not in text
 
 
-NOT_TEXT = {"LAUNCHER", "SECURITY_HEADERS", "EXAMPLE_KEYS", "UPDATE_HEADERS", "TMDB_HEADERS", "SITES"}  # the server's constants that hold code, not words
+NOT_TEXT = {"LAUNCHER", "SECURITY_HEADERS", "EXAMPLE_KEYS", "UPDATE_HEADERS", "TMDB_HEADERS", "SITES", "NETWORKS"}  # the server's constants that hold code, not words
 
 
 def server_texts(source: str) -> dict[str, list[str]]:

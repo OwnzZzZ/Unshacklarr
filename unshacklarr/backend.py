@@ -55,7 +55,7 @@ def unshackle_python(command: str) -> tuple[str, Path]:
     if not found:
         raise UnshackleError(
             f"The {command or 'unshackle'!r} command was not found. Install Unshackle, "
-            "or give the full path to its command in Settings, unshackle."
+            "or give the full path to its command in Settings, Unshackle."
         )
     script = Path(found).resolve()
     venv = script.parent.parent
@@ -223,7 +223,7 @@ class Unshackle:
         try:
             return r.json()
         except ValueError:  # a proxy's login page, or another program at this address
-            raise UnshackleError(f"{url} did not answer as unshackle serve does (no JSON): is the address right?") from None
+            raise UnshackleError(f"{url} did not answer like unshackle serve (no JSON): is the address right?") from None
 
     def services(self) -> list[dict]:
         """Tag, URL and help of each service, kept 10 minutes."""
@@ -288,7 +288,7 @@ class Unshackle:
                     # its own words stay out: the error may quote a secret; a missing module is safe to name
                     if module := re.search(r"No module named '([A-Za-z0-9_.]+)'", error):
                         raise UnshackleError(f"{tag} did not load in unshackle serve: the Python module {module[1]} is missing "
-                                             "where it runs. Its startup log says more")
+                                             "on the machine where it runs. Its startup log has more details")
                     raise UnshackleError(f"{tag} did not load in unshackle serve: its startup log says why")
         return self.call("POST", "/api/download", json=payload)["job_id"]
 

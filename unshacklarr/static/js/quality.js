@@ -4,6 +4,19 @@ const CODECS = [["", "Any codec"], ["AVC", "H.264"], ["HEVC", "H.265"], ["AV1", 
 const RANGES = [["", "Any range"], ["SDR", "SDR"], ["HDR10", "HDR10"], ["HDR10P", "HDR10+"], ["DV", "Dolby Vision"], ["HLG", "HLG"]];
 const ladders = () => (S.config.quality_ladders ??= []);
 const nameOf = (list, v) => (list.find(([k]) => k === v) || [v, v])[1];
+/* A series' ladder (its own, its service's, the settings'), and where a track stands on it: as sync.ladder_of,
+   sync.fits and sync.step_of do on the server. */
+function ladderOfSeries(conf) {
+  const name = conf?.ladder || S.config.service_defaults?.[conf?.service]?.ladder || S.config.settings.quality_ladder || "";
+  return name === "off" ? null : ladders().find((l) => l.name === name) || null;
+}
+const HEIGHTS = [4320, 2160, 1440, 1080, 720, 576, 540, 480, 360, 240];  // sync.HEIGHTS: a class within 2% counts as it
+const heightClass = (v) => HEIGHTS.find((h) => Math.abs(v - h) <= h * 0.02) ?? Math.floor(v);
+const eqHeight = (t) => Math.max(heightClass(t.height || 0), heightClass((t.width || 0) * 9 / 16));
+const fitsStep = (st, t) => (!st.codec || t.codec === st.codec) && (!st.range || t.range === st.range)
+  && eqHeight(t) >= (st.min || 0) && (!st.max || eqHeight(t) <= st.max);
+const stepOf = (lad, t) => { const i = lad.steps.findIndex((st) => fitsStep(st, t)); return i < 0 ? lad.steps.length : i; };
+const trackText = (t) => `${eqHeight(t) || "?"}p ${nameOf(CODECS, t.codec) || "?"} ${nameOf(RANGES, t.range) || "?"}`;
 function stepText(st) {
   const height = st.max && st.max !== st.min ? `${st.min || 0}–${st.max}p` : st.max ? `${st.max}p` : st.min ? `${st.min}p and up` : "Any height";
   return [height, st.codec ? nameOf(CODECS, st.codec) : "", st.range ? nameOf(RANGES, st.range) : ""].filter(Boolean).join(" ");
@@ -44,7 +57,7 @@ function renderQuality() {
     type: "button", role: "radio", textContent: label, ariaChecked: String((def === "off" ? "" : def) === v),
     onclick: () => { set.quality_ladder = v; dirty(); renderQuality(); } })));
   $("#ql-list").replaceChildren(...(list.length ? list.map(ladderCard)
-    : [el("section", { className: "sx-card" }, el("p", { className: "dx-empty", textContent: "No ladder: New ladder makes one, or bring back the built-in ones." }))]));
+    : [el("section", { className: "sx-card" }, el("p", { className: "dx-empty", textContent: "No ladder yet. Create one with New ladder, or bring back the built-in ones." }))]));
 }
 
 function ladderCard(lad) {
@@ -52,7 +65,7 @@ function ladderCard(lad) {
   const say = el("small", { className: "ql-say", textContent: use.length ? `Used by ${use.join(", ")}` : "Not used yet: pick it above, for a service or a series" });
   const name = el("input", { type: "text", className: "ql-name", value: lad.name, ariaLabel: "Ladder name", spellcheck: false, maxLength: 40,
     oninput: (e) => {
-      const v = e.target.value.trim(), why = !v ? "Give it a name" : v === "off" ? "Off is taken: it means no ladder"
+      const v = e.target.value.trim(), why = !v ? "Give it a name" : v === "off" ? "Off is reserved: it means no ladder"
         : list.some((o) => o !== lad && o.name === v) ? "Another ladder has this name" : "";
       e.target.classList.toggle("bad", !!why);
       say.classList.toggle("bad", !!why);
@@ -75,16 +88,40 @@ function ladderCard(lad) {
     list.splice(list.indexOf(lad) + 1, 0, { name: `${lad.name} (${n})`, steps: structuredClone(lad.steps) });
     dirty(); renderQuality();
   } });
+  const at = list.indexOf(lad);
+  const shift = (to, label, path) => el("button", { type: "button", className: "ql-icon", ariaLabel: label, disabled: to < 0 || to >= list.length,
+    innerHTML: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"/></svg>`, onclick: () => {
+      list.splice(to, 0, ...list.splice(at, 1)); dirty(); renderQuality(); renderServiceDefaults();
+    } });
+  // its language order: which of the episode's tracks to take, unless a series or its service asks for languages
+  const langs = (kind, label, help) => {
+    const input = el("input", { type: "text", spellcheck: false, value: (lad[kind] || []).join(", "), placeholder: "Example: en-AU, en", oninput: (e) => {
+      const codes = e.target.value.split(/[\s,]+/).filter(Boolean);
+      const bad = codes.find((c) => !/^[a-z]{2,3}(-[a-z0-9]{2,8})*$/i.test(c) || ["orig", "all", "best"].includes(c.toLowerCase()));
+      e.target.classList.toggle("bad", !!bad);
+      e.target.nextElementSibling.classList.toggle("bad", !!bad);
+      e.target.nextElementSibling.textContent = bad ? `${bad} is not a language code like fr or en-AU` : help;
+      if (bad) return;
+      if (codes.length) lad[kind] = codes; else delete lad[kind];
+      dirty();
+    } });
+    input.id = `ql-${kind}-${++fieldIds}`;
+    return el("div", { className: "field" }, el("label", { htmlFor: input.id, textContent: label }), input, el("small", { textContent: help }));
+  };
   const steps = el("ol", { className: "ql-steps" }, ...lad.steps.map((st, i) => stepRow(lad, st, i)));
   return el("section", { className: "sx-card ql-card" },
     el("div", { className: "ql-head" }, el("span", { className: "sx-ico", ariaHidden: "true", innerHTML: '<svg viewBox="0 0 24 24"><path d="M4 20v-5M10 20V10M16 20V6M22 20V3"/></svg>' }),
-      el("div", { className: "ql-title" }, name, say), el("div", { className: "ql-acts" }, copy, del)),
+      el("div", { className: "ql-title" }, name, say),
+      el("div", { className: "ql-acts" }, shift(at - 1, "Move this ladder up", "m6 15 6-6 6 6"), shift(at + 1, "Move this ladder down", "m6 9 6 6 6-6"), copy, del)),
     steps,
     el("div", { className: "ql-foot" },
       el("button", { type: "button", className: "btn small", textContent: "Add a step", onclick: () => {
         lad.steps.push({ codec: "", range: "SDR", min: 720, max: 720 }); dirty(); renderQuality();
       } }),
-      el("small", { className: "muted", textContent: "Tried from the top: the first step the episode has a track for is downloaded, its best track there." })));
+      el("small", { className: "muted", textContent: "Tried from the top: Unshacklarr downloads the first step the episode has a track for, and the best track within it." })),
+    el("div", { className: "sx-grid ql-langs" },
+      langs("audio", "Audio, in this order", "The first language in this list that the episode has is downloaded (en also matches en-GB). Not used when empty, or when the series or its service sets --a-lang."),
+      langs("subtitles", "Subtitles, in this order", "The first language in this list that the episode has full subtitles in is downloaded. Not used when empty, or when --s-lang is set.")));
 }
 
 function stepRow(lad, st, i) {
@@ -127,7 +164,7 @@ $("#ql-add").onclick = () => {
   $("#ql-list .ql-card:last-child .ql-name")?.select();
 };
 $("#ql-reset").onclick = (e) => {
-  if (e.target.dataset.sure !== "1") { e.target.dataset.sure = "1"; e.target.textContent = "Sure? Your own ladders go"; return; }
+  if (e.target.dataset.sure !== "1") { e.target.dataset.sure = "1"; e.target.textContent = "Sure? Your own ladders will be deleted"; return; }
   delete e.target.dataset.sure;
   e.target.textContent = "Reset to the built-in ladders";
   const keep = new Set(S.builtinLadders.map((l) => l.name));
@@ -142,10 +179,11 @@ function renderBackends() {
   const list = (S.config.settings.backends ??= []);
   $("#ub-list").replaceChildren(...(list.length ? list.map(backendBlock)
     : [el("p", { className: "dx-empty", textContent: "None: every service downloads with the Unshackle above." })]));
+  paintServers();
 }
 function backendBlock(b) {
   const list = S.config.settings.backends;
-  const state = el("span", { className: "ub-state" });
+  const state = el("span", { className: "ub-state", dataset: { server: b.name || "" } });
   const check = (input, why) => {
     input.classList.toggle("bad", !!why);
     input.nextElementSibling.classList.toggle("bad", !!why);
@@ -161,13 +199,13 @@ function backendBlock(b) {
     }, onchange: () => { if (key === "name") renderServiceDefaults(); } });
     return input;
   };
-  const name = text("name", {}, "How Per service names it: vpn, home.", (v) => !v ? "Give it a name"
+  const name = text("name", {}, "The name Per service shows, e.g. vpn, home.", (v) => !v ? "Give it a name"
     : list.some((o) => o !== b && o.name === v) ? "Another server has this name" : !/^\w[\w .-]{0,39}$/.test(v) ? "Letters, digits, spaces, dots and dashes" : "");
   const url = text("url", { type: "url", placeholder: "http://unshackle-vpn:8786" }, "Where Unshacklarr reaches it.",
     (v) => URL_OK.test(v) ? "" : "An address starting with http:// or https://, without a user name");
   const key = el("input", { type: "password", autocomplete: "off",
     placeholder: b.api_key_set ? "Type a new key to replace it" : "", oninput: (e) => { b.api_key = e.target.value.trim() || undefined; dirty(); } });
-  const dl = text("downloads", { placeholder: "Same path" }, "The downloads folder, as this server sees it. Empty: the same path.",
+  const dl = text("downloads", { placeholder: S.config.settings.unshackle_downloads || "As the main one" }, "The downloads folder, as this server sees it. Empty: as the main one sees it (Folders, above).",
     (v) => !v || /^(\/|[A-Za-z]:[\\/])/.test(v) && !/(^|[\\/])\.\.([\\/]|$)/.test(v) ? "" : "A full path, from / (or a drive letter), without ..");
   const head = el("b", { textContent: b.name || "New server" });
   const test = el("button", { type: "button", className: "btn small", textContent: "Test", onclick: async () => {
@@ -177,6 +215,7 @@ function backendBlock(b) {
       const { services } = await api("/api/unshackle/test", { method: "POST", body: JSON.stringify({ unshackle_mode: "remote", unshackle_url: b.url, unshackle_api_key: b.api_key || "" }) });
       state.className = "ub-state ok"; state.textContent = services === 1 ? "✓ Reached: 1 service" : `✓ Reached: ${services} services`;
     } catch (err) { state.className = "ub-state bad"; state.textContent = err.message; }
+    state.dataset.tested = "1";  // its test speaks until the page reloads
   } });
   const remove = el("button", { type: "button", className: "btn small danger", textContent: "Remove", onclick: (e) => {
     if (e.target.dataset.sure !== "1") { e.target.dataset.sure = "1"; e.target.textContent = "Sure?"; return; }
@@ -185,12 +224,23 @@ function backendBlock(b) {
     dirty(); renderBackends(); renderServiceDefaults();
   } });
   const withHelp = (label, input, saved) => el("div", { className: "field" },
-    el("label", { htmlFor: input.id ||= `ub-${++fieldIds}` }, label, ...(saved ? [" ", el("span", { className: "sx-saved", textContent: "✓ Saved" })] : [])),
+    el("label", { htmlFor: input.id ||= `ub-${++fieldIds}` }, ...[label].flat(), ...(saved ? [" ", el("span", { className: "sx-saved", textContent: "✓ Saved" })] : [])),
     input, el("small", { textContent: input.dataset.help || "The serve: api_secret of its unshackle.yaml. Empty keeps the saved one." }));
   return el("div", { className: "svc-block ub-block" },
     el("div", { className: "svc-block-head" }, head, el("span", { className: "ub-acts" }, state, test, remove)),
-    el("div", { className: "sx-grid" }, withHelp("Name", name), withHelp("Address of unshackle serve", url),
+    el("div", { className: "sx-grid" }, withHelp("Name", name), withHelp(["Address of ", el("code", { textContent: "unshackle serve" })], url),
       withHelp("API key", key, b.api_key_set), withHelp("Downloads folder, as it sees it", dl)));
+}
+/* Each saved server's state from the health check (every minute): reachable with its version, or why not. */
+let serverStates = {};
+function paintServers(states = serverStates) {
+  serverStates = states || {};
+  document.querySelectorAll(".ub-state[data-server]").forEach((box) => {
+    const st = serverStates[box.dataset.server];
+    if (!st || box.dataset.tested) return;
+    box.className = st.ok ? "ub-state ok" : "ub-state bad";
+    box.textContent = st.ok ? `● Connected${st.version ? ` · Unshackle ${st.version}` : ""}` : `● ${st.error || "Unreachable"}`;
+  });
 }
 $("#ub-add").onclick = () => {
   const list = (S.config.settings.backends ??= []);
@@ -208,7 +258,7 @@ function renderImportMode() {
   $("#ax-import").querySelectorAll("button").forEach((b) => b.setAttribute("aria-checked", String((b.dataset.only === "true") === only)));
   const other = Object.values(S.config.series || {}).filter((c) => c.service && typeof c.download_only === "boolean" && c.download_only !== only).length;
   $("#ax-import-say").replaceChildren(el("span", { textContent: only
-    ? "Each episode waits in Activity, Waiting in downloads, until you import or delete it; never deleted on its own."
+    ? "Each episode stays in Activity, Waiting in downloads, until you import or delete it. It is never deleted automatically."
     : "Sonarr imports each episode once it is downloaded and checked." }),
     ...(other ? [" ", el("span", { textContent: other === 1 ? "1 series says otherwise, on its page." : `${other} series say otherwise, on their page.` })] : []));
 }
@@ -226,9 +276,17 @@ function fillQualityImport(conf) {
   }), { id: "d-ladder" }));
   $("#d-import").options[0].textContent = `Default: ${set.download_only ? "Download only" : "Sonarr imports it"}`;
   $("#d-import").value = conf.download_only === true ? "only" : conf.download_only === false ? "import" : "";
+  importChips();
+}
+/* After the download: its choices as chips, the select behind them keeping the value. */
+function importChips() {
+  const sel = $("#d-import");
+  $("#d-import-seg").replaceChildren(...[...sel.options].map((o) => el("button", { type: "button", role: "radio", textContent: o.textContent,
+    ariaChecked: String(o.value === sel.value), onclick: () => { sel.value = o.value; sel.dispatchEvent(new Event("change")); } })));
 }
 $("#d-import").onchange = (e) => {
   const conf = S.config.series[current.tvdbId];
   if (e.target.value) conf.download_only = e.target.value === "only"; else delete conf.download_only;
+  importChips();
   dirty();
 };

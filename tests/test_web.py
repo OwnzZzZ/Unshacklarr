@@ -1298,3 +1298,178 @@ def test_a_viewer_closing_the_terminal_leaves_the_download_running(tmp_path, mon
             assert socket.closed
     assert web.sonarr_sync.EpisodeRun.active is active
     assert run_id in active
+
+
+def test_ladder_languages_networks_and_the_catch_up_list(tmp_path, monkeypatch):
+    # From #11 and #12, by mj23au
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    from aiohttp import web as aioweb
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    steps = [{"codec": "", "range": "SDR", "min": 1080, "max": 1080}]
+    assert web.check_ladders([{"name": "A", "steps": steps, "audio": "en-AU, en", "subtitles": []}])[0] == \
+        {"name": "A", "steps": steps, "audio": ["en-AU", "en"]}
+    try:
+        web.check_ladders([{"name": "A", "steps": steps, "audio": ["orig"]}])
+        raise AssertionError("orig is not a language")
+    except aioweb.HTTPBadRequest:
+        pass
+    assert web.service_for_network("Channel 4", {"ALL4"}) == "ALL4" and web.service_for_network("E4", {"C4"}) == "C4"
+    assert web.service_for_network("BBC One", {"iP"}) == "iP" and web.service_for_network("BBC One", set()) is None
+    assert web.service_for_network("Channel 45", {"ALL4"}) is None  # a first word, not any prefix
+
+    now = web.datetime(2026, 10, 7, tzinfo=web.timezone.utc)
+    (tmp_path / "config.yaml").write_text("series:\n  1: {service: X, title: t}\n")
+    series = {1: {"id": 7, "tvdbId": 1, "title": "Show", "monitored": True}, 2: {"id": 8, "tvdbId": 2, "title": "Other"}}
+    ep = lambda i, s, n, aired, **k: {"id": i, "seasonNumber": s, "episodeNumber": n, "airDateUtc": aired, "monitored": True, "hasFile": False, **k}  # noqa: E731
+    episodes = [ep(1, 1, 1, "2026-01-01T20:00:00Z"), ep(2, 1, 2, "2026-10-01T20:00:00Z"), ep(3, 1, 3, "2026-10-01T20:00:00Z", hasFile=True),
+                ep(4, 1, 4, "2026-12-01T20:00:00Z"), ep(5, 0, 1, "2026-10-01T20:00:00Z"), ep(6, 1, 6, "2026-10-02T20:00:00Z", monitored=False)]
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_series", lambda wanted: series)
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_get", lambda path, **p: episodes if p.get("seriesId") == 7 else [ep(9, 1, 1, "2026-10-01T20:00:00Z")])
+    assert [e["episodeId"] for e in web.missing_of_managed(None, now)] == [1, 2]  # aired, monitored, no file, series managed here
+    assert [e["episodeId"] for e in web.missing_of_managed(30, now)] == [2]
+    (web.sonarr_sync.DOWNLOADS / "unshackle-1-S01E02").mkdir(parents=True)
+    assert [e["episodeId"] for e in web.missing_of_managed(30, now)] == []  # already waiting in the downloads folder
+
+
+def test_upgrades_find_the_files_a_service_has_on_an_earlier_step(tmp_path, monkeypatch):
+    # From #11, by mj23au: judged by the ladder, H.264 to H.265 at the same height included
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    sync = web.sonarr_sync
+    assert web.ladder_track({"resolution": "1920x800", "videoCodec": "x265", "videoDynamicRangeType": "DV HDR10"}) == \
+        {"height": 800, "width": 1920, "codec": "HEVC", "range": "DV"}
+    assert web.ladder_track({"resolution": "1280x720", "videoCodec": "h264", "videoDynamicRangeType": ""})["range"] == "SDR"
+    hevc_first = {"name": "HEVC first", "steps": [{"codec": "HEVC", "range": "SDR", "min": 1080, "max": 1080},
+                                                  {"codec": "AVC", "range": "SDR", "min": 1080, "max": 1080}]}
+    assert sync.step_of(hevc_first, {"height": 1080, "codec": "AVC", "range": "SDR"}) == 1
+    assert sync.step_of(hevc_first, {"height": 720, "codec": "AVC", "range": "SDR"}) == 2  # outside it
+
+    (tmp_path / "config.yaml").write_text("series:\n  1: {service: X, title: t, ladder: HEVC first}\n  2: {service: X, title: u}\n")
+    config = sync.read_file()
+    config["quality_ladders"] = [hevc_first]
+    monkeypatch.setattr(sync, "read_file", lambda: config)
+    series = {1: {"id": 7, "tvdbId": 1, "title": "Show"}, 2: {"id": 8, "tvdbId": 2, "title": "No ladder"}}
+    avc = {"resolution": "1920x1080", "videoCodec": "h264"}
+    files = [{"id": 70, "mediaInfo": avc}, {"id": 71, "mediaInfo": {**avc, "videoCodec": "hevc"}}, {"id": 72, "mediaInfo": avc}]
+    eps = [{"id": n, "seasonNumber": 1, "episodeNumber": n, "hasFile": True, "episodeFileId": 69 + n} for n in (1, 2, 3)]
+    monkeypatch.setattr(sync, "sonarr_series", lambda wanted: series)
+    monkeypatch.setattr(sync, "sonarr_get", lambda path, **p: (files if path == "episodefile" else eps) if p.get("seriesId") == 7 else [])
+    monkeypatch.setattr(sync, "download_request", lambda show, config, wanted, out: {"service": "X", "title_id": "t", "wanted": [wanted]})
+    asked = []
+    on_service = {"S01E01": [{"height": 1080, "codec": "HEVC", "range": "SDR"}], "S01E03": [{"height": 1080, "codec": "AVC", "range": "SDR"}]}
+    monkeypatch.setattr(sync, "list_tracks", lambda show, config, request, ladder: asked.append(request["wanted"][0]) or [{"video": on_service[request["wanted"][0]]}])
+    monkeypatch.setattr(web, "UPGRADE_PAUSE", 0)
+    web.scan_upgrades()
+    assert asked == ["S01E01", "S01E03"]  # S01E02 is on the first step already; the series without a ladder is not asked
+    found = web.read_json(web.UPGRADES_FILE, {})["items"]
+    assert [(i["sxxeyy"], i["fileStep"], i["betterStep"]) for i in found] == [("S01E01", 2, 1)]  # S01E03: nothing better there
+    assert not web.upgrade_scan["running"] and web.upgrade_scan["done"] == 2
+
+
+def test_automatic_backups_are_kept_listed_and_restore_a_new_install(tmp_path, monkeypatch):
+    # From #15, by mj23au
+    import asyncio
+    import os
+    import yaml
+    from datetime import datetime, timedelta, timezone
+    from aiohttp.test_utils import TestClient, TestServer
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    monkeypatch.setenv("SETUP_TOKEN", "code")
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    ladders = [{"name": "Mine", "steps": [{"codec": "", "range": "SDR", "min": 1080, "max": 1080}]}]
+    web.write_config({**web.read_config(), "auth": {"password": web.hash_password("password1"), "secret": "s1"},
+                      "series": {111: {"service": "iP", "title": "x"}}, "settings": {"sonarr_api_key": "sonarr-secret"},
+                      "quality_ladders": ladders})
+    sync = web.sonarr_sync
+    assert web.make_backup() is None and not (tmp_path / "backups").exists()  # off by default
+    sync.SETTINGS.update(backup_every_days=1, backup_keep=3)
+    start = datetime(2026, 10, 1, 9, 0, tzinfo=timezone.utc)
+    first = web.make_backup(start)
+    saved = yaml.safe_load(first.read_text())
+    assert saved["series"] and saved["quality_ladders"] == ladders and "auth" not in saved  # the ladders too, never the password
+    assert web.backup_problem(saved) is None and oct(first.stat().st_mode & 0o777) == "0o600"
+    os.utime(first, (start.timestamp(), start.timestamp()))
+    assert web.make_backup(start + timedelta(hours=12)) is None  # not due yet
+    for day in range(1, 6):
+        at = start + timedelta(days=day)
+        os.utime(web.make_backup(at), (at.timestamp(), at.timestamp()))
+    names = [p.name for p in web.saved_backups()]
+    assert names == ["unshacklarr-2026-10-06-0900.yaml", "unshacklarr-2026-10-05-0900.yaml", "unshacklarr-2026-10-04-0900.yaml"]
+    for bad in ("../config.yaml", "unshacklarr-2026-01-01-0000.yaml", ""):
+        try:
+            web.saved_backup(bad)
+            raise AssertionError(bad)
+        except web.web.HTTPNotFound:
+            pass
+
+    # a rebuild: no password yet, the backup in the data folder
+    web.write_config({"auth": {}})
+    monkeypatch.setattr(web, "sonarr_status", lambda url, key: "4.0")
+    monkeypatch.setattr(web, "check_unshackle", lambda settings: (_ for _ in ()).throw(web.UnshackleError("not back yet")))
+    h = {"X-Unshackle": "1"}
+
+    async def go():
+        async with TestClient(TestServer(web.app)) as client:
+            listed = (await client.post("/api/setup/backups", json={"setup_code": "nope"}, headers=h)).status
+            found = await (await client.post("/api/setup/backups", json={"setup_code": "code"}, headers=h)).json()
+            sneaky = (await client.post("/api/setup/restore", json={"setup_code": "code", "password": "password2", "name": "../config.yaml"}, headers=h)).status
+            short = (await client.post("/api/setup/restore", json={"setup_code": "code", "password": "short", "name": names[0]}, headers=h)).status
+            r = await client.post("/api/setup/restore", json={"setup_code": "code", "password": "password2", "name": names[0]}, headers=h)
+            again = (await client.post("/api/setup/restore", json={"setup_code": "code", "password": "password3", "name": names[0]}, headers=h)).status
+            return listed, found, sneaky, short, r.status, await r.json(), again
+
+    listed, found, sneaky, short, status, body, again = asyncio.run(go())
+    assert listed == 403 and [b["name"] for b in found["saved"]] == names  # only with the setup code
+    assert sneaky == 404 and short == 400
+    assert status == 200 and body["series"] == 1 and body["sonarr"] == {"ok": True}
+    assert body["unshackle"] == {"ok": False, "error": "not back yet"}  # restored all the same
+    assert again == 403  # set up now: the setup routes are closed
+    config = web.read_config()
+    assert list(config["series"]) == [111] and config["quality_ladders"] == ladders and web.password_ok("password2", config["auth"]["password"])
+
+
+def test_episode_links_are_taken_back_to_their_series(tmp_path, monkeypatch):
+    # From #12, by mj23au
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    cases = {
+        "https://www.channel4.com/programmes/taskmaster/on-demand/71670-001": "https://www.channel4.com/programmes/taskmaster",
+        "https://www.itv.com/watch/bay-of-fires/10a5270/10a5270a0001": "https://www.itv.com/watch/bay-of-fires/10a5270",
+        "https://www.channel5.com/show/cause-of-death/season-1/episode-1": "https://www.channel5.com/show/cause-of-death",
+        "https://www.paramountplus.com/shows/mobland/video/abc/x": "https://www.paramountplus.com/shows/mobland/",
+        "https://www.sbs.com.au/ondemand/tv-series/blue-lights/season-1/x": "https://www.sbs.com.au/ondemand/tv-series/blue-lights",
+        "https://u.co.uk/shows/blue-lights/watch-online/6388360695112": "https://u.co.uk/shows/blue-lights/watch-online",
+    }
+    for given, series in cases.items():
+        assert web.series_title(given) == series, given
+
+    class Page:
+        def __init__(self, data):
+            self.data = data
+
+        def json(self):
+            return self.data
+    tree = {"programme": {"pid": "p0f2cz7f", "parent": {"programme": {"pid": "p0f2cxs1", "parent": {"programme": {"pid": "p0f2cxpr"}}}}}}
+    monkeypatch.setattr(web.requests, "get", lambda url, timeout: Page(tree))
+    assert web.series_title("https://www.bbc.co.uk/iplayer/episode/p0f2cz7f/blue-lights") == "https://www.bbc.co.uk/iplayer/episodes/p0f2cxpr"
+
+    def down(url, timeout):
+        raise web.requests.ConnectionError("offline")
+    monkeypatch.setattr(web.requests, "get", down)
+    kept = web.series_title("https://www.bbc.co.uk/iplayer/episode/b0abc123")
+    assert kept == "https://www.bbc.co.uk/iplayer/episode/b0abc123" and "b0abc123" not in web.bbc_programmes  # asked again next time
+    assert web.episode_link(kept)  # still one episode: a series link of the same service is preferred
+    assert web.episode_link("https://play.hbomax.com/video/watch/7656258d-aaaa/x") and web.episode_link("https://www.bbc.co.uk/iplayer/episode/b0abc123")
+    assert not web.episode_link("https://play.hbomax.com/show/86bc816f-aaaa")

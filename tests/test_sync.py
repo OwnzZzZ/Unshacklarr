@@ -1241,7 +1241,7 @@ def test_an_episode_its_number_misses_is_found_by_its_title(tmp_path, monkeypatc
 
     def find(show, ep):
         listed.append(ep["id"])
-        return {201: {"service": "S01E07", "match": "title"}}  # S02E01 by its title; S02E02 not out yet
+        return {"available": {201: {"service": "S01E07", "match": "title"}}, "listed": {"S01E07"}}  # S02E01 by its title; S02E02 not out yet
 
     monkeypatch.setattr(sync, "run_job_retrying", download)
     monkeypatch.setattr(sync, "download_request", lambda show, config, sx, out: {"service": "RTLP", "title_id": "t", "wanted": [sx], "output_dir": str(out)})
@@ -1517,3 +1517,74 @@ def test_the_rename_keeps_the_resolution_and_a_title_starting_with_a_number(tmp_
     use_tools(monkeypatch, sync, fake_tools([], lambda *a: None, {}))
     sync.finalize(out, "S17E03", "Bake Off")
     assert [f.name for f in out.iterdir()] == ["Bake.Off.S17E03.1080p.ALL4.WEB-DL.mkv"]
+
+
+def test_a_ladder_takes_widescreen_tracks_by_their_16_9_height_and_its_language_order(tmp_path, monkeypatch):
+    # From #11, by mj23au: a cropped 1920x800 film is 1080p to Unshackle's own --quality
+    sync = load(tmp_path, monkeypatch)
+    config = sync.read_file()
+    config["series"][111]["ladder"] = "1080p"
+    config["quality_ladders"] = [{**sync.BUILTIN_LADDERS[0], "audio": ["en-AU", "en"], "subtitles": ["fr"]}]
+    tracks = {"video": [{"height": 800, "width": 1920, "codec": "AVC", "range": "SDR"}],
+              "audio": [{"language": "en-GB"}, {"language": "de"}], "subtitles": [{"language": "fr", "forced": True}, {"language": "en"}]}
+    monkeypatch.setattr(sync.UNSHACKLE, "call", lambda method, path, json=None, **_: {"episodes": [tracks]})
+    monkeypatch.setattr(sync, "no_cdm", lambda tag, config=None: "")
+    downloads = []
+    monkeypatch.setattr(sync, "run_job_retrying", lambda payload, run=None: downloads.append(payload))
+    sync.sync(config, {}, [episode(111, 2, 5)], manual=True, kind="manual")
+    assert downloads[0]["quality"] == [800]  # its own height: Unshackle takes the track by it exactly
+    assert downloads[0]["a_lang"] == ["en-GB"]  # no en-AU: en takes en-GB
+    assert "s_lang" not in downloads[0]  # forced French lines are not subtitles
+    config["series"][111]["options"] = {"--lang": "fr,en"}  # the series asks for languages itself: the ladder's order stays out
+    sync.sync(config, {}, [episode(111, 2, 6)], manual=True, kind="manual")
+    assert "a_lang" not in downloads[1]
+    assert sync.eq_height({"width": 3840, "height": 1920}) == 2160 and sync.eq_height({"height": 720}) == 720
+    assert sync.eq_height({"width": 1918, "height": 802}) == 1080  # Apple's: 1078 at 16:9, within 2% of 1080
+    assert sync.eq_height({"width": 1280, "height": 534}) == 720 and sync.eq_height({"height": 900}) == 900
+    assert sync.first_language(["pt-BR", "pt"], [{"language": "pt-PT"}, {"language": "pt-BR"}]) == "pt-BR"
+
+
+def test_a_server_that_is_down_keeps_its_services_and_another_takes_the_main_folder(tmp_path, monkeypatch):
+    # From #13, by mj23au
+    sync = load(tmp_path, monkeypatch)
+    sync.apply_settings({**sync.SETTINGS, "unshackle_downloads": "/srv/dl", "backends": [{"name": "vpn", "url": "http://vpn:8786", "api_key": "k"}]})
+    vpn = sync.BACKENDS["vpn"]
+    assert vpn.settings["unshackle_downloads"] == "/srv/dl"  # empty: as the main serve sees it
+    monkeypatch.setattr(vpn, "services", lambda: [{"tag": "RTLP", "cli_params": []}])
+
+    def down():
+        raise sync.UnshackleError("unshackle serve is unreachable")
+    monkeypatch.setattr(sync.UNSHACKLE, "services", down)
+    assert sync.backend_for("RTLP", {}) is sync.UNSHACKLE  # down is not "doesn't have it": no other cookies, proxy or CDM
+    monkeypatch.setattr(sync.UNSHACKLE, "services", lambda: [{"tag": "MLT"}])
+    assert sync.backend_for("RTLP", {}) is vpn
+
+
+def test_a_number_its_title_gives_to_another_episode_is_not_downloaded(tmp_path, monkeypatch):
+    # From #12, by mj23au: a same-named series elsewhere, seasons numbered apart
+    sync = load(tmp_path, monkeypatch)
+    listing = {"available": {}, "listed": {"S02E05", "S03E01"}, "titled": {"S02E05"}}  # another episode's title gives S02E05
+    monkeypatch.setattr(sync, "find_by_title", lambda show, ep: listing)
+    monkeypatch.setattr(sync, "no_cdm", lambda tag, config=None: "")
+    asked = []
+    monkeypatch.setattr(sync, "run_job_retrying", lambda payload, run=None: asked.append(payload["wanted"][0]))
+    monkeypatch.setattr(sync, "notify", lambda *a, **k: None)
+    sync.sync(sync.read_file(), {}, [episode(111, 2, 5)], manual=True, kind="manual")
+    assert asked == []  # listed under its number, but its title says another episode
+    card = next(json.loads(p.read_text()) for p in (tmp_path / "runs").glob("*.json"))
+    assert card["outcome"] == "failed" and "is another episode, by its title" in card["cause"]
+
+    sync.title_matches.clear()
+    listing["available"] = {205: {"service": "S03E01", "match": "title"}}  # its title puts it there
+    sync.sync(sync.read_file(), {}, [episode(111, 2, 5)], manual=True, kind="manual")
+    assert asked == ["S03E01"]
+
+    sync.title_matches.clear()
+    listing["available"] = {205: {"service": "S02E05"}}  # its number is right
+    sync.sync(sync.read_file(), {}, [episode(111, 2, 5)], manual=True, kind="manual")
+    assert asked == ["S03E01", "S02E05"]
+
+    sync.title_matches.clear()
+    listing.update(available={}, titled=set())  # its title merely differs (no translation yet): downloaded by its number
+    sync.sync(sync.read_file(), {}, [episode(111, 2, 5)], manual=True, kind="manual")
+    assert asked == ["S03E01", "S02E05", "S02E05"]

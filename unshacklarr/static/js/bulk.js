@@ -42,8 +42,8 @@ function openSel() {
 function sayNoService() {
   const none = [...SEL.ids].filter((id) => !S.config.series[id]?.service).length;
   $("#sel-noservice").hidden = !none || Boolean($("#sel-service").value);
-  $("#sel-noservice").textContent = none === 1 ? "One of them has no service: pick one above, or nothing is kept for it."
-    : `${none} of them have no service: pick one above, or nothing is kept for them.`;
+  $("#sel-noservice").textContent = none === 1 ? "One of them has no service: pick one above, or its changes are not kept."
+    : `${none} of them have no service: pick one above, or their changes are not kept.`;
 }
 $("#sel-service").onchange = sayNoService;
 $("#sel-form").onsubmit = (e) => {

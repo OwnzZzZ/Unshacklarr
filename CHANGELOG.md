@@ -4,6 +4,54 @@ Every change worth knowing, newest first. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/): until 1.0.0, a minor version may change how things work.
 
+## [1.4.0] - 2026-10-07
+
+### Added
+
+- **Automatic backups.** Settings › Account › Back up the settings can save a backup every few days in the data
+  folder's `backups` folder, the newest kept, each downloaded with the password. A new install can start from one:
+  the setup offers Restore from a backup, from that folder or a file, with a new password. (#15)
+- **Upgrades.** Activity › Upgrades finds the files a series' quality ladder says could be better, asks each
+  service what it has (one episode at a time), and replaces them, even when Sonarr ranks both the same (H.264 and
+  H.265 in 1080p). The Episodes tab marks them too. (#11)
+- **Catch up.** Activity › Catch up lists the aired episodes your series still miss (those from before a series
+  got its service, or that the automatic sync gave up on), within 7, 30 or 90 days or all, and downloads them
+  together. (#12)
+- **The right episode, checked first.** Before a download, the series' listing on its service is read (kept 15
+  minutes): when another episode's title claims the number asked for, the episode is taken where its own title
+  puts it, or not downloaded. A title that merely differs (no translation yet) changes nothing. (#12)
+- **A language order per quality ladder**: which of the episode's audio and subtitle tracks to take (en-AU, then
+  en), unless a series or its service sets `--a-lang` or `--s-lang`. And ladders move up and down. (#11)
+- **A series TMDB links nowhere** is offered its channel's service (Channel 4 on ALL4, BBC on iP…) and looked up
+  on it by name. (#12)
+- **Every Unshackle server watched.** Each other server says in Settings whether it answers, and you are told
+  when one goes down and when it is back. (#13)
+
+### Fixed
+
+- **Sonarr links work away from home.** A Sonarr reached by a LAN address or a Docker name is linked with the
+  name the page was opened with (Tailscale, a VPN). Through a reverse proxy, the LAN link stays. (#14)
+- **Episode links from TMDB lead to the series** for iPlayer, Channel 4, ITV, Channel 5, Paramount+, SBS and U;
+  HBO Max's episode links give way to its series link. (#12)
+- **A backup keeps the quality ladders** too.
+- **Widescreen tracks fit their step.** A 1920x800 film or a 2:1 series counts as 1080p in a quality ladder,
+  as Unshackle's own `--quality` takes it. (#11)
+- **An Unshackle server that is down keeps its services**: they fail there, saying why, instead of going to
+  another server with other cookies or proxies. (#13)
+- **Another server's empty downloads folder** is the main server's, not Unshacklarr's own. (#13)
+- **A link to one episode** (iPlayer's `/episode/`) suggests no season map, and Test this series says the link
+  may be an episode. (#12)
+- **Activity on a phone** no longer scrolls sideways by a few pixels.
+
+### Changed
+
+- **A series' settings, reordered.** Source, When, What to get, Unshackle options and Numbering, each a card with
+  its purpose, a bar to jump between them, and a line that says where the series stands.
+- **Clearer texts** throughout the page, the notifications and the errors, in every language.
+- **A new version shows within the hour** in the header, instead of up to half a day later.
+- **Cookies and CDM on a remote Unshackle** with no folder mounted say they are managed where it runs, not an
+  error. The restart and log commands show only for the bundled compose's server. (#13)
+
 ## [1.3.2] - 2026-10-07
 
 ### Fixed
@@ -280,6 +328,7 @@ A full audit found nothing critical nor high; what it found is fixed:
 - **Dependencies.** oauthlib 4.0.0, for two advisories on OAuth servers that never reached Unshacklarr
   (Apprise only uses it as a client).
 
+[1.4.0]: https://github.com/OwnzZzZ/Unshacklarr/releases/tag/v1.4.0
 [1.3.2]: https://github.com/OwnzZzZ/Unshacklarr/releases/tag/v1.3.2
 [1.3.1]: https://github.com/OwnzZzZ/Unshacklarr/releases/tag/v1.3.1
 [1.3.0]: https://github.com/OwnzZzZ/Unshacklarr/releases/tag/v1.3.0

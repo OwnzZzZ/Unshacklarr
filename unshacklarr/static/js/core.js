@@ -114,8 +114,8 @@ const i18nReady = (async () => {  // awaited before the first screen; English if
   finally { document.documentElement.classList.remove("i18n-wait"); }
 })();
 const tmdbHint = () => ["Optional and free: ", el("a", { href: "https://www.themoviedb.org/settings/api", target: "_blank", rel: "noopener", textContent: "create one on TMDB" }),
-  " (an account, then Settings, API).\nIt shows each series' channel and streaming services in the Schedule.\n"
-  + "For a series not in English, it also finds episodes by their title: Sonarr only has English ones."];
+  " (sign in, then Settings, API).\nWith it, the Schedule shows each series' channel and streaming services.\n"
+  + "For a series not in English, it also finds episodes by their title: Sonarr only has English titles."];
 let S = { series: [], config: { defaults: {}, series: {}, notifications: {} }, services: [], serviceNames: {}, dlOptions: [], health: {} };
 const serviceOptions = {};
 let current = null;
@@ -333,7 +333,7 @@ async function openDrawer(s, tab, fromRoute = false) {
   if (sick) $("#d-sick").replaceChildren(el("b", { textContent: `Its last ${sick.failing} downloads failed` }),
     el("span", { textContent: sick.cause || "See the history in Activity for why." }),
     el("span", { textContent: "Test this series below: a URL the service no longer knows, or cookies to update in Settings, Cookies." }));
-  $("#d-probe-state").textContent = "Asks the service for its episodes, nothing downloaded.";
+  $("#d-probe-state").textContent = "Asks the service which episodes it has. Nothing is downloaded.";
   drawerPushed = !fromRoute;
   if (!fromRoute) { drawerTab = tab || "episodes"; navigate(true); }  // back will close it
   const existed = s.tvdbId in S.config.series;
@@ -379,14 +379,30 @@ async function openDrawer(s, tab, fromRoute = false) {
   navigate(false);
   loadEpisodes(s);
   $("#drawer .d-body").scrollTop = 0;
+  dsPicked = null;
+  requestAnimationFrame(dsLight);  // its first card lit in the shortcuts
   scrollTo({ top: 0 });
   $("#close").focus();
   loadSuggestions(s);
   await renderServiceOptions(conf);
 }
 
+/* Where the series stands, above its settings: downloaded from its service, missing its URL, failing, or not downloaded. */
+function renderSeriesState() {
+  const conf = current && S.config.series[current.tvdbId], box = $("#ds-state");
+  if (!conf) return;
+  const sick = conf.service && S.health[current.tvdbId];
+  const [cls, text] = !conf.service ? ["", "Not downloaded by Unshackle"]
+    : sick ? ["down", `Its downloads from ${svcName(conf.service)} fail`]
+    : !conf.title ? ["warn", `On ${svcName(conf.service)}: its series URL is missing`]
+    : ["ok", `Downloaded from ${svcName(conf.service)}`];
+  box.classList.remove("ok", "down", "warn");
+  if (cls) box.classList.add(cls);
+  $("#ds-state-text").textContent = text;
+}
 /* Service options only show for a service that has some; "stop" only for a managed series. */
 async function renderServiceOptions(conf) {
+  renderSeriesState();
   const specs = await loadServiceOptions(conf.service).catch(() => []);  // Unshackle down: no options to offer
   if (current && S.config.series[current.tvdbId] !== conf && oneOff !== conf) return;  // another series opened meanwhile
   $("#d-service-field").hidden = !specs.length && !Object.keys(conf.service_options).length;
@@ -456,11 +472,25 @@ function failed(text, retry) {
     retry ? el("button", { className: "btn small", textContent: "Try again", onclick: retry }) : "");
 }
 
+/* No link from TMDB: the series' channel may have a catch-up service here, picked and looked up on by its name. */
+function networkPick(s, box, none, lead) {
+  const tag = S.networkServices?.[s.tvdbId];
+  if (!tag) return box.replaceChildren(el("small", { className: "muted", textContent: none }));
+  box.replaceChildren(el("small", { className: "muted", textContent: `${lead} Its channel, ${s.network}, is on ${svcName(tag)}:` }),
+    el("button", { type: "button", ariaLabel: `Find it on ${svcName(tag)}`, onclick: () => {
+      const sel = $("#d-service");
+      if (sel.value !== tag) { sel.value = tag; sel.dispatchEvent(new Event("change")); }
+      $("#d-find").hidden = true;
+      $("#d-find-q").value = s.title;
+      $("#d-find-open").click();
+    } }, el("b", { textContent: tag }), el("span", { textContent: `Find ${s.title} on ${svcName(tag)}` })));
+}
+
 async function loadSuggestions(s, refresh = false) {
   const box = $("#d-suggest");
   $("#d-checked").textContent = "";
   $("#d-refresh").hidden = !s.tmdbId;
-  if (!s.tmdbId) return box.replaceChildren(el("small", { className: "muted", textContent: "Sonarr has no TMDB ID for this series." }));
+  if (!s.tmdbId) return networkPick(s, box, "Sonarr has no TMDB ID for this series.", "Sonarr has no TMDB ID for this series.");
   box.replaceChildren(loading("Looking up where to watch it…"));
   let links;
   try {
@@ -470,10 +500,8 @@ async function loadSuggestions(s, refresh = false) {
   }
   catch (e) { if (current === s) box.replaceChildren(failed(`TMDB lookup failed: ${e.message}`, () => loadSuggestions(s, refresh))); return; }
   if (current !== s) return;  // another series was opened meanwhile
-  if (!links.length) {
-    return box.replaceChildren(el("small", { className: "muted",
-      textContent: `TMDB lists no supported service in ${S.config.tmdb_countries.join(", ")}. Enter it below by hand.` }));
-  }
+  if (!links.length) return networkPick(s, box, `TMDB lists no supported service in ${S.config.tmdb_countries.join(", ")}. Enter it below by hand.`,
+    "TMDB lists no supported service.");
   box.replaceChildren(...links.map((l) => el("button", {
     ariaLabel: `Use ${l.service}: ${l.url}`,
     onclick: () => applySuggestion(l),
@@ -491,10 +519,11 @@ async function applySuggestion(link) {
   $("#d-url").value = conf.title;
   if (link.needs_series_url) {  // Crave: only an episode is linked; its series page has the URL to use
     if (/^https?:\/\//i.test(link.url)) window.open(link.url, "_blank", "noopener");  // a web page only, never javascript:
-    toast("Crave only links an episode: on crave.ca, go to its series page and paste that URL here.");
+    toast("This Crave link points to an episode. On crave.ca, open the series page and paste that URL here.");
     $("#d-url").placeholder = "https://www.crave.ca/en/series/name-12345";
     $("#d-url").focus();
   }
+  renderSeriesState();
   optionsEditor($("#d-service-opts"), await loadServiceOptions(conf.service).catch(() => []), conf.service_options);
   dirty();
   renderWall();
@@ -586,6 +615,7 @@ $("#d-url").oninput = async (e) => {
   conf.title = e.target.value.trim();
   dirty();
   renderMeta(current);
+  renderSeriesState();
   renderCheck(current, true);  // Episodes offers to ask the service at once
   // A link to another site: its service, picked for you (a service chosen by hand stays while its link is edited)
   const tag = serviceOfLink(conf.title);
@@ -604,8 +634,17 @@ $("#d-url").oninput = async (e) => {
 function sonarrWeb() {
   const set = S.config.settings || {};
   if (set.sonarr_public_url) return set.sonarr_public_url.replace(/\/+$/, "");
-  try { const u = new URL(set.sonarr_url); return u.hostname.includes(".") || u.hostname === "localhost" ? u.origin + u.pathname.replace(/\/+$/, "") : ""; }
-  catch { return ""; }
+  try {
+    const u = new URL(set.sonarr_url);
+    // A Docker name or a LAN address only works at home. Sonarr runs beside Unshacklarr (as in the compose file): the
+    // name this page was opened with reaches the same machine (Tailscale, a VPN, another LAN name). A LAN address
+    // stays as it is through a reverse proxy (no port in the page's address): Sonarr's port is rarely open there,
+    // and the LAN link still works at home. A Docker name always takes the page's: it has no link otherwise.
+    const docker = !u.hostname.includes(".") && u.hostname !== "localhost";
+    const lan = u.hostname === "localhost" || /^(10|127|192\.168|172\.(1[6-9]|2\d|3[01]))\./.test(u.hostname);
+    if (location.hostname !== u.hostname && (docker || (lan && location.port))) u.hostname = location.hostname;
+    return u.origin + u.pathname.replace(/\/+$/, "");
+  } catch { return ""; }
 }
 /* Under the series' name: it on TVDB, TMDB, its service (the page Unshackle downloads from) and Sonarr. */
 function renderMeta(s) {

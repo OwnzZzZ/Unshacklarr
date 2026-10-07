@@ -101,6 +101,7 @@ function renderSettings() {
   $("#tmdb-hint").replaceChildren(...tmdbHint());
   $("#countries").value = S.config.tmdb_countries.join(", ");
   renderRegion();
+  renderBackups();
   const n = S.config.notifications;
   n.targets ||= [];
   document.querySelectorAll("[data-event]").forEach((c) => { c.checked = (n.events || {})[c.dataset.event] ?? true; });
@@ -264,7 +265,7 @@ $("#ak-pass").oninput = () => akPassSay();
 $("#ak-pass").onkeydown = (e) => { if (e.key === "Enter") $("#ak-new").click(); };
 $("#ak-delete").onclick = async (e) => {
   const b = e.currentTarget;
-  if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Sure? Programs using it stop"; return setTimeout(() => { if (b.dataset.sure === "1") { b.dataset.sure = ""; b.textContent = "Delete the key"; } }, 4000); }
+  if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Sure? Programs using it will stop working"; return setTimeout(() => { if (b.dataset.sure === "1") { b.dataset.sure = ""; b.textContent = "Delete the key"; } }, 4000); }
   try { await api("/api/api-key/delete", { method: "POST" }); akShow({ set: false }); }
   catch (err) { toast(err.message, true); }
 };
@@ -287,6 +288,27 @@ $("#ac-reset").after((() => {
   return copy;
 })());
 /* Account, backup: the settings to a file and back, the password asked first (the file holds the keys). */
+/* Account, automatic backups: the saved ones, newest first, each downloaded with the password (it holds the keys). */
+function renderBackups() {
+  const saved = S.backups?.saved || [];
+  $("#bk-saved").hidden = !saved.length;
+  if (!saved.length) return;
+  const when = (at) => new Date(at).toLocaleString(LOCALE, { dateStyle: "medium", timeStyle: "short" });
+  $("#bk-saved-head").replaceChildren("Saved backups", el("small", { textContent: ` · ${saved.length} in ${S.backups.folder}` }));
+  $("#bk-list").replaceChildren(...saved.map((f) => el("div", { className: "bk-row" },
+    el("span", { textContent: when(f.at) }), el("small", { textContent: `${Math.max(1, Math.round(f.size / 1024))} KB` }),
+    el("button", { className: "btn small", type: "button", textContent: "Download", onclick: () => backupFile(f.name) }))));
+}
+async function backupFile(name) {
+  if (!bkPassword()) return;
+  try {
+    const r = await api("/api/backups/download", { method: "POST", body: JSON.stringify({ password: $("#bk-pass").value, name }) });
+    const a = el("a", { href: URL.createObjectURL(new Blob([r.text], { type: "text/yaml" })), download: r.name });
+    a.click();
+    URL.revokeObjectURL(a.href);
+    bkSay(`✓ ${r.name} downloaded`, false);
+  } catch (e) { if (/password/i.test(e.message)) { bkSay(e.message); $("#bk-pass").select(); } else toast(e.message, true); }
+}
 const bkSay = (text = "", bad = true) => { $("#bk-say").textContent = text || "Asked again: the file holds secrets."; $("#bk-say").className = `pw-match${text ? (bad ? " bad" : " good") : ""}`; };
 const bkPassword = () => { if ($("#bk-pass").value) return true; bkSay("Type your password first"); $("#bk-pass").focus(); return false; };
 $("#bk-pass").oninput = () => bkSay();
@@ -350,17 +372,17 @@ const BUILDERS = {
   Discord: { hint: "In Discord: the channel's settings, Integrations, Webhooks, New Webhook, Copy Webhook URL.",
     fields: [["webhook", "Webhook URL", "https://discord.com/api/webhooks/…"]], url: (f) => f.webhook,
     check: (f) => /^https:\/\/([\w-]+\.)?discord(app)?\.com\/api\/webhooks\/\d+\/[\w-]+/.test(f.webhook) || ["webhook", "Paste the whole webhook URL: it starts with https://discord.com/api/webhooks/"] },
-  Telegram: { hint: "Create a bot with @BotFather: it gives its token. Then send your bot a message, and get your chat ID from @userinfobot.",
+  Telegram: { hint: "Create a bot with @BotFather to get its token. Then send your bot a message, and get your chat ID from @userinfobot.",
     fields: [["token", "Bot token", "123456789:AAE…"], ["chat", "Chat ID", "123456789"]], url: (f) => `tgram://${f.token}/${f.chat}`,
     check: (f) => !/^\d+:[\w-]{20,}$/.test(f.token) ? ["token", "A bot token looks like 123456789:AAE…"] : /^-?\d+$|^@\w+$/.test(f.chat) || ["chat", "A chat ID is a number (or @channel)"] },
-  ntfy: { hint: "Install the ntfy app and subscribe to a topic. Pick a name hard to guess: whoever knows it can read.",
+  ntfy: { hint: "Install the ntfy app and subscribe to a topic. Pick a name that is hard to guess: anyone who knows it can read your messages.",
     fields: [["topic", "Topic", "unshacklarr-7f3k"], ["server", "Server, if not ntfy.sh", "ntfy.example.com"]],
     url: (f) => f.server ? `ntfys://${f.server.replace(/^https?:\/\//, "").replace(/\/+$/, "")}/${f.topic}` : `ntfy://${f.topic}`,
     check: (f) => /^[\w-]{1,64}$/.test(f.topic) || ["topic", "A topic: letters, digits, - and _"] },
-  Pushover: { hint: "Your user key is on pushover.net once logged in. Create an application there: it gives the API token.",
+  Pushover: { hint: "Your user key is shown on pushover.net once you log in. Create an application there to get the API token.",
     fields: [["user", "User key"], ["token", "API token"]], url: (f) => `pover://${f.user}@${f.token}`,
     check: (f) => !/^\w{30}$/.test(f.user) ? ["user", "A user key is 30 letters and digits"] : /^\w{30}$/.test(f.token) || ["token", "An API token is 30 letters and digits"] },
-  "E-mail": { hint: "For Gmail, Outlook or iCloud: an app password, made in your account's security settings (not your usual password).",
+  "E-mail": { hint: "For Gmail, Outlook or iCloud: use an app password, created in your account's security settings (not your usual password).",
     fields: [["email", "Your address", "you@gmail.com"], ["password", "App password", "", "password"]],
     url: (f) => { const [user, domain] = f.email.split("@"); return `mailtos://${encodeURIComponent(user)}:${encodeURIComponent(f.password)}@${domain}?to=${encodeURIComponent(f.email)}`; },
     check: (f) => !/^[^@\s]+@[^@\s]+\.\w+$/.test(f.email) ? ["email", "An e-mail address, like you@gmail.com"] : Boolean(f.password) || ["password", "The app password"] },
@@ -368,7 +390,7 @@ const BUILDERS = {
     fields: [["server", "Server", "https://gotify.example.com"], ["token", "App token"]],
     url: (f) => { const u = new URL(f.server); return `${u.protocol === "https:" ? "gotifys" : "gotify"}://${u.host}${u.pathname.replace(/\/+$/, "")}/${f.token}`; },
     check: (f) => { try { new URL(f.server); } catch { return ["server", "The server's address, with https://"]; } return Boolean(f.token) || ["token", "The app token"]; } },
-  Other: { hint: "Any of Apprise's 100+ services: its address format is in Apprise's list (the link at the top of the page).",
+  Other: { hint: "Any of Apprise's 100+ services. Find its address format in Apprise's list (linked at the top of the page).",
     fields: [["url", "Apprise address", "slack://…"]], url: (f) => f.url.trim(),
     check: (f) => /^[a-z][a-z0-9+.-]*:\/\/\S+$/i.test(f.url.trim()) || ["url", "An address like slack://…"] },
 };
@@ -412,12 +434,12 @@ function renderNotify() {
   box.querySelector("small").textContent = [[...new Set(used.map((t) => appOf(t.url)))].join(", "), n.quiet ? `quiet ${n.quiet.from}–${n.quiet.to}` : ""].filter(Boolean).join(" · ");
   const late = Number($("#nt-late").value), warnOff = !(n.warning ?? true);
   $("#nt-late-say").replaceChildren(late > 0 ? `Now: a message when an episode is still missing ${late} hour${late === 1 ? "" : "s"} after airing.` : "Now: no message for late episodes.",
-    ...(late > 0 && warnOff ? [el("span", { className: "status-err", textContent: " Needs a look is off above: it will not go out." })] : []));
+    ...(late > 0 && warnOff ? [el("span", { className: "status-err", textContent: " Needs a look is turned off above, so this message will not be sent." })] : []));
   $("#nt-quiet-on").checked = Boolean(n.quiet);
   $("#nt-quiet").hidden = !n.quiet;
   if (n.quiet) { $("#nt-quiet-from").value = n.quiet.from; $("#nt-quiet-to").value = n.quiet.to; }
-  $("#nt-quiet-say").textContent = n.quiet ? `Messages wait, then arrive as one summary at ${n.quiet.to} (${S.config.settings.timezone.replaceAll("_", " ")}). A code to enter comes at once.`
-    : "Messages wait, then arrive as one summary when they end.";
+  $("#nt-quiet-say").textContent = n.quiet ? `Messages are held, then sent as one summary at ${n.quiet.to} (${S.config.settings.timezone.replaceAll("_", " ")}). A code to enter is sent at once.`
+    : "Messages are held, then sent as one summary when they end.";
   renderNotifPreview();
 }
 function renderNotifPreview() {

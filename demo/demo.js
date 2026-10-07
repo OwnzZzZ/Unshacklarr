@@ -143,9 +143,24 @@
       keep();
       return { configured: true };
     }
+    // The setup from a backup: two made-up ones, restored in words (nothing is written)
+    if (p === "/api/setup/backups") {
+      if (String(body?.setup_code || "").trim().toUpperCase() !== "DEMO") throw new Refused(403, "Wrong setup code: in the demo, it is DEMO");
+      return { saved: [{ name: "unshacklarr-2026-10-06-0300.yaml", at: new Date(Date.now() - 864e5).toISOString(), size: 7300 },
+        { name: "unshacklarr-2026-10-05-0300.yaml", at: new Date(Date.now() - 2 * 864e5).toISOString(), size: 7100 }] };
+    }
+    if (p === "/api/setup/restore") {
+      mem.configured = mem.logged = true;
+      mem.config = copy(R["/api/state"].config);
+      keep();
+      return { logged_in: true, series: Object.keys(mem.config.series || {}).length, sonarr: { ok: true }, unshackle: { ok: false, error: "Not in the demo: there is no Unshackle to test" } };
+    }
     if (!mem.configured || !mem.logged) throw new Refused(401, "Log in first");
     if (p === "/api/logout") { mem.logged = false; keep(); return { logged_in: false }; }
-    if (p === "/api/state") return { ...copy(R["/api/state"]), config: copy(config()) };
+    // Backups: two made-up ones, the setup restores from them in words (nothing is written)
+    const demoBackups = [{ name: "unshacklarr-2026-10-06-0300.yaml", at: new Date(Date.now() - 864e5).toISOString(), size: 7300 },
+      { name: "unshacklarr-2026-10-05-0300.yaml", at: new Date(Date.now() - 2 * 864e5).toISOString(), size: 7100 }];
+    if (p === "/api/state") return { ...copy(R["/api/state"]), config: copy(config()), backups: { count: 2, folder: "/data/backups", latest: demoBackups[0].at, saved: demoBackups } };
     if (p === "/api/config") { mem.config = body; keep(); return { saved: true }; }
     if (p === "/api/hidden") {
       const c = config(), hidden = new Set(c.hidden_series || []);
@@ -216,6 +231,7 @@
     if (p === "/api/api-key/new") return { key: "demo-" + Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, "0")).join(""), created: now() };
     if (p.startsWith("/api/suggest")) return { links: [], checked: now() };
     if (p.startsWith("/api/networks")) return {};
+    if (p === "/api/backups/download") return { name: body.name, text: "# A made-up backup: this is the demo\n" };
     if (method !== "GET") return {};  // the password, the language, logging out others: done, in words
     if (path in R) return copy(R[path]);
     if (p in R) return copy(R[p]);

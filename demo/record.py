@@ -349,6 +349,9 @@ async def record() -> dict:
                      "/api/push/key"):
             await get(path)
         await get("/api/status?full=1")
+        for days in ("", "?days=7", "?days=30", "?days=90"):  # Activity, Catch up
+            await get(f"/api/missing{days}")
+        await get("/api/upgrades")  # Activity, Upgrades (nothing checked yet: a check asks the service)
         start = (NOW.astimezone(sync.LOCAL) - timedelta(days=31)).date().isoformat()
         await get(f"/api/calendar?start={start}&days=62", "/api/calendar")
         await get("/api/unshackle/config-file/open", method="POST", body={"password": PASSWORD})
