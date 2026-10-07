@@ -14,10 +14,11 @@
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2064%2064%22%3E%3Ccircle%20cx=%2232%22%20cy=%2232%22%20r=%2231%22%20fill=%22#26a69a%22/%3E%3Ccircle%20cx=%2232%22%20cy=%2232%22%20r=%2227.6%22%20fill=%22none%22%20stroke=%22#fff%22%20stroke-opacity=%22.18%22%20stroke-width=%221.4%22/%3E%3Cpath%20d=%22M25%2025.5v-5a7%207%200%200%201%2014%200%22%20fill=%22none%22%20stroke=%22#fff%22%20stroke-width=%224.4%22%20stroke-linecap=%22round%22/%3E%3Crect%20x=%2213%22%20y=%2225%22%20width=%2238%22%20height=%2224%22%20rx=%225%22%20fill=%22#fff%22/%3E%3Cpath%20d=%22M32%2029.5v10M27.3%2035%2032%2039.7l4.7-4.7%22%20fill=%22none%22%20stroke=%22#1b7a71%22%20stroke-width=%223.6%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%3Cpath%20d=%22M25%2053.5h14%22%20stroke=%22#fff%22%20stroke-width=%223.6%22%20stroke-linecap=%22round%22/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/xterm.css?v=5.5.0">
-<script src="/xterm.js?v=5.5.0"></script>
-<script src="/xterm-fit.js?v=0.10.0"></script>
+<script src="/xterm.js?v=5.5.0" defer></script>
+<script src="/xterm-fit.js?v=0.10.0" defer></script>
 <link rel="stylesheet" href="/app.css">
 </head>
 <body>
@@ -35,6 +36,7 @@
   <h1 class="brand"><a href="#/series" id="home" aria-label="Unshacklarr, back to the series"><svg class="logo" width="30" height="30" viewBox="0 0 64 64" aria-hidden="true">
   <circle cx="32" cy="32" r="31" fill="#26a69a"/><circle cx="32" cy="32" r="27.6" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="1.4"/><path d="M25 25.5v-5a7 7 0 0 1 14 0" fill="none" stroke="#fff" stroke-width="4.4" stroke-linecap="round"/><rect x="13" y="25" width="38" height="24" rx="5" fill="#fff"/><path d="M32 29.5v10M27.3 35 32 39.7l4.7-4.7" fill="none" stroke="#1b7a71" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M25 53.5h14" stroke="#fff" stroke-width="3.6" stroke-linecap="round"/>
 </svg><span>Unshacklarr</span></a></h1>
+  <button class="version-chip" id="version" type="button" title="What's new in each version" hidden></button>
   <nav role="tablist">
     <button role="tab" data-tab="schedule" aria-selected="true"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span>Schedule</span></button>
     <button role="tab" data-tab="series"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 21h10"/><rect x="2" y="3" width="20" height="14" rx="2"/></svg><span>Series</span></button>
@@ -46,7 +48,6 @@
     <button data-health="unshackle"><i class="dot"></i><span>Unshackle</span></button>
     <button data-health="sonarr"><i class="dot"></i><span>Sonarr</span></button>
   </span>
-  <button class="news-pill" id="news" type="button" aria-label="What's new" hidden><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z"/></svg><span>What's new</span><b></b></button>
   <a class="update-pill" id="update" target="_blank" rel="noopener" hidden><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg><span></span></a>
   <span class="last-sync" id="last-sync"></span>
   <button class="btn" id="bell" aria-label="Notifications"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg><b class="count" id="bell-count" hidden></b></button>
@@ -140,12 +141,13 @@
         <button data-sec="cdm"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4M12 15v2"/></svg><span>CDM</span><small>Widevine and PlayReady devices</small></button>
         </div>
         <div class="set-group" role="group" aria-label="General"><p>General</p>
-        <button data-sec="region"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg><span>Language and region</span><small>Language, country, time zone</small></button>
+        <button data-sec="interface"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg><span>Interface</span><small>Language, no spoilers</small></button>
+        <button data-sec="region"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg><span>Region</span><small>Country, time zone</small></button>
         <button data-sec="notifications"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg><span>Notifications</span><small>Discord, this device and more</small></button>
         <button data-sec="history"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg><span>Activity history</span><small>What Activity keeps</small></button>
         <button data-sec="account"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Account</span><small>Password, sessions, API key</small></button>
         </div>
-        <p class="set-version" id="set-version"></p>
+        <button class="set-version" id="set-version" type="button"></button>
       </div>
       <div class="set-body">
       <button class="set-back" id="set-back" type="button">Settings</button>
@@ -259,8 +261,8 @@
           <p class="rt-who" id="ax-import-say"></p>
         </section>
         <section class="sx-card" id="ax-learn-card">
-          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/><path d="M17 3l3 3"/></svg></span><div><h3>Learn release times</h3><p>When 3 episodes of a series come out at the same time, that time becomes its release time. Only for series without one. You get a notification and can change it on the series page.</p></div>
-            <input type="checkbox" class="switch" id="ax-learn" aria-label="Learn release times"></div>
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/><path d="M17 3l3 3"/></svg></span><div><h3>Auto release times</h3><p>When 3 episodes of a series come out at the same time, that time becomes its release time. Only for series without one. You get a notification and can change it on the series page.</p></div>
+            <input type="checkbox" class="switch" id="ax-learn" aria-label="Auto release times"></div>
           <p class="rt-who" id="ax-learn-say"></p>
         </section>
         <section class="sx-card" id="ax-window-card">
@@ -279,15 +281,26 @@
           </div>
         </section>
       </div>
-      <div class="set-sec sx" data-sec="region" hidden>
+      <div class="set-sec sx" data-sec="interface" hidden>
         <section class="sx-hero">
-          <span class="sx-logo" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></span>
-          <div class="sx-id"><h2>Language and region</h2><p class="rg-purpose">Your language, where you watch, and the time zone that release times and syncs follow.</p></div>
-          <div class="sx-state ok" id="rg-state"><span class="dot"></span><span><b></b><small></small></span></div>
+          <span class="sx-logo" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg></span>
+          <div class="sx-id"><h2>Interface</h2><p class="rg-purpose">How the page looks: its language, and episode titles hidden or not.</p></div>
+          <div class="sx-state ok" id="if-state"><span class="dot"></span><span><b></b><small></small></span></div>
         </section>
         <section class="sx-card">
           <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/></svg></span><div><h3>Language</h3><p>For this browser only. The page reloads in the new language.</p></div></div>
           <div class="rg-langs" id="lang-row" role="radiogroup" aria-label="Language" translate="no"></div>
+        </section>
+        <section class="sx-card" id="rg-spoiler-card">
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h11M4 17h7"/><path d="m15 15 6 6M21 15l-6 6"/></svg></span><div><h3>No spoilers</h3><p>Episode titles are blurred in the Schedule, on series pages and in Catch up. Click or tap a title to show it. A series can change this in its Settings tab.</p></div>
+            <input type="checkbox" class="switch" id="rg-spoiler" aria-label="No spoilers"></div>
+        </section>
+      </div>
+      <div class="set-sec sx" data-sec="region" hidden>
+        <section class="sx-hero">
+          <span class="sx-logo" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></span>
+          <div class="sx-id"><h2>Region</h2><p class="rg-purpose">Where you watch, and the time zone that release times and syncs follow.</p></div>
+          <div class="sx-state ok" id="rg-state"><span class="dot"></span><span><b></b><small></small></span></div>
         </section>
         <section class="sx-card">
           <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></span><div><h3>Where you watch</h3><p>Which streaming services the Schedule shows, and where a series' links are looked for.</p></div></div>
@@ -328,8 +341,8 @@
             <div class="field"><label for="dx-subs">Required subtitle languages</label><input id="dx-subs" type="text" data-set="subs_accept" placeholder="Example: fr" spellcheck="false"><small>The episode must have full subtitles in at least one of them. Forced subtitles (only a few lines) do not count. Empty: not checked. A series can set its own.</small></div>
           </div>
           <div class="up-mode">
-            <span class="sub">When the preferred audio language becomes available</span>
-            <div class="ax-seg" id="dx-upmode" role="radiogroup" aria-label="When the preferred audio language becomes available"><button type="button" role="radio" data-mode="redownload">Download the episode again</button><button type="button" role="radio" data-mode="add_track">Add the audio track to the existing file</button></div>
+            <span class="sub">Audio upgrade</span>
+            <div class="ax-seg" id="dx-upmode" role="radiogroup" aria-label="Audio upgrade"><button type="button" role="radio" data-mode="redownload">Redownload episode</button><button type="button" role="radio" data-mode="add_track">Add audio track</button></div>
             <p class="rt-who" id="dx-upmode-say"></p>
             <div class="sx-grid" id="dx-library">
               <div class="field"><label for="dx-lib-sonarr">Library folder, as Sonarr sees it</label><input id="dx-lib-sonarr" type="text" data-set="library_sonarr_root" placeholder="Example: /tv" spellcheck="false"><small>The path Sonarr uses for your library.</small></div>
@@ -480,14 +493,32 @@
           <div class="cmd ac-cmd"><code id="ac-reset" translate="no">docker exec -it unshacklarr unshacklarr reset-password</code></div>
         </section>
         <section class="sx-card">
-          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></span><div><h3>Back up the settings</h3><p>Everything but the password: the series, their options, the notifications, the keys.<br>The file holds your API keys and notification addresses: keep it private.</p></div></div>
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></span><div><h3>Backups</h3><p>Everything but the password: the series, their options, the notifications, the keys.<br>The file holds your API keys and notification addresses: keep it private.</p></div></div>
           <div class="sx-grid ax-grid">
             <div class="field"><label for="bk-every">Back up automatically every</label><div class="unit"><input id="bk-every" type="number" data-set="backup_every_days" data-num min="0" max="30"><span>days</span></div><small>0 turns it off. Each backup is saved in the data folder's backups folder, without the password.</small></div>
             <div class="field"><label for="bk-keep">Keep the last</label><div class="unit"><input id="bk-keep" type="number" data-set="backup_keep" data-num min="1" max="365"><span>backups</span></div><small>Older ones are deleted. To restore one, download it, then use Restore from a file.</small></div>
           </div>
-          <div class="sx-grid bk-pass-row"><div class="field"><label for="bk-pass">Your password</label><input type="password" id="bk-pass" autocomplete="current-password"><small class="pw-match" id="bk-say">Asked again: the file holds secrets.</small></div></div>
-          <div class="ac-go"><button class="btn primary" id="bk-save" type="button">Download a backup</button><button class="btn" id="bk-load" type="button">Restore from a file…</button><input type="file" id="bk-file" accept=".yaml,.yml,text/yaml" hidden></div>
+          <div class="sx-grid bk-pass-row"><div class="field"><label for="bk-pass">Your password</label><input type="password" id="bk-pass" autocomplete="current-password"><small class="pw-match" id="bk-say">Asked again: the file holds secrets.</small></div>
+            <div class="field" id="bk-phrase-row" hidden><label for="bk-phrase">Passphrase of the backup</label><input type="password" id="bk-phrase" autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true"><small>The backup is encrypted: type the passphrase it was sent with.</small></div></div>
+          <div class="ac-go"><button class="btn primary" id="bk-save" type="button">Download a backup</button><button class="btn" id="bk-load" type="button">Restore from a file…</button><input type="file" id="bk-file" accept=".yaml,.yml,.enc,text/yaml" hidden></div>
           <div class="bk-saved" id="bk-saved" hidden><b id="bk-saved-head">Saved backups</b><div id="bk-list"></div></div>
+        </section>
+        <section class="sx-card" id="bo-card">
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M17.5 19H7a5 5 0 1 1 .9-9.9A6 6 0 0 1 19.5 11 4 4 0 0 1 17.5 19z"/><path d="M12 16v-5M9.5 13.5 12 11l2.5 2.5"/></svg></span><div><h3>Remote backup</h3><p>Each automatic backup is also sent, encrypted, to a WebDAV folder or an S3 bucket. If this server's disk fails, your settings are still safe.</p></div></div>
+          <div class="ax-seg" id="bo-kind" role="radiogroup" aria-label="Send backups to"></div>
+          <div id="bo-fields" hidden>
+            <div class="sx-grid">
+              <div class="field"><label for="bo-url" id="bo-url-l">Folder URL</label><input id="bo-url" type="url" autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true" spellcheck="false"><small id="bo-url-help"></small></div>
+              <div class="field bo-s3"><label for="bo-bucket">Bucket</label><input id="bo-bucket" type="text" placeholder="my-bucket/unshacklarr" autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true" spellcheck="false"><small>A folder in it is allowed: my-bucket/unshacklarr.</small></div>
+              <div class="field"><label for="bo-user" id="bo-user-l">User name</label><input id="bo-user" type="text" autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true" spellcheck="false"><small id="bo-user-help"></small></div>
+              <div class="field"><label for="bo-secret"><span id="bo-secret-l">Password</span> <span class="sx-saved" id="bo-secret-saved" hidden>✓ Saved</span></label><input id="bo-secret" type="password" autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true" spellcheck="false"><small id="bo-secret-help"></small></div>
+              <div class="field bo-s3"><label for="bo-region">Region</label><input id="bo-region" type="text" placeholder="us-east-1" autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true" spellcheck="false"><small>Empty: us-east-1. Cloudflare R2: auto.</small></div>
+              <div class="field"><label for="bo-pass">Passphrase <span class="sx-saved" id="bo-pass-saved" hidden>✓ Saved</span></label><input id="bo-pass" type="password" autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true" spellcheck="false"><small id="bo-pass-help">At least 12 characters. It encrypts the backups, and you need it to restore one: keep it somewhere safe, outside this server.</small></div>
+            </div>
+            <p class="rt-who" id="bo-say"></p>
+            <div class="sx-grid"><div class="field"><label for="bo-pw">Your password</label><input type="password" id="bo-pw" autocomplete="current-password"><small class="pw-match" id="bo-pw-say">Asked again: the backups contain every key and password.</small></div></div>
+            <div class="ac-go"><button class="btn primary" id="bo-send" type="button">Save and test</button></div>
+          </div>
         </section>
         <section class="sx-card">
           <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5l-8-3z"/><path d="m9 12 2 2 4-4"/></svg></span><div><h3>Sign in through a reverse proxy</h3><p>For when Authelia, Authentik or another proxy already logs you in. The proxy passes your name in a header, and Unshacklarr opens without asking for its own password.<br>Your password is still asked before the most sensitive changes.</p></div></div>
@@ -670,6 +701,11 @@
           <small>Download only: the file stays in Activity, Waiting in downloads, until you import it.</small>
         </div>
         <div class="field">
+          <span id="d-spoiler-l">Episode titles</span>
+          <div class="ax-seg" id="d-spoiler-seg" role="radiogroup" aria-labelledby="d-spoiler-l"></div>
+          <small>Hidden titles are blurred until you click or tap them. Default follows Settings, Interface, No spoilers.</small>
+        </div>
+        <div class="field">
           <label for="d-audio">Accepted audio languages</label>
           <input type="text" id="d-audio" spellcheck="false">
           <small>For example fr, en. An episode with none of them is not downloaded. It is tried again at each sync.</small>
@@ -785,10 +821,11 @@
   <div id="inbox-list"></div>
 </dialog>
 <dialog class="modal" id="news-dlg" aria-labelledby="news-title">
-  <h2 id="news-title">What's new</h2>
-  <p>New options you haven't seen yet. Each one keeps its "New" badge until you have seen it.</p>
-  <ul class="news-list" id="news-list"></ul>
-  <div class="modal-actions"><button class="btn" id="news-close" type="button">Close</button></div>
+  <div class="modal-head"><div><h2 id="news-title" tabindex="-1" autofocus>What's new</h2><p id="news-version"></p></div>
+    <button class="inbox-x" id="news-x" type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="news-rels" id="news-list"></div>
+  <div class="modal-actions news-foot"><a href="https://github.com/OwnzZzZ/Unshacklarr/releases" target="_blank" rel="noopener">All releases on GitHub ↗</a>
+    <button class="btn" id="news-close" type="button">Close</button></div>
 </dialog>
 <dialog class="modal" id="clear-dialog" aria-labelledby="clear-title">
   <form method="dialog">

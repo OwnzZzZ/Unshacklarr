@@ -61,6 +61,7 @@
  "-1: service's E04 is Sonarr's E05.": [],
  "0 turns it off. Each backup is saved in the data folder's backups folder, without the password.": [],
  "0: never delete them. Episodes of a series set to Download only are never deleted automatically.": [],
+ "1 change": [],
  "1 episode has another number on {0}: Download takes care of it": [
   "svc"
  ],
@@ -68,6 +69,7 @@
  "1 episode queued, replacing its file": [],
  "1 ladder": [],
  "1 min": [],
+ "1 new option in this section": [],
  "1 of these {0} episodes is already on disk": [
   "picked.size"
  ],
@@ -112,11 +114,15 @@
  "A download or the sync fails": [],
  "A downloaded episode will look like this.": [],
  "A first start of Unshackle takes a few seconds": [],
+ "A folder in it is allowed: my-bucket/unshacklarr.": [],
  "A full path, from / (or a drive letter), without ..": [],
  "A kind of message turned off here goes to no address and not to this device. The bell in the page still shows them all.": [],
  "A license from a test server": [],
  "A new remote CDM": [],
  "A new {0} URL needs its API key too": [
+  "what"
+ ],
+ "A new {0} URL needs its password or secret key too": [
   "what"
  ],
  "A notification address changed meanwhile: reload the page": [],
@@ -146,6 +152,7 @@
   "where",
   "code"
  ],
+ "Access key": [],
  "Account": [],
  "Action needed": [],
  "Actions": [],
@@ -165,9 +172,9 @@
  "Add an address": [],
  "Add an address first": [],
  "Add an option: type to search, e.g. lang, audio, atmos": [],
+ "Add audio track": [],
  "Add cookies": [],
  "Add options for a service": [],
- "Add the audio track to the existing file": [],
  "Add {0} series": [
   "n"
  ],
@@ -200,6 +207,7 @@
  ],
  "All": [],
  "All logins fine": [],
+ "All releases on GitHub ↗": [],
  "All services": [],
  "All services ({0})": [
   "S.series.length"
@@ -214,6 +222,8 @@
  "An API token is 30 letters and digits": [],
  "An address like slack://…": [],
  "An address starting with http:// or https://, without a user name": [],
+ "An app password is safer than your account's password.": [],
+ "An app password is safer than your account's password. Leave empty to keep the saved one.": [],
  "An e-mail address, like you@gmail.com": [],
  "An episode is downloaded and handed to Sonarr": [],
  "An episode is late, a replacement kept the old file, or a code must be entered": [],
@@ -226,7 +236,6 @@
   "run.card['sxxeyy']"
  ],
  "Any codec": [],
- "Any height": [],
  "Any of Apprise's 100+ services. Find its address format in Apprise's list (linked at the top of the page).": [],
  "Any other number of downloads": [],
  "Any other, in days": [],
@@ -249,6 +258,7 @@
   "svc"
  ],
  "Asked again before a key is made.": [],
+ "Asked again: the backups contain every key and password.": [],
  "Asked again: the file holds secrets.": [],
  "Asked again: the old key stops working.": [],
  "Asked for as": [],
@@ -262,6 +272,9 @@
  "Asks the service which episodes it has. Nothing is downloaded.": [],
  "At": [],
  "At a release time": [],
+ "At least 12 characters. It encrypts the backups, and you need it to restore one: keep it somewhere safe, outside this server.": [],
+ "At least 12 characters. It encrypts the backups, and you need it to restore one: keep it somewhere safe, outside this server. Leave empty to keep the saved one.": [],
+ "At least 12 characters: a few words are easy to remember.": [],
  "At least 8 characters.": [],
  "At most 100 episodes at a time": [],
  "Attempt": [],
@@ -274,11 +287,14 @@
   "label"
  ],
  "Audio languages that must exist. The title fails even with --best-available.": [],
+ "Audio upgrade": [],
  "Audio, in this order": [],
+ "Auto release times": [],
  "Automatic and release-time downloads only run from {0} to {1}.": [
   "from",
   "to"
  ],
+ "Automatic backups are off: set how often above, or send one now.": [],
  "Automatic downloads only run between these times, at night for example. Episodes you start by hand are not affected.": [],
  "Automatic downloads only run from {0} to {1}. Release-time downloads are not affected.": [
   "from",
@@ -292,7 +308,12 @@
  "Back to the downloads": [],
  "Back to the file": [],
  "Back up automatically every": [],
- "Back up the settings": [],
+ "Backblaze B2, Cloudflare R2, Wasabi, Scaleway, OVH, AWS or MinIO.": [],
+ "Backup sent: {0}": [
+  "r.sent.name"
+ ],
+ "Backups": [],
+ "Backups can be sent to WebDAV or S3 only": [],
  "Backups found in the data folder, newest first. The password above becomes yours.": [],
  "Before each download, Unshacklarr lists the episode's tracks on the service. It downloads the first step of the ladder that the service has, and nothing outside the ladder.": [],
  "Before {0}'s first episode: nothing to ask for": [
@@ -303,6 +324,7 @@
  "Blocked in this browser's settings for this site.": [],
  "Bot token": [],
  "Broadcast schedule": [],
+ "Bucket": [],
  "Build": [],
  "Bypass proxy for all downloads. Manifest, license, and auth still use proxy.": [],
  "Bypass title cache for this download.": [],
@@ -312,6 +334,7 @@
   "d['name']",
   "word"
  ],
+ "CHANGELOG.md": [],
  "CHROME": [],
  "Calendar": [],
  "Cancel": [],
@@ -372,7 +395,7 @@
   "label"
  ],
  "Checking…": [],
- "Choose the hours when automatic downloads run, at night for example.": [],
+ "Choose a passphrase: the backups are encrypted with it.": [],
  "Choose whether to download the episode again or to add the audio track to the existing file": [],
  "Chrome": [],
  "Clear": [],
@@ -486,6 +509,7 @@
  "Counted from the air date in Sonarr. Pick a day before when a streaming platform gets the episodes ahead of the TV channel.": [],
  "Country": [],
  "Country and time zone": [],
+ "Country, time zone": [],
  "Create a bot with @BotFather to get its token. Then send your bot a message, and get your chat ID from @userinfobot.": [],
  "Create a key": [],
  "Create separate output files per audio codec instead of merging all audio.": [],
@@ -510,7 +534,7 @@
  ],
  "Default: the one of Settings, Quality.": [],
  "Default: {0}": [
-  "set.download_only ? \"Download only\" : \"Sonarr imports it\""
+  "S.config.settings.spoiler_free ? \"Hidden\" : \"Shown\""
  ],
  "Delete": [],
  "Delete the key": [],
@@ -556,7 +580,6 @@
   "where"
  ],
  "Download options": [],
- "Download the episode again": [],
  "Download the {0}": [
   "r.items.length"
  ],
@@ -604,9 +627,10 @@
  "E-AC-3": [],
  "E-mail": [],
  "EXAMPLE": [],
+ "Each automatic backup is also sent, encrypted, to a WebDAV folder or an S3 bucket. If this server's disk fails, your settings are still safe.": [],
  "Each download's output shows much more: Unshackle's debug log, every call to Sonarr, and the job as unshackle serve reports it.": [],
  "Each episode stays in Activity, Waiting in downloads, until you import or delete it. It is never deleted automatically.": [],
- "Each series can have a second service, used when the main one doesn't have the episode yet.": [],
+ "Earlier releases": [],
  "Earlier versions": [],
  "Earlier versions…": [],
  "Edit": [],
@@ -616,17 +640,24 @@
  "Empty: keyxtractor.decryptlabs.com": [],
  "Empty: the URL above, if your browser can open it.": [],
  "Empty: unshackle from the PATH. Otherwise its full path, e.g. the .venv/bin/unshackle of a git clone.": [],
+ "Empty: us-east-1. Cloudflare R2: auto.": [],
  "Empty: uses": [],
+ "Endpoint URL": [],
  "Ends in /playready (pyplayready adds its own paths to it)": [],
  "English": [],
  "Enter": [],
  "Enter Sonarr's API key": [],
  "Enter Sonarr's URL": [],
  "Enter the API key to test this Sonarr": [],
+ "Enter the access key.": [],
  "Enter the address of unshackle serve": [],
  "Enter the address of unshackle serve, like http://unshackle:8786": [],
  "Enter the addresses the reverse proxy connects from. Without them, anyone could send the header": [],
+ "Enter the bucket.": [],
  "Enter the downloads folder as Sonarr sees it": [],
+ "Enter the endpoint URL, starting with https://": [],
+ "Enter the folder URL, starting with https://": [],
+ "Enter the secret key.": [],
  "Enter the setup code": [],
  "Enter the setup code first": [],
  "Enter the setup code first: it opens the backups": [],
@@ -637,6 +668,10 @@
  "Episode table of {0}: write S34E06=S29E05 or S34E06=S29E05.2": [
   "key"
  ],
+ "Episode titles": [],
+ "Episode titles are blurred in the Schedule, on series pages and in Catch up. Click or tap a title to show it. A series can change this in its Settings tab.": [],
+ "Episode titles hidden": [],
+ "Episode titles shown": [],
  "EpisodeRun | None": [],
  "Episodes": [],
  "Episodes in orange can be downloaded again to replace Sonarr's file": [],
@@ -708,7 +743,9 @@
  "Finish the setup": [],
  "Finishing": [],
  "First day": [],
+ "Fix": [],
  "Fix what does not answer in Settings: the restore is done.": [],
+ "Folder URL": [],
  "Folders": [],
  "For": [],
  "For Gmail, Outlook or iCloud: use an app password, created in your account's security settings (not your usual password).": [],
@@ -768,11 +805,13 @@
  "Header with the user's name": [],
  "Here, a remote CDM can be Widevine (pywidevine serve), PlayReady or Decrypt Labs. Add other kinds in unshackle.yaml": [],
  "Hidden": [],
+ "Hidden episode title. Press to show it.": [],
  "Hidden from the calendar only: their episodes are still downloaded.": [],
  "Hidden from the schedule": [],
  "Hidden from the schedule: show it again": [],
  "Hidden in schedule": [],
  "Hidden series": [],
+ "Hidden titles are blurred until you click or tap them. Default follows Settings, Interface, No spoilers.": [],
  "Hide": [],
  "Hide on disk": [],
  "Hide this series from the schedule": [],
@@ -784,6 +823,7 @@
  "History": [],
  "How Unshacklarr reaches Sonarr, to find the missing episodes and hand it the downloads.": [],
  "How it runs": [],
+ "How the page looks: its language, and episode titles hidden or not.": [],
  "If the service refuses the login, the download is tried again with these profiles, in order. Useful for a second account while the first one's cookies are renewed.": [],
  "If this service numbers episodes differently, set its numbering in config.yaml.": [],
  "Import": [],
@@ -795,6 +835,7 @@
  "Imported by hand": [],
  "Importing": [],
  "Importing…": [],
+ "Improved": [],
  "In Discord: the channel's settings, Integrations, Webhooks, New Webhook, Copy Webhook URL.": [],
  "In Gotify: Apps, Create Application, then copy its token.": [],
  "In Sonarr": [],
@@ -816,6 +857,8 @@
  ],
  "Include forced subtitle tracks.": [],
  "Install the ntfy app and subscribe to a topic. Pick a name that is hard to guess: anyone who knows it can read your messages.": [],
+ "Installed": [],
+ "Interface": [],
  "Interrupted": [],
  "Interrupted: Unshacklarr stopped during it": [],
  "Invalid option {0} in {1}": [
@@ -894,12 +937,11 @@
  ],
  "Ladders of resolutions and codecs": [],
  "Language": [],
- "Language and region": [],
  "Language wanted for Audio, overrides -l/--lang for audio tracks. Prefix a value with '-' to exclude it, e.g. 'all,-es'.": [],
  "Language wanted for Subtitles. Prefix a value with '-' to exclude it, e.g. 'all,-es'.": [],
  "Language wanted for Video. You would use this if the video language doesn't match the audio. Prefix a value with '-' to exclude it, e.g. 'all,-es'.": [],
  "Language(s) wanted for Video and Audio (comma-separated). Use 'orig' to select the original language, e.g. 'orig,en' for both original and English. Prefix a value with '-' to exclude it, e.g. 'all,-es'.": [],
- "Language, country, time zone": [],
+ "Language, no spoilers": [],
  "Language: {0}": [
   "LANGS[LANG]"
  ],
@@ -910,14 +952,23 @@
   "ago(updated)"
  ],
  "Last test": [],
+ "Last upload failed ({0}): {1}": [
+  "when",
+  "last.error"
+ ],
+ "Last upload: {0}": [
+  "when"
+ ],
  "Late episodes": [],
  "Late episodes, in hours": [],
  "Late · not on {0} yet": [
   "d.service"
  ],
- "Learn release times": [],
+ "Latest": [],
  "Leave default unless you use Unshackle's --profile": [],
  "Leave empty for no limit.": [],
+ "Leave empty if the folder needs no login.": [],
+ "Leave empty to keep the saved one.": [],
  "Leave it without a service": [],
  "Leave unshackle.yaml without saving your changes?": [],
  "Left": [],
@@ -973,6 +1024,10 @@
  "Missing": [],
  "Missing X-Unshackle header": [],
  "Missing episodes": [],
+ "Missing, on {0} ({1})": [
+  "svcName(S.config.series[current.tvdbId]?.service)",
+  "onService"
+ ],
  "Missing: {0}. Install them, then check again.": [
   "missing.map((t) => t.name).join(\", \")"
  ],
@@ -1020,7 +1075,6 @@
  ],
  "New keys, from its group key": [],
  "New ladder": [],
- "New options you haven't seen yet. Each one keeps its \"New\" badge until you have seen it.": [],
  "New password": [],
  "New password:": [],
  "New server": [],
@@ -1031,6 +1085,7 @@
   "time(next)"
  ],
  "Next sync at …": [],
+ "Nextcloud, Synology, QNAP, kDrive, pCloud… The folder must already exist.": [],
  "No CDM": [],
  "No CDM folder": [],
  "No CDM for {0}": [
@@ -1068,6 +1123,7 @@
  "No license": [],
  "No limit: downloads run at any time.": [],
  "No option matches.": [],
+ "No place to send backups to": [],
  "No remote CDM called {0}": [
   "name"
  ],
@@ -1076,6 +1132,7 @@
  "No series match these filters.": [],
  "No series uses it": [],
  "No service has options of its own yet.": [],
+ "No spoilers": [],
  "No stream in the requested quality. The history in Activity has Unshackle's full output.": [],
  "No streaming in {0}": [
   "net.country"
@@ -1200,6 +1257,7 @@
   "where",
   "getattr(e, 'problem', None) or e"
  ],
+ "Note": [],
  "Nothing better found yet.": [],
  "Nothing better on the services: every file is already on the best step they have.": [],
  "Nothing found on TMDB": [],
@@ -1220,6 +1278,7 @@
  "Nothing missing: every aired episode has its file.": [],
  "Nothing picked": [],
  "Nothing sent yet.": [],
+ "Nothing sent yet. The next automatic backup will be sent here.": [],
  "Nothing set yet": [],
  "Nothing that day.": [],
  "Nothing to do": [],
@@ -1272,10 +1331,6 @@
  "On {0} (--remote). {1}": [
   "server['name']",
   "spec['help']"
- ],
- "On {0} ({1})": [
-  "svcName(S.config.series[current.tvdbId]?.service)",
-  "onService"
  ],
  "On {0}, a channel in {1}. TMDB lists no streaming service for it": [
   "net.name",
@@ -1347,6 +1402,8 @@
  "Part {0} ·": [
   "titles.index(key.split('|')[0]) + 1"
  ],
+ "Passphrase": [],
+ "Passphrase of the backup": [],
  "Password": [],
  "Password must be at least 8 characters": [],
  "Password, sessions, API key": [],
@@ -1407,11 +1464,16 @@
  "Reading the notifications…": [],
  "Rebuilding an install?": [],
  "Recently sent": [],
+ "Redownload episode": [],
  "Refresh": [],
  "Refresh what's on {0}": [
   "svc"
  ],
+ "Region": [],
  "Regular sync": [],
+ "Release notes for Unshacklarr {0}.": [
+  "installed"
+ ],
  "Release time": [],
  "Release time set to {0}: save to keep it": [
   "sg.time"
@@ -1428,6 +1490,8 @@
   "r.name"
  ],
  "Remote CDMs": [],
+ "Remote backup": [],
+ "Remote backup failed": [],
  "Remove": [],
  "Remove it when parts were joined": [],
  "Remove this step": [],
@@ -1483,16 +1547,20 @@
  "Run sync now": [],
  "Running": [],
  "Runs on": [],
+ "S3 endpoint": [],
+ "S3-compatible": [],
  "SDR": [],
  "SELECT": [],
  "SL": [],
  "Same path": [],
  "Sat": [],
  "Save": [],
+ "Save and test": [],
  "Save changes": [],
  "Save or discard your changes first": [],
  "Save your changes first: the download reads the saved settings.": [],
  "Save your changes first: the sync reads the saved settings.": [],
+ "Saved": [],
  "Saved (leave empty to keep it)": [],
  "Saved backups": [],
  "Saved under remote_cdm in unshackle.yaml. A service then uses it by its name.": [],
@@ -1526,10 +1594,13 @@
  "Seasons": [],
  "Seasons on the service": [],
  "Secret (API key)": [],
+ "Secret key": [],
  "Sections of this series' settings": [],
+ "Security": [],
  "Security level": [],
  "Security patch": [],
  "See in Activity": [],
+ "See on GitHub ↗": [],
  "See the history in Activity for why.": [],
  "Select": [],
  "Select all {0}": [
@@ -1543,6 +1614,8 @@
  "Send": [],
  "Send a JSON object": [],
  "Send a test": [],
+ "Send backups to": [],
+ "Sending backups to S3 needs a bucket, an access key and a secret key": [],
  "Sending to 1 address": [],
  "Sending to {0} addresses": [
   "used.length"
@@ -1568,6 +1641,7 @@
  "Session only": [],
  "Set Output Subtitle Format, only converting if necessary. Use 'original' to keep source format.": [],
  "Set Unshackle up first": [],
+ "Set a passphrase: a backup never leaves the server unencrypted": [],
  "Set both a start and an end time for the download window, or neither": [],
  "Set both a start and an end time, or neither.": [],
  "Set both the service and the series URL, or neither.": [],
@@ -1597,6 +1671,7 @@
  "Show me": [],
  "Show more": [],
  "Show name in file names": [],
+ "Show the title": [],
  "Show {0} in the schedule": [
   "name"
  ],
@@ -1604,6 +1679,7 @@
   "folded",
   "folded === 1 ? \"\" : \"s\""
  ],
+ "Shown": [],
  "Shown in Unshacklarr's log when it starts (docker logs unshacklarr), or the SETUP_TOKEN you set.": [],
  "Sign in through a reverse proxy": [],
  "Signal": [],
@@ -1806,11 +1882,14 @@
  "The .wvd and .prd files in the CDM folder. Click one for its details; a test asks the DRM's test server for a license.": [],
  "The API key of unshackle serve is still the example one: put a long random one in UNSHACKLE_API_KEY and in serve: api_secret (openssl rand -hex 32)": [],
  "The Activity tab keeps a card for each download, with its full output.": [],
+ "The S3 bucket does not exist": [],
+ "The S3 service refused the access key or secret key, or the bucket is not theirs": [],
  "The Schedule shows its streaming services.": [],
  "The Series": [],
  "The URL of {0} cannot start with '-'": [
   "key"
  ],
+ "The WebDAV server refused the user name or password": [],
  "The address Unshacklarr uses to reach Sonarr, e.g. http://sonarr:8989 on a shared Docker network.": [],
  "The address has a space in it": [],
  "The address must start with http:// or https://": [],
@@ -1828,6 +1907,7 @@
   "where",
   "code"
  ],
+ "The backup is encrypted: type the passphrase it was sent with.": [],
  "The broadcast schedule of {0}: {1}": [
   "key",
   "what"
@@ -1872,6 +1952,7 @@
  ],
  "The first language in this list that the episode has full subtitles in is downloaded. Not used when empty, or when --s-lang is set.": [],
  "The first language in this list that the episode has is downloaded (en also matches en-GB). Not used when empty, or when the series or its service sets --a-lang.": [],
+ "The folder does not exist on the WebDAV server: create it first": [],
  "The folder with unshackle.yaml and the WVD and PRD files, for Settings, CDM. Empty: Unshacklarr asks Unshackle, which works when both run on this computer.": [],
  "The header your proxy sets: Remote-User for Authelia, X-authentik-username for Authentik. Empty: off.": [],
  "The history in Activity has Unshackle's full output.": [],
@@ -1910,6 +1991,7 @@
  "The parts that came are in {0}.": [
   "where"
  ],
+ "The passphrase must be at least 12 characters: a few words are easy to remember": [],
  "The password that opens Unshacklarr, on every device.": [],
  "The path Sonarr uses for your library.": [],
  "The paths where Unshacklarr itself finds the downloads, the cookies and unshackle.yaml.": [],
@@ -2001,6 +2083,7 @@
  "This Unshackle cannot describe or test its devices: it needs the /api/cdm routes (a newer Unshackle)": [],
  "This Unshackle has no unshackle.yaml yet": [],
  "This address is already there.": [],
+ "This backup is encrypted: type its passphrase": [],
  "This browser cannot receive them.": [],
  "This browser is on": [],
  "This device": [],
@@ -2081,6 +2164,8 @@
  "Type the series' name first": [],
  "Type your password again: it is not kept when the page reloads": [],
  "Type your password first": [],
+ "Type your password first.": [],
+ "UNSHACKLARR ENCRYPTED BACKUP 1": [],
  "URL or ID of the series": [],
  "UTC": [],
  "Unchanged": [],
@@ -2110,9 +2195,9 @@
  "Unless its service or the series itself says otherwise.": [],
  "Unreachable": [],
  "Unreadable": [],
+ "Unreleased": [],
  "Unsaved changes": [],
  "Unshacklarr": [],
- "Unshacklarr can set a series' release time by itself, once 3 episodes came out at the same time.": [],
  "Unshacklarr can't be reached: {0}": [
   "e.message"
  ],
@@ -2164,6 +2249,7 @@
  "Upgrade the audio to": [],
  "Upgrades": [],
  "Use a remote unshackle server from remote_services in unshackle.yaml for the service's own calls and its licences; the files still download here. Set it for one service in Per service.": [],
+ "Use an https:// address: over http://, the WebDAV password would cross the network unencrypted": [],
  "Use exact language matching (no variants). With this flag, -l es-419 matches ONLY es-419, not es-ES or other variants.": [],
  "Use it": [],
  "Use its own schedule": [],
@@ -2186,6 +2272,7 @@
  "Used when the main service doesn't have the episode yet, or not in an accepted language.": [],
  "Useful to spot an episode the service will never have, or a numbering that does not match.": [],
  "User key": [],
+ "User name": [],
  "VC-1": [],
  "VC1": [],
  "VMP": [],
@@ -2218,6 +2305,8 @@
  "Warn after": [],
  "Warnings": [],
  "Weak": [],
+ "WebDAV": [],
+ "WebDAV folder": [],
  "Webhook URL": [],
  "Wed": [],
  "Week of {0}: {1} downloaded, {2} kept, {3} failed": [
@@ -2243,6 +2332,11 @@
   "appOf(t.url)"
  ],
  "What's new": [],
+ "What's new in each version": [],
+ "What's new: 1 new option": [],
+ "What's new: {0} new options": [
+  "count"
+ ],
  "What's on {0}?": [
   "svc"
  ],
@@ -2250,10 +2344,8 @@
  "When": [],
  "When 3 episodes of a series come out at the same time, that time becomes its release time. Only for series without one. You get a notification and can change it on the series page.": [],
  "When Sonarr keeps its own file or an import fails, the download stays in the downloads folder. You find it in Activity, Waiting in downloads.": [],
- "When the preferred audio language becomes available": [],
  "When the service numbers or names episodes differently from Sonarr.": [],
  "When the service publishes new episodes, so Unshackle tries at the right time.": [],
- "When your preferred audio language becomes available, download only that audio track instead of the whole episode.": [],
  "Where": [],
  "Where Unshacklarr reaches it.": [],
  "Where episodes land before Sonarr imports them, as Unshacklarr sees it.": [],
@@ -2261,6 +2353,7 @@
  "Where the episodes land before Sonarr imports them.": [],
  "Where to send": [],
  "Where you watch": [],
+ "Where you watch, and the time zone that release times and syncs follow.": [],
  "Where {0} downloads.": [
   "tag"
  ],
@@ -2273,6 +2366,7 @@
  "Widevine and PlayReady devices": [],
  "Widevine, pywidevine serve": [],
  "Works": [],
+ "Wrong passphrase, or the file is damaged": [],
  "Wrong password": [],
  "Wrong setup code: Unshacklarr prints it when it starts (docker logs unshacklarr)": [],
  "Wrong setup code: it is in Unshacklarr's log": [],
@@ -2282,7 +2376,6 @@
  "Your airing series that Unshackle does not download yet, with the services TMDB finds for them. Pick a service for the ones you want: their new episodes then download on their own.": [],
  "Your answer": [],
  "Your country picks the streaming services the Schedule shows; the time zone, when episodes are tried.": [],
- "Your language, where you watch, and the time zone that release times and syncs follow.": [],
  "Your library": [],
  "Your password": [],
  "Your password is still asked before the most sensitive changes.": [],
@@ -2405,6 +2498,7 @@
  "key saved": [],
  "license granted": [],
  "limit must be from 1 to 500": [],
+ "max-age=31536000, immutable": [],
  "max-age=86400": [],
  "message (“Still unavailable”) per episode.": [],
  "min": [],
@@ -2719,6 +2813,9 @@
  "{0} ch": [
   "n"
  ],
+ "{0} changes": [
+  "r.changes.length"
+ ],
  "{0} contains a symbolic link: nothing was joined or renamed. Check the folder": [
   "out.name"
  ],
@@ -3016,6 +3113,9 @@
  ],
  "{0} new": [
   "fresh"
+ ],
+ "{0} new options in this section": [
+  "here.length"
  ],
  "{0} not out yet": [
   "missing"
@@ -3342,6 +3442,9 @@
  "{0}: the tracks are in": [
   "afterTracks(c)"
  ],
+ "{0}: type the passphrase it was sent with": [
+  "e"
+ ],
  "{0}: {1} audio added, the file imported again": [
   "label",
   "want"
@@ -3384,7 +3487,7 @@
   "e"
  ],
  "{0}p and up": [
-  "st.min"
+  "step['min']"
  ],
  "{0}p here, {1}p asked of {2}": [
   "e.file.height",

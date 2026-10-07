@@ -74,7 +74,7 @@ function renderBroadcast() {
   if (!plan) return;
   const eps = Object.values(epSeasons || {}).flat().filter((e) => e.seasonNumber > 0).sort((a, b) => a.seasonNumber - b.seasonNumber || a.episodeNumber - b.episodeNumber);
   $("#d-bc-from").replaceChildren(...eps.map((e) => { const k = `S${pad2(e.seasonNumber)}E${pad2(e.episodeNumber)}`;
-    return el("option", { value: k, textContent: `${k}${e.title && e.title !== "TBA" ? ` · ${e.title}` : ""}` }); }));
+    return el("option", { value: k, textContent: `${k}${e.title && e.title !== "TBA" && !titleHidden(current.tvdbId, k, e.title) ? ` · ${e.title}` : ""}` }); }));
   if (!eps.length) $("#d-bc-from").append(el("option", { value: plan.from, textContent: plan.from }));
   $("#d-bc-from").value = plan.from;
   $("#d-bc-start").value = plan.start;
@@ -179,6 +179,7 @@ $("#d-seasons").oninput = (e) => {
 $("#close").onclick = () => closeDrawer();  // not closeDrawer itself: it would get the click event as fromRoute
 function showDrawerTab(name, fromRoute = false) {
   if (!["episodes", "settings"].includes(name)) name = "episodes";
+  if (drawerTab === "settings" && name !== "settings") leaveNews((n) => n.series);  // a series' settings left
   drawerTab = name;
   if (!fromRoute) navigate(false);
   document.querySelectorAll(".d-tabs button").forEach((b) => b.setAttribute("aria-selected", b.dataset.dtab === name));
@@ -283,7 +284,7 @@ const svcName = (tag) => S.serviceNames?.[tag] || tag;  // "RMC+" for RMCP
 let epBusy = new Map(), epBusyTimer = null;
 async function refreshEpBusy(s) {
   let cards;
-  try { cards = await api("/api/runs"); } catch { cards = null; }
+  try { cards = await api("/api/runs?live=1"); } catch { cards = null; }
   if (current !== s) return;
   if (cards) {
     const was = epBusy;
@@ -293,7 +294,7 @@ async function refreshEpBusy(s) {
     else if ($("#ep-list")) renderSeason();
     updateEpBar();
   }
-  // ponytail: polls /api/runs while the series is open; Activity's live feed if this gets heavy
+  // ponytail: polls the live cards while the series is open; Activity's live feed if this gets heavy
   clearTimeout(epBusyTimer);  // after the await: one loop, however many calls overlapped
   epBusyTimer = setTimeout(() => refreshEpBusy(s), epBusy.size ? 3000 : 20000);
 }
@@ -405,9 +406,9 @@ function fileLine(f, odd) {  // the same, in one line (phones)
   return el("small", {}, resBadge(f, odd.height), ...parts.flatMap((p, i) => i ? [" · ", p] : [p]));
 }
 function fileTooltip(e) {
-  const f = e.file;
-  if (!f) return e.title || "";
-  return [e.title, `${f.quality}${f.releaseGroup ? ` · ${f.releaseGroup}` : ""}`, `${f.resolution}${f.runTime ? ` · ${f.runTime}` : ""}`].filter(Boolean).join("\n");
+  const f = e.file, title = titleHidden(current.tvdbId, `S${pad2(e.seasonNumber)}E${pad2(e.episodeNumber)}`, e.title) ? "" : e.title;
+  if (!f) return title || "";
+  return [title, `${f.quality}${f.releaseGroup ? ` · ${f.releaseGroup}` : ""}`, `${f.resolution}${f.runTime ? ` · ${f.runTime}` : ""}`].filter(Boolean).join("\n");
 }
 const STATE_ICONS = {
   disk: '<circle cx="12" cy="12" r="10" fill="currentColor"/><path d="m7.5 12.5 3 3 6-6.5" fill="none" stroke="#10151d" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
@@ -526,7 +527,7 @@ function onBadge(e) {
   const sxxeyy = `S${String(e.seasonNumber).padStart(2, "0")}E${String(e.episodeNumber).padStart(2, "0")}`;
   const other = found.service !== sxxeyy;  // under another number there: Download asks for it as found
   return hoverTip(el("em", { className: "ep-on" + (other ? " other" : ""), textContent: other ? `on ${svc} as ${found.service}` : `on ${svc}` }), () => [
-    el("b", { textContent: found.name || `On ${svc}` }),
+    el("b", { textContent: (!titleHidden(current.tvdbId, sxxeyy, found.name) && found.name) || `On ${svc}` }),
     el("small", {}, `${svc} lists it as `, el("code", { textContent: found.service })),
     ...(found.match === "title" ? [el("small", { className: "diff", textContent: `Found by its title, under another number: Download asks the service for ${found.service}` })]
       : found.match === "absolute" ? [el("small", { className: "diff", textContent: `The service numbers episodes from the series' start, like Sonarr's absolute number: Download asks it for ${found.service}` })]
@@ -610,7 +611,7 @@ function renderSeason() {
     return el("li", {}, el("label", { className: "ep" },
       box,
       el("span", { className: "num", textContent: `E${String(e.episodeNumber).padStart(2, "0")}` }),
-      el("span", { className: "t", title: fileTooltip(e) }, el("span", { className: "tt", textContent: e.title || "TBA" }),  // the title gives way, its badge doesn't
+      el("span", { className: "t", title: fileTooltip(e) }, e.title ? episodeTitle(current.tvdbId, `S${pad2(e.seasonNumber)}E${pad2(e.episodeNumber)}`, e.title, "tt") : el("span", { className: "tt", textContent: "TBA" }),  // the title gives way, its badge doesn't
         ...(run ? [el("em", { className: "ep-busy", textContent: isQueued(run) ? "Queued" : afterTracks(run) || `Downloading ${Math.round(Number(run.live?.progress) || 0)}%` })] : []),
         ...(!run && epAvail ? serviceBadge(e) : []),
         ...(e.file ? [fileLine(e.file, odd)] : [])),
@@ -625,7 +626,7 @@ function renderSeason() {
   $("#ep-odd").textContent = `Outliers (${outliers})`;
   if ($("#ep-avail")) {
     const onService = list.filter((e) => state(e) === "miss" && epAvail?.[e.id]).length;
-    $("#ep-avail").textContent = `On ${svcName(S.config.series[current.tvdbId]?.service)} (${onService})`;
+    $("#ep-avail").textContent = `Missing, on ${svcName(S.config.series[current.tvdbId]?.service)} (${onService})`;
     $("#ep-avail").disabled = !onService;
   }
   $("#ep-title").replaceChildren(el("span", { textContent: epSeason === 0 ? "Specials" : `Season ${epSeason}` }),

@@ -1497,3 +1497,64 @@ def test_news_seen_is_kept_for_the_account_and_a_new_install_starts_with_none(tm
     assert b["seen"] == ["download-window", "fallback-service"] and b["list_read"] == web.__version__
     web.news_installed()
     assert web.read_json(web.NEWS_FILE, {})["installed"] == web.__version__ and web.read_json(web.NEWS_FILE, {})["seen"]
+
+
+def test_the_release_notes_come_from_the_changelog(tmp_path, monkeypatch):
+    from unshacklarr import web
+    log = tmp_path / "CHANGELOG.md"
+    log.write_text("# Changelog\n\nIntro.\n\n## [1.1.0] - 2026-10-07\n\nA note of its own,\non two lines.\n\n### Added\n\n"
+                   "**Group**\n\n- **New thing.** It does\n  this.\n\n### Fixed\n\n- **Bug.** Gone.\n\n## [1.0.0] - 2026-09-30\n\n"
+                   "### Security\n\n- Safe.\n\n[1.1.0]: https://example.com\n")
+    monkeypatch.setattr(web, "CHANGELOG_FILES", (log,))
+    assert web.changelog() == [
+        {"version": "1.1.0", "date": "2026-10-07", "changes": [{"kind": "note", "text": "A note of its own, on two lines."},
+                                                                {"kind": "new", "text": "**New thing.** It does this."},
+                                                                {"kind": "fix", "text": "**Bug.** Gone."}]},
+        {"version": "1.0.0", "date": "2026-09-30", "changes": [{"kind": "security", "text": "Safe."}]}]
+
+
+def test_no_spoilers_is_kept_only_when_asked():
+    from unshacklarr import web
+    saved = {**web.sonarr_sync.SETTINGS_DEFAULTS}
+    assert web.check_settings({"spoiler_free": True}, saved)["spoiler_free"] is True
+    assert web.check_settings({"spoiler_free": "yes"}, saved)["spoiler_free"] is False  # only a real true turns it on
+
+
+def test_an_encrypted_backup_is_restored_with_its_passphrase():
+    import pytest
+    from unshacklarr import offsite, web
+    sealed = offsite.encrypt("series: {}\nsettings: {}\n", "pass phrase")
+    assert web.backup_data(sealed, "pass phrase") == {"series": {}, "settings": {}}
+    with pytest.raises(web.web.HTTPBadRequest):
+        web.backup_data(sealed, "wrong")
+    saved = {**web.sonarr_sync.SETTINGS_DEFAULTS}
+    with pytest.raises(web.web.HTTPBadRequest):  # never sent away unencrypted
+        web.check_offsite({"backup_remote": "webdav", "backup_remote_url": "https://dav.example/backups"}, saved)
+    ok = web.check_offsite({"backup_remote": "webdav", "backup_remote_url": "https://dav.example/backups/", "backup_passphrase": "a long phrase"}, saved)
+    assert ok["backup_remote_url"] == "https://dav.example/backups" and ok["backup_passphrase"] == "a long phrase"
+    with pytest.raises(web.web.HTTPBadRequest):  # a short passphrase is refused
+        web.check_offsite({"backup_remote": "s3", "backup_remote_url": "https://s3.example", "backup_passphrase": "short"}, saved)
+    with pytest.raises(web.web.HTTPBadRequest):  # the saved secret never follows a new address
+        web.check_offsite({"backup_remote": "webdav", "backup_remote_url": "https://evil.example"}, {**saved, **ok, "backup_remote_secret": "s"})
+    # the settings' own Save never changes where backups go: that takes the password (backup_offsite)
+    kept = web.check_settings({"backup_remote": "webdav", "backup_remote_url": "https://evil.example", "backup_passphrase": "x"}, {**saved, **ok})
+    assert kept["backup_remote_url"] == "https://dav.example/backups" and kept["backup_passphrase"] == "a long phrase"
+
+
+def test_the_page_files_come_compressed_and_kept_for_good(tmp_path, monkeypatch):
+    import asyncio
+    from aiohttp.test_utils import TestClient, TestServer
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+
+    async def go():
+        async with TestClient(TestServer(web.app)) as client:
+            versioned = await client.get("/app.css?v=1", headers={"Accept-Encoding": "gzip"}, auto_decompress=False)
+            plain = await client.get("/app.css")
+            return versioned.headers.get("Content-Encoding"), versioned.headers["Cache-Control"], plain.headers["Cache-Control"], len(await plain.text())
+
+    encoding, versioned, plain, size = asyncio.run(go())
+    assert encoding == "gzip" and "immutable" in versioned and plain == "no-cache" and size > 10000

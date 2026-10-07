@@ -15,6 +15,7 @@ WORKDIR /app
 COPY pyproject.toml uv.lock README.md LICENSE ./
 RUN uv sync --locked --no-dev --no-install-project
 COPY unshacklarr ./unshacklarr
+COPY CHANGELOG.md ./
 RUN uv sync --locked --no-dev --no-editable
 
 ENV UNSHACKLARR_DATA=/data DOWNLOADS=/downloads HOST=0.0.0.0 PORT=8788 PYTHONUNBUFFERED=1

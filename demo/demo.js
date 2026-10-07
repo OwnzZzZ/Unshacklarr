@@ -162,6 +162,14 @@
       { name: "unshacklarr-2026-10-05-0300.yaml", at: new Date(Date.now() - 2 * 864e5).toISOString(), size: 7100 }];
     if (p === "/api/state") return { ...copy(R["/api/state"]), config: copy(config()), backups: { count: 2, folder: "/data/backups", latest: demoBackups[0].at, saved: demoBackups } };
     if (p === "/api/config") { mem.config = body; keep(); return { saved: true }; }
+    if (p === "/api/backup/offsite") {  // nothing leaves the demo: the place is kept, the backup said to be sent
+      const c = config(), set = { ...body.settings };
+      for (const k of ["backup_remote_secret", "backup_passphrase"]) { set[`${k}_set`] = !!(set[k] || c.settings[`${k}_set`]) && !!set.backup_remote; delete set[k]; }
+      c.settings = { ...c.settings, ...set }; mem.config = c; keep();
+      const now = new Date(), pad = (n) => String(n).padStart(2, "0");
+      const sent = set.backup_remote ? { ok: true, name: `unshacklarr-${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}.yaml.enc`, at: now.toISOString() } : {};
+      return { sent, settings: c.settings };
+    }
     if (p === "/api/hidden") {
       const c = config(), hidden = new Set(c.hidden_series || []);
       body.hidden ? hidden.add(body.tvdbId) : hidden.delete(body.tvdbId);

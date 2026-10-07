@@ -28,3 +28,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["unshacklarr"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"CHANGELOG.md" = "unshacklarr/CHANGELOG.md"  # the release notes, in What's new

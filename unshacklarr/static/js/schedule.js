@@ -78,7 +78,7 @@ $("#hidden-open").onclick = () => {
   const rows = S.config.hidden_series.map((tvdbId) => {
     const series = S.series.find((x) => x.tvdbId === tvdbId), name = series?.title || `TVDB ${tvdbId}`;
     const input = el("input", { type: "checkbox", checked: false, ariaLabel: `Show ${name} in the schedule` });
-    const li = el("li", { className: "off" }, el("img", { alt: "", src: series?.poster || "" }), el("span", { className: "n", textContent: name }),
+    const li = el("li", { className: "off" }, el("img", { alt: "", loading: "lazy", src: series?.poster || "" }), el("span", { className: "n", textContent: name }),
       el("label", { className: "switch" }, "In schedule", input, el("i")));
     input.onchange = async () => {
       li.classList.toggle("off", !input.checked);
@@ -273,7 +273,7 @@ function schedRow(d, when) {
   const thumb = el("img", { className: "thumb", alt: "", loading: "lazy", src: series?.poster || "" });
   const hideCtl = d.fromLate ? "" : hideButton(d);
   const what = el("span", { className: "what" }, el("b", { textContent: `${d.series} ${d.sxxeyy}` }),
-    el("small", { textContent: d.title && d.title !== "TBA" ? d.title : "" }), d.managed ? statusPill(d, "m-only") : "");
+    el("small", {}, episodeTitle(d.tvdbId, d.sxxeyy, d.title && d.title !== "TBA" ? d.title : "")), d.managed ? statusPill(d, "m-only") : "");
   if (!d.managed) {  // not downloaded by Unshackle: one tap to its settings, to add it
     return el("div", { className: "sched-row other" }, el("div", { className: "row-main" },
       thumb, el("span", { className: "when" }, when, networkBadge(d, "in-when")), what,

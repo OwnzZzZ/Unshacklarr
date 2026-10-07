@@ -45,11 +45,23 @@ function langCorner() {
 }
 let T = null, TP = [];  // exact texts; patterns, the most specific first
 const translated = new Set();  // texts already in the language: not taken for English again
+const trSeen = new Map();  // key -> its translation, or null: a series' title is tried against the patterns once
 function tr(text, depth = 0) {
   const key = text.replace(/\s+/g, " ").trim();
   if (!T || !key) return text;
   let out = T[key];
-  if (out === undefined && key.includes(" · ")) {  // pieces joined by " · ": each its own text
+  if (out === undefined && depth === 0 && trSeen.has(key)) out = trSeen.get(key) ?? undefined;
+  else if (out === undefined && depth === 0) {
+    out = trFind(key, depth);
+    if (trSeen.size > 5000) trSeen.clear();  // "3 min ago" changes all day: bounded
+    trSeen.set(key, out ?? null);
+  }
+  else if (out === undefined) out = trFind(key, depth);
+  return out === undefined ? text : text.match(/^\s*/)[0] + out + text.match(/\s*$/)[0];
+}
+function trFind(key, depth) {
+  let out;
+  if (key.includes(" · ")) {  // pieces joined by " · ": each its own text
     const parts = key.split(" · "), done = parts.map((x) => tr(x, depth + 1));
     if (done.some((x, i) => x !== parts[i])) out = done.join(" · ");
   }
@@ -63,7 +75,7 @@ function tr(text, depth = 0) {
       if (m) { out = p.to.replace(/\{(\d+)\}/g, (_, i) => tr(m[+i + 1] ?? "", depth + 1)); break; }
     }
   }
-  return out === undefined ? text : text.match(/^\s*/)[0] + out + text.match(/\s*$/)[0];
+  return out;
 }
 const I18N_SKIP = ".term, .cm-editor, pre, code, textarea, script, style, [translate=no]", I18N_ATTRS = ["placeholder", "title", "aria-label", "data-tip"];
 function trText(node) {
@@ -156,6 +168,25 @@ function dirty() {  // a change put back as it was hides the bar again
   $("#savebar").hidden = !unsaved;
   $("#d-save").hidden = !unsaved;
   if (current) renderInherited(S.config.series[current.tvdbId]);  // a series option may now hide an inherited one
+}
+
+/* Spoiler-free: an episode's title blurred until clicked, for a series that asks (else the settings). What was shown
+   is remembered in this browser. */
+let revealed;
+try { revealed = new Set(JSON.parse(localStorage.getItem("unshacklarr.revealed") || "[]")); } catch { revealed = new Set(); }
+const spoilerFree = (tvdbId) => S.config?.series?.[tvdbId]?.spoiler_free ?? S.config?.settings?.spoiler_free === true;
+const titleHidden = (tvdbId, sxxeyy, title) => !!title && !/^(TBA|Episode \d+)$/i.test(title) && spoilerFree(tvdbId) && !revealed.has(`${tvdbId}-${sxxeyy}`);
+function episodeTitle(tvdbId, sxxeyy, title, className = "") {
+  if (!titleHidden(tvdbId, sxxeyy, title)) return el("span", { className, textContent: title || "" });
+  const show = (ev) => {
+    ev.preventDefault(); ev.stopPropagation();
+    revealed.add(`${tvdbId}-${sxxeyy}`);
+    try { localStorage.setItem("unshacklarr.revealed", JSON.stringify([...revealed].slice(-2000))); } catch { /* shown for now */ }
+    ev.currentTarget.replaceWith(el("span", { className, textContent: title }));
+  };
+  return el("span", { className: `${className} spoiler`.trim(), textContent: title, role: "button", tabIndex: 0,
+    ariaLabel: "Hidden episode title. Press to show it.", title: "Show the title", onclick: show,
+    onkeydown: (ev) => { if (ev.key === "Enter" || ev.key === " ") show(ev); } });
 }
 
 function el(tag, { dataset, ...props } = {}, ...children) {
@@ -445,6 +476,7 @@ async function closeDrawer(fromRoute = false) {
     else return keepDrawer(fromRoute);
   }
   if (!fromRoute && drawerPushed) { history.back(); return true; }  // popstate closes it, and back stays in step
+  if (drawerTab === "settings") leaveNews((n) => n.series);  // its settings were open: their news are seen
   $("#drawer").classList.remove("open");
   $("#drawer").setAttribute("aria-hidden", "true");
   $("#backdrop").classList.remove("open");

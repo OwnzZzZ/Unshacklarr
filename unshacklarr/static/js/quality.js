@@ -17,10 +17,6 @@ const fitsStep = (st, t) => (!st.codec || t.codec === st.codec) && (!st.range ||
   && eqHeight(t) >= (st.min || 0) && (!st.max || eqHeight(t) <= st.max);
 const stepOf = (lad, t) => { const i = lad.steps.findIndex((st) => fitsStep(st, t)); return i < 0 ? lad.steps.length : i; };
 const trackText = (t) => `${eqHeight(t) || "?"}p ${nameOf(CODECS, t.codec) || "?"} ${nameOf(RANGES, t.range) || "?"}`;
-function stepText(st) {
-  const height = st.max && st.max !== st.min ? `${st.min || 0}–${st.max}p` : st.max ? `${st.max}p` : st.min ? `${st.min}p and up` : "Any height";
-  return [height, st.codec ? nameOf(CODECS, st.codec) : "", st.range ? nameOf(RANGES, st.range) : ""].filter(Boolean).join(" ");
-}
 
 /* Every place a ladder (or a server) is picked by name: a rename follows, a removal falls back to the level before. */
 function renameRefs(key, from, to) {
@@ -278,6 +274,17 @@ function fillQualityImport(conf) {
   $("#d-import").options[0].textContent = `Default: ${set.download_only ? "Download only" : "Sonarr imports it"}`;
   $("#d-import").value = conf.download_only === true ? "only" : conf.download_only === false ? "import" : "";
   importChips();
+  spoilerChips(conf);
+}
+/* Episode titles: Default (the settings' No spoilers), hidden or shown, for this series. */
+function spoilerChips(conf) {
+  const opts = [["", `Default: ${S.config.settings.spoiler_free ? "Hidden" : "Shown"}`], [true, "Hidden"], [false, "Shown"]];
+  $("#d-spoiler-seg").replaceChildren(...opts.map(([v, label]) => el("button", { type: "button", role: "radio", textContent: label,
+    ariaChecked: String((conf.spoiler_free ?? "") === v), onclick: () => {
+      if (v === "") delete conf.spoiler_free; else conf.spoiler_free = v;
+      spoilerChips(conf);
+      dirty();
+    } })));
 }
 /* After the download: its choices as chips, the select behind them keeping the value. */
 function importChips() {
@@ -322,6 +329,7 @@ function renderLearnWindow() {
       : `Automatic downloads only run from ${from} to ${to}. Release-time downloads are not affected.`)
       : "No limit: downloads run at any time.";
 }
+$("#rg-spoiler").onchange = (e) => { S.config.settings.spoiler_free = e.target.checked; dirty(); renderInterface(); };
 $("#ax-learn").onchange = (e) => { S.config.settings.release_learn = e.target.checked; dirty(); renderLearnWindow(); };
 $("#ax-window-bursts").onchange = (e) => { S.config.settings.download_window_bursts = e.target.checked; dirty(); renderLearnWindow(); };
 ["#ax-from", "#ax-to"].forEach((id) => $(id).addEventListener("input", renderLearnWindow));

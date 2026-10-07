@@ -62,6 +62,7 @@ it works whatever the service calls the show.
 """
 
 import contextlib
+import copy
 import json
 import queue
 import os
@@ -139,6 +140,13 @@ SETTINGS_DEFAULTS = {
     "history_days": 60,
     "backup_every_days": 0,      # the settings saved in the data folder's backups/ this often, in days (0: never)
     "backup_keep": 14,           # the newest so many automatic backups kept, older ones deleted
+    "backup_remote": "",         # each automatic backup also sent, encrypted, to: "webdav" or "s3" ("": nowhere)
+    "backup_remote_url": "",     # the WebDAV folder, or the S3 endpoint (https://s3.eu-west-1.amazonaws.com)
+    "backup_remote_user": "",    # the WebDAV user name, or the S3 access key
+    "backup_remote_secret": "",  # the WebDAV password, or the S3 secret key
+    "backup_remote_bucket": "",  # S3: the bucket, a folder in it allowed ("backups/unshacklarr")
+    "backup_remote_region": "",  # S3: its region (empty: us-east-1; Cloudflare R2: auto)
+    "backup_passphrase": "",     # what encrypts the backups sent away, and decrypts them for a restore
     "proxy_auth_header": "",     # a reverse proxy's login: this header names the user (Remote-User), believed only
     "proxy_auth_from": "",       # from these addresses (172.18.0.0/16, 10.0.0.5): the proxy's own; both, or none
     "min_free_gb": 0,            # nothing is downloaded while the downloads folder has less room (GB); 0: never checked
@@ -151,7 +159,8 @@ SETTINGS_DEFAULTS = {
     "release_learn": False,      # set a series' release time from when its episodes come out, once it is clear
     "download_from": "",         # the automatic sync downloads only from…
     "download_to": "",           # …to (local time, "01:00" to "07:00"); empty: any time
-    "download_window_bursts": False,  # the tries at a release time keep to it too
+    "download_window_bursts": False,  # release-time downloads follow the download window too
+    "spoiler_free": False,       # the page blurs episode titles until clicked (a series can say otherwise)
     "subs_accept": "",           # and one of these subtitle languages, forced ones aside ("fr"); empty: not checked
     "debug": False,              # Activity's output says more: Unshackle's debug log, every call to Sonarr
     "download_only": False,      # downloaded and tidied, never handed to Sonarr: imported by hand (a series can say otherwise)
@@ -168,8 +177,19 @@ UNSHACKLE = Unshackle(DATA)
 PUSH = Push(DATA)  # the web app's own notifications, on the devices that allowed them
 
 
+_READ = {"stamp": None, "config": {}}  # the file parsed once per change: a read per series was 50 ms each
+
+
 def read_file() -> dict:
-    return (yaml.safe_load(CONFIG_FILE.read_text(encoding="utf8")) if CONFIG_FILE.exists() else None) or {}
+    try:
+        st = CONFIG_FILE.stat()
+    except FileNotFoundError:
+        return {}
+    stamp = (st.st_mtime_ns, st.st_size)
+    if _READ["stamp"] != stamp:
+        text = CONFIG_FILE.read_text(encoding="utf8")
+        _READ.update(stamp=stamp, config=yaml.load(text, Loader=getattr(yaml, "CSafeLoader", yaml.SafeLoader)) or {})
+    return copy.deepcopy(_READ["config"])  # the callers' own to change
 
 
 def load_settings(config: dict | None = None) -> dict:

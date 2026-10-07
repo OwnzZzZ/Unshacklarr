@@ -104,6 +104,7 @@ function renderSettings() {
   $("#countries").value = S.config.tmdb_countries.join(", ");
   renderRegion();
   renderBackups();
+  renderOffsite();
   const n = S.config.notifications;
   n.targets ||= [];
   document.querySelectorAll("[data-event]").forEach((c) => { c.checked = (n.events || {})[c.dataset.event] ?? true; });
@@ -301,6 +302,82 @@ function renderBackups() {
     el("span", { textContent: when(f.at) }), el("small", { textContent: `${Math.max(1, Math.round(f.size / 1024))} KB` }),
     el("button", { className: "btn small", type: "button", textContent: "Download", onclick: () => backupFile(f.name) }))));
 }
+/* Account, backups sent elsewhere: WebDAV or S3, its fields, the passphrase, and how the last one went. Saved with
+   its own button and the password, never by the settings' Save: a session alone must not send the keys elsewhere. */
+let boKind = null;
+function renderOffsite() {
+  const set = S.config.settings;
+  if (boKind === null) {
+    boKind = set.backup_remote || "";
+    $("#bo-url").value = set.backup_remote_url || ""; $("#bo-bucket").value = set.backup_remote_bucket || "";
+    $("#bo-user").value = set.backup_remote_user || ""; $("#bo-region").value = set.backup_remote_region || "";
+  }
+  const s3 = boKind === "s3";
+  $("#bo-kind").replaceChildren(...[["", "Off"], ["webdav", "WebDAV"], ["s3", "S3-compatible"]].map(([v, label]) => el("button", {
+    type: "button", role: "radio", textContent: label, ariaChecked: String(boKind === v),
+    onclick: () => { boKind = v; renderOffsite(); } })));
+  $("#bo-fields").hidden = !boKind && !set.backup_remote;
+  $("#bo-fields .sx-grid").hidden = !boKind;
+  document.querySelectorAll(".bo-s3").forEach((x) => x.hidden = !s3);
+  $("#bo-url-l").textContent = s3 ? "Endpoint URL" : "Folder URL";
+  $("#bo-url").placeholder = s3 ? "https://s3.eu-west-3.amazonaws.com" : "https://cloud.example.com/remote.php/dav/files/me/backups";
+  $("#bo-url-help").textContent = s3 ? "Backblaze B2, Cloudflare R2, Wasabi, Scaleway, OVH, AWS or MinIO." : "Nextcloud, Synology, QNAP, kDrive, pCloud… The folder must already exist.";
+  $("#bo-user-l").textContent = s3 ? "Access key" : "User name";
+  $("#bo-user-help").textContent = s3 ? "" : "Leave empty if the folder needs no login.";
+  $("#bo-secret-l").textContent = s3 ? "Secret key" : "Password";
+  $("#bo-secret-help").textContent = s3 ? (set.backup_remote_secret_set ? "Leave empty to keep the saved one." : "")
+    : set.backup_remote_secret_set ? "An app password is safer than your account's password. Leave empty to keep the saved one."
+    : "An app password is safer than your account's password.";
+  $("#bo-secret-saved").hidden = !set.backup_remote_secret_set;
+  $("#bo-pass-saved").hidden = !set.backup_passphrase_set;
+  $("#bo-pass-help").textContent = set.backup_passphrase_set
+    ? "At least 12 characters. It encrypts the backups, and you need it to restore one: keep it somewhere safe, outside this server. Leave empty to keep the saved one."
+    : "At least 12 characters. It encrypts the backups, and you need it to restore one: keep it somewhere safe, outside this server.";
+  $("#bo-send").textContent = boKind ? "Save and test" : "Save";
+  const last = S.backups?.offsite || {}, when = last.at && new Date(last.at).toLocaleString(LOCALE, { dateStyle: "medium", timeStyle: "short" });
+  $("#bo-say").className = `rt-who${last.at && !last.ok ? " status-err" : ""}`;
+  $("#bo-say").textContent = !set.backup_remote ? ""
+    : !Number(set.backup_every_days) ? "Automatic backups are off: set how often above, or send one now."
+    : !last.at ? "Nothing sent yet. The next automatic backup will be sent here."
+    : last.ok ? `Last upload: ${when}` : `Last upload failed (${when}): ${last.error}`;
+  $("#bo-say").title = last.ok ? last.name : "";
+  $("#bo-say").hidden = !$("#bo-say").textContent;
+}
+const boWrong = (id, text) => {
+  const f = $(id), help = f.closest(".field").querySelector("small");
+  f.classList.add("bad");
+  help.dataset.was ??= help.textContent;
+  help.textContent = text;
+  help.classList.add("status-err");
+  f.focus();
+  f.addEventListener("input", () => { f.classList.remove("bad"); help.textContent = help.dataset.was; help.classList.remove("status-err"); delete help.dataset.was; }, { once: true });
+};
+$("#bo-send").onclick = async (e) => {
+  const set = S.config.settings, s3 = boKind === "s3";
+  if (boKind && !/^https?:\/\/\S+$/.test($("#bo-url").value.trim())) return boWrong("#bo-url", s3 ? "Enter the endpoint URL, starting with https://" : "Enter the folder URL, starting with https://");
+  if (s3 && !$("#bo-bucket").value.trim()) return boWrong("#bo-bucket", "Enter the bucket.");
+  if (s3 && !$("#bo-user").value.trim()) return boWrong("#bo-user", "Enter the access key.");
+  if (s3 && !$("#bo-secret").value && !set.backup_remote_secret_set) return boWrong("#bo-secret", "Enter the secret key.");
+  const phrase = $("#bo-pass").value;
+  if (boKind && !phrase && !set.backup_passphrase_set) return boWrong("#bo-pass", "Choose a passphrase: the backups are encrypted with it.");
+  if (phrase && phrase.length < 12) return boWrong("#bo-pass", "At least 12 characters: a few words are easy to remember.");
+  if (!$("#bo-pw").value) return boWrong("#bo-pw", "Type your password first.");
+  e.target.disabled = true;
+  try {
+    const settings = { backup_remote: boKind, backup_remote_url: $("#bo-url").value, backup_remote_bucket: $("#bo-bucket").value,
+      backup_remote_user: $("#bo-user").value, backup_remote_secret: $("#bo-secret").value, backup_remote_region: $("#bo-region").value,
+      backup_passphrase: $("#bo-pass").value };
+    const r = await api("/api/backup/offsite", { method: "POST", body: JSON.stringify({ password: $("#bo-pw").value, settings }) });
+    for (const k of Object.keys(settings).concat(["backup_remote_secret_set", "backup_passphrase_set"])) S.config.settings[k] = r.settings[k];
+    savedConfig = configKey(S.config);  // saved on the server already: no unsaved change
+    $("#bo-secret").value = $("#bo-pass").value = $("#bo-pw").value = "";
+    if (r.sent.at) S.backups = { ...(S.backups || {}), offsite: r.sent };
+    boKind = null;
+    renderOffsite();
+    toast(!r.sent.at ? "Saved" : r.sent.ok ? `Backup sent: ${r.sent.name}` : r.sent.error, r.sent.at && !r.sent.ok);
+  } catch (err) { if (/^Wrong password/.test(err.message)) boWrong("#bo-pw", err.message); else toast(err.message, true); }
+  finally { e.target.disabled = false; }
+};
 async function backupFile(name) {
   if (!bkPassword()) return;
   try {
@@ -330,10 +407,24 @@ $("#bk-file").onchange = async (e) => {
   e.target.value = "";
   if (!file) return;
   try {
-    const r = await api("/api/restore", { method: "POST", body: JSON.stringify({ password: $("#bk-pass").value, text: await file.text() }) });
+    const text = await file.text();
+    bkFile = text;
+    const r = await api("/api/restore", { method: "POST", body: JSON.stringify({ password: $("#bk-pass").value, text, passphrase: $("#bk-phrase").value }) });
     toast(`Settings restored: ${r.series} series`);
     setTimeout(() => location.reload(), 900);  // everything on the page comes from the settings
-  } catch (err) { if (/password/i.test(err.message)) { bkSay(err.message); $("#bk-pass").select(); } else bkSay(err.message); }
+  } catch (err) {
+    if (/passphrase/i.test(err.message)) { $("#bk-phrase-row").hidden = false; $("#bk-phrase").focus(); bkSay(err.message); }
+    else if (/password/i.test(err.message)) { bkSay(err.message); $("#bk-pass").select(); } else bkSay(err.message);
+  }
+};
+let bkFile = "";  // an encrypted backup picked: Enter in its passphrase restores it
+$("#bk-phrase").onkeydown = async (e) => {
+  if (e.key !== "Enter" || !bkFile) return;
+  try {
+    const r = await api("/api/restore", { method: "POST", body: JSON.stringify({ password: $("#bk-pass").value, text: bkFile, passphrase: e.target.value }) });
+    toast(`Settings restored: ${r.series} series`);
+    setTimeout(() => location.reload(), 900);
+  } catch (err) { bkSay(err.message); }
 };
 $("#logout").onclick = async () => { await api("/api/logout", { method: "POST" }).catch(() => {}); location.reload(); };
 $("#countries").oninput = (e) => {
@@ -341,7 +432,14 @@ $("#countries").oninput = (e) => {
   renderRegion();
   dirty();
 };
-/* Language and region: the time where you are, the countries as flags, a time zone that exists. */
+/* Interface: the language of this browser, and spoilers on or off for the account. */
+function renderInterface() {
+  const on = S.config.settings.spoiler_free === true;
+  $("#rg-spoiler").checked = on;
+  $("#if-state b").textContent = LANGS[LANG];
+  $("#if-state small").textContent = on ? "Episode titles hidden" : "Episode titles shown";
+}
+/* Region: the time where you are, the countries as flags, a time zone that exists. */
 const ZONES = Intl.supportedValuesOf?.("timeZone") || [];
 function renderRegion() {
   const set = S.config.settings || {}, tz = set.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
