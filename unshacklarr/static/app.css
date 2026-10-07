@@ -1554,3 +1554,11 @@ input.bad, select.bad { border-color: var(--err) !important; box-shadow: 0 0 0 3
 .wz-restore-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--field-bg); color: var(--text); font: inherit; cursor: pointer; text-align: left; }
 .wz-restore-row:hover { border-color: var(--accent); } .wz-restore-row b { flex: 1; font-weight: 600; } .wz-restore-row small { color: var(--muted); } .wz-restore-row span { color: var(--accent); font-weight: 600; }
 .wz-sum li.wz-bad { color: var(--err); }
+/* Languages, how the audio is upgraded; Automation, the window's checkbox */
+.up-mode { margin-top: var(--gap-field); padding-top: 14px; border-top: 1px solid var(--line); }
+.up-mode .sub { display: block; font-weight: 600; font-size: 13.5px; margin-bottom: 8px; }
+#dx-library[hidden] { display: none; } .ax-bursts { margin-top: 4px; font-size: 13.5px; }
+/* the window's hours look like the other fields; a fallback half set says so in red */
+input[type=time] { background: var(--field-bg); border: 1px solid var(--field-line); border-radius: 9px; padding: 7px 10px; width: 100%; min-height: 40px; color: var(--text); color-scheme: dark; }
+input[type=time]:focus:not(.bad) { border-color: var(--accent); box-shadow: 0 0 0 3px rgb(79 179 191 / .16); outline: none; }
+#d-fb-say.status-err, #ax-window-say.status-err { color: var(--err); }

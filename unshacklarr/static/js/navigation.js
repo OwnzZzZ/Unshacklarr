@@ -21,7 +21,7 @@ function showSettingsSec(name, fromRoute = false) {
   if (name === "history" && S.dlOptions.length) loadHistory();
   if (name === "account") loadAccount();
   if (name === "notifications") { renderPush().catch(() => {}); if (S.dlOptions.length) loadSent(); }
-  if (name === "automation") { renderAutomation(); renderImportMode(); }
+  if (name === "automation") { renderAutomation(); renderImportMode(); renderLearnWindow(); }
   if (name === "quality") renderQuality();
   if (!fromRoute && currentTab === "settings") navigate(fromList);  // from the list: back returns to it
   if (fromList) scrollTo({ top: 0 });

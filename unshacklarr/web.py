@@ -673,6 +673,8 @@ async def save_config(request):
             raise web.HTTPBadRequest(text=f"The fallback profiles of {key}: {bad[0]!r} is not a profile name")
         if profiles:
             series[int(key)]["fallback_profiles"] = ", ".join(dict.fromkeys(profiles))
+        if (alt := show.get("fallback") or {}) and (alt.get("service") or alt.get("title")):
+            series[int(key)]["fallback"] = check_fallback(alt, known, dl_specs, str(key))
         if isinstance(show.get("download_only"), bool):  # absent: the settings say
             series[int(key)]["download_only"] = show["download_only"]
         if ladder := check_ladder_name(show.get("ladder"), ladders, str(key)):
@@ -714,6 +716,19 @@ async def save_config(request):
     }
     write_config(config)
     return web.json_response(public_config(read_config()))
+
+
+def check_fallback(alt: dict, known: dict | None, dl_specs: list[dict], key: str) -> dict:
+    """A series' fallback service: its service and URL, its own options and numbering (only the ones set)."""
+    service, title = str(alt.get("service") or ""), str(alt.get("title") or "").strip()
+    if not service or not title:
+        raise web.HTTPBadRequest(text=f"The fallback of {key} needs both a service and its URL")
+    specs = check_service(service, known, f"the fallback of {key}")
+    if title.startswith("-"):
+        raise web.HTTPBadRequest(text=f"The fallback URL of {key} cannot start with '-'")
+    numbering = {k: v for k, v in check_numbering(alt, f"the fallback of {key}").items() if k in sonarr_sync.FALLBACK_NUMBERING}
+    own = check_options(alt.get("service_options") or {}, specs, f"the fallback of {key}")
+    return {"service": service, "title": title, **({"service_options": own} if own else {}), **numbering}
 
 
 def check_ladders(given) -> list[dict]:
@@ -999,6 +1014,25 @@ def check_settings(body: dict, previous: dict) -> dict:
     settings["audio_prefer"] = check_prefer(body.get("audio_prefer"), "the settings")
     settings["proxy_auth_header"], settings["proxy_auth_from"] = check_proxy_auth(body.get("proxy_auth_header"), body.get("proxy_auth_from"))
     settings["debug"] = body.get("debug") is True
+    mode = str(body.get("upgrade_mode") or "redownload")
+    if mode not in ("redownload", "add_track"):
+        raise web.HTTPBadRequest(text="Upgrading the audio either downloads the episode again or adds the audio to its file")
+    settings["upgrade_mode"] = mode
+    for name in ("library_sonarr_root", "library_local_root"):
+        settings[name] = folder = str(body.get(name) or "").strip().rstrip("/\\")
+        if folder and (not (posixpath.isabs(folder) or ntpath.isabs(folder)) or ".." in re.split(r"[\\/]", folder)):
+            raise web.HTTPBadRequest(text=f"{folder} must be a full path, from / (or a drive letter), without ..")
+    if bool(settings["library_sonarr_root"]) != bool(settings["library_local_root"]):
+        raise web.HTTPBadRequest(text="Give the library folder both as Sonarr sees it and as Unshacklarr sees it, or neither")
+    settings["release_learn"] = body.get("release_learn") is True
+    for name in ("download_from", "download_to"):
+        at = str(body.get(name) or "").strip()
+        if at and not re.fullmatch(r"([01]\d|2[0-3]):[0-5]\d", at):
+            raise web.HTTPBadRequest(text="The download window's hours look like 01:00")
+        settings[name] = at
+    if bool(settings["download_from"]) != bool(settings["download_to"]):
+        raise web.HTTPBadRequest(text="Give the download window both a start and an end, or neither")
+    settings["download_window_bursts"] = body.get("download_window_bursts") is True
     settings["download_only"] = body.get("download_only") is True
     settings["quality_ladder"] = str(body.get("quality_ladder") or "")  # checked against the ladders by save_config
     settings["backends"] = check_backends(body.get("backends"), previous.get("backends"))
@@ -1258,7 +1292,11 @@ def check_upgrades(now: datetime) -> list[str]:
             continue
         tracks = sonarr_sync.tracks_on_service(show, config, request)
         if tracks and sonarr_sync.speaks(tracks["audio"], [w["want"]]):
-            run_sync([int(key)], replace=True, kind="upgrade")  # its import takes it off the list
+            # its audio only, added to the file, when chosen and possible; else the whole episode again
+            if sonarr_sync.SETTINGS.get("upgrade_mode") == "add_track":
+                threading.Thread(target=add_or_download, args=(int(key), w["want"]), daemon=True).start()
+            else:
+                run_sync([int(key)], replace=True, kind="upgrade")  # its import takes it off the list
             started.append(w["label"])
     with sonarr_sync.upgrades_lock:  # read again: a download may have added or taken one meanwhile
         watched = read_json(sonarr_sync.UPGRADES_FILE, {})
@@ -1269,6 +1307,15 @@ def check_upgrades(now: datetime) -> list[str]:
                 watched[key]["checked"] = now.isoformat()
         write_atomic(sonarr_sync.UPGRADES_FILE, json.dumps(watched))
     return started
+
+
+def add_or_download(episode_id: int, want: str) -> None:
+    try:
+        if sonarr_sync.add_track(episode_id, want):
+            return
+    except Exception as e:  # anything unforeseen: the whole episode again, as before
+        print(f"Add the audio: {type(e).__name__}: {e}", flush=True)
+    run_sync([episode_id], replace=True, kind="upgrade")
 
 
 async def watch_upgrades():
@@ -1292,6 +1339,8 @@ async def watch_releases():
             for episode_id in await asyncio.to_thread(due_releases, datetime.now(timezone.utc)):
                 run = burst_runs.get(episode_id)
                 if (run is None or not run.is_alive()) and not await asyncio.to_thread(burst_failed, episode_id):  # the previous try is over
+                    if sonarr_sync.SETTINGS.get("download_window_bursts") and not sonarr_sync.in_download_window():
+                        continue  # chosen in Automation: the release-time tries keep to the window too
                     burst_runs[episode_id] = run_sync([episode_id], kind="burst")
         except Exception as e:  # Sonarr down for a moment: try again next round
             print(f"Release watch: {e}", flush=True)
@@ -2656,6 +2705,21 @@ def title_matches(show: dict, ep: dict) -> dict:
 
 
 sonarr_sync.find_by_title = title_matches
+
+
+def release_learned(tvdb: int, at: str, day: int) -> None:
+    """A release time the sync learnt (release_learn): in the series' settings, as if typed on its page."""
+    config = read_config()
+    show = config["series"].get(tvdb)
+    if not show or show.get("release_time"):
+        return  # gone, or set meanwhile: never over one set by hand
+    show["release_time"] = at
+    if day:
+        show["release_day"] = day
+    write_config(config)
+
+
+sonarr_sync.on_release_learned = release_learned
 
 
 async def service_list(request):

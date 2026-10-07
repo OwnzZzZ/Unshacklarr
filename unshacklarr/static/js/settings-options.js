@@ -94,6 +94,8 @@ function renderSettings() {
   renderBackends();
   renderQuality();
   renderImportMode();
+  renderUpgradeMode();
+  renderLearnWindow();
   $("#sx-tmdb-saved").hidden = !set.tmdb_api_key_set;
   renderSonarrState();
   $("#downloads-input").placeholder = "In Unshacklarr's settings folder";

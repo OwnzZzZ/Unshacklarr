@@ -342,6 +342,22 @@ change that.
 
 <a name="api"></a>
 
+## 🧰 Options worth knowing
+
+All off until you turn them on:
+
+- **Add the audio to the file** (Settings › Download options › Languages): when *Upgrade the audio to* finds its
+  language on the service, only that audio track is downloaded and joined to the library's file, which Sonarr then
+  imports again. Unshacklarr must read the library: give its folder as Sonarr sees it and as Unshacklarr sees it.
+  A file out of reach is downloaded again whole, as before.
+- **Fallback service** (a series' page, Source): another service and its URL, tried when the series' own has no
+  episode yet, or not in a language you accept. Its numbering is the service's own (`fallback:` in `config.yaml`
+  takes `season_map`, `episode_offset`… when it differs).
+- **Learn release times** (Settings › Automation): a series without a release time gets one once 3 of its episodes
+  came out at the same time. A time you set is never changed.
+- **Download window** (Settings › Automation): the automatic sync downloads only between two hours, over
+  midnight or not; the release-time tries keep to it too if you choose. Episodes picked by hand always go at once.
+
 ## 💾 Backups
 
 Settings › Account › *Back up the settings* downloads every setting but the password (the series, their options,

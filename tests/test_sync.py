@@ -1588,3 +1588,107 @@ def test_a_number_its_title_gives_to_another_episode_is_not_downloaded(tmp_path,
     listing.update(available={}, titled=set())  # its title merely differs (no translation yet): downloaded by its number
     sync.sync(sync.read_file(), {}, [episode(111, 2, 5)], manual=True, kind="manual")
     assert asked == ["S03E01", "S02E05", "S02E05"]
+
+
+def test_the_download_window_keeps_the_automatic_sync_to_its_hours(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    at = lambda hhmm: datetime(2026, 10, 7, *map(int, hhmm.split(":")), tzinfo=sync.LOCAL)  # noqa: E731
+    assert sync.in_download_window(at("15:00"))  # none set: always
+    sync.SETTINGS.update(download_from="01:00", download_to="07:00")
+    assert sync.in_download_window(at("03:00")) and not sync.in_download_window(at("15:00"))
+    sync.SETTINGS.update(download_from="23:00", download_to="06:00")  # over midnight
+    assert sync.in_download_window(at("23:30")) and sync.in_download_window(at("05:59")) and not sync.in_download_window(at("06:00"))
+    monkeypatch.setattr(sync, "missing_episodes", lambda: (_ for _ in ()).throw(AssertionError("asked Sonarr outside the window")))
+    monkeypatch.setattr(sync, "in_download_window", lambda now=None: False)
+    assert sync.main() == 0
+
+
+def test_a_series_falls_back_on_another_service_when_its_own_has_nothing(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    config = sync.read_file()
+    config["series"][111].update(season_map={2: 9}, fallback={"service": "MLT", "title": "https://mlt/show", "episode_offset": 1})
+    alt = sync.fallback_show(config["series"][111])
+    assert alt["service"] == "MLT" and "season_map" not in alt and alt["episode_offset"] == 1  # its own numbering, not the main one's
+    monkeypatch.setattr(sync, "no_cdm", lambda tag, config=None: "")
+    asked = []
+
+    def download(payload, run=None):
+        asked.append((payload["service"], payload["wanted"][0]))
+        if payload["service"] == "MLT":  # only the fallback has it
+            out = Path(payload["output_dir"])
+            out.mkdir(parents=True, exist_ok=True)
+            (out / "Show.S02E06.mkv").write_bytes(b"x")
+
+    monkeypatch.setattr(sync, "run_job_retrying", download)
+    monkeypatch.setattr(sync, "finalize", lambda *a, **k: 1)
+    monkeypatch.setattr(sync, "check_audio", lambda *a: None)
+    imported = []
+    monkeypatch.setattr(sync, "import_episode", lambda ep, out, replace=False: imported.append(ep["id"]))
+    monkeypatch.setattr(sync, "notify", lambda *a, **k: None)
+    sync.sync(config, {}, [episode(111, 2, 5)], manual=True, kind="manual")
+    assert asked == [("RTLP", "S09E05"), ("MLT", "S02E06")] and imported == [205]
+    card = next(json.loads(p.read_text()) for p in (tmp_path / "runs").glob("*.json"))
+    assert card["service"] == "MLT" and card["fallback"] == "RTLP" and card["outcome"] == "downloaded"
+
+
+def test_a_release_time_is_learnt_once_clear_and_never_over_one_set(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    seen = {f"unshackle-111-S02E0{n}": {"tvdbId": 111, "aired": f"2026-09-0{n}T19:00:00Z", "not_yet": f"2026-09-0{n}T20:55:00Z",
+                                         "available": f"2026-09-0{n}T21:05:00Z"} for n in (1, 2, 3)}
+    sync.write_atomic(sync.SEEN_FILE, json.dumps(seen))
+    learnt, told = [], []
+    monkeypatch.setattr(sync, "on_release_learned", lambda tvdb, at, day: learnt.append((tvdb, at, day)))
+    monkeypatch.setattr(sync, "notify", lambda settings, level, title, *a, **k: told.append(title))
+    ep = episode(111, 2, 4)
+    sync.learn_release(ep, {"service": "RTLP"}, {})
+    assert learnt == [] and told == []  # off by default
+    sync.SETTINGS["release_learn"] = True
+    sync.learn_release(ep, {"service": "RTLP", "release_time": "20:00"}, {})
+    assert learnt == []  # one set by hand stays
+    sync.learn_release(ep, {"service": "RTLP"}, {})
+    assert learnt == [(111, sync.suggest_release(list(seen.values()))["time"], 0)] and told == ["Release time set: Show"]
+
+
+def test_the_preferred_audio_is_added_to_the_file_it_has(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    library = tmp_path / "lib" / "Show" / "Season 02"
+    library.mkdir(parents=True)
+    (library / "Show - S02E05.mkv").write_bytes(b"video")
+    sync.SETTINGS.update(library_sonarr_root="/tv", library_local_root=str(tmp_path / "lib"))
+    assert sync.library_file("/tv/Show/Season 02/Show - S02E05.mkv") == library / "Show - S02E05.mkv"
+    assert sync.library_file("/elsewhere/x.mkv") == Path("/elsewhere/x.mkv")
+    ep = {**episode(111, 2, 5), "episodeFileId": 9}
+    monkeypatch.setattr(sync, "chosen_episodes", lambda ids: [ep])
+    monkeypatch.setattr(sync, "sonarr_get", lambda path, **p: {"path": "/tv/Show/Season 02/Show - S02E05.mkv"})
+    monkeypatch.setattr(sync, "no_cdm", lambda tag, config=None: "")
+    asked = []
+
+    def download(payload, run=None):
+        asked.append(payload)
+        (Path(payload["output_dir"]) / "audio.mka").parent.mkdir(parents=True, exist_ok=True)
+        (Path(payload["output_dir"]) / "audio.mka").write_bytes(b"fr")
+
+    calls, imported = [], []
+
+    def tools(cmd, **_):
+        calls.append(cmd)
+        if cmd[:2] == ["mkvmerge", "-J"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps({"container": {"properties": {"duration": 2_400_000_000_000}}}))
+        Path(cmd[cmd.index("-o") + 1]).write_bytes(b"joined")
+        return subprocess.CompletedProcess(cmd, 0, stdout="")
+
+    monkeypatch.setattr(sync, "run_job_retrying", download)
+    monkeypatch.setattr(sync.subprocess, "run", tools)
+    monkeypatch.setattr(sync, "import_episode", lambda e, out, replace=False: imported.append((sorted(f.name for f in out.iterdir()), replace)))
+    monkeypatch.setattr(sync, "notify", lambda *a, **k: None)
+    assert sync.add_track(205, "fr") is True
+    assert asked[0]["audio_only"] is True and asked[0]["a_lang"] == ["fr"] and "lang" not in asked[0]
+    merge = calls[-1]
+    assert merge[:4] == ["mkvmerge", "-q", "-o", str(tmp_path / "unshackle-111-S02E05" / "Show - S02E05.mkv")]
+    assert str(library / "Show - S02E05.mkv") in merge and merge[-1].endswith("audio.mka")
+    assert imported == [(["Show - S02E05.mkv"], True)]  # the joined file only, in place of the library's
+    card = next(json.loads(p.read_text()) for p in (tmp_path / "runs").glob("*.json"))
+    assert card["kind"] == "upgrade" and card["outcome"] == "downloaded"
+
+    monkeypatch.setattr(sync, "sonarr_get", lambda path, **p: {"path": "/tv/Show/Gone.mkv"})
+    assert sync.add_track(205, "fr") is False  # out of reach here: downloaded again as before

@@ -257,6 +257,20 @@
           <div class="ax-seg" id="ax-import" role="radiogroup" aria-label="After the download"><button type="button" role="radio" data-only="false">Sonarr imports it</button><button type="button" role="radio" data-only="true">Download only</button></div>
           <p class="rt-who" id="ax-import-say"></p>
         </section>
+        <section class="sx-card" id="ax-learn-card">
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/><path d="M17 3l3 3"/></svg></span><div><h3>Learn release times</h3><p>A series without a release time gets one once 3 of its episodes came out at the same time. You are told, and you can change it on its page.</p></div>
+            <input type="checkbox" class="switch" id="ax-learn" aria-label="Learn release times"></div>
+          <p class="rt-who" id="ax-learn-say"></p>
+        </section>
+        <section class="sx-card">
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span><div><h3>Download window</h3><p>The automatic sync downloads only in these hours, the night say. Episodes you pick by hand always go at once.</p></div></div>
+          <div class="sx-grid ax-grid">
+            <div class="field"><label for="ax-from">From</label><input id="ax-from" type="time" data-set="download_from"><small>Empty: any time.</small></div>
+            <div class="field"><label for="ax-to">To</label><input id="ax-to" type="time" data-set="download_to"><small>It can go over midnight: 23:00 to 06:00.</small></div>
+          </div>
+          <label class="check ax-bursts"><input type="checkbox" id="ax-window-bursts"> The tries at a release time keep to it too</label>
+          <p class="rt-who" id="ax-window-say"></p>
+        </section>
         <section class="sx-card">
           <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></span><div><h3>Downloads left waiting</h3><p>When Sonarr keeps its own file or an import fails, the download stays in the downloads folder. You find it in Activity, Waiting in downloads.</p></div></div>
           <div class="sx-grid ax-grid">
@@ -311,6 +325,15 @@
             <div class="field"><label for="dx-prefer">Upgrade the audio to</label><input id="dx-prefer" type="text" data-set="audio_prefer" placeholder="Example: fr" spellcheck="false"><small>One language. An episode downloaded in another accepted language (for example English with French subtitles) is downloaded again when the service has this one. Empty: never.</small></div>
             <div class="field"><label for="dx-upgrade-days">Wait for it</label><div class="unit-input"><input id="dx-upgrade-days" type="number" data-set="upgrade_days" data-num min="1" max="365" step="1" inputmode="numeric"><span>days</span></div><small>After the download, the service is checked once a day for this many days. Nothing is downloaded until that language is there. After that, the episode keeps the audio it has.</small></div>
             <div class="field"><label for="dx-subs">Required subtitle languages</label><input id="dx-subs" type="text" data-set="subs_accept" placeholder="Example: fr" spellcheck="false"><small>The episode must have full subtitles in at least one of them. Forced subtitles (only a few lines) do not count. Empty: not checked. A series can set its own.</small></div>
+          </div>
+          <div class="up-mode">
+            <span class="sub">When the preferred audio comes</span>
+            <div class="ax-seg" id="dx-upmode" role="radiogroup" aria-label="When the preferred audio comes"><button type="button" role="radio" data-mode="redownload">Download the episode again</button><button type="button" role="radio" data-mode="add_track">Add the audio to its file</button></div>
+            <p class="rt-who" id="dx-upmode-say"></p>
+            <div class="sx-grid" id="dx-library">
+              <div class="field"><label for="dx-lib-sonarr">Library folder, as Sonarr sees it</label><input id="dx-lib-sonarr" type="text" data-set="library_sonarr_root" placeholder="Example: /tv" spellcheck="false"><small>The start of the paths Sonarr gives its files.</small></div>
+              <div class="field"><label for="dx-lib-local">Library folder, as Unshacklarr sees it</label><input id="dx-lib-local" type="text" data-set="library_local_root" placeholder="Example: /mnt/tv" spellcheck="false"><small>The same folder, mounted here. Both empty: the same path.</small></div>
+            </div>
           </div>
         </section>
       </div>
@@ -586,6 +609,13 @@
         <div class="url-find-out" id="d-find-out"></div>
       </div>
       <div id="d-probe-out"></div>
+      <details class="ds-sub" id="d-fb">
+        <summary><b>Fallback service</b><small>Tried when this service has no episode yet, or not in a language you accept.</small></summary>
+        <div class="sx-grid ds-svc">
+          <div class="field"><label for="d-fb-service">Service</label><select id="d-fb-service"></select></div>
+          <div class="field"><label for="d-fb-url">Series URL on it</label><input type="text" id="d-fb-url" placeholder="URL or ID of the series" spellcheck="false"><small id="d-fb-say">Its numbering is the service's own: set it in config.yaml when it differs.</small></div>
+        </div>
+      </details>
       <div class="card-foot"><button class="btn danger" id="d-stop" hidden>Stop downloading this series</button></div>
     </section>
 

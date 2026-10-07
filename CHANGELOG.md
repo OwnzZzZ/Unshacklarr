@@ -4,6 +4,22 @@ Every change worth knowing, newest first. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/): until 1.0.0, a minor version may change how things work.
 
+## [Unreleased]
+
+### Added
+
+- **Add the audio to the file.** When an episode's preferred audio comes on its service, its audio track alone can be
+  downloaded and added to the library's file, instead of the whole episode again. Settings › Download options ›
+  Languages, with the library folder as Sonarr and as Unshacklarr see it.
+- **A fallback service per series**, tried when its own has no episode yet or not in an accepted language: on the
+  series' page, Source.
+- **Release times learnt.** A series without one gets it once 3 episodes came out at the same time, and you are
+  told: Settings › Automation › Learn release times.
+- **A download window.** The automatic sync downloads only between two hours, the release-time tries too if you
+  choose: Settings › Automation › Download window.
+
+All four are off until you turn them on.
+
 ## [1.4.0] - 2026-10-07
 
 ### Added
