@@ -922,6 +922,7 @@
  "Left": [],
  "Less free space than Settings keeps: nothing is downloaded until there is enough": [],
  "Letters, digits, spaces, dots and dashes": [],
+ "Library": [],
  "Line {0}, column {1}{2}": [
   "line.number",
   "head - line.from + 1",
@@ -2417,6 +2418,7 @@
  "no (no group key: an older .prd)": [],
  "no DRM: no device used": [],
  "no ladder": [],
+ "no ladder chosen": [],
  "no ladder chosen yet": [],
  "no language tag": [],
  "no language tagged": [],

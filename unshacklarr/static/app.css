@@ -1558,4 +1558,13 @@ input.bad, select.bad { border-color: var(--err) !important; box-shadow: 0 0 0 3
 .sx-head:has(> .btn) > div { flex: 1; min-width: 0; }
 .d-also { display: grid; gap: 4px; margin-top: var(--gap-field); padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; }
 .d-also[hidden] { display: none; } .d-also p { margin: 0; } .d-also span { color: var(--muted); }
-.ep-sonarr { margin-bottom: 10px; }
+/* Which library's episodes, under the series' tabs: each Sonarr, its ladder, what it misses. From #10, by mj23au */
+.ep-sonarr { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px; margin: 4px 0 12px; padding: 3px;
+  border: 1.5px solid var(--line); border-radius: 999px; background: var(--field-bg); max-width: 100%; }
+.ep-sonarr-label { padding: 0 10px 0 12px; color: var(--muted); font-size: 12.5px; }
+.ep-sonarr button { display: inline-flex; align-items: baseline; gap: 6px; padding: 6px 14px; border: 0; border-radius: 999px;
+  background: none; color: var(--text); font: inherit; font-size: 13.5px; cursor: pointer; }
+.ep-sonarr button:hover { background: rgb(79 179 191 / .08); }
+.ep-sonarr button[aria-checked=true] { background: rgb(79 179 191 / .18); color: var(--accent); font-weight: 600; }
+.ep-sonarr button small { color: var(--muted); font-size: 11.5px; font-weight: 400; }
+.ep-sonarr button em { font-style: normal; font-size: 11.5px; color: var(--warn); font-weight: 500; }

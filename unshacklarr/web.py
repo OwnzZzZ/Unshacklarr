@@ -2393,8 +2393,10 @@ def instances_of_series() -> dict[int, list[dict]]:
         except requests.RequestException:
             continue
         for tvdb in managed & set(found):
+            stats = found[tvdb].get("statistics") or {}  # as the main Sonarr's "missing" on the Series page
             out.setdefault(tvdb, []).append({"name": inst["name"], "id": found[tvdb]["id"],
-                                             "ladder": inst["quality_ladder"], "download_only": inst["download_only"]})
+                                             "ladder": inst["quality_ladder"], "download_only": inst["download_only"],
+                                             "missing": max(0, stats.get("episodeCount", 0) - stats.get("episodeFileCount", 0))})
     return out
 
 

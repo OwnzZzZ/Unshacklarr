@@ -205,13 +205,23 @@ function viewAvail(raw) {
   for (const list of Object.values(epSeasons)) for (const e of list) byKey[sxxOf(e)] = e.id;
   return Object.fromEntries(Object.entries(raw).map(([id, m]) => [byKey[mainKeys[id]], m]).filter(([k]) => k));
 }
+/* Which library's episodes: each Sonarr with the ladder it downloads by and how many episodes it misses. From #10,
+   by mj23au. */
 function sonarrSwitch(s) {
   const others = S.instances?.[s.tvdbId] || [];
   if (!others.length) return "";
-  return el("div", { className: "ax-seg ep-sonarr", role: "radiogroup", ariaLabel: "Which Sonarr's episodes" },
-    ...[{ name: "", label: "Sonarr" }, ...others.map((i) => ({ name: i.name, label: i.name }))].map((o) =>
-      el("button", { type: "button", role: "radio", textContent: o.label, ariaChecked: String(epSonarr === o.name),
-        onclick: () => { if (epSonarr !== o.name) { epSonarr = o.name; loadEpisodes(s); } } })));
+  const conf = S.config.series[s.tvdbId] || {};
+  const own = conf.ladder || S.config.service_defaults?.[conf.service]?.ladder || S.config.settings?.quality_ladder || "";
+  const shown = (l) => !l || l === "off" ? "" : l === "series" ? (own && own !== "off" ? own : "") : l;  // "series": the series' own
+  const opts = [{ name: "", label: "Sonarr", ladder: shown(own), missing: S.series.find((x) => x.tvdbId === s.tvdbId)?.missing },
+    ...others.map((i) => ({ name: i.name, label: i.name, ladder: i.ladder ? shown(i.ladder) : "no ladder chosen", missing: i.missing }))];
+  return el("div", { className: "ep-sonarr", role: "radiogroup", ariaLabel: "Which Sonarr's episodes" },
+    el("span", { className: "ep-sonarr-label", textContent: "Library" }),
+    ...opts.map((o) => el("button", { type: "button", role: "radio", ariaChecked: String(epSonarr === o.name),
+      onclick: () => { if (epSonarr !== o.name) { epSonarr = o.name; loadEpisodes(s); } } },
+      el("span", { textContent: o.label }),
+      ...(o.ladder ? [el("small", { textContent: o.ladder })] : []),
+      ...(o.missing ? [el("em", { textContent: `${o.missing} missing` })] : []))));
 }
 async function loadEpisodes(s, keep = false) {  // keep: a reload after a download ended, same season and selection
   const box = $("#d-episodes");

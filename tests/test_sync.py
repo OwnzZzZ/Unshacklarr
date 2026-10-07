@@ -1734,9 +1734,9 @@ def test_the_series_page_and_upgrades_know_the_other_sonarr(tmp_path, monkeypatc
     web = importlib.reload(unshacklarr.web)
     web.write_config({**web.read_config(), "series": {1: {"service": "X", "title": "t"}, 2: {"service": "X", "title": "u"}}})
     with_4k(web.sonarr_sync)  # after: writing the config applies its settings
-    libraries = {"": {1: {"id": 10}, 2: {"id": 20}}, "sonarr-4k": {1: {"id": 77}}}
+    libraries = {"": {1: {"id": 10}, 2: {"id": 20}}, "sonarr-4k": {1: {"id": 77, "statistics": {"episodeCount": 6, "episodeFileCount": 1}}}}
     monkeypatch.setattr(web.sonarr_sync, "sonarr_series", lambda wanted: libraries[(web.sonarr_sync.instance() or {}).get("name", "")])
-    assert web.instances_of_series() == {1: [{"name": "sonarr-4k", "id": 77, "ladder": "4K only", "download_only": None}]}
+    assert web.instances_of_series() == {1: [{"name": "sonarr-4k", "id": 77, "ladder": "4K only", "download_only": None, "missing": 5}]}
     web.health["sonarrs"] = {"sonarr-4k": {"ok": False}}
     assert web.instances_of_series() == {}  # down: the page opens without waiting for it
     assert web.upgrades_file("") == web.UPGRADES_FILE and web.upgrades_file("sonarr-4k").name == "upgrades_found-sonarr-4k.json"
