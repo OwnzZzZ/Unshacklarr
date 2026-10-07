@@ -285,10 +285,20 @@ function sonarrBlock(i) {
     oninput: (e) => { i.api_key = e.target.value.trim() || undefined; dirty(); } });
   const dl = text("downloads", { placeholder: S.config.settings.sonarr_downloads || "As the main one" }, "The downloads folder, as this Sonarr sees it. Empty: as the main Sonarr sees it.",
     (v) => !v || /^(\/|[A-Za-z]:[\\/])/.test(v) && !/(^|[\\/])\.\.([\\/]|$)/.test(v) ? "" : "A full path, from / (or a drive letter), without ..");
-  const ladder = el("select", { onchange: (e) => { i.quality_ladder = e.target.value; dirty(); } },
-    el("option", { value: "", textContent: "Each series' own" }), el("option", { value: "off", textContent: "Off" }),
-    ...ladders().map((l) => el("option", { value: l.name, textContent: l.name })));
+  // chosen, never a silent default: a 4K Sonarr left on each series' own would get 1080p copies
+  const ladder = el("select", { onchange: (e) => { i.quality_ladder = e.target.value; dirty(); showChoice(); } },
+    el("option", { value: "", textContent: "Choose…", disabled: true }), el("option", { value: "series", textContent: "Same as each series" }),
+    el("option", { value: "off", textContent: "Off" }), ...ladders().map((l) => el("option", { value: l.name, textContent: l.name })));
   ladder.value = i.quality_ladder || "";
+  const showChoice = () => {
+    const unset = !i.quality_ladder;
+    ladder.classList.toggle("bad", unset);
+    ladder.nextElementSibling?.classList.toggle("bad", unset);
+    if (ladder.nextElementSibling) ladder.nextElementSibling.textContent = unset
+      ? "Choose one: nothing is downloaded for this Sonarr until you do."
+      : "For every series it downloads, over the series' own (4K for a 4K Sonarr).";
+  };
+  queueMicrotask(showChoice);
   const after = el("select", { onchange: (e) => { i.download_only = e.target.value === "" ? null : e.target.value === "only"; dirty(); } },
     el("option", { value: "", textContent: "Each series' own" }), el("option", { value: "import", textContent: "Sonarr imports it" }),
     el("option", { value: "only", textContent: "Download only" }));
@@ -332,7 +342,7 @@ $("#sn-add").onclick = () => {
   const list = (S.config.settings.sonarrs ??= []);
   let n = list.length + 1;
   while (list.some((o) => o.name === `sonarr${n}`)) n++;
-  list.push({ name: list.length ? `sonarr${n}` : "sonarr-4k", url: "", downloads: "", quality_ladder: "", download_only: null });
+  list.push({ name: list.length ? `sonarr${n}` : "sonarr-4k", url: "", downloads: "", quality_ladder: "", download_only: null });  // its ladder: to choose
   dirty(); renderSonarrs();
   $("#sn-list .ub-block:last-child input[type=url]")?.focus();
 };
@@ -354,7 +364,19 @@ $("#ax-import").querySelectorAll("button").forEach((b) => b.onclick = () => {
 });
 
 /* A series' page: its ladder and what follows its downloads, Default being its service's, then the settings'. */
+/* A series' page, What to get: the other Sonarr instances that have it, and how they download it. */
+function renderAlso(conf) {
+  const also = S.instances?.[current?.tvdbId] || [];
+  let box = $("#d-also");
+  if (!box) { box = el("div", { id: "d-also", className: "d-also" }); $("#ds-quality").append(box); }
+  const ladder = (l) => !l ? "no ladder chosen yet" : l === "series" ? "this series' ladder" : l === "off" ? "no ladder" : l;
+  box.hidden = !also.length;
+  box.replaceChildren(...also.map((i) => el("p", {},
+    el("b", { textContent: `Also in ${i.name}` }),
+    el("span", { textContent: ` · ${ladder(i.ladder)} · ${i.download_only === true ? "Download only" : i.download_only === false ? "Sonarr imports it" : "After the download as above"}` }))));
+}
 function fillQualityImport(conf) {
+  renderAlso(conf);
   const set = S.config.settings, svc = S.config.service_defaults?.[conf.service] || {};
   $("#d-ladder").replaceWith(Object.assign(ladderSelect(conf.ladder, svc.ladder || set.quality_ladder, (v) => {
     if (v) conf.ladder = v; else delete conf.ladder;

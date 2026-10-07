@@ -10,8 +10,9 @@ Every change worth knowing, newest first. The format follows
 
 - **More than one Sonarr** (a 4K one beside the 1080p one), in Settings › Sonarr › Other Sonarr instances: the
   series set up here are downloaded for each one that has them, with its own quality ladder and After the
-  download, and imported into it. Its automatic sync follows the main one's; release times, episodes picked by
-  hand and Catch up stay with the main Sonarr for now. (#10)
+  download, and imported into it. A series' page says which other Sonarr has it; its Episodes tab, Catch up
+  and Upgrades switch to another Sonarr's episodes and download for it. Each one's ladder is chosen when it is
+  added (a ladder, Off, or Same as each series): one saved without it is paused and said so. (#10, with mj23au)
 
 ## [1.4.0] - 2026-10-07
 

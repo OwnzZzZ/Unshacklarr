@@ -193,10 +193,33 @@ $("#d-save").onclick = () => saveHere($("#d-save"));
 /* Sonarr-like episode list: tick episodes or whole seasons, then download them now. */
 const picked = new Set();
 let epSeasons = {}, epSeason = null, hideOnDisk = false;
+/* Another Sonarr's episodes of the series (a 4K one): its own ids and files. What the service has was listed with the
+   main Sonarr's ids: matched by SxxEyy. */
+let epSonarr = "", epSonarrOf = null, mainKeys = null, epAvailRaw = null;
+const sxxOf = (e) => `S${pad2(e.seasonNumber)}E${pad2(e.episodeNumber)}`;
+function viewAvail(raw) {
+  epAvailRaw = raw;
+  if (!raw || !epSonarr) return raw;
+  if (!mainKeys) return null;  // until the main Sonarr's numbers are known
+  const byKey = {};
+  for (const list of Object.values(epSeasons)) for (const e of list) byKey[sxxOf(e)] = e.id;
+  return Object.fromEntries(Object.entries(raw).map(([id, m]) => [byKey[mainKeys[id]], m]).filter(([k]) => k));
+}
+function sonarrSwitch(s) {
+  const others = S.instances?.[s.tvdbId] || [];
+  if (!others.length) return "";
+  return el("div", { className: "ax-seg ep-sonarr", role: "radiogroup", ariaLabel: "Which Sonarr's episodes" },
+    ...[{ name: "", label: "Sonarr" }, ...others.map((i) => ({ name: i.name, label: i.name }))].map((o) =>
+      el("button", { type: "button", role: "radio", textContent: o.label, ariaChecked: String(epSonarr === o.name),
+        onclick: () => { if (epSonarr !== o.name) { epSonarr = o.name; loadEpisodes(s); } } })));
+}
 async function loadEpisodes(s, keep = false) {  // keep: a reload after a download ended, same season and selection
   const box = $("#d-episodes");
+  if (epSonarrOf !== s.tvdbId) { epSonarr = ""; epSonarrOf = s.tvdbId; }  // another series: the main Sonarr's first
+  const inst = (S.instances?.[s.tvdbId] || []).find((i) => i.name === epSonarr);
+  if (!inst) epSonarr = "";
   if (!keep) {
-    epAvail = epTitles = null;
+    epAvail = epTitles = epAvailRaw = null;
     epSeasons = {}; epSeason = null; epBusy = new Map();  // nothing of the series open before
     picked.clear();
     updateEpBar();
@@ -205,16 +228,20 @@ async function loadEpisodes(s, keep = false) {  // keep: a reload after a downlo
     epChecked = null;
     api(`/api/probe/${s.tvdbId}`).then((hit) => {  // the last check of the service, kept 12 h: no need to ask again
       if (!hit || current !== s || epAvail) return;
-      epAvail = hit.available; epTitles = hit.titles; epChecked = hit.checked; localTitles(hit.local_titles);
+      epAvail = viewAvail(hit.available); epTitles = hit.titles; epChecked = hit.checked; localTitles(hit.local_titles);
       if ($("#ep-list")) { $("#ep-avail").hidden = false; renderSeason(); checkLabel(`Refresh what's on ${svcName(S.config.series[s.tvdbId]?.service)}`); }
     }).catch(() => {});
   }
   let eps;
-  try { eps = await api(`/api/series/${s.id}/episodes`); }
+  try {
+    eps = await api(inst ? `/api/series/${inst.id}/episodes?sonarr=${encodeURIComponent(inst.name)}` : `/api/series/${s.id}/episodes`);
+    mainKeys = inst ? Object.fromEntries((await api(`/api/series/${s.id}/episodes`)).map((e) => [e.id, sxxOf(e)])) : null;
+  }
   catch (e) { if (current === s) box.replaceChildren(failed(`Could not load the episodes: ${e.message}`, () => loadEpisodes(s))); return; }
   if (current !== s) return;
   epSeasons = {};
   for (const e of eps) { e.sonarrAir = e.airDateUtc; (epSeasons[e.seasonNumber] ??= []).push(e); }
+  if (epAvailRaw && epSonarr) epAvail = viewAvail(epAvailRaw);  // what the service has, by this Sonarr's ids
   applyBroadcast(S.config.series[s.tvdbId]);  // a series with its own schedule: its dates, not Sonarr's
   renderReleaseNext();  // Timing says when the next one is tried
   renderBroadcast();
@@ -222,6 +249,7 @@ async function loadEpisodes(s, keep = false) {  // keep: a reload after a downlo
   if (!numbers.length) return box.replaceChildren(el("p", { className: "muted", textContent: "Sonarr lists no episode for this series." }));
   if (!(keep && numbers.includes(epSeason))) epSeason = numbers[0];  // the newest; seasons with gaps stand out in the strip
   box.replaceChildren(
+    sonarrSwitch(s),
     el("div", { className: "seasons", role: "group", ariaLabel: "Seasons" }, ...numbers.map((n) => {
       const list = epSeasons[n], disk = list.filter((e) => e.hasFile).length, miss = list.filter((e) => state(e) === "miss").length;
       const b = el("button", { onclick: () => { epSeason = n; renderSeason(); } },
@@ -577,7 +605,7 @@ async function askService(s) {
   let r = null;
   try {
     r = await api("/api/probe", { method: "POST", signal: AbortSignal.timeout(120000), body: JSON.stringify({ show: conf, seriesId: s.id, tvdbId: s.tvdbId, title: s.title }) });
-    if (current === s) { epAvail = r.available; epTitles = r.titles || []; epChecked = r.checked; localTitles(r.local_titles); $("#ep-avail").hidden = false; renderSeason(); renderPreview(); }
+    if (current === s) { epAvail = viewAvail(r.available); epTitles = r.titles || []; epChecked = r.checked; localTitles(r.local_titles); $("#ep-avail").hidden = false; renderSeason(); renderPreview(); }
   } catch (e) { toast(e.message, true); }
   if (current === s && $(".ep-check")) { $(".ep-check").disabled = false; checkLabel(epAvail ? `Refresh what's on ${svc}` : `What's on ${svc}?`); }
   return r;
@@ -811,8 +839,9 @@ async function startDownload(numbering = null) {
     }
   }
   try {
-    await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: [...picked], replace, ...(numbering ? { numbering } : {}) }) });
-    toast(`Downloading ${picked.size} episode${picked.size > 1 ? "s" : ""}: follow it in Activity`);
+    await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: [...picked], replace, ...(numbering ? { numbering } : {}),
+      ...(epSonarr ? { sonarr: epSonarr } : {}) }) });  // picked in another Sonarr's episodes: its ids, its ladder
+    toast(`Downloading ${picked.size} episode${picked.size > 1 ? "s" : ""}${epSonarr ? ` for ${epSonarr}` : ""}: follow it in Activity`);
     $("#ep-clear").click();
     const s = current;
     setTimeout(() => { if (s && current === s) refreshEpBusy(s); }, 1500);

@@ -1,3 +1,4 @@
+import asyncio
 import importlib
 import json
 import shutil
@@ -7,6 +8,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import responses
+from aiohttp import web as aioweb
+from aiohttp.test_utils import TestClient, TestServer
 
 SONARR = "http://sonarr:8989"
 SINCE = "2026-01-01T00:00:00+00:00"
@@ -1341,7 +1344,7 @@ def test_the_missing_episodes_come_from_the_calendar_and_the_library_is_asked_on
     assert library.call_count == 1  # kept: the whole library is one big answer
     clock = [sync.time.monotonic()]
     monkeypatch.setattr(sync.time, "monotonic", lambda: clock[0])
-    sync._series_by_tvdb = (clock[0], {111: {"id": 7}})
+    sync._series_by_tvdb[""] = (clock[0], {111: {"id": 7}})  # the main Sonarr's entry
     sync.sonarr_series({222})  # a series added since, but asked less than a minute ago: not again yet
     assert library.call_count == 1
     clock[0] += 61
@@ -1629,3 +1632,117 @@ def test_another_sonarr_gets_its_own_copy_with_its_own_ladder(tmp_path, monkeypa
     assert [(c.get("instance"), c["series"], c["outcome"]) for c in cards] == [(None, "Show", "downloaded"), ("sonarr-4k", "Show · sonarr-4k", "downloaded")]
     m = sync.FOLDER.fullmatch("unshackle-sonarr-4k-111-S02E05")
     assert m.groups() == ("sonarr-4k", "111", "02", "05") and sync.FOLDER.fullmatch("unshackle-111-S02E05").group(1) is None
+
+
+# From #10, by mj23au: another Sonarr picked by hand, its own series list, Catch up
+FOURK = {"name": "sonarr-4k", "url": "http://sonarr4k:8989", "api_key": "k4", "downloads": "", "quality_ladder": "4K only",
+         "download_only": None}
+
+
+def with_4k(sync):
+    sync.apply_settings({**sync.SETTINGS, "sonarrs": [FOURK]})
+    return sync.SONARRS["sonarr-4k"]
+
+
+@responses.activate
+def test_another_sonarr_needs_a_ladder_chosen_and_waits_until_it_is(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    import unshacklarr.web
+    web = importlib.reload(unshacklarr.web)
+    try:  # a new one: chosen before it is saved
+        web.check_sonarrs([{**FOURK, "quality_ladder": ""}], [], "http://sonarr:8989")
+        raise AssertionError("a new instance without a ladder chosen was kept")
+    except aioweb.HTTPBadRequest as e:
+        assert "Choose a quality ladder" in e.text
+    assert web.check_sonarrs([FOURK], [], "http://sonarr:8989")[0]["quality_ladder"] == "4K only"
+    same = web.check_sonarrs([{**FOURK, "quality_ladder": "series"}], [], "http://sonarr:8989")[0]
+    assert sync.instance_config(same, {"series": {1: {"ladder": "1080p"}}})["series"][1]["ladder"] == "1080p"  # each series' own
+    # one saved before (a test build): kept as it is, so other settings still save, but paused and told once
+    old = {**FOURK, "quality_ladder": ""}
+    assert web.check_sonarrs([{**old, "api_key": ""}], [old], "http://sonarr:8989")[0]["quality_ladder"] == ""
+    told = []
+    monkeypatch.setattr(sync, "notify", lambda settings, level, title, *a, **k: told.append(title))
+    monkeypatch.setattr(sync, "missing_episodes", lambda: (_ for _ in ()).throw(AssertionError("asked Sonarr for a paused instance")))
+    assert sync.sync_instance(old, sync.read_file(), {}) == 0 and sync.sync_instance(old, sync.read_file(), {}) == 0
+    assert told == ["Sonarr sonarr-4k has no quality ladder chosen"]
+    sync.apply_settings({**sync.SETTINGS, "sonarrs": [old]})
+    try:
+        sync.main([5], sonarr="sonarr-4k")
+        raise AssertionError("a hand-picked download went to a paused instance")
+    except RuntimeError as e:
+        assert "Choose a quality ladder" in str(e)
+
+
+def test_each_sonarr_keeps_its_own_series_list(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    inst = with_4k(sync)
+    libraries = {"": [{"tvdbId": 1, "id": 10}], "sonarr-4k": [{"tvdbId": 1, "id": 77}]}
+    monkeypatch.setattr(sync, "sonarr_get", lambda path, **_: libraries[(sync.instance() or {}).get("name", "")])
+    assert sync.sonarr_series({1})[1]["id"] == 10
+    with sync.on_instance(inst):
+        assert sync.sonarr_series({1})[1]["id"] == 77  # not the main Sonarr's id, cached a moment ago
+    assert sync.sonarr_series({1})[1]["id"] == 10
+
+
+def test_episodes_picked_in_another_sonarr_download_for_it_with_its_ladder(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    with_4k(sync)
+    seen = {}
+    monkeypatch.setattr(sync, "chosen_episodes", lambda ids: seen.setdefault("asked_in", (sync.instance() or {}).get("name")) and [])
+    monkeypatch.setattr(sync, "sync", lambda config, settings, episodes, **kw: seen.update(
+        ran_in=(sync.instance() or {}).get("name"), ladder=config["series"][111].get("ladder"), manual=kw.get("manual")) or 0)
+    sync.main([5], sonarr="sonarr-4k")
+    assert seen == {"asked_in": "sonarr-4k", "ran_in": "sonarr-4k", "ladder": "4K only", "manual": True}
+    seen.clear()
+    sync.main([5])
+    assert seen["ran_in"] is None and seen["ladder"] is None  # the main Sonarr, the series' own ladder
+
+
+def test_episodes_catch_up_and_download_name_another_sonarr(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    import unshacklarr.web
+    web = importlib.reload(unshacklarr.web)
+    with_4k(web.sonarr_sync)
+    asked = []
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_get", lambda path, **_: asked.append((path, (web.sonarr_sync.instance() or {}).get("name"))) or [])
+    monkeypatch.setattr(web, "missing_of_managed", lambda days: [{"from": (web.sonarr_sync.instance() or {}).get("name")}])
+    monkeypatch.setattr(web, "cdm_refusal", lambda ids: asked.append(("cdm", (web.sonarr_sync.instance() or {}).get("name"))) or "")
+    started = []
+    monkeypatch.setattr(web, "run_sync", lambda ids, **kw: started.append(kw.get("sonarr")))
+    monkeypatch.setattr(web, "room_for_one_more", lambda: None)
+    web.app._middlewares = type(web.app._middlewares)([web.same_origin_only])  # logged in, for this test
+    h = {"X-Unshackle": "1"}
+
+    async def go():
+        async with TestClient(TestServer(web.app)) as client:
+            eps = (await client.get("/api/series/77/episodes?sonarr=sonarr-4k", headers=h)).status
+            bad = (await client.get("/api/series/77/episodes?sonarr=nope", headers=h)).status
+            caught = await (await client.get("/api/missing?sonarr=sonarr-4k", headers=h)).json()
+            down = (await client.post("/api/download", json={"episodeIds": [5], "sonarr": "sonarr-4k"}, headers=h)).status
+            return eps, bad, caught, down
+
+    eps, bad, caught, down = asyncio.run(go())
+    assert eps == 200 and bad == 400
+    assert ("episode", "sonarr-4k") in asked and ("episodefile", "sonarr-4k") in asked and ("cdm", "sonarr-4k") in asked
+    assert caught["items"] == [{"from": "sonarr-4k"}]
+    assert down == 200 and started == ["sonarr-4k"]
+
+
+def test_the_series_page_and_upgrades_know_the_other_sonarr(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    import unshacklarr.web
+    web = importlib.reload(unshacklarr.web)
+    web.write_config({**web.read_config(), "series": {1: {"service": "X", "title": "t"}, 2: {"service": "X", "title": "u"}}})
+    with_4k(web.sonarr_sync)  # after: writing the config applies its settings
+    libraries = {"": {1: {"id": 10}, 2: {"id": 20}}, "sonarr-4k": {1: {"id": 77}}}
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_series", lambda wanted: libraries[(web.sonarr_sync.instance() or {}).get("name", "")])
+    assert web.instances_of_series() == {1: [{"name": "sonarr-4k", "id": 77, "ladder": "4K only", "download_only": None}]}
+    web.health["sonarrs"] = {"sonarr-4k": {"ok": False}}
+    assert web.instances_of_series() == {}  # down: the page opens without waiting for it
+    assert web.upgrades_file("") == web.UPGRADES_FILE and web.upgrades_file("sonarr-4k").name == "upgrades_found-sonarr-4k.json"
+    seen = []
+    monkeypatch.setattr(web, "upgrade_candidates", lambda config: seen.append(((web.sonarr_sync.instance() or {}).get("name"),
+                                                                              config["series"][1].get("ladder"))) or [])
+    web.scan_upgrades("sonarr-4k")
+    assert seen == [("sonarr-4k", "4K only")]  # its files, on its own ladder
+    assert web.read_json(web.upgrades_file("sonarr-4k"), {})["items"] == [] and not web.UPGRADES_FILE.exists()

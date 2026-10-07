@@ -522,6 +522,7 @@ async def state(_):
         "builtin_ladders": sonarr_sync.BUILTIN_LADDERS,
         "backups": backups_info(),
         "network_services": {str(s["tvdbId"]): tag for s in series if (tag := service_for_network(s.get("network"), set(services)))},
+        "instances": {str(k): v for k, v in (await asyncio.to_thread(instances_of_series)).items()},
     })
 
 
@@ -697,8 +698,9 @@ async def save_config(request):
         if opts or own or picks:  # a service with nothing set is not worth a line
             service_defaults[service] = {"options": opts, "service_options": own, **picks}
     settings["quality_ladder"] = check_ladder_name(settings.get("quality_ladder"), ladders, "the settings")
-    for other in settings["sonarrs"]:
-        other["quality_ladder"] = check_ladder_name(other["quality_ladder"], ladders, f"Sonarr {other['name']}")
+    for other in settings["sonarrs"]:  # "" stays as saved (not chosen yet: paused, and said so); "series": each series' own
+        if other["quality_ladder"] not in ("", sonarr_sync.SAME_AS_SERIES):
+            other["quality_ladder"] = check_ladder_name(other["quality_ladder"], ladders, f"Sonarr {other['name']}")
     config = {
         "settings": settings,
         "auth": previous["auth"],  # never from the browser
@@ -817,6 +819,8 @@ def check_sonarrs(given, saved, main_url: str) -> list[dict]:
         folder = str(i.get("downloads") or "").strip().rstrip("/\\")
         if folder and (not (posixpath.isabs(folder) or ntpath.isabs(folder)) or ".." in re.split(r"[\\/]", folder)):
             raise web.HTTPBadRequest(text=f"{folder} must be a full path, from / (or a drive letter), without ..")
+        if not str(i.get("quality_ladder") or "") and name not in saved:  # a new one: chosen, never a silent default
+            raise web.HTTPBadRequest(text=f"Choose a quality ladder for {name}: a ladder, Off, or Same as each series")
         only = i.get("download_only")
         out.append({"name": name, "url": url, "api_key": key, "downloads": folder, "quality_ladder": str(i.get("quality_ladder") or ""),
                     "download_only": only if isinstance(only, bool) else None})
@@ -2293,13 +2297,13 @@ def room_for_one_more() -> None:
 
 
 def run_sync(episode_ids: list[int] | None = None, replace: bool = False, kind: str = "manual", numbering: dict | None = None,
-             batch: str | None = None) -> threading.Thread:
+             batch: str | None = None, sonarr: str = "") -> threading.Thread:
     """A sync in the background: every missing episode, or the ones given. Each episode has
     its own lock, so these runs never download the same one twice."""
     def work():
         global last_sync
         try:
-            sonarr_sync.main(episode_ids, replace=replace, kind=kind, numbering=numbering, batch=batch)
+            sonarr_sync.main(episode_ids, replace=replace, kind=kind, numbering=numbering, batch=batch, sonarr=sonarr)
         except Exception as e:  # notified already; the page shows the history
             print(f"Sync stopped: {type(e).__name__}: {e}", flush=True)
         finally:
@@ -2376,12 +2380,46 @@ def ladder_track(mi: dict) -> dict:
             else "HDR10" if "HDR" in dynamic or "PQ" in dynamic else "SDR"}
 
 
+def instances_of_series() -> dict[int, list[dict]]:
+    """Each series set up here, in the other Sonarr instances: {tvdb: [{"name", "id" (its series id there), "ladder",
+    "download_only"}]}. An instance the health check finds down is skipped: the page opens without waiting for it."""
+    managed = {int(k) for k, v in (read_config()["series"] or {}).items() if v.get("service")}
+    out: dict[int, list[dict]] = {}
+    for inst in list(sonarr_sync.SONARRS.values()):
+        if health.get("sonarrs", {}).get(inst["name"], {}).get("ok") is False:
+            continue
+        try:
+            found = on_sonarr(inst, sonarr_sync.sonarr_series, managed)
+        except requests.RequestException:
+            continue
+        for tvdb in managed & set(found):
+            out.setdefault(tvdb, []).append({"name": inst["name"], "id": found[tvdb]["id"],
+                                             "ladder": inst["quality_ladder"], "download_only": inst["download_only"]})
+    return out
+
+
+def sonarr_named(name: str) -> dict | None:
+    """The other Sonarr a request names (?sonarr= or "sonarr"); None: the main one."""
+    if not name:
+        return None
+    if name not in sonarr_sync.SONARRS:
+        raise web.HTTPBadRequest(text=f"No Sonarr named {name} in Settings, Sonarr")
+    return sonarr_sync.SONARRS[name]
+
+
+def on_sonarr(inst: dict | None, fn, *args, **kwargs):
+    """fn in a worker thread, talking to that Sonarr: the instance is the thread's own."""
+    with sonarr_sync.on_instance(inst):
+        return fn(*args, **kwargs)
+
+
 async def episodes(request):
-    series_id = request.match_info["series_id"]
+    series_id = request.match_info["series_id"]  # that Sonarr's own series id (?sonarr=)
+    inst = sonarr_named(request.query.get("sonarr", ""))
     try:
         eps, files = await asyncio.gather(
-            asyncio.to_thread(sonarr_sync.sonarr_get, "episode", seriesId=series_id),
-            asyncio.to_thread(sonarr_sync.sonarr_get, "episodefile", seriesId=series_id),
+            asyncio.to_thread(on_sonarr, inst, sonarr_sync.sonarr_get, "episode", seriesId=series_id),
+            asyncio.to_thread(on_sonarr, inst, sonarr_sync.sonarr_get, "episodefile", seriesId=series_id),
         )
     except requests.RequestException as e:
         raise web.HTTPBadGateway(text=f"Sonarr is unreachable: {no_credentials(e)}")
@@ -2862,14 +2900,16 @@ async def download(request):
     batch = str(body.get("batch") or "")  # a retry from a job: it stays in that job
     if batch and not BATCH_ID.fullmatch(batch):
         raise web.HTTPBadRequest(text="Unknown job")
-    if why := await asyncio.to_thread(cdm_refusal, ids):
+    inst = sonarr_named(str(body.get("sonarr") or ""))  # episodes picked in another Sonarr: its ids, its ladder
+    if why := await asyncio.to_thread(on_sonarr, inst, cdm_refusal, ids):
         raise web.HTTPBadRequest(text=why)
     if numbering is None and body.get("retry") is True:  # the same numbering as the attempt it retries
         numbering = await asyncio.to_thread(retried_numbering, ids, batch)
     if batch and len(ids) == 1 and await join_job(batch, ids[0]):
         return web.json_response({"running": True})  # the job still runs: at the end of its queue, one download at a time
     room_for_one_more()
-    run_sync(ids, replace=replace, kind="retry" if body.get("retry") is True else "manual", numbering=numbering, batch=batch or None)
+    run_sync(ids, replace=replace, kind="retry" if body.get("retry") is True else "manual", numbering=numbering, batch=batch or None,
+             sonarr=inst["name"] if inst else "")
     return web.json_response({"running": True})
 
 
@@ -2897,9 +2937,13 @@ def missing_of_managed(days: int | None, now: datetime | None = None) -> list[di
 # Upgrades: the files of the series with a quality ladder that are not on its first step, checked against the
 # service's tracks one episode at a time. A list-tracks logs in to the service: a pause between two, and only
 # when asked (Activity, Upgrades).
-UPGRADES_FILE = sonarr_sync.DATA / "upgrades_found.json"  # the last check's finds: {"checked", "items"}
+UPGRADES_FILE = sonarr_sync.DATA / "upgrades_found.json"  # the last check's finds: {"checked", "items"}; another Sonarr's apart
+
+
+def upgrades_file(name: str = "") -> Path:
+    return UPGRADES_FILE.with_name(f"upgrades_found-{name}.json") if name else UPGRADES_FILE
 UPGRADE_PAUSE = 2.0  # seconds between two episodes asked of a service
-upgrade_scan = {"running": False, "done": 0, "total": 0, "series": "", "errors": 0, "stop": False}
+upgrade_scan = {"running": False, "done": 0, "total": 0, "series": "", "errors": 0, "stop": False, "sonarr": ""}
 
 
 def upgrade_candidates(config: dict) -> list[tuple]:
@@ -2921,10 +2965,18 @@ def upgrade_candidates(config: dict) -> list[tuple]:
     return work
 
 
-def scan_upgrades() -> None:
-    """Ask each candidate's service which step it has; keep those it has on an earlier step than the file."""
+def scan_upgrades(name: str = "") -> None:
+    """Ask each candidate's service which step it has; keep those it has on an earlier step than the file. For
+    another Sonarr (name), its files, placed on its own ladder."""
+    inst = sonarr_sync.SONARRS.get(name) if name else None
+    with sonarr_sync.on_instance(inst):
+        scan_upgrades_in(inst, name)
+
+
+def scan_upgrades_in(inst: dict | None, name: str) -> None:
     config, found = sonarr_sync.read_file(), []
-    upgrade_scan.update(running=True, done=0, total=0, series="", errors=0, stop=False)
+    config = sonarr_sync.instance_config(inst, config) if inst else config
+    upgrade_scan.update(running=True, done=0, total=0, series="", errors=0, stop=False, sonarr=name)
     try:
         work = upgrade_candidates(config)
         upgrade_scan["total"] = len(work)
@@ -2952,7 +3004,7 @@ def scan_upgrades() -> None:
                               "sxxeyy": f"S{e['seasonNumber']:02}E{e['episodeNumber']:02}", "title": e.get("title"),
                               "file": sonarr_sync.track_label(track), "fileStep": step + 1 if step < len(ladder["steps"]) else None,
                               "better": sonarr_sync.track_label(have), "betterStep": number})
-        write_atomic(UPGRADES_FILE, json.dumps({"checked": datetime.now(timezone.utc).isoformat(), "items": found,
+        write_atomic(upgrades_file(name), json.dumps({"checked": datetime.now(timezone.utc).isoformat(), "items": found,
                                                 "stopped": upgrade_scan["stop"]}))
     except requests.RequestException as err:
         upgrade_scan["errors"] += 1
@@ -2961,12 +3013,13 @@ def scan_upgrades() -> None:
         upgrade_scan.update(running=False, series="")
 
 
-async def upgrades(_):
-    """Activity, Upgrades: the last check's finds, and the check going on."""
-    last = await asyncio.to_thread(read_json, UPGRADES_FILE, {})
+async def upgrades(request):
+    """Activity, Upgrades: the last check's finds, and the check going on; another Sonarr's with ?sonarr=."""
+    name = (sonarr_named(request.query.get("sonarr", "")) or {}).get("name", "")
+    last = await asyncio.to_thread(read_json, upgrades_file(name), {})
     cards = await asyncio.to_thread(run_cards) if sonarr_sync.RUNS_DIR.exists() else []
     # replaced since the check: gone from the list; being replaced now: said so
-    mine = [c for c in cards if not c.get("instance")]  # Upgrades looks at the main Sonarr's files
+    mine = [c for c in cards if c.get("instance", "") == name]  # that Sonarr's copies only
     done = {(c.get("tvdbId"), c.get("sxxeyy")) for c in mine if c.get("outcome") == "downloaded" and (c.get("ended") or "") > (last.get("checked") or "")}
     busy = {(c.get("tvdbId"), c.get("sxxeyy")) for c in mine if c.get("outcome") == "running"}
     items = [{**i, "running": (i["tvdbId"], i["sxxeyy"]) in busy} for i in last.get("items") or [] if (i["tvdbId"], i["sxxeyy"]) not in done]
@@ -2979,18 +3032,22 @@ async def upgrades_action(request):
     if request.match_info["action"] == "stop":
         upgrade_scan["stop"] = True
     elif not upgrade_scan["running"]:
+        inst = sonarr_named(str((await json_object(request)).get("sonarr") or "")) if request.can_read_body else None
+        if sonarr_sync.unset_ladder(inst):
+            raise web.HTTPBadRequest(text=f"Choose a quality ladder for Sonarr {inst['name']} in Settings, Sonarr first")
         upgrade_scan["running"] = True  # at once: a second click before the thread starts is not a second check
-        threading.Thread(target=scan_upgrades, daemon=True).start()
+        threading.Thread(target=scan_upgrades, args=((inst or {}).get("name", ""),), daemon=True).start()
     return web.json_response({"running": upgrade_scan["running"]})
 
 
 async def missing(request):
-    """Activity's catch-up: what missing_of_managed finds, aired within ?days= when given."""
+    """Activity's catch-up: what missing_of_managed finds, aired within ?days= when given, in ?sonarr= when given."""
     days = request.query.get("days", "")
     if days and not days.isdigit():
         raise web.HTTPBadRequest(text="days is a number of days")
+    inst = sonarr_named(request.query.get("sonarr", ""))
     try:
-        items = await asyncio.to_thread(missing_of_managed, int(days) if days else None)
+        items = await asyncio.to_thread(on_sonarr, inst, missing_of_managed, int(days) if days else None)
     except requests.RequestException as e:
         raise web.HTTPBadGateway(text=f"Sonarr is unreachable: {no_credentials(e)}")
     return web.json_response({"items": items})

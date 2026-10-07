@@ -953,18 +953,18 @@ def broadcast_plans(config: dict) -> list[tuple[dict, list[dict], dict[int, date
     return plans
 
 
-_series_by_tvdb: tuple[float, dict] = (0.0, {})
+_series_by_tvdb: dict[str, tuple[float, dict]] = {}  # by Sonarr ("" the main one): (fetched, series by TVDB id)
 
 
 def sonarr_series(wanted: set) -> dict[int, dict]:
     """Sonarr's series by TVDB id, kept an hour: the whole library is one big answer, asked again sooner
     only for a series it did not have (added since), at most once a minute."""
-    global _series_by_tvdb
-    fetched, known = _series_by_tvdb
+    key = (instance() or {}).get("name", "")  # each Sonarr its own library: ids differ between them
+    fetched, known = _series_by_tvdb.get(key, (0.0, {}))
     age = time.monotonic() - fetched
     if not fetched or age > 3600 or (age > 60 and not wanted <= set(known)):
         known = {s["tvdbId"]: s for s in sonarr_get("series") if s.get("tvdbId")}
-        _series_by_tvdb = (time.monotonic(), known)
+        _series_by_tvdb[key] = (time.monotonic(), known)
     return known
 
 
@@ -1779,12 +1779,19 @@ sweep_lock = threading.Lock()
 
 
 def main(episode_ids: list[int] | None = None, replace: bool = False, kind: str = "manual", numbering: dict | None = None,
-         batch: str | None = None) -> int:
+         batch: str | None = None, sonarr: str = "") -> int:
     config = read_file()
     settings = config.get("notifications") or {}
     try:
         if episode_ids:  # picked by hand or a release burst: the per-episode lock is enough
-            return sync(config, settings, chosen_episodes(episode_ids), manual=True, replace=replace, kind=kind, numbering=numbering, batch=batch)
+            inst = SONARRS.get(sonarr) if sonarr else None  # picked in another Sonarr's episodes: its ids, its ladder
+            if sonarr and not inst:
+                raise RuntimeError(f"The Sonarr named {sonarr} is no longer in Settings, Sonarr")
+            if unset_ladder(inst):
+                raise RuntimeError(f"Choose a quality ladder for Sonarr {sonarr} in Settings, Sonarr first")
+            with on_instance(inst):
+                return sync(instance_config(inst, config) if inst else config, settings, chosen_episodes(episode_ids),
+                            manual=True, replace=replace, kind=kind, numbering=numbering, batch=batch)
         if not sweep_lock.acquire(blocking=False):  # one automatic sweep at a time
             print("A sync is already running, nothing to do.")
             return 0
@@ -1808,10 +1815,19 @@ def main(episode_ids: list[int] | None = None, replace: bool = False, kind: str 
         raise
 
 
+SAME_AS_SERIES = "series"  # another Sonarr's ladder chosen as each series' own; "" is none chosen yet
+
+
+def unset_ladder(inst: dict | None) -> bool:
+    """Another Sonarr whose ladder was never chosen: paused, so no 1080p copy lands in a 4K library by default."""
+    return bool(inst) and not inst.get("quality_ladder")
+
+
 def instance_config(inst: dict, config: dict) -> dict:
     """The config as another Sonarr downloads by: the same series, with its own ladder and After the download
     when it sets them (over the series' own: a 4K Sonarr wants 4K whatever the series says)."""
-    own = {**({"ladder": inst["quality_ladder"]} if inst.get("quality_ladder") else {}),
+    ladder = inst.get("quality_ladder") or ""
+    own = {**({"ladder": ladder} if ladder and ladder != SAME_AS_SERIES else {}),
            **({"download_only": bool(inst["download_only"])} if inst.get("download_only") is not None else {})}
     return {**config, "series": {k: {**v, **own} for k, v in (config.get("series") or {}).items()}}
 
@@ -1822,6 +1838,11 @@ instance_failed: dict[str, str] = {}  # another Sonarr's last sync failure, told
 def sync_instance(inst: dict, config: dict, settings: dict) -> int:
     """The automatic sync for another Sonarr: the new episodes it misses of the series set up here (by their TVDB
     id), downloaded and imported into it. Its own failure is told and ends nothing else."""
+    if unset_ladder(inst):  # told once, then nothing downloads for it until a ladder is chosen
+        if first_warning(f"sonarr-unset:{inst['name']}"):
+            notify(settings, "warning", f"Sonarr {inst['name']} has no quality ladder chosen",
+                   f"Nothing is downloaded for it until you choose one in Settings, Sonarr: a ladder, Off, or Same as each series.")
+        return 0
     with on_instance(inst):
         try:
             series = config.get("series") or {}

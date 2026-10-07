@@ -188,6 +188,7 @@
  "After that, Unshacklarr stops trying: download the episode by hand from its series.": [],
  "After the defaults, for every series on that service:": [],
  "After the download": [],
+ "After the download as above": [],
  "After the download, the service is checked once a day for this many days. Nothing is downloaded until that language is there. After that, the episode keeps the audio it has.": [],
  "After this delay, you get one": [],
  "After two failed checks in a row, and again when it is back": [],
@@ -209,6 +210,9 @@
  "All shown": [],
  "Already downloaded: waiting for Sonarr's import": [],
  "Already set up": [],
+ "Also in {0}": [
+  "i.name"
+ ],
  "Also tell me when": [],
  "Always remove it": [],
  "Amount of tracks to download concurrently.": [],
@@ -353,15 +357,24 @@
   "scan.errors ? ` · ${scan.errors} could not be asked` : \"\""
  ],
  "Checking Unshackle…": [],
- "Checking {0} of {1}{2}…": [
+ "Checking {0} of {1}{2}{3}…": [
   "scan.done",
   "scan.total",
+  "scan.sonarr ? ` in ${scan.sonarr}` : \"\"",
   "scan.series ? ` · ${scan.series}` : \"\""
  ],
  "Checking {0}…": [
   "label"
  ],
  "Checking…": [],
+ "Choose a quality ladder for Sonarr {0} in Settings, Sonarr first": [
+  "sonarr"
+ ],
+ "Choose a quality ladder for {0}: a ladder, Off, or Same as each series": [
+  "name"
+ ],
+ "Choose one: nothing is downloaded for this Sonarr until you do.": [],
+ "Choose…": [],
  "Chrome": [],
  "Clear": [],
  "Clear all": [],
@@ -560,9 +573,10 @@
  ],
  "Downloading": [],
  "Downloading now": [],
- "Downloading {0} episode{1}: follow it in Activity": [
+ "Downloading {0} episode{1}{2}: follow it in Activity": [
   "picked.size",
-  "picked.size > 1 ? \"s\" : \"\""
+  "picked.size > 1 ? \"s\" : \"\"",
+  "epSonarr ? ` for ${epSonarr}` : \"\""
  ],
  "Downloading {0}%": [
   "Math.round(Number(c.live?.progress) || 0)"
@@ -1023,6 +1037,9 @@
   "tag"
  ],
  "No DRM, nothing to decrypt": [],
+ "No Sonarr named {0} in Settings, Sonarr": [
+  "name"
+ ],
  "No address yet": [],
  "No address yet: add Discord, Telegram, ntfy or another.": [],
  "No answer after 30 s.": [],
@@ -1188,6 +1205,7 @@
  "Nothing goes out": [],
  "Nothing in the history yet": [],
  "Nothing in use": [],
+ "Nothing is downloaded for it until you choose one in Settings, Sonarr: a ladder, Off, or Same as each series.": [],
  "Nothing is downloaded while the downloads folder has less free space than this, and you get a notification. 0: not checked.": [],
  "Nothing is downloading or waiting.": [],
  "Nothing is downloading right now.": [],
@@ -1330,6 +1348,9 @@
  "Passwords do not match": [],
  "Paste the whole webhook URL: it starts with https://discord.com/api/webhooks/": [],
  "Pause": [],
+ "Paused for {0}: choose a quality ladder in Settings, Sonarr.": [
+  "paused.join(\", \")"
+ ],
  "Per episode": [],
  "Per service": [],
  "Pick a country in the list": [],
@@ -1460,6 +1481,7 @@
  "SDR": [],
  "SELECT": [],
  "SL": [],
+ "Same as each series": [],
  "Same path": [],
  "Sat": [],
  "Save": [],
@@ -1640,6 +1662,12 @@
  "Sonarr {0}": [
   "i.name"
  ],
+ "Sonarr {0} has no quality ladder chosen": [
+  "inst['name']"
+ ],
+ "Sonarr {0} has no quality ladder chosen: nothing is downloaded for it until you choose one in Settings, Sonarr.": [
+  "name"
+ ],
  "Sonarr {0} is unreachable: {1}": [
   "inst['name']",
   "no_credentials(e)"
@@ -1788,7 +1816,7 @@
  "The Schedule shows its streaming services.": [],
  "The Series": [],
  "The Sonarr named {0} is no longer in Settings, Sonarr": [
-  "m.group(1)"
+  "sonarr"
  ],
  "The URL of {0} cannot start with '-'": [
   "key"
@@ -2227,6 +2255,8 @@
  "Where {0} downloads.": [
   "tag"
  ],
+ "Which Sonarr": [],
+ "Which Sonarr's episodes": [],
  "Which device each service uses": [],
  "Which message": [],
  "Which series": [],
@@ -2347,6 +2377,9 @@
  "failed its test": [],
  "for another.": [],
  "for one,": [],
+ "for {0}": [
+  "epSonarr"
+ ],
  "from season": [],
  "from the PATH. Otherwise, its full path, e.g.": [],
  "gotify": [],
@@ -2356,6 +2389,9 @@
  "iPhone": [],
  "import": [],
  "in a git clone.": [],
+ "in {0}": [
+  "scan.sonarr"
+ ],
  "in {0} · {1}": [
   "until(next)",
   "every === 24 ? \"once a day\" : every === 1 ? \"every hour\" : `every ${every} hours`"
@@ -2380,6 +2416,8 @@
  "no": [],
  "no (no group key: an older .prd)": [],
  "no DRM: no device used": [],
+ "no ladder": [],
+ "no ladder chosen yet": [],
  "no language tag": [],
  "no language tagged": [],
  "no output": [],
@@ -2527,6 +2565,7 @@
  "this computer": [],
  "this device is no longer subscribed": [],
  "this download": [],
+ "this series' ladder": [],
  "timeZone": [],
  "title={0} {1} {2}": [
   "name",

@@ -1554,3 +1554,8 @@ input.bad, select.bad { border-color: var(--err) !important; box-shadow: 0 0 0 3
 .wz-restore-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--field-bg); color: var(--text); font: inherit; cursor: pointer; text-align: left; }
 .wz-restore-row:hover { border-color: var(--accent); } .wz-restore-row b { flex: 1; font-weight: 600; } .wz-restore-row small { color: var(--muted); } .wz-restore-row span { color: var(--accent); font-weight: 600; }
 .wz-sum li.wz-bad { color: var(--err); }
+/* A card head with a button: its text shrinks beside it ("Add a Sonarr" stays in the card). From #10, by mj23au */
+.sx-head:has(> .btn) > div { flex: 1; min-width: 0; }
+.d-also { display: grid; gap: 4px; margin-top: var(--gap-field); padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; }
+.d-also[hidden] { display: none; } .d-also p { margin: 0; } .d-also span { color: var(--muted); }
+.ep-sonarr { margin-bottom: 10px; }

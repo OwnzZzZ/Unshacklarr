@@ -579,6 +579,10 @@ async function refreshLog() {
   $("#log-state").textContent = running
     ? "A sync is running."
     : `No sync running. One starts automatically every ${S.config?.settings?.sync_every_hours == 1 ? "hour" : `${S.config?.settings?.sync_every_hours ?? 2} hours`}, or run one now.`;
+  // another Sonarr whose ladder was never chosen: nothing downloads for it, said here too
+  const paused = (S.config?.settings?.sonarrs || []).filter((i) => !i.quality_ladder).map((i) => i.name);
+  if (paused.length) $("#log-state").append(el("span", { className: "status-err", textContent:
+    ` Paused for ${paused.join(", ")}: choose a quality ladder in Settings, Sonarr.` }));
   $("#sync").disabled = running;
   $("#sync span").textContent = running ? "Sync running…" : "Run sync now";
   $("#sync").classList.toggle("spin", running);
