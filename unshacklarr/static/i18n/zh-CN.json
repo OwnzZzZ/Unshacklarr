@@ -2009,5 +2009,6 @@
  "How the page looks: its language, and episode titles hidden or not.": "页面的显示方式：语言，以及是否隐藏剧集标题。",
  "Interface": "界面",
  "Language, no spoilers": "语言、防剧透",
- "Where you watch, and the time zone that release times and syncs follow.": "你的观看地区，以及发布时间和同步所遵循的时区。"
+ "Where you watch, and the time zone that release times and syncs follow.": "你的观看地区，以及发布时间和同步所遵循的时区。",
+ "found by its title · {0}": "按标题找到 · {0}"
 }

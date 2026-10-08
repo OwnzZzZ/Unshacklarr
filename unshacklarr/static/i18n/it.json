@@ -1997,5 +1997,6 @@
  "How the page looks: its language, and episode titles hidden or not.": "L'aspetto della pagina: la lingua e se i titoli degli episodi sono nascosti.",
  "Interface": "Interfaccia",
  "Language, no spoilers": "Lingua, niente spoiler",
- "Where you watch, and the time zone that release times and syncs follow.": "Dove guardi e il fuso orario seguito dagli orari di uscita e dalle sincronizzazioni."
+ "Where you watch, and the time zone that release times and syncs follow.": "Dove guardi e il fuso orario seguito dagli orari di uscita e dalle sincronizzazioni.",
+ "found by its title · {0}": "trovata dal titolo · {0}"
 }

@@ -537,7 +537,7 @@ async function loadSuggestions(s, refresh = false) {
   box.replaceChildren(...links.map((l) => el("button", {
     ariaLabel: `Use ${l.service}: ${l.url}`,
     onclick: () => applySuggestion(l),
-  }, el("b", { textContent: l.service }), el("span", { textContent: l.needs_series_url || l.episode ? `episode link · ${l.url}` : l.url }),
+  }, el("b", { textContent: l.service }), el("span", { textContent: l.needs_series_url || l.episode ? `episode link · ${l.url}` : l.found_by === "search" ? `found by its title · ${l.url}` : l.url }),
     el("small", { textContent: l.country }))));
   box.querySelectorAll("button").forEach((b, i) => b.dataset.url = links[i].url);
 }

@@ -2004,5 +2004,6 @@
  "How the page looks: its language, and episode titles hidden or not.": "ページの表示：言語と、エピソードのタイトルを隠すかどうか。",
  "Interface": "インターフェース",
  "Language, no spoilers": "言語、ネタバレ防止",
- "Where you watch, and the time zone that release times and syncs follow.": "視聴する国と、公開時刻と同期が従うタイムゾーン。"
+ "Where you watch, and the time zone that release times and syncs follow.": "視聴する国と、公開時刻と同期が従うタイムゾーン。",
+ "found by its title · {0}": "タイトルで検索 · {0}"
 }

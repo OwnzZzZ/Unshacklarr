@@ -1977,5 +1977,6 @@
  "How the page looks: its language, and episode titles hidden or not.": "Wie die Seite aussieht: ihre Sprache und ob Episodentitel ausgeblendet sind.",
  "Interface": "Oberfläche",
  "Language, no spoilers": "Sprache, keine Spoiler",
- "Where you watch, and the time zone that release times and syncs follow.": "Wo du schaust und die Zeitzone, nach der sich Erscheinungszeiten und Synchronisierungen richten."
+ "Where you watch, and the time zone that release times and syncs follow.": "Wo du schaust und die Zeitzone, nach der sich Erscheinungszeiten und Synchronisierungen richten.",
+ "found by its title · {0}": "über den Titel gefunden · {0}"
 }

@@ -1155,10 +1155,54 @@ async def suggest(request):
                     seen["country"] = ", ".join(filter(None, [seen["country"], link["country"]]))
             with_series = {l["service"] for l in unique.values() if not l.get("episode")}
             links = [l for l in unique.values() if not (l.get("episode") and l["service"] in with_series)]
+            links = await asyncio.to_thread(searched_in_place, links, int(tmdb_id))
             hit = {"countries": countries, "checked": datetime.now(timezone.utc).isoformat(), "links": links}
             cache[tmdb_id] = hit
             write_atomic(TMDB_CACHE, json.dumps(cache))
     return web.json_response({"links": await asyncio.to_thread(installed_links, hit["links"]), "checked": hit["checked"]})
+
+
+def title_key(title: str) -> str:
+    """A title compared without its year, case, accents or punctuation: "WAR (2026)" and "War" match."""
+    title = re.sub(r"\s*\(\d{4}\)\s*$", "", unicodedata.normalize("NFKD", title or ""))
+    return re.sub(r"[^a-z0-9]+", "", title.casefold())
+
+
+def searched_in_place(links: list[dict], tmdb_id: int) -> list[dict]:
+    """A service TMDB links only by an episode (HBO Max's /video/watch/<id>) is searched with
+    Sonarr's title; the one result with that title takes the episode link's place. No match, several, or a service
+    that can't be searched: the episode link stays."""
+    alone = {l["service"] for l in links if l.get("episode")} - {l["service"] for l in links if not l.get("episode")}
+    if not alone:
+        return links
+    try:
+        series = next((s for s in sonarr_series() if s.get("tmdbId") == tmdb_id), None)
+    except requests.RequestException:
+        return links
+    if not series:
+        return links
+    out = list(links)
+    for service in sorted(alone):
+        if url := search_series_url(service, series["title"]):
+            episode = next(l for l in out if l["service"] == service and l.get("episode"))
+            out = [l for l in out if not (l["service"] == service and l.get("episode"))]
+            out.append({**{k: v for k, v in episode.items() if k != "episode"}, "url": url, "found_by": "search"})
+    return out
+
+
+def search_series_url(service: str, title: str) -> str | None:
+    """The series' address on its service when its search has exactly one result of that title."""
+    show = {"service": service}
+    dl, _ = sonarr_sync.stacked(show, read_config())
+    params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy")}
+    query = re.sub(r"\s*\(\d{4}\)\s*$", "", title)
+    try:
+        found = sonarr_sync.backend_for(service).call("POST", "/api/search", json={**params, "service": service, "query": query})
+    except UnshackleError as e:
+        print(f"Search {service} for {query!r}: {no_credentials(e)}", flush=True)
+        return None
+    same = [r for r in found.get("results") or [] if title_key(str(r.get("title") or "")) == title_key(title) and (r.get("url") or r.get("id"))]
+    return str(same[0].get("url") or same[0].get("id")) if len(same) == 1 else None
 
 
 def installed_links(links: list[dict]) -> list[dict]:

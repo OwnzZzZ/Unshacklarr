@@ -2001,5 +2001,6 @@
  "How the page looks: its language, and episode titles hidden or not.": "Вид страницы: язык и скрывать ли названия эпизодов.",
  "Interface": "Интерфейс",
  "Language, no spoilers": "Язык, без спойлеров",
- "Where you watch, and the time zone that release times and syncs follow.": "Где вы смотрите и часовой пояс для времени выхода и синхронизаций."
+ "Where you watch, and the time zone that release times and syncs follow.": "Где вы смотрите и часовой пояс для времени выхода и синхронизаций.",
+ "found by its title · {0}": "найдено по названию · {0}"
 }

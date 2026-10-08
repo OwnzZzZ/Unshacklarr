@@ -1558,3 +1558,45 @@ def test_the_page_files_come_compressed_and_kept_for_good(tmp_path, monkeypatch)
 
     encoding, versioned, plain, size = asyncio.run(go())
     assert encoding == "gzip" and "immutable" in versioned and plain == "no-cache" and size > 10000
+
+
+def test_an_episode_only_link_gives_way_to_the_series_found_by_its_title(tmp_path, monkeypatch):
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    episode = {"service": "HMAX", "url": "https://play.hbomax.com/video/watch/4d269596-6871/x", "country": "US",
+               "site": "play.hbomax.com", "episode": True}
+
+    class Backend:
+        def __init__(self, results=None, error=None):
+            self.results, self.error, self.asked = results or [], error, []
+
+        def call(self, method, path, json=None, **_):
+            self.asked.append(json)
+            if self.error:
+                raise self.error
+            return {"results": self.results}
+
+    def use(backend):
+        monkeypatch.setattr(web, "sonarr_series", lambda: [{"tmdbId": 55, "title": "WAR (2026)", "year": 2026}])
+        monkeypatch.setattr(web.sonarr_sync, "backend_for", lambda tag, config=None: backend)
+
+    backend = Backend([{"title": "War", "url": "/show/abc-123"}, {"title": "War of the Worlds", "url": "/show/zzz"}])
+    use(backend)
+    links = web.searched_in_place([episode, {"service": "ATV", "url": "umc.cmc.x", "country": "US"}], 55)
+    assert backend.asked[0]["query"] == "WAR" and backend.asked[0]["service"] == "HMAX"
+    hmax = [link for link in links if link["service"] == "HMAX"]
+    assert hmax == [{"service": "HMAX", "url": "/show/abc-123", "country": "US", "site": "play.hbomax.com", "found_by": "search"}]
+    assert any(link["service"] == "ATV" for link in links)
+
+    # the episode link stays without exactly one result of that title
+    for backend in (Backend([{"title": "War", "url": "/show/a"}, {"title": "WAR", "url": "/show/b"}]),  # two of that title
+                    Backend([{"title": "War Games", "url": "/show/c"}]),  # none
+                    Backend(error=web.UnshackleError("HMAX can't be searched"))):
+        use(backend)
+        assert web.searched_in_place([episode], 55) == [episode]
+    series_link = {"service": "HMAX", "url": "https://play.hbomax.com/show/x", "country": "AU"}
+    use(Backend([{"title": "War", "url": "/show/abc"}]))
+    assert web.searched_in_place([series_link], 55) == [series_link]  # a series link already: nothing searched
