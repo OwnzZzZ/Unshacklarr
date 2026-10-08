@@ -141,5 +141,6 @@ $("#version").onclick = $("#set-version").onclick = openNews;
 $("#news-close").onclick = $("#news-x").onclick = () => $("#news-dlg").close();
 $("#news-dlg").addEventListener("click", (e) => {  // a click outside the window (on the dimmed page) closes it
   const r = e.currentTarget.getBoundingClientRect();
-  if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) e.currentTarget.close();
+  const outside = e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+  if (e.target === e.currentTarget && outside) e.currentTarget.close();  // not a button pressed with the keyboard
 });
