@@ -255,7 +255,8 @@ function optionPicker(free, onPick) {
 const SEL = { on: false, ids: new Set() };  // the series picked to change together (js/bulk.js)
 function renderWall() {
   const q = $("#search").value.trim().toLowerCase();
-  const svc = $("#f-service").value;
+  const svc = $("#f-service").value, lib = $("#f-library").value;
+  const libsOf = (s) => S.sonarrsOf?.[s.tvdbId] || [];
   const on = (s) => Boolean(S.config.series[s.tvdbId]?.service);
   const failing = (s) => Boolean(S.health[s.tvdbId]) && on(s);
   const counts = { "": S.series.length, "*": S.series.filter(on).length, h: S.config.hidden_series.length, f: S.series.filter(failing).length };
@@ -282,6 +283,7 @@ function renderWall() {
       return (!q || s.title.toLowerCase().includes(q))
         && (!managed || (managed === "f" ? failing(s) : managed === "h" ? S.config.hidden_series.includes(s.tvdbId) : managed === "*" ? on : !on))
         && (!svc || on === svc)
+        && (!lib || (lib === "-" ? !libsOf(s).length : libsOf(s).some((o) => o.name === lib)))
         && (!$("#f-missing").checked || s.missing > 0)
         && (!$("#f-monitored").checked || s.monitored);
     })
@@ -292,6 +294,13 @@ function renderWall() {
       const art = el("span", { className: "art" });
       if (s.poster) art.append(el("img", { src: s.poster, alt: "", loading: "lazy", decoding: "async" }));
       if (conf?.service) art.append(el("span", { className: "svc", textContent: conf.service }));
+      if (libsOf(s).length) {  // the other Sonarr libraries it is in; struck through where switched off
+        const names = libsOf(s).map((o) => o.name), offs = names.filter((n) => conf?.sonarrs?.[n]?.off);
+        art.append(el("span", { className: `lib${conf?.service && (offs.length === names.length) ? " off" : ""}${conf?.main_off ? " only" : ""}`,
+          textContent: `${conf?.main_off ? "" : "+"}${names.join(", ")}`,
+          title: [`Also in ${names.join(", ")}.`, offs.length ? `Switched off for ${offs.join(", ")}.` : "",
+            conf?.main_off ? "Switched off for Sonarr." : ""].filter(Boolean).join("\n") }));  // whole sentences: each translates
+      }
       const sick = conf?.service && S.health[s.tvdbId];
       if (sick) art.append(el("span", { className: "sick", title: `Its last ${sick.failing} downloads failed${sick.cause ? `: ${sick.cause}` : ""}`, textContent: "!" }));
       if (S.config.hidden_series.includes(s.tvdbId)) {
@@ -631,11 +640,10 @@ $("#d-url").oninput = async (e) => {
   }
 };
 /* Sonarr as a browser opens it: its public address, else the one Unshacklarr uses unless it's a Docker name (http://sonarr:8989). */
-function sonarrWeb() {
-  const set = S.config.settings || {};
-  if (set.sonarr_public_url) return set.sonarr_public_url.replace(/\/+$/, "");
+function sonarrWeb(url = S.config.settings?.sonarr_url, publicUrl = S.config.settings?.sonarr_public_url) {
+  if (publicUrl) return publicUrl.replace(/\/+$/, "");
   try {
-    const u = new URL(set.sonarr_url);
+    const u = new URL(url);
     // A Docker name or a LAN address only works at home. Sonarr runs beside Unshacklarr (as in the compose file): the
     // name this page was opened with reaches the same machine (Tailscale, a VPN, another LAN name). A LAN address
     // stays as it is through a reverse proxy (no port in the page's address): Sonarr's port is rarely open there,
@@ -646,6 +654,15 @@ function sonarrWeb() {
     return u.origin + u.pathname.replace(/\/+$/, "");
   } catch { return ""; }
 }
+/* The other Sonarr instances that have the series, set up here or not: "also in sonarr-4k", each a link to it there. */
+function inOtherSonarrs(s, ext) {
+  const others = S.sonarrsOf?.[s.tvdbId] || [];
+  if (!others.length) return [];
+  return [" · also in ", ...others.flatMap((o, i) => {
+    const web = sonarrWeb(o.url, "");
+    return [...(i ? [", "] : []), web && o.slug ? ext(o.name, `${web}/series/${o.slug}`) : o.name];
+  })];
+}
 /* Under the series' name: it on TVDB, TMDB, its service (the page Unshackle downloads from) and Sonarr. */
 function renderMeta(s) {
   const ext = (label, href) => el("a", { href, target: "_blank", rel: "noopener", textContent: label, title: `This series on ${label}` });
@@ -654,5 +671,6 @@ function renderMeta(s) {
     ...(s.tmdbId ? [" · ", ext("TMDB", `https://www.themoviedb.org/tv/${s.tmdbId}`)] : []),
     ...(conf?.service && /^https?:\/\//.test(conf.title || "") ? [" · ", ext(svcName(conf.service), conf.title)] : []),
     ...(sonarrWeb() && s.titleSlug ? [" · ", ext("Sonarr", `${sonarrWeb()}/series/${s.titleSlug}`)] : []),
+    ...inOtherSonarrs(s, ext),
     s.year ? ` · ${s.year}` : "");
 }

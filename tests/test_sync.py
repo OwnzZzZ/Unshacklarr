@@ -1737,8 +1737,11 @@ def test_the_series_page_and_upgrades_know_the_other_sonarr(tmp_path, monkeypatc
     libraries = {"": {1: {"id": 10}, 2: {"id": 20}}, "sonarr-4k": {1: {"id": 77, "statistics": {"episodeCount": 6, "episodeFileCount": 1}}}}
     monkeypatch.setattr(web.sonarr_sync, "sonarr_series", lambda wanted: libraries[(web.sonarr_sync.instance() or {}).get("name", "")])
     assert web.instances_of_series() == {1: [{"name": "sonarr-4k", "id": 77, "ladder": "4K only", "download_only": None, "missing": 5}]}
+    libraries["sonarr-4k"][3] = {"id": 78, "titleSlug": "tehran"}  # in sonarr-4k, not set up here yet
+    assert web.sonarrs_of_series() == {1: [{"name": "sonarr-4k", "url": web.sonarr_sync.SONARRS["sonarr-4k"]["url"], "slug": ""}],
+                                       3: [{"name": "sonarr-4k", "url": web.sonarr_sync.SONARRS["sonarr-4k"]["url"], "slug": "tehran"}]}
     web.health["sonarrs"] = {"sonarr-4k": {"ok": False}}
-    assert web.instances_of_series() == {}  # down: the page opens without waiting for it
+    assert web.instances_of_series() == {} and web.sonarrs_of_series() == {}  # down: the page opens without waiting for it
     assert web.upgrades_file("") == web.UPGRADES_FILE and web.upgrades_file("sonarr-4k").name == "upgrades_found-sonarr-4k.json"
     seen = []
     monkeypatch.setattr(web, "upgrade_candidates", lambda config: seen.append(((web.sonarr_sync.instance() or {}).get("name"),
@@ -1774,3 +1777,39 @@ def test_the_release_group_set_only_in_unshackle_yaml_is_read_from_the_file(tmp_
     monkeypatch.setattr(sync.UNSHACKLE, "dl_config", lambda: {"sub_format": "srt"})  # serve's /api/config: no tag
     monkeypatch.setattr(sync, "backend_for", lambda tag, config=None: sync.UNSHACKLE)
     assert sync.release_group_of({"service": "NF"}, {"settings": {}, "defaults": {}, "service_defaults": {}}) == ("TiNA", "unshackle.yaml (tag:)")
+
+
+def test_a_series_sets_its_own_ladder_options_or_off_for_another_sonarr(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    import unshacklarr.web
+    web = importlib.reload(unshacklarr.web)
+    inst = {"name": "sonarr-4k", "quality_ladder": "4K only", "download_only": None}
+    config = {"series": {1: {"service": "X", "options": {"--tag": "a"}},
+                         2: {"service": "X", "options": {"--tag": "a"}, "sonarrs": {"sonarr-4k": {"ladder": "1080p", "download_only": True, "options": {"--atmos": True}}}},
+                         3: {"service": "X", "sonarrs": {"sonarr-4k": {"off": True}}}}}
+    got = sync.instance_config(inst, config)["series"]
+    assert got[1]["ladder"] == "4K only" and "download_only" not in got[1]  # that Sonarr's own, for every series
+    assert got[2]["ladder"] == "1080p" and got[2]["download_only"] is True and got[2]["options"] == {"--tag": "a", "--atmos": True}
+    assert config["series"][2]["options"] == {"--tag": "a"}  # the main Sonarr's copy keeps the series' own
+    assert [sync.off_in(inst, s) for s in config["series"].values()] == [False, False, True]
+    assert sync.off_in(None, {"main_off": True}) and not sync.off_in(None, config["series"][3])  # the main Sonarr's own switch
+
+    downloads = []
+    monkeypatch.setattr(sync, "run_episodes", lambda config, settings, episodes, *a, **k: downloads.append([e["id"] for e in episodes]) or 0)
+    eps = [{"id": n, "series": {"tvdbId": n, "title": "S"}, "seasonNumber": 1, "episodeNumber": n} for n in (1, 2)]
+    off = {"series": {1: {"service": "X", "main_off": True}, 2: {"service": "X"}}}
+    sync.sync(off, {}, eps, kind="auto")
+    sync.sync(off, {}, eps, kind="burst")
+    assert downloads == [[2], [2]]  # switched off for the main Sonarr: none of its new episodes (picked ones aren't filtered)
+
+    ladders = [{"name": "1080p", "steps": []}]
+    body = {"settings": {"sonarrs": [{"name": "sonarr-4k"}]}}
+    specs = [{"flag": "--atmos", "is_flag": True, "choices": []}]
+    monkeypatch.setattr(web, "check_ladder_name", lambda name, ladders, where: name or "")
+    assert web.check_series_sonarrs({"sonarr-4k": {"off": True, "ladder": "", "options": {}}}, body, ladders, specs, "1") == {"sonarr-4k": {"off": True}}
+    assert web.check_series_sonarrs({"sonarr-4k": {}}, body, ladders, specs, "1") == {}  # nothing of its own: left out
+    try:
+        web.check_series_sonarrs({"nope": {"off": True}}, body, ladders, specs, "1")
+        raise AssertionError("a Sonarr not in Settings was taken")
+    except web.web.HTTPBadRequest:
+        pass

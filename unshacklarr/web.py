@@ -523,6 +523,7 @@ async def state(_):
         "backups": backups_info(),
         "network_services": {str(s["tvdbId"]): tag for s in series if (tag := service_for_network(s.get("network"), set(services)))},
         "instances": {str(k): v for k, v in (await asyncio.to_thread(instances_of_series)).items()},
+        "sonarrs_of": {str(k): v for k, v in (await asyncio.to_thread(sonarrs_of_series)).items()},
     })
 
 
@@ -553,6 +554,32 @@ async def service_options(request):
         return web.json_response(await asyncio.to_thread(specs_of, request.match_info["tag"]))
     except UnshackleError as e:
         raise web.HTTPBadGateway(text=str(e))
+
+
+def check_series_sonarrs(value, body: dict, ladders: list[dict], dl_specs: list[dict], where: str) -> dict:
+    """A series' own settings for each other Sonarr: {name: {"off", "ladder", "download_only", "options"}}, each
+    over what that Sonarr sets for every series. Only the Sonarrs in Settings; empty ones are left out."""
+    if not value:
+        return {}
+    if not isinstance(value, dict):
+        raise web.HTTPBadRequest(text=f"The Sonarr settings of {where} must be an object")
+    names = {str(i.get("name") or "") for i in (body.get("settings") or {}).get("sonarrs") or []} | set(sonarr_sync.SONARRS)
+    out = {}
+    for name, per in value.items():
+        if name not in names or not isinstance(per, dict):
+            raise web.HTTPBadRequest(text=f"{where}: no Sonarr named {name} in Settings, Sonarr")
+        own = {}
+        if per.get("off") is True:  # its new episodes are not downloaded for that Sonarr
+            own["off"] = True
+        if ladder := check_ladder_name(per.get("ladder"), ladders, f"{where} in {name}"):
+            own["ladder"] = ladder
+        if isinstance(per.get("download_only"), bool):
+            own["download_only"] = per["download_only"]
+        if opts := check_options(per.get("options") or {}, dl_specs, f"{where} in {name}"):
+            own["options"] = opts
+        if own:
+            out[name] = own
+    return out
 
 
 def check_options(opts: dict, specs: list[dict] | None, where: str) -> dict:
@@ -681,6 +708,10 @@ async def save_config(request):
             series[int(key)]["ladder"] = ladder
         if show.get("skip_upgrades") is True:  # left out of Activity, Upgrades
             series[int(key)]["skip_upgrades"] = True
+        if per := check_series_sonarrs(show.get("sonarrs"), body, ladders, dl_specs, str(key)):
+            series[int(key)]["sonarrs"] = per
+        if show.get("main_off") is True:  # not downloaded for the main Sonarr, only for the others
+            series[int(key)]["main_off"] = True
     notifications = body.get("notifications") or {}
     targets = check_targets(notifications, [t["url"] for t in sonarr_sync.notification_targets(previous["notifications"])])
     countries = [c for c in body.get("tmdb_countries") or [] if re.fullmatch(r"[A-Z]{2}", c)]
@@ -2411,6 +2442,22 @@ def instances_of_series() -> dict[int, list[dict]]:
             out.setdefault(tvdb, []).append({"name": inst["name"], "id": found[tvdb]["id"],
                                              "ladder": inst["quality_ladder"], "download_only": inst["download_only"],
                                              "missing": max(0, stats.get("episodeCount", 0) - stats.get("episodeFileCount", 0))})
+    return out
+
+
+def sonarrs_of_series() -> dict[int, list[dict]]:
+    """Every series of the other Sonarr instances, set up here or not: {tvdb: [{"name", "url", "slug"}]}, so a series'
+    page says where it is before it is set up. An instance the health check finds down is skipped."""
+    out: dict[int, list[dict]] = {}
+    for inst in list(sonarr_sync.SONARRS.values()):
+        if health.get("sonarrs", {}).get(inst["name"], {}).get("ok") is False:
+            continue
+        try:
+            found = on_sonarr(inst, sonarr_sync.sonarr_series, set())
+        except requests.RequestException:
+            continue
+        for tvdb, serie in found.items():
+            out.setdefault(tvdb, []).append({"name": inst["name"], "url": inst["url"], "slug": serie.get("titleSlug") or ""})
     return out
 
 

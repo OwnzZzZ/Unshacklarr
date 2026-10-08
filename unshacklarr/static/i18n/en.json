@@ -186,6 +186,7 @@
  "Added to each series' own options. An option a series already has is replaced.": [],
  "Added to every": [],
  "Added to the": [],
+ "Added to this series' own options (Unshackle options, below), for this library's copies only.": [],
  "Address": [],
  "Address of": [],
  "Address of unshackle serve": [],
@@ -195,6 +196,10 @@
  "After the defaults, for every series on that service:": [],
  "After the download": [],
  "After the download as above": [],
+ "After the download, for Sonarr": [],
+ "After the download, for {0}": [
+  "o.name"
+ ],
  "After the download, the service is checked once a day for this many days. Nothing is downloaded until that language is there. After that, the episode keeps the audio it has.": [],
  "After this delay, you get one": [],
  "After two failed checks in a row, and again when it is back": [],
@@ -208,6 +213,10 @@
   "missing"
  ],
  "All": [],
+ "All libraries": [],
+ "All libraries ({0})": [
+  "S.series.length"
+ ],
  "All logins fine": [],
  "All services": [],
  "All services ({0})": [
@@ -218,6 +227,13 @@
  "Already set up": [],
  "Also in {0}": [
   "i.name"
+ ],
+ "Also in {0} ({1})": [
+  "name",
+  "n(name)"
+ ],
+ "Also in {0}.": [
+  "names.join(\", \")"
  ],
  "Also tell me when": [],
  "Always remove it": [],
@@ -527,7 +543,10 @@
  ],
  "Default: the one of Settings, Quality.": [],
  "Default: {0}": [
-  "set.download_only ? \"Download only\" : \"Sonarr imports it\""
+  "instAfter"
+ ],
+ "Default: {0}'s own, from Settings, Sonarr.": [
+  "o.name"
  ],
  "Delete": [],
  "Delete the key": [],
@@ -573,6 +592,9 @@
   "where"
  ],
  "Download options": [],
+ "Download options, for {0}": [
+  "o.name"
+ ],
  "Download the {0}": [
   "r.items.length"
  ],
@@ -712,6 +734,7 @@
  "Files Sonarr did not take": [],
  "Files a service has in better quality": [],
  "Files your quality ladder says could be better. Check now asks each service what it has, up to 10 episodes of a series at a time, and keeps each answer for the days set in Settings, Upgrades. Replace downloads the better ones over your files, even when Sonarr ranks both the same (H.264 and H.265 in 1080p).": [],
+ "Filter by Sonarr library": [],
  "Filter by service": [],
  "Find a series": [],
  "Find it on {0}": [
@@ -1044,6 +1067,16 @@
  "New episodes airing from {0} are downloaded automatically. For older ones, tick them in Episodes.": [
   "new Date(conf.since).toLocaleDateString(LOCALE, { day: \"numeric\", month: \"long\", year: \"numeric\" })"
  ],
+ "New episodes are downloaded for Sonarr, with the quality ladder {0}. After the download: {1}. Both are set in What to get.": [
+  "lad",
+  "mainAfter"
+ ],
+ "New episodes are downloaded for Sonarr, without a quality ladder. After the download: {0}. Both are set in What to get.": [
+  "mainAfter"
+ ],
+ "New episodes are downloaded for {0} too, as set here.": [
+  "o.name"
+ ],
  "New keys, from its group key": [],
  "New ladder": [],
  "New password": [],
@@ -1283,6 +1316,11 @@
  "Off is reserved: it means no ladder": [],
  "Off. Notifications come from the app itself, no other service needed": [],
  "Off. Turn it on to look into a problem, and send the output with the report.": [],
+ "Off: new episodes are not downloaded for Sonarr, only for the libraries switched on below. You can still pick episodes in Episodes.": [],
+ "Off: new episodes are not downloaded for {0}. You can still pick episodes in Episodes, {1}.": [
+  "o.name",
+  "o.name"
+ ],
  "Older episodes are not checked. 0: all of them.": [],
  "Older ones are deleted. To restore one, download it, then use Restore from a file.": [],
  "On": [],
@@ -1328,6 +1366,9 @@
  "Only download video tracks.": [],
  "Only episodes from the last": [],
  "Only for the episodes picked now. The series keeps its own settings.": [],
+ "Only in Sonarr ({0})": [
+  "only"
+ ],
  "Only the fields you fill in change. Everything else stays as it is for each series. Save afterwards, as for one series.": [],
  "Only use CDM, or only use Key Vaults for retrieval of Decryption Keys.": [],
  "Only {0} GB free in the downloads folder, less than the {1} GB to keep free: nothing is downloaded until there is room": [
@@ -1417,6 +1458,10 @@
  "Pushover": [],
  "Quality": [],
  "Quality ladder": [],
+ "Quality ladder, for Sonarr": [],
+ "Quality ladder, for {0}": [
+  "o.name"
+ ],
  "Queue": [],
  "Queue it again": [],
  "Queue {0} again": [
@@ -1676,6 +1721,7 @@
   "no_credentials(e)"
  ],
  "Sonarr kept its own file": [],
+ "Sonarr libraries": [],
  "Sonarr lists no episode for this series.": [],
  "Sonarr numbers it {0}: this series' Numbering settings map it there": [
   "sxxeyy"
@@ -1783,6 +1829,10 @@
  "Sure? Remove it from unshackle.yaml": [],
  "Sure? They log in again": [],
  "Sure? Your own ladders will be deleted": [],
+ "Switched off for Sonarr.": [],
+ "Switched off for {0}.": [
+  "offs.join(\", \")"
+ ],
  "Sync running…": [],
  "Syncs, release times, retries": [],
  "System ID": [],
@@ -1855,6 +1905,9 @@
  "The Series": [],
  "The Sonarr named {0} is no longer in Settings, Sonarr": [
   "sonarr"
+ ],
+ "The Sonarr settings of {0} must be an object": [
+  "where"
  ],
  "The URL of {0} cannot start with '-'": [
   "key"
@@ -2050,6 +2103,10 @@
  "This is not a valid address": [],
  "This job is over": [],
  "This link may be an episode, not the series.": [],
+ "This series is also in {0}: the quality ladder and After the download here are for Sonarr; each other library sets its own in Sonarr libraries, below. The languages apply to every library.": [
+  "found.map((o) => o.name).join(\", \")"
+ ],
+ "This series is in more than one Sonarr. Each one switched on downloads its own copy of new episodes, by its own ladder (Settings, Sonarr) unless the series says otherwise here.": [],
  "This series on {0}": [
   "label"
  ],
@@ -2350,6 +2407,9 @@
  "any episode": [],
  "any height": [],
  "any range": [],
+ "as for Sonarr ({0})": [
+  "mainAfter"
+ ],
  "as {0}": [
   "service_sxxeyy"
  ],
@@ -2475,6 +2535,7 @@
  "no subs": [],
  "no video": [],
  "none": [],
+ "none chosen yet": [],
  "none on {0}": [
   "svc"
  ],
@@ -2511,7 +2572,6 @@
  ],
  "one file, nothing to join": [],
  "oninput": [],
- "only": [],
  "open {0} and enter {1}": [
   "need.get('url')",
   "need.get('code')"
@@ -2607,6 +2667,7 @@
   "ago(oldest)"
  ],
  "the series": [],
+ "the series' ladder": [],
  "the service defaults": [],
  "the settings": [],
  "these": [],
@@ -3279,6 +3340,10 @@
   "name ? `${name} · ` : \"\"",
   "parts.map((t) => t.part).join(\" + \")"
  ],
+ "{0}'s own ({1})": [
+  "o.name",
+  "said(inst.download_only)"
+ ],
  "{0}'s unshackle.yaml (dl:)": [
   "backend.name or 'Unshackle'"
  ],
@@ -3330,6 +3395,10 @@
  "{0}: logged in with the profile {1}": [
   "label",
   "profile"
+ ],
+ "{0}: no Sonarr named {1} in Settings, Sonarr": [
+  "where",
+  "name"
  ],
  "{0}: no {1} audio yet. The service is checked once a day, and the episode is downloaded again when it comes": [
   "label",
@@ -3435,6 +3504,7 @@
  "· Unshackle {0}": [
   "st.version"
  ],
+ "· also in": [],
  "· checking…": [],
  "· in": [],
  "· in use": [],

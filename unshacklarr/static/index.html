@@ -66,6 +66,9 @@
       <select id="f-service" aria-label="Filter by service">
         <option value="">All services</option>
       </select>
+      <select id="f-library" aria-label="Filter by Sonarr library" hidden>
+        <option value="">All libraries</option>
+      </select>
       <select id="f-sort" aria-label="Sort">
         <option value="title">Sort by title</option>
         <option value="missing">Sort by missing episodes</option>
@@ -586,7 +589,7 @@
     </div>
     <div id="dt-settings" class="d-pane ds">
     <div class="ds-nav" role="navigation" aria-label="Sections of this series' settings">
-      <a href="#ds-source" data-to="ds-source">Source</a><a href="#ds-timing" data-to="ds-timing">When</a><a href="#ds-quality" data-to="ds-quality">What to get</a><a href="#ds-options" data-to="ds-options">Unshackle options</a><a href="#d-adv" data-to="d-adv">Numbering</a>
+      <a href="#ds-source" data-to="ds-source">Source</a><a href="#ds-timing" data-to="ds-timing">When</a><a href="#ds-quality" data-to="ds-quality">What to get</a><a href="#ds-sonarrs" data-to="ds-sonarrs" id="d-to-sonarrs" hidden>Sonarr libraries</a><a href="#ds-options" data-to="ds-options">Unshackle options</a><a href="#d-adv" data-to="d-adv">Numbering</a>
     </div>
     <div class="sx-state ds-state" id="ds-state"><span class="dot"></span><span><b id="ds-state-text"></b><small id="d-since"></small></span></div>
 
@@ -657,9 +660,10 @@
 
     <section class="card sx-card" id="ds-quality">
       <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></svg></span><div><h3>What to get</h3><p>The quality and languages an episode needs, and what happens after the download. Default follows the service, then Settings. An empty language field uses Settings, Download options.</p></div></div>
+      <p class="d-lib-note" id="d-lib-note" hidden></p>
       <div class="sx-grid">
         <div class="field">
-          <label for="d-ladder">Quality ladder</label>
+          <label for="d-ladder" id="d-ladder-l">Quality ladder</label>
           <select id="d-ladder"></select>
           <small>Its steps are tried in order against the tracks the service has for the episode (Settings, Quality).</small>
           <label class="ug-line"><input type="checkbox" id="d-skip-upgrades"> Skip upgrades</label>
@@ -686,6 +690,11 @@
           <small>For example fr. The episode must have full subtitles in at least one of them. Forced subtitles do not count.</small>
         </div>
       </div>
+    </section>
+
+    <section class="card sx-card" id="ds-sonarrs" hidden>
+      <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="8" rx="2"/><rect x="2" y="13" width="20" height="8" rx="2"/><path d="M6 7h.01M6 17h.01"/></svg></span><div><h3>Sonarr libraries</h3><p>This series is in more than one Sonarr. Each one switched on downloads its own copy of new episodes, by its own ladder (Settings, Sonarr) unless the series says otherwise here.</p></div></div>
+      <div id="d-sonarrs" class="d-sonarrs"></div>
     </section>
 
     <section class="card sx-card" id="ds-options">

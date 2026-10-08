@@ -1862,7 +1862,20 @@ def instance_config(inst: dict, config: dict) -> dict:
     ladder = inst.get("quality_ladder") or ""
     own = {**({"ladder": ladder} if ladder and ladder != SAME_AS_SERIES else {}),
            **({"download_only": bool(inst["download_only"])} if inst.get("download_only") is not None else {})}
-    return {**config, "series": {k: {**v, **own} for k, v in (config.get("series") or {}).items()}}
+
+    def for_series(v: dict) -> dict:  # the series' own settings for that Sonarr come last (sonarrs: {name: {...}})
+        per = (v.get("sonarrs") or {}).get(inst["name"]) or {}
+        return {**v, **own, **{k: per[k] for k in ("ladder", "download_only") if k in per},
+                **({"options": {**(v.get("options") or {}), **per["options"]}} if per.get("options") else {})}
+    return {**config, "series": {k: for_series(v) for k, v in (config.get("series") or {}).items()}}
+
+
+def off_in(inst: dict | None, show: dict) -> bool:
+    """A series switched off for that Sonarr (None: the main one, main_off): its new episodes are not downloaded
+    there, neither by the sync nor at its release time; episodes picked by hand still are."""
+    if not inst:
+        return bool(show.get("main_off"))
+    return bool(((show.get("sonarrs") or {}).get(inst["name"]) or {}).get("off"))
 
 
 instance_failed: dict[str, str] = {}  # another Sonarr's last sync failure, told once
@@ -1878,7 +1891,7 @@ def sync_instance(inst: dict, config: dict, settings: dict) -> int:
         return 0
     with on_instance(inst):
         try:
-            series = config.get("series") or {}
+            series = {k: v for k, v in (config.get("series") or {}).items() if not off_in(inst, v)}
             wanted = [ep for ep in missing_episodes() if ep["series"].get("tvdbId") in series]
             failed = sync(instance_config(inst, config), settings, wanted, kind="auto")
             instance_failed.pop(inst["name"], None)
@@ -1902,6 +1915,8 @@ def sync(config: dict, settings: dict, episodes, manual: bool = False, replace: 
         series = {k: {**{o: v for o, v in show.items() if o not in NUMBERING}, **numbering} for k, show in series.items()}
         config = {**config, "series": series}
     episodes = list(episodes)
+    if kind in ("auto", "burst"):  # switched off for this Sonarr: none of its new episodes
+        episodes = [ep for ep in episodes if not off_in(instance(), series.get(ep["series"]["tvdbId"]) or {})]
     # Episodes picked together are one job in Activity: their cards, and one output for them all
     # (a job's episode queued again once the job was over goes on in that same job)
     batch = batch or (f"{datetime.now(timezone.utc):%Y%m%d-%H%M%S}-{uuid.uuid4().hex[:6]}" if kind != "auto" and len(episodes) > 1 else None)

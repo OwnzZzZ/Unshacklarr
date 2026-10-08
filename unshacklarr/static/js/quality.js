@@ -376,7 +376,7 @@ function renderAlso(conf) {
     el("span", { textContent: ` · ${ladder(i.ladder)} · ${i.download_only === true ? "Download only" : i.download_only === false ? "Sonarr imports it" : "After the download as above"}` }))));
 }
 function fillQualityImport(conf) {
-  renderAlso(conf);
+  renderSeriesSonarrs(conf);
   const set = S.config.settings, svc = S.config.service_defaults?.[conf.service] || {};
   $("#d-ladder").replaceWith(Object.assign(ladderSelect(conf.ladder, svc.ladder || set.quality_ladder, (v) => {
     if (v) conf.ladder = v; else delete conf.ladder;
@@ -402,6 +402,7 @@ $("#d-import").onchange = (e) => {
   const conf = S.config.series[current.tvdbId];
   if (e.target.value) conf.download_only = e.target.value === "only"; else delete conf.download_only;
   importChips();
+  renderSeriesSonarrs(conf);
   dirty();
 };
 
@@ -464,3 +465,62 @@ async function renderUpgradeGroups(fetch = true) {
         : `${none.length} series have no group and are left as they are: ${listed(none)}. Set a Group Tag in Download options to include them.` }))] : []));
 }
 $("#ug-other").onchange = (e) => { S.config.settings.upgrade_other_groups = e.target.checked; dirty(); renderUpgradeSeries(); renderUpgradeGroups(false); };
+
+/* A series' page, Sonarr libraries: the main Sonarr and each other one that has the series, each switched on or off
+   for it (main_off, sonarrs[name].off); the others with the series' own ladder, After the download and options there. */
+function renderSeriesSonarrs(conf) {
+  const found = S.sonarrsOf?.[current?.tvdbId] || [], box = $("#d-sonarrs"), set = S.config.settings || {};
+  const multi = found.length > 0;
+  $("#ds-sonarrs").hidden = $("#d-to-sonarrs").hidden = !multi;
+  if ($("#d-also")) $("#d-also").hidden = true;  // said here instead
+  // What to get, with other libraries: its ladder and After the download are the main Sonarr's
+  $("#d-ladder-l").textContent = multi ? "Quality ladder, for Sonarr" : "Quality ladder";
+  $("#d-import-l").textContent = multi ? "After the download, for Sonarr" : "After the download";
+  $("#d-lib-note").hidden = !multi;
+  $("#d-lib-note").textContent = multi ? `This series is also in ${found.map((o) => o.name).join(", ")}: the quality ladder and After the download here are for Sonarr; each other library sets its own in Sonarr libraries, below. The languages apply to every library.` : "";
+  if (!multi) return box.replaceChildren();
+  const said = (only) => only === true ? "Download only" : "Sonarr imports it";
+  const mainAfter = said(conf.download_only ?? set.download_only);
+  const insts = Object.fromEntries((set.sonarrs || []).map((i) => [i.name, i]));
+  const seg = (value, defLabel, onpick) => el("div", { className: "ax-seg", role: "radiogroup" },
+    ...[["", defLabel], ["import", "Sonarr imports it"], ["only", "Download only"]].map(([v, label]) => el("button", {
+      type: "button", role: "radio", textContent: label, ariaChecked: String(v === value), onclick: () => onpick(v) })));
+  const block = (name, link, isOn, onToggle, onNote, offNote, body) => el("div", { className: `d-sonarr${isOn ? "" : " off"}` },
+    el("label", { className: "ug-switch" }, el("input", { type: "checkbox", className: "switch", checked: isOn, onchange: (e) => onToggle(e.target.checked) }),
+      el("span", {}, el("b", {}, link || name), el("small", { textContent: isOn ? onNote : offNote }))),
+    ...(isOn ? body : []));
+  const mainWeb = sonarrWeb(), slug = S.series.find((x) => x.tvdbId === current?.tvdbId)?.titleSlug;
+  const main = block("Sonarr", mainWeb && slug ? el("a", { href: `${mainWeb}/series/${slug}`, target: "_blank", rel: "noopener", textContent: "Sonarr" }) : null,
+    !conf.main_off, (on) => { if (on) delete conf.main_off; else conf.main_off = true; dirty(); renderSeriesSonarrs(conf); },
+    ((lad) => !lad || lad === "off" ? `New episodes are downloaded for Sonarr, without a quality ladder. After the download: ${mainAfter}. Both are set in What to get.`
+      : `New episodes are downloaded for Sonarr, with the quality ladder ${lad}. After the download: ${mainAfter}. Both are set in What to get.`)(
+      conf.ladder || S.config.service_defaults?.[conf.service]?.ladder || set.quality_ladder),
+    "Off: new episodes are not downloaded for Sonarr, only for the libraries switched on below. You can still pick episodes in Episodes.", []);
+  box.replaceChildren(main, ...found.map((o) => {
+    const inst = insts[o.name] || {}, all = (conf.sonarrs ??= {});
+    const per = () => (all[o.name] ??= {});
+    const tidy = () => { const p = all[o.name]; if (p && !Object.keys(p).length) delete all[o.name]; if (!Object.keys(all).length) delete conf.sonarrs; };
+    const cur = all[o.name] || {};
+    const instLadder = inst.quality_ladder === "series" ? (conf.ladder || "the series' ladder") : inst.quality_ladder || "none chosen yet";
+    const ladder = ladderSelect(cur.ladder, instLadder, (v) => { if (v) per().ladder = v; else delete per().ladder; tidy(); dirty(); });
+    const instAfter = inst.download_only === true || inst.download_only === false ? `${o.name}'s own (${said(inst.download_only)})` : `as for Sonarr (${mainAfter})`;
+    const afterValue = cur.download_only === true ? "only" : cur.download_only === false ? "import" : "";
+    const after = seg(afterValue, `Default: ${instAfter}`, (v) => {
+      if (v) per().download_only = v === "only"; else delete per().download_only; tidy(); dirty(); renderSeriesSonarrs(conf); });
+    const opts = el("div", { className: "opts" });
+    const values = new Proxy(cur.options || {}, {  // written into conf only once an option is added
+      set: (t, k, v) => { t[k] = v; per().options = t; dirty(); return true; },
+      deleteProperty: (t, k) => { delete t[k]; if (!Object.keys(t).length && all[o.name]) { delete all[o.name].options; tidy(); } dirty(); return true; } });
+    optionsEditor(opts, S.dlOptions, values);
+    const web = sonarrWeb(o.url, "");
+    return block(o.name, web && o.slug ? el("a", { href: `${web}/series/${o.slug}`, target: "_blank", rel: "noopener", textContent: o.name }) : null,
+      !cur.off, (on) => { if (on) delete per().off; else per().off = true; tidy(); dirty(); renderSeriesSonarrs(conf); },
+      `New episodes are downloaded for ${o.name} too, as set here.`,
+      `Off: new episodes are not downloaded for ${o.name}. You can still pick episodes in Episodes, ${o.name}.`,
+      [el("div", { className: "sx-grid" },
+        el("div", { className: "field" }, el("label", { textContent: `Quality ladder, for ${o.name}` }), ladder, el("small", { textContent: `Default: ${o.name}'s own, from Settings, Sonarr.` })),
+        el("div", { className: "field" }, el("span", { textContent: `After the download, for ${o.name}` }), after)),
+       el("div", { className: "field" }, el("label", { textContent: `Download options, for ${o.name}` }), opts,
+         el("small", { textContent: "Added to this series' own options (Unshackle options, below), for this library's copies only." }))]);
+  }));
+}

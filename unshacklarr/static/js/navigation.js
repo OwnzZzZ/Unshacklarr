@@ -96,7 +96,7 @@ document.querySelectorAll("#tab-series .seg button").forEach((b) => b.onclick = 
   document.querySelectorAll("#tab-series .seg button").forEach((x) => x.setAttribute("aria-pressed", x === b));
   renderWall();
 });
-["#f-service", "#f-sort", "#f-missing", "#f-monitored"].forEach((id) => $(id).onchange = renderWall);
+["#f-service", "#f-library", "#f-sort", "#f-missing", "#f-monitored"].forEach((id) => $(id).onchange = renderWall);
 
 /* The service filter lists only the services some series actually uses. */
 function renderServiceFilter() {
@@ -106,6 +106,19 @@ function renderServiceFilter() {
   const n = (t) => S.series.filter((s) => S.config.series[s.tvdbId]?.service === t).length;
   f.options[0].textContent = `All services (${S.series.length})`;
   f.append(...used.map((t) => el("option", { className: "svc-opt", value: t, textContent: `${t} (${n(t)})` })));
+  f.value = [...f.options].some((o) => o.value === keep) ? keep : "";
+  renderLibraryFilter();
+}
+/* The Sonarr library filter: shown once another Sonarr is set up; each with the number of series it shares. */
+function renderLibraryFilter() {
+  const f = $("#f-library"), keep = f.value, names = (S.config.settings?.sonarrs || []).map((i) => i.name);
+  f.hidden = !names.length;
+  const n = (name) => S.series.filter((s) => (S.sonarrsOf?.[s.tvdbId] || []).some((o) => o.name === name)).length;
+  const only = S.series.filter((s) => !(S.sonarrsOf?.[s.tvdbId] || []).length).length;
+  f.querySelectorAll("option.lib-opt").forEach((o) => o.remove());
+  f.options[0].textContent = `All libraries (${S.series.length})`;
+  f.append(...names.map((name) => el("option", { className: "lib-opt", value: name, textContent: `Also in ${name} (${n(name)})` })),
+    el("option", { className: "lib-opt", value: "-", textContent: `Only in Sonarr (${only})` }));
   f.value = [...f.options].some((o) => o.value === keep) ? keep : "";
 }
 window.addEventListener("beforeunload", (e) => { if (!$("#savebar").hidden) e.preventDefault(); });
