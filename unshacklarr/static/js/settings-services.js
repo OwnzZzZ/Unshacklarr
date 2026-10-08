@@ -253,7 +253,9 @@ $("#d-probe").onclick = async () => {
         dirty();
         toast("Season map set: save, then test again");
       } }))] : [];
-    const single = r.count > 0 && r.count < 3 ? [el("div", { className: "probe-warn" },
+    // An episode link, not the series: the service lists fewer than Sonarr has aired. A series simply new (one aired,
+    // one listed) is no warning.
+    const single = r.count > 0 && r.count < 3 && r.checks.filter((c) => c.aired).length > r.count ? [el("div", { className: "probe-warn" },
       el("b", { textContent: "This link may be an episode, not the series." }),
       el("span", { textContent: " On the service, open the series' own page (all its episodes) and paste that link instead." }))] : [];
     out.replaceChildren(el("div", { className: "probe-out" },

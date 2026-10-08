@@ -209,7 +209,7 @@ class Unshackle:
     def call(self, method: str, path: str, **kwargs):
         url, key = self.endpoint()
         try:
-            r = requests.request(method, f"{url}{path}", headers={"X-Secret-Key": key}, timeout=60, **kwargs)
+            r = requests.request(method, f"{url}{path}", headers={"X-Secret-Key": key}, timeout=(5, 60), **kwargs)  # a server down: 5 s, not 60
         except requests.RequestException as e:
             raise UnshackleError(no_credentials(f"unshackle serve is unreachable at {url}: {e}")) from e
         if r.status_code == 401:

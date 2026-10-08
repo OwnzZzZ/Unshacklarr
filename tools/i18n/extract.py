@@ -39,6 +39,8 @@ def wanted(text: str) -> bool:
         return False  # "btn small primary": classes
     if re.match(r"^[#.\[/&]|^https?:|^\w+://|^--|^[a-z]+\(|^\$|^%|^@media", text):
         return False
+    if re.search(r"AWS4-|x-amz-", text) or text == "Authorization":  # an S3 signature's parts
+        return False
     if "{" in text and not re.search(r"\s", text):  # run={0}, {0}.wvd, S{0}E{1}: a key or a name, built
         return False
     if re.search(r"\(\?[:!=]|\$$|\\[dswSb]|\{\d+\}(?:/[^\s/]+){2,}|\{\d+\}/api/|\{\d+\}://|\w\[[\"']|\w\(\"", text):  # a pattern, a URL built, code
@@ -190,7 +192,7 @@ def extract(page: str) -> dict[str, list[str]]:
     return {t: holes.get(t, []) for t in sorted(found)}
 
 
-SERVER = ["sync.py", "web.py", "backend.py", "cdm.py", "cookies.py", "options.py", "push.py"]
+SERVER = ["sync.py", "web.py", "backend.py", "cdm.py", "cookies.py", "options.py", "push.py", "offsite.py"]
 
 
 def said(text: str) -> bool:

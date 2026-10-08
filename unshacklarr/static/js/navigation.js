@@ -2,12 +2,15 @@
    #/settings is the list of sections, and a section is a page of its own that goes back to it. */
 let settingsSec = "unshackle", settingsList = false, secFromList = false;
 const phone = () => matchMedia("(max-width: 700px)").matches;
+const inSettingsSec = () => currentTab === "settings" && !settingsList;  // a section on screen, not the phone's list
 function showSettingsList(on) {
+  if (on && phone() && inSettingsSec()) leaveNews((n) => n.sec === settingsSec);  // back to the list: the section is left
   settingsList = on && phone();
   $(".set-layout").classList.toggle("at-list", settingsList);
 }
 function showSettingsSec(name, fromRoute = false) {
   if (!document.querySelector(`.set-sec[data-sec="${name}"]`)) name = "unshackle";
+  if (name !== settingsSec && inSettingsSec()) leaveNews((n) => n.sec === settingsSec);
   const fromList = settingsList;
   secFromList = fromList && !fromRoute;
   showSettingsList(false);
@@ -21,9 +24,10 @@ function showSettingsSec(name, fromRoute = false) {
   if (name === "history" && S.dlOptions.length) loadHistory();
   if (name === "account") loadAccount();
   if (name === "notifications") { renderPush().catch(() => {}); if (S.dlOptions.length) loadSent(); }
-  if (name === "automation") { renderAutomation(); renderImportMode(); }
+  if (name === "automation") { renderAutomation(); renderImportMode(); renderLearnWindow(); }
   if (name === "quality") renderQuality();
   if (name === "upgrades") { renderUpgradeSeries(); renderUpgradeGroups(); }
+  if (name === "interface") renderInterface();
   if (!fromRoute && currentTab === "settings") navigate(fromList);  // from the list: back returns to it
   if (fromList) scrollTo({ top: 0 });
 }
@@ -78,6 +82,7 @@ function showTab(name, fromRoute = false, quiet = false) {
     if (uyDirty() && !confirm("Leave unshackle.yaml without saving your changes?")) { if (fromRoute) navigate(true); return; }
     uyReset();
   }
+  if (name !== currentTab && inSettingsSec()) leaveNews((n) => n.sec === settingsSec);
   currentTab = name;
   if (name === "settings" && !fromRoute) showSettingsList(true);  // a phone: the Settings tab opens on its list
   document.querySelectorAll("nav button").forEach((b) => b.setAttribute("aria-selected", b.dataset.tab === (name === "yaml" ? "settings" : name)));

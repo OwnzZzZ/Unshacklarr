@@ -15,9 +15,13 @@ WORKDIR /app
 COPY pyproject.toml uv.lock README.md LICENSE ./
 RUN uv sync --locked --no-dev --no-install-project
 COPY unshacklarr ./unshacklarr
+COPY CHANGELOG.md ./
 RUN uv sync --locked --no-dev --no-editable
 
 ENV UNSHACKLARR_DATA=/data DOWNLOADS=/downloads HOST=0.0.0.0 PORT=8788 PYTHONUNBUFFERED=1
 EXPOSE 8788
 VOLUME ["/data"]
+# Unshacklarr itself answering (Sonarr or Unshackle down is not its fault: /health?strict=1 says that too)
+HEALTHCHECK --interval=60s --timeout=5s --start-period=30s --retries=3 \
+  CMD python -c "import os, urllib.request; urllib.request.urlopen(f'http://127.0.0.1:{os.environ.get(\"PORT\", \"8788\")}/health', timeout=4)"
 ENTRYPOINT ["unshacklarr"]

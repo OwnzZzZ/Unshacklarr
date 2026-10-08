@@ -62,6 +62,7 @@ it works whatever the service calls the show.
 """
 
 import contextlib
+import copy
 import json
 import queue
 import os
@@ -139,6 +140,13 @@ SETTINGS_DEFAULTS = {
     "history_days": 60,
     "backup_every_days": 0,      # the settings saved in the data folder's backups/ this often, in days (0: never)
     "backup_keep": 14,           # the newest so many automatic backups kept, older ones deleted
+    "backup_remote": "",         # each automatic backup also sent, encrypted, to: "webdav" or "s3" ("": nowhere)
+    "backup_remote_url": "",     # the WebDAV folder, or the S3 endpoint (https://s3.eu-west-1.amazonaws.com)
+    "backup_remote_user": "",    # the WebDAV user name, or the S3 access key
+    "backup_remote_secret": "",  # the WebDAV password, or the S3 secret key
+    "backup_remote_bucket": "",  # S3: the bucket, a folder in it allowed ("backups/unshacklarr")
+    "backup_remote_region": "",  # S3: its region (empty: us-east-1; Cloudflare R2: auto)
+    "backup_passphrase": "",     # what encrypts the backups sent away, and decrypts them for a restore
     "proxy_auth_header": "",     # a reverse proxy's login: this header names the user (Remote-User), believed only
     "proxy_auth_from": "",       # from these addresses (172.18.0.0/16, 10.0.0.5): the proxy's own; both, or none
     "min_free_gb": 0,            # nothing is downloaded while the downloads folder has less room (GB); 0: never checked
@@ -148,6 +156,14 @@ SETTINGS_DEFAULTS = {
     "upgrade_recheck_days": 30,  # Upgrades: an episode's last answer is kept this long before it is asked again (0: always ask)
     "upgrade_max_age_years": 0,  # Upgrades: only episodes aired in the last N years (0: all)
     "upgrade_other_groups": False,  # Upgrades: a file from another release group than ours is replaced by the same step too
+    "upgrade_mode": "redownload",  # once the preferred audio comes: download the episode again, or add_track (its audio only, added)
+    "library_sonarr_root": "",   # add_track reads the library's file: its folder as Sonarr sees it (/tv)…
+    "library_local_root": "",    # …and as Unshacklarr sees it (/mnt/tv); both empty: the same path
+    "release_learn": False,      # set a series' release time from when its episodes come out, once it is clear
+    "download_from": "",         # the automatic sync downloads only from…
+    "download_to": "",           # …to (local time, "01:00" to "07:00"); empty: any time
+    "download_window_bursts": False,  # release-time downloads follow the download window too
+    "spoiler_free": False,       # the page blurs episode titles until clicked (a series can say otherwise)
     "subs_accept": "",           # and one of these subtitle languages, forced ones aside ("fr"); empty: not checked
     "debug": False,              # Activity's output says more: Unshackle's debug log, every call to Sonarr
     "download_only": False,      # downloaded and tidied, never handed to Sonarr: imported by hand (a series can say otherwise)
@@ -165,8 +181,19 @@ UNSHACKLE = Unshackle(DATA)
 PUSH = Push(DATA)  # the web app's own notifications, on the devices that allowed them
 
 
+_READ = {"stamp": None, "config": {}}  # the file parsed once per change: a read per series was 50 ms each
+
+
 def read_file() -> dict:
-    return (yaml.safe_load(CONFIG_FILE.read_text(encoding="utf8")) if CONFIG_FILE.exists() else None) or {}
+    try:
+        st = CONFIG_FILE.stat()
+    except FileNotFoundError:
+        return {}
+    stamp = (st.st_mtime_ns, st.st_size)
+    if _READ["stamp"] != stamp:
+        text = CONFIG_FILE.read_text(encoding="utf8")
+        _READ.update(stamp=stamp, config=yaml.load(text, Loader=getattr(yaml, "CSafeLoader", yaml.SafeLoader)) or {})
+    return copy.deepcopy(_READ["config"])  # the callers' own to change
 
 
 def load_settings(config: dict | None = None) -> dict:
@@ -441,6 +468,19 @@ def deliver(settings: dict, level: str, title: str, message: str, details: dict 
     if to:
         note_sent(level, title, to)
     return any(t["ok"] for t in to if t["app"] != "This device")
+
+
+def notify_series(show: dict | None, settings: dict, level: str, title: str, message: str, *args, **kwargs) -> bool:
+    """An episode's notification, as its series asks (notify: all, failures or none): the bell keeps them all, only
+    what the series lets through goes out."""
+    mode = (show or {}).get("notify") or "all"
+    if mode == "none" or (mode == "failures" and level != "error"):
+        try:
+            inbox_add(level, title, message, kwargs.get("action"), kwargs.get("batch"))
+        except OSError as e:
+            print(f"Inbox not written: {e}", file=sys.stderr)
+        return False
+    return notify(settings, level, title, message, *args, **kwargs)
 
 
 def notify(settings: dict, level: str, title: str, message: str, action: dict | None = None, batch: str | None = None,
@@ -863,14 +903,65 @@ LOGIN = re.compile(r"\b40[13]\b|unauthori[sz]ed|forbidden|not logged|log ?in|sig
                    r"invalid token|access token|credential|authenticat", re.IGNORECASE)
 
 
+# Subtitles asked for (--s-lang) that the episode lacks: Unshackle stops ("fr not found in tracks", "… in subtitle
+# tracks" in some builds, or "There's no ['fr'] Subtitle Track" when it has none at all) unless --best-available, which
+# relaxes the quality too. Audio and video say "audio tracks" / "video tracks": never taken for subtitles.
+SUBS_MISSING = re.compile(r"([\w ,'\[\]-]+?) not found in (?:subtitle )?tracks|There's no .{0,80}? Subtitle Track", re.IGNORECASE)
+
+
+def base_lang(code) -> str:
+    return str(code).strip(" '[]").lower().split("-")[0]
+
+
+def subs_dropped(request: dict, missing: set[str] | None) -> dict | None:
+    """The request without the subtitle languages the episode lacks (every one when `missing` is None): a file with
+    the subtitles it has, or none, rather than no file. None when there is nothing to drop, or subtitles are
+    required (--require-subs: the episode waits for them). With none left and forced subtitles asked for
+    (--forced-s-lang), --best-available instead: --no-subs would drop those too, Unshackle keeps them."""
+    asked = [str(x) for x in request.get("s_lang") or []]
+    if not asked or request.get("require_subs") or request.get("no_subs"):
+        return None
+    keep = [] if missing is None else [x for x in asked if x.startswith("-") or base_lang(x) not in missing]
+    if keep == asked:
+        return None
+    out = {k: v for k, v in request.items() if k != "s_lang"}
+    if any(not x.startswith("-") for x in keep):
+        out["s_lang"] = keep
+    elif request.get("forced_s_lang"):
+        return {**request, "best_available": True}  # ponytail: relaxes the quality too, the price of keeping them
+    else:
+        out["no_subs"] = True
+    return out
+
+
+def subs_what(fixed: dict) -> str:
+    """What a download goes on with once subs_dropped changed it, for the log."""
+    if fixed.get("no_subs"):
+        return "without subtitles"
+    if fixed.get("best_available"):
+        return "with the forced subtitles only"
+    return f"with subtitles in {', '.join(fixed['s_lang'])}"
+
+
 def run_job_retrying(payload: dict, run: EpisodeRun | None = None, sleep=time.sleep) -> list[str]:
     """run_job, tried again after 30 s then 2 min when it failed on the network or a service
-    hiccup (a timeout, a 502...). Other failures (not found, login, a language missing) end it."""
+    hiccup (a timeout, a 502...); at once, without them, when subtitles asked for are missing. Other failures
+    (not found, login, a language missing) end it."""
+    subs_tried = False
     for wait in (*RETRY_AFTER, None):
         try:
             return run_job(payload, run)
         except (JobFailed, UnshackleError) as e:
             cause = getattr(e, "cause", str(e))
+            if not subs_tried and (m := SUBS_MISSING.search(f"{cause}\n{e}")):  # its one line, else all it said
+                missing = {base_lang(x) for x in re.split(r"[,\s]+", m.group(1)) if x.strip(" '[]")} if m.group(1) else None
+                if fixed := subs_dropped(payload, missing):
+                    subs_tried, payload = True, fixed
+                    what = subs_what(fixed)
+                    trace(f"subtitles asked for are missing ({cause[:120]}): downloading again {what}")
+                    if run:
+                        run.say(f"\r\n\x1b[33mSubtitles asked for are missing: downloading again {what}\x1b[0m")
+                    continue
             if wait is None or getattr(e, "status", "failed") == "cancelled" or not TRANSIENT.search(cause):
                 raise
             if run:
@@ -1094,6 +1185,20 @@ def wrong_number(show: dict, ep: dict, asked: str, run) -> dict | None:
     if not hit and asked.split(".")[0] in found.get("titled", ()):
         return {}  # its number is another episode's, by that one's title
     return None
+
+
+FALLBACK_NUMBERING = ("season_map", "season_offset", "season_offset_from", "episode_offset", "episode_map")
+
+
+def fallback_show(show: dict) -> dict | None:
+    """The series as its fallback service has it ({service, title, service_options} and its own numbering), the
+    rest (file names, parts, languages, ladder) its own; None when it has none."""
+    alt = show.get("fallback") or {}
+    if not alt.get("service") or not alt.get("title"):
+        return None
+    own = {k: v for k, v in show.items() if k not in ("service", "title", "service_options", "fallback", *FALLBACK_NUMBERING)}
+    return {**own, "service": alt["service"], "title": alt["title"], "service_options": alt.get("service_options") or {},
+            **{k: alt[k] for k in FALLBACK_NUMBERING if alt.get(k)}}
 
 
 def stacked(show: dict, config: dict) -> tuple[dict, dict]:
@@ -1353,6 +1458,81 @@ UPGRADES_FILE = DATA / "upgrades.json"  # episode id -> the preferred language i
 upgrades_lock = threading.Lock()
 
 
+def library_file(sonarr_path: str) -> Path:
+    """A library file, as Sonarr names it, where Unshacklarr reads it (the two roots of Settings)."""
+    root, local = str(SETTINGS.get("library_sonarr_root") or "").rstrip("/\\"), str(SETTINGS.get("library_local_root") or "").rstrip("/\\")
+    if root and local and (sonarr_path == root or sonarr_path.startswith(root + "/") or sonarr_path.startswith(root + "\\")):
+        return Path(local + sonarr_path[len(root):].replace("\\", "/"))
+    return Path(sonarr_path)
+
+
+def add_track(episode_id: int, want: str) -> bool:
+    """The preferred audio added to the episode's file, not the whole episode again (upgrade_mode add_track): its
+    audio only is downloaded, joined to the library's file with mkvmerge, and Sonarr imports the joined file in its
+    place. False when that can't be done (the file out of reach, no audio came, lengths that differ): the caller
+    then downloads the episode again as before."""
+    config = read_file()
+    ep = chosen_episodes([episode_id])[0]
+    show = (config.get("series") or {}).get(ep["series"]["tvdbId"]) or {}
+    if not ep.get("episodeFileId") or not show.get("service"):
+        return False
+    have = library_file(sonarr_get(f"episodefile/{ep['episodeFileId']}")["path"])
+    if not have.is_file():
+        print(f"Add the audio: {have} is out of reach here, the episode is downloaded again", flush=True)
+        return False
+    out = episode_folder(ep)
+    sxxeyy = f"S{ep['seasonNumber']:02}E{ep['episodeNumber']:02}"
+    service_sxxeyy = service_episode(show, ep["seasonNumber"], ep["episodeNumber"]) or sxxeyy
+    label = f"{ep['series']['title']} {sxxeyy}"
+    with episode_lock(out) as mine:
+        if not mine or out.exists():
+            return False
+        run = EpisodeRun(ep, show, "upgrade", service_sxxeyy)
+        try:
+            run.say(f"{label}: adding the {want} audio from {show['service']} to the file it has")
+            request = download_request(show, config, service_sxxeyy, out)
+            for k in ("video_only", "subs_only", "no_audio", "lang", "a_lang", "require_audio", "s_lang", "require_subs"):
+                request.pop(k, None)
+            request.update(audio_only=True, a_lang=[want])
+            run_job_retrying(request, run)
+            got = videos_in(out) + [f for f in out.rglob("*.mka")]
+            if not got:
+                raise RuntimeError(f"No {want} audio came from {show['service']}")
+            lengths = [duration_of(have), duration_of(got[0])]
+            if all(lengths) and abs(lengths[0] - lengths[1]) > 2:
+                raise RuntimeError(f"The {want} audio lasts {lengths[1]:.0f} s, the file {lengths[0]:.0f} s: not joined")
+            joined = out / have.name
+            run.step("joining")
+            cmd = ["mkvmerge", "-q", "-o", str(joined), str(have), "--no-video", "--no-subtitles", "--no-chapters", "--no-attachments", str(got[0])]
+            done = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace")
+            if done.returncode > 1:
+                raise RuntimeError(f"mkvmerge could not add the audio: {done.stdout.strip()[-300:]}")
+            for f in got:
+                f.unlink(missing_ok=True)
+            run.card["size"] = joined.stat().st_size
+            run.step("importing")
+            import_episode(ep, out, replace=True)
+            note_upgrade(ep, show, service_sxxeyy, "")
+            run.say(f"{label}: {want} audio added, the file imported again")
+            run.step("done")
+            run.finish("downloaded", "", f"{want} audio added to the file")
+            notify(config.get("notifications") or {}, "success", f"Audio added: {label}", f"The {want} audio track was added to the file.")
+            return True
+        except (RuntimeError, JobFailed, UnshackleError, ValueError, subprocess.CalledProcessError, requests.RequestException) as e:
+            run.say(f"{label}: {e}")
+            run.finish("failed", str(e), f"The files are in {seen_by('sonarr_downloads', out)}")
+            return True  # tried: the next day's check tries again, not a second download now
+        finally:
+            if not videos_in(out):
+                shutil.rmtree(out, ignore_errors=True)
+
+
+def duration_of(path: Path) -> float:
+    """A file's length in seconds, as mkvmerge reads it (0 when it can't tell)."""
+    info = subprocess.run(["mkvmerge", "-J", str(path)], stdout=subprocess.PIPE, text=True)
+    return (json.loads(info.stdout or "{}").get("container", {}).get("properties", {}).get("duration") or 0) / 1e9
+
+
 def note_upgrade(ep: dict, show: dict, service_sxxeyy: str, lacking: str) -> None:
     """An episode imported without its preferred language is watched for it; one with it is no longer."""
     with upgrades_lock:
@@ -1518,6 +1698,14 @@ def apply_ladder(show: dict, config: dict, request: dict) -> None:
         if ladder.get(kind) and not any(request.get(k) for k in asked) and (lang := first_language(ladder[kind], episodes[0].get(kind) or [])):
             request[key] = [lang]
             trace(f"quality ladder {ladder['name']}: {kind} in {lang}")
+    # subtitles asked for (s_lang, e.g. from unshackle.yaml's dl:) the episode lacks: Unshackle would stop the download;
+    # it goes on with those it has, or none, unless they are required (by mj23au, #16)
+    have = {base_lang(t.get("language") or "") for ep in episodes for t in ep.get("subtitles") or []}
+    missing = {base_lang(w) for w in request.get("s_lang") or [] if str(w) not in ("all", "orig") and not str(w).startswith("-")} - have
+    if missing and (fixed := subs_dropped(request, missing)):
+        request.clear()
+        request.update(fixed)
+        trace(f"no {', '.join(sorted(missing))} subtitles on {show['service']}: downloading {subs_what(fixed)}")
 
 
 def first_language(order: list[str], tracks: list[dict]) -> str | None:
@@ -1647,18 +1835,37 @@ def import_episode(ep: dict, out: Path, replace: bool = False) -> None:
         }
         for c in candidates
     ]
-    r = requests.post(
-        f"{sonarr_url()}/api/v3/command",
-        headers=sonarr_headers(),
-        json={"name": "ManualImport", "files": files, "importMode": "move"},
-        timeout=30,
-    )
-    r.raise_for_status()
-    trace(f"Sonarr's import asked (command {r.json().get('id')}), moving {len(files)} file{'s' if len(files) != 1 else ''}{', replacing its file' if replace else ''}")
-    wait_for_import(ep, r.json().get("id"), ep.get("episodeFileId") if ep.get("hasFile") else None)
+    # One import at a time per Sonarr: several big files moved at once make it answer too late (by mj23au, #10);
+    # the downloads still run side by side
+    with IMPORT_LOCKS.setdefault(sonarr_url(), threading.Lock()):
+        old_file = ep.get("episodeFileId") if ep.get("hasFile") else None
+        for attempt in range(1, IMPORT_ASKS + 1):
+            try:
+                r = requests.post(
+                    f"{sonarr_url()}/api/v3/command",
+                    headers=sonarr_headers(),
+                    json={"name": "ManualImport", "files": files, "importMode": "move"},
+                    timeout=120,  # as long as its reads: a Sonarr busy moving another big file answers late
+                )
+                break
+            except (requests.Timeout, requests.ConnectionError) as e:
+                # It may have taken it and imported all the same: the episode's file says, before asking again
+                time.sleep(IMPORT_RETRY_WAIT)
+                now = sonarr_get(f"episode/{ep['id']}")
+                if now.get("hasFile") and now.get("episodeFileId") != old_file:
+                    trace(f"Sonarr did not answer the import ({type(e).__name__}), but the episode has its new file: imported")
+                    return
+                if attempt == IMPORT_ASKS:
+                    raise RuntimeError(f"Sonarr did not answer the import {IMPORT_ASKS} times ({no_credentials(str(e))})") from e
+                trace(f"Sonarr did not answer the import ({type(e).__name__}): asked again ({attempt + 1} of {IMPORT_ASKS})")
+        r.raise_for_status()
+        trace(f"Sonarr's import asked (command {r.json().get('id')}), moving {len(files)} file{'s' if len(files) != 1 else ''}{', replacing its file' if replace else ''}")
+        wait_for_import(ep, r.json().get("id"), old_file)
 
 
 IMPORT_WAIT, IMPORT_POLL = 300, 3  # seconds
+IMPORT_ASKS, IMPORT_RETRY_WAIT = 3, 60  # an import Sonarr does not answer: asked so many times, a minute apart
+IMPORT_LOCKS: dict[str, threading.Lock] = {}  # by Sonarr URL
 
 
 def wait_for_import(ep: dict, command_id: int | None, old_file: int | None) -> None:
@@ -1684,6 +1891,36 @@ def wait_for_import(ep: dict, command_id: int | None, old_file: int | None) -> N
 
 
 seen_lock = threading.Lock()
+
+
+def in_download_window(now: datetime | None = None) -> bool:
+    """Within the hours the automatic sync downloads in (download_from to download_to, local time, over midnight or not);
+    no window set: always."""
+    start, end = str(SETTINGS.get("download_from") or ""), str(SETTINGS.get("download_to") or "")
+    if not start or not end or start == end:
+        return True
+    at = (now or datetime.now(timezone.utc)).astimezone(LOCAL).strftime("%H:%M")
+    return start <= at < end if start < end else at >= start or at < end
+
+
+LEARN_AFTER = 3  # episodes seen coming out at the same time before a release time is set from them
+on_release_learned = None  # web.py sets it: writes the series' release time in config.yaml
+
+
+def learn_release(ep: dict, show: dict, settings: dict) -> None:
+    """A series with no release time gets one once its episodes are seen coming out at the same time (release_learn):
+    the page's suggestion, applied and told. One set by hand is never changed."""
+    if not SETTINGS.get("release_learn") or show.get("release_time") or on_release_learned is None:
+        return
+    tvdb = ep["series"]["tvdbId"]
+    found = suggest_release([e for e in read_json(SEEN_FILE, {}).values() if e.get("tvdbId") == tvdb])
+    if not found or found["episodes"] < LEARN_AFTER:
+        return
+    on_release_learned(tvdb, found["time"], found["day"])
+    when = {0: "the day it airs", 1: "the day after"}.get(found["day"], f"{-found['day']} days before")
+    notify_series(show, settings, "success", f"Release time set: {ep['series']['title']}",
+           f"{found['episodes']} episodes came out on {show['service']} at {found['time']}, {when}. New episodes are now downloaded at that time. "
+           "You can change it on the series page.")
 
 
 def note_availability(ep: dict, out: Path, found: bool, when: datetime) -> None:
@@ -1829,6 +2066,9 @@ def main(episode_ids: list[int] | None = None, replace: bool = False, kind: str 
             print("A sync is already running, nothing to do.")
             return 0
         try:
+            if not in_download_window():
+                print("Outside the download window (Settings, Automation): the sync waits for it.", flush=True)
+                return 0
             now, plans = datetime.now(timezone.utc), broadcast_plans(config)
             dated = broadcast_dated(plans)
             own = lambda ep: ep["id"] in dated  # its own schedule dates it
@@ -1863,10 +2103,9 @@ def instance_config(inst: dict, config: dict) -> dict:
     own = {**({"ladder": ladder} if ladder and ladder != SAME_AS_SERIES else {}),
            **({"download_only": bool(inst["download_only"])} if inst.get("download_only") is not None else {})}
 
-    def for_series(v: dict) -> dict:  # the series' own settings for that Sonarr come last (sonarrs: {name: {...}})
+    def for_series(v: dict) -> dict:  # options the series adds for that Sonarr's copies only (sonarrs: {name: {...}})
         per = (v.get("sonarrs") or {}).get(inst["name"]) or {}
-        return {**v, **own, **{k: per[k] for k in ("ladder", "download_only") if k in per},
-                **({"options": {**(v.get("options") or {}), **per["options"]}} if per.get("options") else {})}
+        return {**v, **own, **({"options": {**(v.get("options") or {}), **per["options"]}} if per.get("options") else {})}
     return {**config, "series": {k: for_series(v) for k, v in (config.get("series") or {}).items()}}
 
 
@@ -1954,6 +2193,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
         if kind in ("auto", "burst"):  # a click says nothing of when it came out
             if not instance():  # the release time is learnt once, from the main Sonarr's tries
                 note_availability(ep, out, True, parse_time(run.card["started"]))
+                learn_release(ep, show, settings)
         try:
             def on_step(step: str, parts: int) -> None:
                 run.card["parts"] = parts
@@ -1976,7 +2216,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                 run.say(f"{label}: downloaded but not imported (download only). It waits in {where}")
                 run.step("done")
                 run.finish("kept", "Download only: not imported", f"The download waits in {where}")
-                notify(settings, "success", f"Downloaded, not imported: {label}",
+                notify_series(show, settings, "success", f"Downloaded, not imported: {label}",
                        f"Download only: the file waits in {where}. Import or delete it in Activity, Waiting in downloads.",
                        batch=batch, details=episode_details(ep, show, run))
                 return
@@ -1986,7 +2226,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
             # Deliberate: the library keeps its better (or equal) file; ours waits in the downloads folder.
             run.say(f"{label}: not imported, the library keeps its file: {e}")
             run.finish("kept", f"Not better: {e}", f"The download waits in {seen_by('sonarr_downloads', out)}")
-            notify(settings, "warning", f"Kept the existing file: {label}",
+            notify_series(show, settings, "warning", f"Kept the existing file: {label}",
                    f"Not better: {e}.\nThe new download is in {seen_by('sonarr_downloads', out)}; delete it or import it by hand.", batch=batch)
             return
         except (RuntimeError, subprocess.CalledProcessError, requests.RequestException) as e:
@@ -1995,7 +2235,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                 failures += 1
             run.say(f"{label}: {e}")
             run.finish("failed", str(e), f"The files are in {seen_by('sonarr_downloads', out)}")
-            notify(settings, "error", f"Not imported: {label}", f"{e}\nThe files are in {seen_by('sonarr_downloads', out)}.", batch=batch)
+            notify_series(show, settings, "error", f"Not imported: {label}", f"{e}\nThe files are in {seen_by('sonarr_downloads', out)}.", batch=batch)
             return
         if not videos_in(out):
             shutil.rmtree(out, ignore_errors=True)  # Sonarr moved the file: nothing left to keep
@@ -2007,7 +2247,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
         run.step("done")
         imported_at[(instance() or {}).get("name", ""), ep["id"]] = time.monotonic()
         run.finish("downloaded", "", "Imported by Sonarr")
-        notify(settings, "success", f"Downloaded: {label}", "Imported by Sonarr.", batch=batch, details=episode_details(ep, show, run))
+        notify_series(show, settings, "success", f"Downloaded: {label}", "Imported by Sonarr.", batch=batch, details=episode_details(ep, show, run))
 
     for_instance = instance()  # the finishing thread imports into the same Sonarr
 
@@ -2101,29 +2341,32 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                     run.say(f"{label}: {why}, not downloaded")
                     run.finish("unavailable", why)
                     if first_warning(f"{out.name}:{e.kind}"):
-                        notify(settings, "warning", title,
+                        notify_series(show, settings, "warning", title,
                                f"{why}. The episode is tried again at each sync, and downloaded when one is there.", batch=batch, details=episode_details(ep, show))
 
-                def ask(wanted: str, profile: str = "") -> None:
-                    request = download_request(show, config, wanted, out)
+                def ask(wanted: str, profile: str = "", use: dict | None = None) -> None:
+                    use = use or show  # the series as it downloads: its own service, or its fallback
+                    request = download_request(use, config, wanted, out)
                     if profile:  # a fallback profile, its login refused with the series' own
                         request["profile"] = profile
-                    if any(wanted_langs.values()) and (tracks := tracks_on_service(show, config, request)) is not None:
+                    if any(wanted_langs.values()) and (tracks := tracks_on_service(use, config, request)) is not None:
                         for kind, accepted in wanted_langs.items():
                             if accepted and not speaks(tracks[kind], accepted):
                                 raise Missing(kind, accepted, tracks[kind])
-                    apply_ladder(show, config, request)
+                    apply_ladder(use, config, request)
                     asked = {k: v for k, v in request.items() if k not in ("service", "title_id", "wanted", "output_dir", "debug")}
                     trace(f"asking for {request['service']} {request['title_id']} {wanted}, into {request['output_dir']}")
                     trace("options: " + (", ".join(f"{k}={options.HIDDEN.sub('//***@', str(v))}" for k, v in asked.items()) or "none"))  # no proxy password in the log
-                    backend = backend_for(show["service"], config)
+                    backend = backend_for(use["service"], config)
                     run.card["setup"] = setup_of(request, backend)
                     if backend.name:  # the serve run_job hands it to, and Activity's Stop cancels it on
                         run.card["backend"] = backend.name
                     run.save()
                     run_job_retrying(request, run)
 
+                missed = None  # its own service has it in none of the languages accepted: the fallback's turn
                 try:
+                  try:
                     # Its number on the service may hold another episode (a same-named series elsewhere, seasons
                     # numbered apart): its title says so before anything is downloaded
                     if numbering is None and int(show.get("parts") or 0) <= 1 and sxxeyy not in (show.get("episode_map") or {}) \
@@ -2131,7 +2374,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                         if not wrong:
                             why = f"{service_sxxeyy} on {show['service']} is another episode, by its title"
                             run.say(f"{label}: {why}, not downloaded")
-                            tell_failure(run, why, lambda: notify(settings, "error", f"Failed: {label}", f"{why}.\nCheck its Numbering, then try again.",
+                            tell_failure(run, why, lambda: notify_series(show, settings, "error", f"Failed: {label}", f"{why}.\nCheck its Numbering, then try again.",
                                                                   batch=batch))
                             with counted:
                                 failures += 1
@@ -2154,6 +2397,23 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                         own = {k: show[k] for k in NUMBERING if k in show}  # a retry asks the same again
                         run.card.update(serviceEpisode=other, numbering={**own, "episode_map": {**(own.get("episode_map") or {}), sxxeyy: other}})
                         ask(other)
+                  except Missing as e:
+                    if not fallback_show(show):
+                        raise
+                    missed = e
+                  # Nothing on its own service (or not in a language accepted): its fallback service, when it has one,
+                  # with its own URL and numbering
+                  if not videos_in(out) and (alt := fallback_show(show)) and (alt_sxxeyy := service_episode(alt, ep["seasonNumber"], ep["episodeNumber"])):
+                    if missed:
+                        run.say(f"{label}: no accepted language on {show['service']}, trying {alt['service']} as {alt_sxxeyy}")
+                    else:
+                        run.say(f"{label}: not on {show['service']}, trying {alt['service']} as {alt_sxxeyy}")
+                    run.card.update(service=alt["service"], serviceEpisode=alt_sxxeyy, fallback=show["service"])
+                    service_sxxeyy = alt_sxxeyy
+                    ask(alt_sxxeyy, use=alt)
+                    missed = None
+                  elif missed:
+                    raise missed
                 except Missing as e:
                     no_language(e)
                     continue
@@ -2214,7 +2474,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                         failures += 1
                     where = seen_by("sonarr_downloads", out)
                     run.say(f"\r\n\x1b[31m{label}: Unshackle FAILED after {parts_in(out)} part(s)\x1b[0m\n{error}".replace("\n", "\r\n"))
-                    tell_failure(run, cause, lambda: notify(settings, "error", f"Failed: {label}", f"{cause[:1500]}\nThe parts that came are in {where}.", batch=batch, details=episode_details(ep, show)))
+                    tell_failure(run, cause, lambda: notify_series(show, settings, "error", f"Failed: {label}", f"{cause[:1500]}\nThe parts that came are in {where}.", batch=batch, details=episode_details(ep, show)))
                     run.finish("failed", cause, f"The parts that came are in {where}")
                     continue
                 if not videos_in(out):
@@ -2225,10 +2485,10 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                         run.say(f"\r\n\x1b[31m{label}: Unshackle FAILED\x1b[0m\n{error}".replace("\n", "\r\n"))
                         if LOGIN.search(cause):
                             hint = f"{show['service']} refused Unshackle: its cookies may have expired. Update them in Settings, Cookies."
-                            tell_failure(run, cause, lambda: notify(settings, "error", f"Login failed on {show['service']}: {label}", f"{hint}\n{cause[:1200]}", batch=batch))
+                            tell_failure(run, cause, lambda: notify_series(show, settings, "error", f"Login failed on {show['service']}: {label}", f"{hint}\n{cause[:1200]}", batch=batch))
                             run.finish("failed", cause, hint)
                         else:
-                            tell_failure(run, cause, lambda: notify(settings, "error", f"Failed: {label}", f"{cause[:1500]}\nThe history in Activity has Unshackle's full output.", batch=batch, details=episode_details(ep, show)))
+                            tell_failure(run, cause, lambda: notify_series(show, settings, "error", f"Failed: {label}", f"{cause[:1500]}\nThe history in Activity has Unshackle's full output.", batch=batch, details=episode_details(ep, show)))
                             run.finish("failed", cause)
                     else:
                         run.say(f"{label}: not on {show['service']} yet{missing}")
@@ -2237,7 +2497,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                             note_availability(ep, out, False, datetime.now(timezone.utc))
                         aired = ep.get("airDateUtc")
                         if LATE_AFTER and aired and datetime.now(timezone.utc) - parse_time(aired) > LATE_AFTER and first_warning(out.name):
-                            notify(settings, "warning", f"Still unavailable: {label}", f"Aired {aired[:10]}, still not on {show['service']}{missing}.", batch=batch, details=episode_details(ep, show))
+                            notify_series(show, settings, "warning", f"Still unavailable: {label}", f"Aired {aired[:10]}, still not on {show['service']}{missing}.", batch=batch, details=episode_details(ep, show))
                     continue
 
                 # Downloaded: the rest (parts, name, audio, Sonarr) goes on aside, the next download starts now
@@ -2250,7 +2510,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                 print(f"{label}: {type(e).__name__}: {e}", flush=True)
                 if run and not run.card.get("ended"):
                     run.finish("failed", f"{type(e).__name__}: {e}")
-                notify(settings, "error", f"Failed: {label}", f"{type(e).__name__}: {e}", batch=batch)
+                notify_series(show, settings, "error", f"Failed: {label}", f"{type(e).__name__}: {e}", batch=batch)
             finally:
                 if not handed:
                     lock.__exit__(None, None, None)

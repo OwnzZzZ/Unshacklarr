@@ -215,7 +215,9 @@ function showSetup(found) {
      setup code and a new password; Sonarr and Unshackle are tested with its addresses, and the restore is done
      either way (one of them may not be back yet). */
   const restoreBox = el("div", { className: "wz-restore" });
-  const restoreFile = el("input", { type: "file", accept: ".yaml,.yml,text/yaml", hidden: true });
+  const restoreFile = el("input", { type: "file", accept: ".yaml,.yml,.enc,text/yaml", hidden: true });
+  const phrase = el("input", { type: "password", autocomplete: "off", placeholder: "Passphrase of the backup" });
+  let lastPick = null;  // an encrypted backup: asked again with its passphrase
   const restoreSay = el("div", { className: "wz-restore-say" });
   const restoreFrom = async (pick) => {
     const bad = !f.setup_code.value.trim() ? wrong("Enter the setup code", f.setup_code)
@@ -225,10 +227,15 @@ function showSetup(found) {
     restoreSay.replaceChildren(loading("Restoring, then testing Sonarr and Unshackle…"));
     try {
       const r = await api("/api/setup/restore", { method: "POST", signal: AbortSignal.timeout(180000),
-        body: JSON.stringify({ setup_code: f.setup_code.value, password: f.password.value, ...pick }) });
+        body: JSON.stringify({ setup_code: f.setup_code.value, password: f.password.value, passphrase: phrase.value, ...pick }) });
       try { sessionStorage.removeItem("setup-draft"); } catch {}
       restored(r);
-    } catch (e) { restoreSay.replaceChildren(failed(e.message)); }
+    } catch (e) {
+      lastPick = pick;
+      restoreSay.replaceChildren(failed(e.message), ...(/passphrase/i.test(e.message) ? [el("div", { className: "wz-phrase" }, phrase,
+        el("button", { type: "button", className: "btn small primary", textContent: "Restore", onclick: () => restoreFrom(lastPick) }))] : []));
+      if (/passphrase/i.test(e.message)) phrase.focus();
+    }
   };
   restoreFile.onchange = async () => { const file = restoreFile.files[0]; restoreFile.value = ""; if (file) restoreFrom({ text: await file.text() }); };
   const openRestore = async () => {
@@ -445,17 +452,22 @@ $("[data-set=country]").after(settingsCountry.input, settingsCountry.list);
 settingsZone = zonePicker($("#tz-select"));
 $("#tz-select").after(settingsZone.input, settingsZone.list);
 (async () => {
+  // asked at once, while the translations load: the state only when logged in (else it answers 401, and is dropped)
+  const sessionAsked = api("/api/session"), stateAsked = fetch("/api/state", { headers: { "X-Unshackle": "1" } })
+    .then((r) => (r.ok ? r.json() : null)).catch(() => null);
   await i18nReady;
   let session;
-  try { session = await api("/api/session"); }
+  try { session = await sessionAsked; }
   catch (e) { return $("#wall").replaceChildren(failed(`Unshacklarr can't be reached: ${e.message}`, () => location.reload())); }
   if (!session.configured) return showSetup(session.setup);
   if (!session.logged_in) return showLogin();
   try {
-    const data = await api("/api/state");
-    S = { series: data.series, config: data.config, services: data.services, serviceNames: data.service_names || {}, dlOptions: data.dl_options, health: data.health || {}, cdm: data.cdm || {}, domains: data.service_domains || {}, builtinLadders: data.builtin_ladders || [], networkServices: data.network_services || {}, backups: data.backups || null, instances: data.instances || {}, sonarrsOf: data.sonarrs_of || {} };
+    const data = (await stateAsked) || await api("/api/state");
+    S = { series: data.series, config: data.config, services: data.services, serviceNames: data.service_names || {}, dlOptions: data.dl_options, health: data.health || {}, cdm: data.cdm || {}, domains: data.service_domains || {}, builtinLadders: data.builtin_ladders || [], networkServices: data.network_services || {}, backups: data.backups || null, news: data.news || {}, update: data.update || null, version: data.version, instances: data.instances || {}, sonarrsOf: data.sonarrs_of || {} };
     savedConfig = configKey(S.config);
     $("#set-version").textContent = data.version ? `Unshacklarr ${data.version}` : "";
+    $("#version").textContent = data.version ? `v${data.version}` : "";  // renderNews adds the count of new options
+    $("#version").hidden = !data.version;
     const update = $("#update");  // a newer release: in sight on every page, its notes one click away
     update.hidden = !data.update;
     if (data.update) {
@@ -468,6 +480,7 @@ $("#tz-select").after(settingsZone.input, settingsZone.list);
     renderWall();
     optionsEditor($("#defaults"), S.dlOptions, S.config.defaults);
     renderSettings();
+    renderNews();
     refreshLog();
     refreshInbox();
     if (!busyStarted) { busyStarted = true; refreshBusy(); }  // one loop, however often the page reloads its state

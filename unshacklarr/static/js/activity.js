@@ -348,7 +348,7 @@ async function showLeftovers() {
   const rows = r.items.map((it) => {
     const poster = S.series.find((x) => x.tvdbId === it.tvdbId)?.poster || "";
     const age = Math.floor((Date.now() / 1000 - it.since) / 86400);
-    return el("div", { className: "left-row" }, el("img", { alt: "", src: poster }),
+    return el("div", { className: "left-row" }, el("img", { alt: "", loading: "lazy", src: poster }),
       el("div", {}, el("b", { textContent: `${it.series || `TVDB ${it.tvdbId}`} ${it.sxxeyy}` }),
         el("small", { className: "why", textContent: it.cause || (it.outcome ? OUTCOME[it.outcome] : "No download history for it") }),
         el("small", { textContent: `${it.size >= 2 ** 30 ? `${(it.size / 2 ** 30).toFixed(1)} GB` : `${Math.max(1, Math.round(it.size / 2 ** 20))} MB`} · waiting ${age < 1 ? "since today" : `${age} day${age > 1 ? "s" : ""}`} · ${it.sonarr_path}` }),
@@ -404,9 +404,9 @@ async function showMissing() {
     } });
   const rows = r.items.map((it) => {
     const poster = S.series.find((x) => x.tvdbId === it.tvdbId)?.poster || "";
-    return el("div", { className: "left-row" }, el("img", { alt: "", src: poster }),
+    return el("div", { className: "left-row" }, el("img", { alt: "", loading: "lazy", src: poster }),
       el("div", {}, el("b", { textContent: `${it.series} ${it.sxxeyy}` }),
-        el("small", { textContent: [it.title, `aired ${ago(it.aired)}`].filter(Boolean).join(" · ") })));
+        el("small", {}, ...(it.title ? [episodeTitle(it.tvdbId, it.sxxeyy, it.title), " · "] : []), `aired ${ago(it.aired)}`)));
   });
   $("#cd-main").replaceChildren(el("div", { style: "display:grid;gap:14px" },
     el("div", { className: "cd-head" }, el("div", {}, el("h3", { textContent: "Catch up" }),
@@ -454,7 +454,7 @@ async function showUpgrades() {
     const poster = S.series.find((x) => x.tvdbId === it.tvdbId)?.poster || "";
     const box = el("input", { type: "checkbox", checked: !upgradeSkip.has(it.episodeId), disabled: it.running, ariaLabel: `Replace ${it.series} ${it.sxxeyy}`,
       onchange: (e) => { if (e.target.checked) upgradeSkip.delete(it.episodeId); else upgradeSkip.add(it.episodeId); showUpgrades(); } });
-    return el("label", { className: "left-row up-row" }, box, el("img", { alt: "", src: poster }),
+    return el("label", { className: "left-row up-row" }, box, el("img", { alt: "", loading: "lazy", src: poster }),
       el("div", {}, el("b", { textContent: `${it.series} ${it.sxxeyy}` }),
         el("small", { textContent: `${it.file} here${it.fileStep ? ` (step ${it.fileStep})` : " (outside the ladder)"} → ${it.better} on the service (step ${it.betterStep} of ${it.ladder})` }),
         ...(it.running ? [el("small", { className: "left-hand", textContent: "Being replaced now" })] : [])));
@@ -576,8 +576,20 @@ function runActs(c) {
     live && c.job_id ? el("button", { className: "btn small danger", textContent: "Stop", onclick: (e) => stopRun(c, e.target) }) : "",
     !live && c.outcome === "kept" ? el("button", { className: "btn small primary", textContent: "Import anyway", onclick: (e) => importKept(c, e.target) }) : "",
     !live && c.episodeId && c.outcome !== "downloaded" && c.outcome !== "kept" ? el("button", { className: "btn small primary", textContent: "Retry", onclick: (e) => retryRun(c, e.target) }) : "",
+    !live ? el("button", { className: "btn small", textContent: "Diagnostic", title: "A file to attach to a GitHub issue: versions, settings and this attempt's log, without passwords, keys or tokens",
+      onclick: () => downloadDiagnostic(c) }) : "",
     !live ? el("button", { className: "btn small", textContent: "Delete", onclick: (e) => deleteRun(c, e.target) }) : "",
   ].filter(Boolean);
+}
+async function downloadDiagnostic(c) {
+  try {
+    const r = await fetch(`/api/runs/${encodeURIComponent(c.id)}/diagnostic`);
+    if (!r.ok) throw new Error(await r.text() || r.statusText);
+    const a = el("a", { href: URL.createObjectURL(await r.blob()), download: `unshacklarr-diagnostic-${c.id}.md` });
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast("Diagnostic downloaded: check it, then attach it to the issue");
+  } catch (e) { toast(e.message, true); }
 }
 /* A track as serve names it ("Part 1 · audio fr 2.0"): an icon for its kind, the kind, then what it is in chips. */
 const TRACK_KINDS = {

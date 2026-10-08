@@ -348,9 +348,28 @@ change that.
 
 <a name="api"></a>
 
+## 🧰 Options worth knowing
+
+These are off until you turn them on:
+
+- **Add audio track** (Settings › Download options › Languages). When your preferred audio
+  language becomes available, only that audio track is downloaded and added to the file in your library. Sonarr then
+  imports the updated file. Unshacklarr needs access to your library: set its folder as Sonarr sees it and as
+  Unshacklarr sees it. If the file can't be found, the whole episode is downloaded instead.
+- **Fallback service** (on a series page, in Source). A second service and the series URL on it, used when the main
+  service doesn't have the episode yet, or not in an accepted language. If that service numbers episodes
+  differently, set its `season_map` or `episode_offset` under `fallback:` in `config.yaml`.
+- **Auto release times** (Settings › Automation). When 3 episodes of a series come out at the same time, that time
+  becomes its release time. Release times you set yourself are never changed.
+- **Download window** (Settings › Automation). Automatic downloads only run between two times, which can span
+  midnight. Release-time downloads can follow it too. Episodes you start by hand are not affected.
+
+After an update, the **What's new** button in the header lists the new options, and each one shows a "New" badge
+until you have seen it.
+
 ## 💾 Backups
 
-Settings › Account › *Back up the settings* downloads every setting but the password (the series, their options,
+Settings › Account › *Backups* downloads every setting but the password (the series, their options,
 the ladders, the notifications, the API keys: keep the file private), and *Restore from a file* puts one back.
 Set *Back up automatically every N days*, and a backup is also saved in the data folder's `backups` folder, the
 newest few kept. To rebuild an install, put a backup in that folder (or keep the file at hand), start

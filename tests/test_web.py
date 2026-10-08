@@ -1521,3 +1521,156 @@ def test_episode_links_are_taken_back_to_their_series(tmp_path, monkeypatch):
     assert web.episode_link(kept)  # still one episode: a series link of the same service is preferred
     assert web.episode_link("https://play.hbomax.com/video/watch/7656258d-aaaa/x") and web.episode_link("https://www.bbc.co.uk/iplayer/episode/b0abc123")
     assert not web.episode_link("https://play.hbomax.com/show/86bc816f-aaaa")
+
+
+def test_news_seen_is_kept_for_the_account_and_a_new_install_starts_with_none(tmp_path, monkeypatch):
+    import asyncio
+    from aiohttp.test_utils import TestClient, TestServer
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    web.app._middlewares = type(web.app._middlewares)([web.same_origin_only])  # logged in, for this test
+    h = {"X-Unshackle": "1"}
+
+    async def go():
+        async with TestClient(TestServer(web.app)) as client:
+            a = await (await client.post("/api/news/seen", json={"ids": ["download-window", "../bad", 5]}, headers=h)).json()
+            b = await (await client.post("/api/news/seen", json={"ids": ["fallback-service"], "list": True}, headers=h)).json()
+            return a, b
+
+    a, b = asyncio.run(go())
+    assert a["seen"] == ["download-window"]  # only ids, never anything else
+    assert b["seen"] == ["download-window", "fallback-service"] and b["list_read"] == web.__version__
+    web.news_installed()
+    assert web.read_json(web.NEWS_FILE, {})["installed"] == web.__version__ and web.read_json(web.NEWS_FILE, {})["seen"]
+
+
+def test_the_release_notes_come_from_the_changelog(tmp_path, monkeypatch):
+    from unshacklarr import web
+    log = tmp_path / "CHANGELOG.md"
+    log.write_text("# Changelog\n\nIntro.\n\n## [1.1.0] - 2026-10-07\n\nA note of its own,\non two lines.\n\n### Added\n\n"
+                   "**Group**\n\n- **New thing.** It does\n  this.\n\n### Fixed\n\n- **Bug.** Gone.\n\n## [1.0.0] - 2026-09-30\n\n"
+                   "### Security\n\n- Safe.\n\n[1.1.0]: https://example.com\n")
+    monkeypatch.setattr(web, "CHANGELOG_FILES", (log,))
+    assert web.changelog() == [
+        {"version": "1.1.0", "date": "2026-10-07", "changes": [{"kind": "note", "text": "A note of its own, on two lines."},
+                                                                {"kind": "new", "text": "**New thing.** It does this."},
+                                                                {"kind": "fix", "text": "**Bug.** Gone."}]},
+        {"version": "1.0.0", "date": "2026-09-30", "changes": [{"kind": "security", "text": "Safe."}]}]
+
+
+def test_no_spoilers_is_kept_only_when_asked():
+    from unshacklarr import web
+    saved = {**web.sonarr_sync.SETTINGS_DEFAULTS}
+    assert web.check_settings({"spoiler_free": True}, saved)["spoiler_free"] is True
+    assert web.check_settings({"spoiler_free": "yes"}, saved)["spoiler_free"] is False  # only a real true turns it on
+
+
+def test_an_encrypted_backup_is_restored_with_its_passphrase():
+    import pytest
+    from unshacklarr import offsite, web
+    sealed = offsite.encrypt("series: {}\nsettings: {}\n", "pass phrase")
+    assert web.backup_data(sealed, "pass phrase") == {"series": {}, "settings": {}}
+    with pytest.raises(web.web.HTTPBadRequest):
+        web.backup_data(sealed, "wrong")
+    saved = {**web.sonarr_sync.SETTINGS_DEFAULTS}
+    with pytest.raises(web.web.HTTPBadRequest):  # never sent away unencrypted
+        web.check_offsite({"backup_remote": "webdav", "backup_remote_url": "https://dav.example/backups"}, saved)
+    ok = web.check_offsite({"backup_remote": "webdav", "backup_remote_url": "https://dav.example/backups/", "backup_passphrase": "a long phrase"}, saved)
+    assert ok["backup_remote_url"] == "https://dav.example/backups" and ok["backup_passphrase"] == "a long phrase"
+    with pytest.raises(web.web.HTTPBadRequest):  # a short passphrase is refused
+        web.check_offsite({"backup_remote": "s3", "backup_remote_url": "https://s3.example", "backup_passphrase": "short"}, saved)
+    with pytest.raises(web.web.HTTPBadRequest):  # the saved secret never follows a new address
+        web.check_offsite({"backup_remote": "webdav", "backup_remote_url": "https://evil.example"}, {**saved, **ok, "backup_remote_secret": "s"})
+    # the settings' own Save never changes where backups go: that takes the password (backup_offsite)
+    kept = web.check_settings({"backup_remote": "webdav", "backup_remote_url": "https://evil.example", "backup_passphrase": "x"}, {**saved, **ok})
+    assert kept["backup_remote_url"] == "https://dav.example/backups" and kept["backup_passphrase"] == "a long phrase"
+
+
+def test_the_page_files_come_compressed_and_kept_for_good(tmp_path, monkeypatch):
+    import asyncio
+    from aiohttp.test_utils import TestClient, TestServer
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+
+    async def go():
+        async with TestClient(TestServer(web.app)) as client:
+            versioned = await client.get("/app.css?v=1", headers={"Accept-Encoding": "gzip"}, auto_decompress=False)
+            plain = await client.get("/app.css")
+            return versioned.headers.get("Content-Encoding"), versioned.headers["Cache-Control"], plain.headers["Cache-Control"], len(await plain.text())
+
+    encoding, versioned, plain, size = asyncio.run(go())
+    assert encoding == "gzip" and "immutable" in versioned and plain == "no-cache" and size > 10000
+
+
+def test_an_episode_only_link_gives_way_to_the_series_found_by_its_title(tmp_path, monkeypatch):
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    episode = {"service": "HMAX", "url": "https://play.hbomax.com/video/watch/4d269596-6871/x", "country": "US",
+               "site": "play.hbomax.com", "episode": True}
+
+    class Backend:
+        def __init__(self, results=None, error=None):
+            self.results, self.error, self.asked = results or [], error, []
+
+        def call(self, method, path, json=None, **_):
+            self.asked.append(json)
+            if self.error:
+                raise self.error
+            return {"results": self.results}
+
+    def use(backend):
+        monkeypatch.setattr(web, "sonarr_series", lambda: [{"tmdbId": 55, "title": "WAR (2026)", "year": 2026}])
+        monkeypatch.setattr(web.sonarr_sync, "backend_for", lambda tag, config=None: backend)
+
+    backend = Backend([{"title": "War", "url": "/show/abc-123"}, {"title": "War of the Worlds", "url": "/show/zzz"}])
+    use(backend)
+    links = web.searched_in_place([episode, {"service": "ATV", "url": "umc.cmc.x", "country": "US"}], 55)
+    assert backend.asked[0]["query"] == "WAR" and backend.asked[0]["service"] == "HMAX"
+    hmax = [link for link in links if link["service"] == "HMAX"]
+    assert hmax == [{"service": "HMAX", "url": "/show/abc-123", "country": "US", "site": "play.hbomax.com", "found_by": "search"}]
+    assert any(link["service"] == "ATV" for link in links)
+
+    # the episode link stays without exactly one result of that title
+    for backend in (Backend([{"title": "War", "url": "/show/a"}, {"title": "WAR", "url": "/show/b"}]),  # two of that title
+                    Backend([{"title": "War Games", "url": "/show/c"}]),  # none
+                    Backend(error=web.UnshackleError("HMAX can't be searched"))):
+        use(backend)
+        assert web.searched_in_place([episode], 55) == [episode]
+    series_link = {"service": "HMAX", "url": "https://play.hbomax.com/show/x", "country": "AU"}
+    use(Backend([{"title": "War", "url": "/show/abc"}]))
+    assert web.searched_in_place([series_link], 55) == [series_link]  # a series link already: nothing searched
+
+
+def test_health_answers_without_login_and_says_only_yes_or_no(tmp_path, monkeypatch):
+    import asyncio
+    from aiohttp.test_utils import TestClient, TestServer
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    web.health.update(sonarr={"ok": False, "error": "http://secret@sonarr:8989 refused"}, unshackle={"ok": True})
+
+    async def go():
+        async with TestClient(TestServer(web.app)) as client:
+            plain, strict = await client.get("/health"), await client.get("/health?strict=1")
+            return plain.status, await plain.json(), strict.status
+
+    status, body, strict = asyncio.run(go())
+    assert status == 200 and strict == 503 and body == {"ok": False, "unshacklarr": True, "sonarr": False, "unshackle": True}
+
+
+def test_a_diagnostic_keeps_no_token_key_or_address():
+    from unshacklarr import web
+    text = web.scrubbed("GET https://api.netflix.com/license?playbackContextId=abc123&esn=NFCDIE key=" + "a" * 40 + " mail me@example.com")
+    assert "playbackContextId" not in text and "a" * 40 not in text and "me@example.com" not in text
+    assert "https://api.netflix.com/license?…" in text
