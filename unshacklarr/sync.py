@@ -860,14 +860,52 @@ LOGIN = re.compile(r"\b40[13]\b|unauthori[sz]ed|forbidden|not logged|log ?in|sig
                    r"invalid token|access token|credential|authenticat", re.IGNORECASE)
 
 
+# Subtitles asked for (--s-lang) that the episode lacks: Unshackle stops ("fr not found in subtitle tracks", or
+# "There's no ['fr'] Subtitle Track" when it has none at all) unless --best-available, which relaxes the quality too
+SUBS_MISSING = re.compile(r"([\w ,'\[\]-]+?) not found in subtitle tracks|There's no .{0,80}? Subtitle Track", re.IGNORECASE)
+
+
+def base_lang(code) -> str:
+    return str(code).strip(" '[]").lower().split("-")[0]
+
+
+def subs_dropped(request: dict, missing: set[str] | None) -> dict | None:
+    """The request without the subtitle languages the episode lacks (every one when `missing` is None): a file with
+    the subtitles it has, or none, rather than no file. None when there is nothing to drop, or subtitles are
+    required (--require-subs: the episode waits for them)."""
+    asked = [str(x) for x in request.get("s_lang") or []]
+    if not asked or request.get("require_subs") or request.get("no_subs"):
+        return None
+    keep = [] if missing is None else [x for x in asked if x.startswith("-") or base_lang(x) not in missing]
+    if keep == asked:
+        return None
+    out = {k: v for k, v in request.items() if k != "s_lang"}
+    if any(not x.startswith("-") for x in keep):
+        out["s_lang"] = keep
+    else:
+        out["no_subs"] = True
+    return out
+
+
 def run_job_retrying(payload: dict, run: EpisodeRun | None = None, sleep=time.sleep) -> list[str]:
     """run_job, tried again after 30 s then 2 min when it failed on the network or a service
-    hiccup (a timeout, a 502...). Other failures (not found, login, a language missing) end it."""
+    hiccup (a timeout, a 502...); at once, without them, when subtitles asked for are missing. Other failures
+    (not found, login, a language missing) end it."""
+    subs_tried = False
     for wait in (*RETRY_AFTER, None):
         try:
             return run_job(payload, run)
         except (JobFailed, UnshackleError) as e:
             cause = getattr(e, "cause", str(e))
+            if not subs_tried and (m := SUBS_MISSING.search(f"{cause}\n{e}")):  # its one line, else all it said
+                missing = {base_lang(x) for x in re.split(r"[,\s]+", m.group(1)) if x.strip(" '[]")} if m.group(1) else None
+                if fixed := subs_dropped(payload, missing):
+                    subs_tried, payload = True, fixed
+                    what = "without subtitles" if fixed.get("no_subs") else f"with subtitles in {', '.join(fixed['s_lang'])}"
+                    trace(f"subtitles asked for are missing ({cause[:120]}): downloading again {what}")
+                    if run:
+                        run.say(f"\r\n\x1b[33mSubtitles asked for are missing: downloading again {what}\x1b[0m")
+                    continue
             if wait is None or getattr(e, "status", "failed") == "cancelled" or not TRANSIENT.search(cause):
                 raise
             if run:
@@ -1571,6 +1609,15 @@ def apply_ladder(show: dict, config: dict, request: dict) -> None:
         if ladder.get(kind) and not any(request.get(k) for k in asked) and (lang := first_language(ladder[kind], episodes[0].get(kind) or [])):
             request[key] = [lang]
             trace(f"quality ladder {ladder['name']}: {kind} in {lang}")
+    # subtitles asked for (s_lang, e.g. from unshackle.yaml's dl:) the episode lacks: Unshackle would stop the download;
+    # it goes on with those it has, or none, unless they are required (by mj23au, #16)
+    have = {base_lang(t.get("language") or "") for ep in episodes for t in ep.get("subtitles") or []}
+    missing = {base_lang(w) for w in request.get("s_lang") or [] if str(w) not in ("all", "orig") and not str(w).startswith("-")} - have
+    if missing and (fixed := subs_dropped(request, missing)):
+        request.clear()
+        request.update(fixed)
+        trace(f"no {', '.join(sorted(missing))} subtitles on {show['service']}: downloading "
+              + ("without subtitles" if fixed.get("no_subs") else f"with {', '.join(fixed['s_lang'])} subtitles"))
 
 
 def first_language(order: list[str], tracks: list[dict]) -> str | None:

@@ -1751,3 +1751,49 @@ def test_an_import_sonarr_does_not_answer_is_asked_again(tmp_path, monkeypatch):
     except RuntimeError as e:
         assert "did not answer the import 3 times" in str(e)
     assert len(posts) == 3
+
+
+def test_subtitles_asked_for_that_the_episode_lacks_do_not_stop_its_download(tmp_path, monkeypatch):
+    # By mj23au (#16): s_lang en (here from unshackle.yaml's dl:) on an episode with no English subtitles: Unshackle
+    # would exit ("en not found in tracks"); the download goes on without them. With them there, nothing changes.
+    sync = load(tmp_path, monkeypatch)
+    config = sync.read_file()
+    config["series"][111]["ladder"] = "1080p"
+    subs = {"S02E05": [], "S02E06": [{"language": "en-GB"}], "S02E07": [{"language": "fr"}]}
+    video = [{"height": 1080, "codec": "AVC", "range": "SDR"}]
+    monkeypatch.setattr(sync.UNSHACKLE, "call", lambda method, path, json=None, **_:
+                        {"episodes": [{"video": video, "subtitles": subs[json["wanted"][0]]}]} if path == "/api/list-tracks" else {})
+    monkeypatch.setattr(sync.UNSHACKLE, "dl_config", lambda: {"s_lang": ["en"]})
+    monkeypatch.setattr(sync, "no_cdm", lambda tag, config=None: "")
+    downloads = []
+    monkeypatch.setattr(sync, "run_job_retrying", lambda payload, run=None: downloads.append(payload))
+    for n in (5, 6, 7):
+        sync.sync(config, {}, [episode(111, 2, n)], manual=True, kind="manual")
+    assert [(d.get("s_lang"), d.get("no_subs")) for d in downloads] == [(None, True), (["en"], None), (None, True)]
+
+    config["series"][111]["options"] = {"--require-subs": "en"}  # required: it stops as before, nothing relaxed
+    sync.sync(config, {}, [episode(111, 2, 5)], manual=True, kind="manual")
+    assert downloads[-1].get("no_subs") is None
+
+
+def test_only_the_missing_subtitle_languages_are_dropped(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    assert sync.subs_dropped({"s_lang": ["fr", "en"]}, {"fr"}) == {"s_lang": ["en"]}  # partly there: the rest kept
+    assert sync.subs_dropped({"s_lang": ["fr", "-es"]}, {"fr"}) == {"no_subs": True}
+    assert sync.subs_dropped({"s_lang": ["fr"], "require_subs": ["fr"]}, {"fr"}) is None  # required: it waits
+    assert sync.subs_dropped({"s_lang": ["en"]}, {"fr"}) is None  # nothing to drop
+
+
+def test_a_download_stopped_for_missing_subtitles_goes_again_without_them(tmp_path, monkeypatch):
+    # Any series, with no ladder (or --remote): Unshackle's own error says which, the download goes again once, at once
+    sync = load(tmp_path, monkeypatch)
+    asked = []
+
+    def job(payload, run=None):
+        asked.append(payload)
+        if len(asked) == 1:
+            raise sync.JobFailed("Tracks listed\nfr not found in subtitle tracks", "failed")
+        return ["ok"]
+    monkeypatch.setattr(sync, "run_job", job)
+    assert sync.run_job_retrying({"s_lang": ["fr", "en"]}, sleep=lambda s: None) == ["ok"]
+    assert asked[1] == {"s_lang": ["en"]}
