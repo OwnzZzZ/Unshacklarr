@@ -1657,7 +1657,6 @@
  "Codec": "コーデック",
  "DV": "DV",
  "Default: the one of Settings, Quality.": "既定：設定 › 画質 のもの。",
- "Default: {0}": "既定：{0}",
  "Dolby Vision": "Dolby Vision",
  "Download only": "ダウンロードのみ",
  "Download only: the file stays in Activity, Waiting in downloads, until you import it.": "ダウンロードのみ：インポートするまで、ファイルは アクティビティ › ダウンロードで待機中 に残ります。",
@@ -1735,9 +1734,7 @@
  "any height": "任意の高さ",
  "any range": "任意のレンジ",
  "every series": "全シリーズ",
- "import": "インポート",
  "no video": "映像なし",
- "only": "のみ",
  "quality ladder {0}: step {1} ({2}), {3}": "画質ラダー {0}：ステップ {1}（{2}）、{3}",
  "unshackle serve{0} took it as job {1}": "unshackle serve{0} がジョブ {1} として受け付けました",
  "{0} downloads with the Unshackle server {1}, which is not in Settings, Unshackle": "{0} は Unshackle サーバー {1} でダウンロードしますが、設定 › Unshackle にありません",
@@ -2011,5 +2008,6 @@
  "Diagnostic downloaded: check it, then attach it to the issue": "診断をダウンロードしました。確認してから Issue に添付してください",
  "Failures only": "失敗のみ",
  "No such attempt": "その試行は見つかりません",
- "What is sent for this series' episodes. The bell in the page always keeps everything.": "このシリーズのエピソードで送信する内容。ページのベルには常にすべて残ります。"
+ "What is sent for this series' episodes. The bell in the page always keeps everything.": "このシリーズのエピソードで送信する内容。ページのベルには常にすべて残ります。",
+ "{0} (default)": "{0}（既定）"
 }

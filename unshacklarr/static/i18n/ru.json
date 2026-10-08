@@ -1652,7 +1652,6 @@
  "Codec": "Кодек",
  "DV": "DV",
  "Default: the one of Settings, Quality.": "По умолчанию: та, что в Настройки, Качество.",
- "Default: {0}": "По умолчанию: {0}",
  "Dolby Vision": "Dolby Vision",
  "Download only": "Только скачать",
  "Download only: the file stays in Activity, Waiting in downloads, until you import it.": "Только скачать: файл ждёт в «Активность», «Ожидают в загрузках», пока вы его не импортируете.",
@@ -1730,9 +1729,7 @@
  "any height": "любая высота",
  "any range": "любой диапазон",
  "every series": "все сериалы",
- "import": "импорт",
  "no video": "нет видео",
- "only": "только",
  "quality ladder {0}: step {1} ({2}), {3}": "лестница качества {0}: ступень {1} ({2}), {3}",
  "unshackle serve{0} took it as job {1}": "unshackle serve{0} принял это как задание {1}",
  "{0} downloads with the Unshackle server {1}, which is not in Settings, Unshackle": "{0} скачивает через сервер Unshackle {1}, которого нет в Настройки, Unshackle",
@@ -2008,5 +2005,6 @@
  "Diagnostic downloaded: check it, then attach it to the issue": "Диагностика скачана: проверьте её и приложите к issue",
  "Failures only": "Только ошибки",
  "No such attempt": "Такой попытки нет",
- "What is sent for this series' episodes. The bell in the page always keeps everything.": "Что отправляется по эпизодам этого сериала. Колокольчик на странице всегда хранит всё."
+ "What is sent for this series' episodes. The bell in the page always keeps everything.": "Что отправляется по эпизодам этого сериала. Колокольчик на странице всегда хранит всё.",
+ "{0} (default)": "{0} (по умолчанию)"
 }

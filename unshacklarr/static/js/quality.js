@@ -31,13 +31,23 @@ function ladderUse(name) {
   return [S.config.settings.quality_ladder === name ? "every series" : "", ...services.map(svcName), series ? `${series} series` : ""].filter(Boolean);
 }
 
-/* A ladder picker: "" is the level before (named in its label), off is none. */
+/* A ladder picker: each choice once, the one the level before gives marked (default). Picking it is "" (follow
+   that level), any other is this level's own; off is none. */
 function ladderSelect(value, inherited, onchange) {
+  const def = inherited && ladders().some((l) => l.name === inherited) ? inherited : "off";
+  const choice = (name, label) => el("option", { value: name === def ? "" : name, textContent: name === def ? `${label} (default)` : label });
   const sel = el("select", { onchange: (e) => onchange(e.target.value) },
-    el("option", { value: "", textContent: `Default: ${inherited && inherited !== "off" ? inherited : "Off"}` }),
-    el("option", { value: "off", textContent: "Off" }), ...ladders().map((l) => el("option", { value: l.name, textContent: l.name })));
-  sel.value = value || "";
+    choice("off", "Off"), ...ladders().map((l) => choice(l.name, l.name)));
+  sel.value = !value || value === def ? "" : value;
   return sel;
+}
+/* Chips for a setting a series may take from the level before: each choice once, the inherited one marked
+   default; picking it follows that level again, any other is the series' own. */
+function defaultChips(box, choices, own, inherited, pick) {
+  const now = own ?? inherited;
+  box.replaceChildren(...choices.map(([v, label]) => el("button", { type: "button", role: "radio", ariaChecked: String(now === v),
+    onclick: () => pick(v === inherited ? undefined : v) },
+    el("span", { textContent: label }), ...(v === inherited ? [el("small", { className: "chip-default", textContent: "default" })] : []))));
 }
 
 function renderQuality() {
@@ -271,8 +281,6 @@ function fillQualityImport(conf) {
     if (v) conf.ladder = v; else delete conf.ladder;
     dirty();
   }), { id: "d-ladder" }));
-  $("#d-import").options[0].textContent = `Default: ${set.download_only ? "Download only" : "Sonarr imports it"}`;
-  $("#d-import").value = conf.download_only === true ? "only" : conf.download_only === false ? "import" : "";
   importChips();
   spoilerChips(conf);
   notifyChips(conf);
@@ -287,28 +295,23 @@ function notifyChips(conf) {
       dirty();
     } })));
 }
-/* Episode titles: Default (the settings' No spoilers), hidden or shown, for this series. */
+/* Episode titles: hidden or shown for this series, the settings' No spoilers marked default. */
 function spoilerChips(conf) {
-  const opts = [["", `Default: ${S.config.settings.spoiler_free ? "Hidden" : "Shown"}`], [true, "Hidden"], [false, "Shown"]];
-  $("#d-spoiler-seg").replaceChildren(...opts.map(([v, label]) => el("button", { type: "button", role: "radio", textContent: label,
-    ariaChecked: String((conf.spoiler_free ?? "") === v), onclick: () => {
-      if (v === "") delete conf.spoiler_free; else conf.spoiler_free = v;
-      spoilerChips(conf);
-      dirty();
-    } })));
+  defaultChips($("#d-spoiler-seg"), [[true, "Hidden"], [false, "Shown"]], conf.spoiler_free, S.config.settings.spoiler_free === true, (v) => {
+    if (v === undefined) delete conf.spoiler_free; else conf.spoiler_free = v;
+    spoilerChips(conf);
+    dirty();
+  });
 }
 /* After the download: its choices as chips, the select behind them keeping the value. */
 function importChips() {
-  const sel = $("#d-import");
-  $("#d-import-seg").replaceChildren(...[...sel.options].map((o) => el("button", { type: "button", role: "radio", textContent: o.textContent,
-    ariaChecked: String(o.value === sel.value), onclick: () => { sel.value = o.value; sel.dispatchEvent(new Event("change")); } })));
-}
-$("#d-import").onchange = (e) => {
   const conf = S.config.series[current.tvdbId];
-  if (e.target.value) conf.download_only = e.target.value === "only"; else delete conf.download_only;
-  importChips();
-  dirty();
-};
+  defaultChips($("#d-import-seg"), [[false, "Sonarr imports it"], [true, "Download only"]], conf.download_only, S.config.settings.download_only === true, (v) => {
+    if (v === undefined) delete conf.download_only; else conf.download_only = v;
+    importChips();
+    dirty();
+  });
+}
 
 /* Download options, Languages: when the preferred audio comes, the episode again or its audio added to the file. */
 function renderUpgradeMode() {

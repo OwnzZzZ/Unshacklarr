@@ -33,7 +33,7 @@ function renderNews() {
   document.querySelectorAll(".is-new").forEach((b) => { if (!ids.has(b.dataset.newsId)) b.classList.remove("is-new"); });
   for (const n of unseen) {
     const box = document.querySelector(n.target), title = box && newsTitle(box);
-    box?.classList.add("is-new");
+    if (box && !box.matches("label, span[id]")) box.classList.add("is-new");  // a field's label: its badge is enough
     if (title && !title.querySelector(`.new-badge[data-news="${n.id}"]`)) title.append(el("span", { className: "new-badge", textContent: "New", dataset: { news: n.id } }));
     if (box) watchNews(box, n.id);
   }

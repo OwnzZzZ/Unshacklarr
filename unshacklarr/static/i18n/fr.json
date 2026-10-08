@@ -1654,7 +1654,6 @@
  "Before each download, Unshacklarr lists the episode's tracks on the service. It downloads the first step of the ladder that the service has, and nothing outside the ladder.": "Avant chaque téléchargement, Unshacklarr liste les pistes de l'épisode sur le service. Il télécharge la première étape de l'échelle que le service propose, et rien en dehors de l'échelle.",
  "Codec": "Codec",
  "Default: the one of Settings, Quality.": "Par défaut : celle de Réglages, Qualité.",
- "Default: {0}": "Par défaut : {0}",
  "Download only": "Téléchargement seul",
  "Download only: the file stays in Activity, Waiting in downloads, until you import it.": "Téléchargement seul: le fichier reste dans Activité, En attente dans les téléchargements, jusqu'à ce que vous l'importiez.",
  "Download only: the file waits in {0}. Import or delete it in Activity, Waiting in downloads.": "Téléchargement seul: le fichier attend dans {0}. Importez-le ou supprimez-le dans Activité, En attente dans les téléchargements.",
@@ -1995,5 +1994,7 @@
  "Diagnostic downloaded: check it, then attach it to the issue": "Diagnostic téléchargé : relisez-le, puis joignez-le à l'issue",
  "Failures only": "Échecs seulement",
  "No such attempt": "Cet essai n'existe pas",
- "What is sent for this series' episodes. The bell in the page always keeps everything.": "Ce qui est envoyé pour les épisodes de cette série. La cloche de la page garde toujours tout."
+ "What is sent for this series' episodes. The bell in the page always keeps everything.": "Ce qui est envoyé pour les épisodes de cette série. La cloche de la page garde toujours tout.",
+ "default": "par défaut",
+ "{0} (default)": "{0} (par défaut)"
 }

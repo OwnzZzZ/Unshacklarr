@@ -1618,7 +1618,6 @@
  "Codec": "Códec",
  "DV": "DV",
  "Default: the one of Settings, Quality.": "Predeterminado: la de Ajustes, Calidad.",
- "Default: {0}": "Predeterminado: {0}",
  "Dolby Vision": "Dolby Vision",
  "Download only": "Solo descargar",
  "Download only: the file stays in Activity, Waiting in downloads, until you import it.": "Solo descargar: el archivo se queda en Actividad, En espera en descargas, hasta que lo importes.",
@@ -1696,9 +1695,7 @@
  "any height": "cualquier altura",
  "any range": "cualquier rango",
  "every series": "todas las series",
- "import": "importar",
  "no video": "sin vídeo",
- "only": "solo",
  "quality ladder {0}: step {1} ({2}), {3}": "escalera de calidad {0}: paso {1} ({2}), {3}",
  "unshackle serve{0} took it as job {1}": "unshackle serve{0} lo aceptó como tarea {1}",
  "{0} downloads with the Unshackle server {1}, which is not in Settings, Unshackle": "{0} descarga con el servidor Unshackle {1}, que no está en Ajustes, Unshackle",
@@ -1979,5 +1976,7 @@
  "Diagnostic downloaded: check it, then attach it to the issue": "Diagnóstico descargado: revísalo y adjúntalo a la incidencia",
  "Failures only": "Solo fallos",
  "No such attempt": "No existe ese intento",
- "What is sent for this series' episodes. The bell in the page always keeps everything.": "Lo que se envía para los episodios de esta serie. La campana de la página siempre lo guarda todo."
+ "What is sent for this series' episodes. The bell in the page always keeps everything.": "Lo que se envía para los episodios de esta serie. La campana de la página siempre lo guarda todo.",
+ "default": "por defecto",
+ "{0} (default)": "{0} (por defecto)"
 }

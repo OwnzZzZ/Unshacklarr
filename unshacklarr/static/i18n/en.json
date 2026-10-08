@@ -534,9 +534,6 @@
   "cdmShort(d) || device"
  ],
  "Default: the one of Settings, Quality.": [],
- "Default: {0}": [
-  "S.config.settings.spoiler_free ? \"Hidden\" : \"Shown\""
- ],
  "Delete": [],
  "Delete the key": [],
  "Delete them after": [],
@@ -1293,6 +1290,7 @@
  "Notifications": [],
  "Notifications cleared": [],
  "Notifications on for this device": [],
+ "Notifications per series": [],
  "Notifications were not allowed": [],
  "Notifications will show up here.": [],
  "Notifications, {0} new": [
@@ -1704,6 +1702,18 @@
  ],
  "Sonarr URL": [],
  "Sonarr answers": [],
+ "Sonarr did not answer the import ({0}), but the episode has its new file: imported": [
+  "type(e).__name__"
+ ],
+ "Sonarr did not answer the import ({0}): asked again ({1} of {2})": [
+  "type(e).__name__",
+  "attempt + 1",
+  "IMPORT_ASKS"
+ ],
+ "Sonarr did not answer the import {0} times ({1})": [
+  "IMPORT_ASKS",
+  "no_credentials(str(e))"
+ ],
  "Sonarr finished the import but the episode has no new file: {0}": [
   "command.get('message') or 'see Activity in Sonarr'"
  ],
@@ -2506,7 +2516,6 @@
  "hide": [],
  "hour": [],
  "iPhone": [],
- "import": [],
  "in a git clone.": [],
  "in {0} · {1}": [
   "until(next)",
@@ -2544,6 +2553,10 @@
  ],
  "no subs": [],
  "no video": [],
+ "no {0} subtitles on {1}: downloading": [
+  "', '.join(sorted(missing))",
+  "show['service']"
+ ],
  "none": [],
  "none on {0}": [
   "svc"
@@ -2581,7 +2594,6 @@
  ],
  "one file, nothing to join": [],
  "oninput": [],
- "only": [],
  "open {0} and enter {1}": [
   "need.get('url')",
   "need.get('code')"
@@ -2651,6 +2663,10 @@
  "stopped": [],
  "subs {0}": [
   "f.subtitles.join(\", \")"
+ ],
+ "subtitles asked for are missing ({0}): downloading again {1}": [
+  "cause[:120]",
+  "what"
  ],
  "subtitles of {0}: {1} (accepted: {2})": [
   "f.name",
@@ -2762,6 +2778,13 @@
  ],
  "value of its unshackle.yaml. Leave empty to keep the saved key.": [],
  "was revoked": [],
+ "with subtitles in {0}": [
+  "', '.join(fixed['s_lang'])"
+ ],
+ "with {0} subtitles": [
+  "', '.join(fixed['s_lang'])"
+ ],
+ "without subtitles": [],
  "ws": [],
  "wss": [],
  "wvd": [],
@@ -2771,6 +2794,9 @@
  "yesterday": [],
  "you@gmail.com": [],
  "zh-CN": [],
+ "{0} (default)": [
+  "label"
+ ],
  "{0} (for Unshacklarr)": [
   "name"
  ],

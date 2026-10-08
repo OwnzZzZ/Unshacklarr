@@ -1661,7 +1661,6 @@
  "Codec": "编码",
  "DV": "DV",
  "Default: the one of Settings, Quality.": "默认：设置 › 画质 中的那个。",
- "Default: {0}": "默认：{0}",
  "Dolby Vision": "Dolby Vision",
  "Download only": "仅下载",
  "Download only: the file stays in Activity, Waiting in downloads, until you import it.": "仅下载：文件会留在“活动”›“下载文件夹中等待”中，直到你导入它。",
@@ -1739,9 +1738,7 @@
  "any height": "任意高度",
  "any range": "任意动态范围",
  "every series": "所有剧集",
- "import": "导入",
  "no video": "无视频",
- "only": "仅",
  "quality ladder {0}: step {1} ({2}), {3}": "画质阶梯 {0}：第 {1} 级（{2}），{3}",
  "unshackle serve{0} took it as job {1}": "unshackle serve{0} 已将其作为任务 {1} 接收",
  "{0} downloads with the Unshackle server {1}, which is not in Settings, Unshackle": "{0} 使用 Unshackle 服务器 {1} 下载，但它不在 设置 › Unshackle 中",
@@ -2016,5 +2013,6 @@
  "Diagnostic downloaded: check it, then attach it to the issue": "诊断已下载：检查后附加到 Issue",
  "Failures only": "仅失败",
  "No such attempt": "没有这次尝试",
- "What is sent for this series' episodes. The bell in the page always keeps everything.": "为该剧集的剧集发送的内容。页面中的铃铛始终保留全部内容。"
+ "What is sent for this series' episodes. The bell in the page always keeps everything.": "为该剧集的剧集发送的内容。页面中的铃铛始终保留全部内容。",
+ "{0} (default)": "{0}（默认）"
 }

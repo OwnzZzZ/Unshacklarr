@@ -1626,7 +1626,6 @@
  "Codec": "Codec",
  "DV": "DV",
  "Default: the one of Settings, Quality.": "Standard: die aus Einstellungen, Qualität.",
- "Default: {0}": "Standard: {0}",
  "Dolby Vision": "Dolby Vision",
  "Download only": "Nur herunterladen",
  "Download only: the file stays in Activity, Waiting in downloads, until you import it.": "Nur herunterladen: Die Datei bleibt in Aktivität, Wartet in Downloads, bis du sie importierst.",
@@ -1704,9 +1703,7 @@
  "any height": "beliebige Höhe",
  "any range": "beliebiger Dynamikumfang",
  "every series": "jede Serie",
- "import": "importieren",
  "no video": "kein Video",
- "only": "nur",
  "quality ladder {0}: step {1} ({2}), {3}": "Qualitätsleiter {0}: Stufe {1} ({2}), {3}",
  "unshackle serve{0} took it as job {1}": "unshackle serve{0} hat es als Auftrag {1} übernommen",
  "{0} downloads with the Unshackle server {1}, which is not in Settings, Unshackle": "{0} lädt mit dem Unshackle-Server {1} herunter, der nicht in Einstellungen, Unshackle steht",
@@ -1984,5 +1981,7 @@
  "Diagnostic downloaded: check it, then attach it to the issue": "Diagnose heruntergeladen: prüfe sie und hänge sie an das Issue an",
  "Failures only": "Nur Fehler",
  "No such attempt": "Kein solcher Versuch",
- "What is sent for this series' episodes. The bell in the page always keeps everything.": "Was für die Episoden dieser Serie gesendet wird. Die Glocke auf der Seite behält immer alles."
+ "What is sent for this series' episodes. The bell in the page always keeps everything.": "Was für die Episoden dieser Serie gesendet wird. Die Glocke auf der Seite behält immer alles.",
+ "default": "Standard",
+ "{0} (default)": "{0} (Standard)"
 }

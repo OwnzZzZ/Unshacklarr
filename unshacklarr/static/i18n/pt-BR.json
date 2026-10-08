@@ -1635,7 +1635,6 @@
  "Codec": "Codec",
  "DV": "DV",
  "Default: the one of Settings, Quality.": "Padrão: a de Configurações, Qualidade.",
- "Default: {0}": "Padrão: {0}",
  "Dolby Vision": "Dolby Vision",
  "Download only": "Só baixar",
  "Download only: the file stays in Activity, Waiting in downloads, until you import it.": "Só baixar: o arquivo fica em Atividade, Aguardando nos downloads, até você importá-lo.",
@@ -1713,9 +1712,7 @@
  "any height": "qualquer altura",
  "any range": "qualquer faixa",
  "every series": "todas as séries",
- "import": "importar",
  "no video": "sem vídeo",
- "only": "só",
  "quality ladder {0}: step {1} ({2}), {3}": "escada de qualidade {0}: degrau {1} ({2}), {3}",
  "unshackle serve{0} took it as job {1}": "O unshackle serve{0} o recebeu como tarefa {1}",
  "{0} downloads with the Unshackle server {1}, which is not in Settings, Unshackle": "{0} baixa com o servidor Unshackle {1}, que não está em Configurações, Unshackle",
@@ -1991,5 +1988,7 @@
  "Diagnostic downloaded: check it, then attach it to the issue": "Diagnóstico baixado: confira e anexe à issue",
  "Failures only": "Só falhas",
  "No such attempt": "Tentativa não encontrada",
- "What is sent for this series' episodes. The bell in the page always keeps everything.": "O que é enviado para os episódios desta série. O sino da página sempre guarda tudo."
+ "What is sent for this series' episodes. The bell in the page always keeps everything.": "O que é enviado para os episódios desta série. O sino da página sempre guarda tudo.",
+ "default": "padrão",
+ "{0} (default)": "{0} (padrão)"
 }

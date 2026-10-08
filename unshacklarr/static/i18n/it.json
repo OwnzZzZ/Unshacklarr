@@ -1648,7 +1648,6 @@
  "Codec": "Codec",
  "DV": "DV",
  "Default: the one of Settings, Quality.": "Predefinito: quella di Impostazioni, Qualità.",
- "Default: {0}": "Predefinito: {0}",
  "Dolby Vision": "Dolby Vision",
  "Download only": "Solo download",
  "Download only: the file stays in Activity, Waiting in downloads, until you import it.": "Solo download: il file resta in Attività, In attesa nei download, finché non lo importi.",
@@ -1726,9 +1725,7 @@
  "any height": "qualsiasi altezza",
  "any range": "qualsiasi gamma",
  "every series": "ogni serie",
- "import": "importa",
  "no video": "nessun video",
- "only": "solo",
  "quality ladder {0}: step {1} ({2}), {3}": "scala di qualità {0}: gradino {1} ({2}), {3}",
  "unshackle serve{0} took it as job {1}": "unshackle serve{0} l'ha preso come job {1}",
  "{0} downloads with the Unshackle server {1}, which is not in Settings, Unshackle": "{0} scarica con il server Unshackle {1}, che non è in Impostazioni, Unshackle",
@@ -2004,5 +2001,7 @@
  "Diagnostic downloaded: check it, then attach it to the issue": "Diagnostica scaricata: controllala, poi allegala alla issue",
  "Failures only": "Solo errori",
  "No such attempt": "Tentativo inesistente",
- "What is sent for this series' episodes. The bell in the page always keeps everything.": "Cosa viene inviato per gli episodi di questa serie. La campanella della pagina conserva sempre tutto."
+ "What is sent for this series' episodes. The bell in the page always keeps everything.": "Cosa viene inviato per gli episodi di questa serie. La campanella della pagina conserva sempre tutto.",
+ "default": "predefinito",
+ "{0} (default)": "{0} (predefinito)"
 }
