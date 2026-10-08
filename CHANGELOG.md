@@ -22,6 +22,10 @@ Every change worth knowing, newest first. The format follows
 
 The new options are off until you turn them on.
 
+### Changed
+
+- **Clearer selection in Series.** Select turns into Done, each poster gets a check, the ones not picked are dimmed.
+
 ### Fixed
 
 - **A series' link found by its title** when its service is only linked by an episode (HBO Max). (#12, by mj23au)
