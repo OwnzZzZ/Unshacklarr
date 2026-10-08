@@ -24,6 +24,7 @@ The new options are off until you turn them on.
 
 ### Changed
 
+- **One import at a time per Sonarr.** Downloads still run side by side; big files no longer reach Sonarr together. (#10, by mj23au)
 - **Clearer selection in Series.** Select turns into Done, each poster gets a check, the ones not picked are dimmed.
 
 ### Fixed

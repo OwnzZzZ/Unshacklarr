@@ -2006,5 +2006,7 @@
  "Failures only": "Только ошибки",
  "No such attempt": "Такой попытки нет",
  "What is sent for this series' episodes. The bell in the page always keeps everything.": "Что отправляется по эпизодам этого сериала. Колокольчик на странице всегда хранит всё.",
- "{0} (default)": "{0} (по умолчанию)"
+ "{0} (default)": "{0} (по умолчанию)",
+ "no {0} subtitles on {1}: downloading {2}": "нет субтитров {0} на {1}: загрузка {2}",
+ "with the forced subtitles only": "только с принудительными субтитрами"
 }

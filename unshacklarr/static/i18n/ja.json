@@ -2009,5 +2009,7 @@
  "Failures only": "失敗のみ",
  "No such attempt": "その試行は見つかりません",
  "What is sent for this series' episodes. The bell in the page always keeps everything.": "このシリーズのエピソードで送信する内容。ページのベルには常にすべて残ります。",
- "{0} (default)": "{0}（既定）"
+ "{0} (default)": "{0}（既定）",
+ "no {0} subtitles on {1}: downloading {2}": "{1} に {0} 字幕なし：{2} でダウンロード",
+ "with the forced subtitles only": "強制字幕のみ"
 }

@@ -1996,5 +1996,7 @@
  "No such attempt": "Cet essai n'existe pas",
  "What is sent for this series' episodes. The bell in the page always keeps everything.": "Ce qui est envoyé pour les épisodes de cette série. La cloche de la page garde toujours tout.",
  "default": "par défaut",
- "{0} (default)": "{0} (par défaut)"
+ "{0} (default)": "{0} (par défaut)",
+ "no {0} subtitles on {1}: downloading {2}": "pas de sous-titres {0} sur {1} : téléchargement {2}",
+ "with the forced subtitles only": "avec les sous-titres forcés seulement"
 }

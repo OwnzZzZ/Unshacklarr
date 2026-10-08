@@ -2003,5 +2003,7 @@
  "No such attempt": "Tentativo inesistente",
  "What is sent for this series' episodes. The bell in the page always keeps everything.": "Cosa viene inviato per gli episodi di questa serie. La campanella della pagina conserva sempre tutto.",
  "default": "predefinito",
- "{0} (default)": "{0} (predefinito)"
+ "{0} (default)": "{0} (predefinito)",
+ "no {0} subtitles on {1}: downloading {2}": "nessun sottotitolo {0} su {1}: download {2}",
+ "with the forced subtitles only": "solo con i sottotitoli forzati"
 }

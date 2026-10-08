@@ -860,9 +860,10 @@ LOGIN = re.compile(r"\b40[13]\b|unauthori[sz]ed|forbidden|not logged|log ?in|sig
                    r"invalid token|access token|credential|authenticat", re.IGNORECASE)
 
 
-# Subtitles asked for (--s-lang) that the episode lacks: Unshackle stops ("fr not found in subtitle tracks", or
-# "There's no ['fr'] Subtitle Track" when it has none at all) unless --best-available, which relaxes the quality too
-SUBS_MISSING = re.compile(r"([\w ,'\[\]-]+?) not found in subtitle tracks|There's no .{0,80}? Subtitle Track", re.IGNORECASE)
+# Subtitles asked for (--s-lang) that the episode lacks: Unshackle stops ("fr not found in tracks", "… in subtitle
+# tracks" in some builds, or "There's no ['fr'] Subtitle Track" when it has none at all) unless --best-available, which
+# relaxes the quality too. Audio and video say "audio tracks" / "video tracks": never taken for subtitles.
+SUBS_MISSING = re.compile(r"([\w ,'\[\]-]+?) not found in (?:subtitle )?tracks|There's no .{0,80}? Subtitle Track", re.IGNORECASE)
 
 
 def base_lang(code) -> str:
@@ -872,7 +873,8 @@ def base_lang(code) -> str:
 def subs_dropped(request: dict, missing: set[str] | None) -> dict | None:
     """The request without the subtitle languages the episode lacks (every one when `missing` is None): a file with
     the subtitles it has, or none, rather than no file. None when there is nothing to drop, or subtitles are
-    required (--require-subs: the episode waits for them)."""
+    required (--require-subs: the episode waits for them). With none left and forced subtitles asked for
+    (--forced-s-lang), --best-available instead: --no-subs would drop those too, Unshackle keeps them."""
     asked = [str(x) for x in request.get("s_lang") or []]
     if not asked or request.get("require_subs") or request.get("no_subs"):
         return None
@@ -882,9 +884,20 @@ def subs_dropped(request: dict, missing: set[str] | None) -> dict | None:
     out = {k: v for k, v in request.items() if k != "s_lang"}
     if any(not x.startswith("-") for x in keep):
         out["s_lang"] = keep
+    elif request.get("forced_s_lang"):
+        return {**request, "best_available": True}  # ponytail: relaxes the quality too, the price of keeping them
     else:
         out["no_subs"] = True
     return out
+
+
+def subs_what(fixed: dict) -> str:
+    """What a download goes on with once subs_dropped changed it, for the log."""
+    if fixed.get("no_subs"):
+        return "without subtitles"
+    if fixed.get("best_available"):
+        return "with the forced subtitles only"
+    return f"with subtitles in {', '.join(fixed['s_lang'])}"
 
 
 def run_job_retrying(payload: dict, run: EpisodeRun | None = None, sleep=time.sleep) -> list[str]:
@@ -901,7 +914,7 @@ def run_job_retrying(payload: dict, run: EpisodeRun | None = None, sleep=time.sl
                 missing = {base_lang(x) for x in re.split(r"[,\s]+", m.group(1)) if x.strip(" '[]")} if m.group(1) else None
                 if fixed := subs_dropped(payload, missing):
                     subs_tried, payload = True, fixed
-                    what = "without subtitles" if fixed.get("no_subs") else f"with subtitles in {', '.join(fixed['s_lang'])}"
+                    what = subs_what(fixed)
                     trace(f"subtitles asked for are missing ({cause[:120]}): downloading again {what}")
                     if run:
                         run.say(f"\r\n\x1b[33mSubtitles asked for are missing: downloading again {what}\x1b[0m")
@@ -1616,8 +1629,7 @@ def apply_ladder(show: dict, config: dict, request: dict) -> None:
     if missing and (fixed := subs_dropped(request, missing)):
         request.clear()
         request.update(fixed)
-        trace(f"no {', '.join(sorted(missing))} subtitles on {show['service']}: downloading "
-              + ("without subtitles" if fixed.get("no_subs") else f"with {', '.join(fixed['s_lang'])} subtitles"))
+        trace(f"no {', '.join(sorted(missing))} subtitles on {show['service']}: downloading {subs_what(fixed)}")
 
 
 def first_language(order: list[str], tracks: list[dict]) -> str | None:
@@ -1747,33 +1759,37 @@ def import_episode(ep: dict, out: Path, replace: bool = False) -> None:
         }
         for c in candidates
     ]
-    old_file = ep.get("episodeFileId") if ep.get("hasFile") else None
-    for attempt in range(1, IMPORT_ASKS + 1):
-        try:
-            r = requests.post(
-                f"{SONARR}/api/v3/command",
-                headers=HEADERS,
-                json={"name": "ManualImport", "files": files, "importMode": "move"},
-                timeout=120,  # as long as its reads: a Sonarr busy moving another big file answers late
-            )
-            break
-        except (requests.Timeout, requests.ConnectionError) as e:
-            # It may have taken it and imported all the same: the episode's file says, before asking again
-            time.sleep(IMPORT_RETRY_WAIT)
-            now = sonarr_get(f"episode/{ep['id']}")
-            if now.get("hasFile") and now.get("episodeFileId") != old_file:
-                trace(f"Sonarr did not answer the import ({type(e).__name__}), but the episode has its new file: imported")
-                return
-            if attempt == IMPORT_ASKS:
-                raise RuntimeError(f"Sonarr did not answer the import {IMPORT_ASKS} times ({no_credentials(str(e))})") from e
-            trace(f"Sonarr did not answer the import ({type(e).__name__}): asked again ({attempt + 1} of {IMPORT_ASKS})")
-    r.raise_for_status()
-    trace(f"Sonarr's import asked (command {r.json().get('id')}), moving {len(files)} file{'s' if len(files) != 1 else ''}{', replacing its file' if replace else ''}")
-    wait_for_import(ep, r.json().get("id"), old_file)
+    # One import at a time per Sonarr: several big files moved at once make it answer too late (by mj23au, #10);
+    # the downloads still run side by side
+    with IMPORT_LOCKS.setdefault(SONARR, threading.Lock()):
+        old_file = ep.get("episodeFileId") if ep.get("hasFile") else None
+        for attempt in range(1, IMPORT_ASKS + 1):
+            try:
+                r = requests.post(
+                    f"{SONARR}/api/v3/command",
+                    headers=HEADERS,
+                    json={"name": "ManualImport", "files": files, "importMode": "move"},
+                    timeout=120,  # as long as its reads: a Sonarr busy moving another big file answers late
+                )
+                break
+            except (requests.Timeout, requests.ConnectionError) as e:
+                # It may have taken it and imported all the same: the episode's file says, before asking again
+                time.sleep(IMPORT_RETRY_WAIT)
+                now = sonarr_get(f"episode/{ep['id']}")
+                if now.get("hasFile") and now.get("episodeFileId") != old_file:
+                    trace(f"Sonarr did not answer the import ({type(e).__name__}), but the episode has its new file: imported")
+                    return
+                if attempt == IMPORT_ASKS:
+                    raise RuntimeError(f"Sonarr did not answer the import {IMPORT_ASKS} times ({no_credentials(str(e))})") from e
+                trace(f"Sonarr did not answer the import ({type(e).__name__}): asked again ({attempt + 1} of {IMPORT_ASKS})")
+        r.raise_for_status()
+        trace(f"Sonarr's import asked (command {r.json().get('id')}), moving {len(files)} file{'s' if len(files) != 1 else ''}{', replacing its file' if replace else ''}")
+        wait_for_import(ep, r.json().get("id"), old_file)
 
 
 IMPORT_WAIT, IMPORT_POLL = 300, 3  # seconds
 IMPORT_ASKS, IMPORT_RETRY_WAIT = 3, 60  # an import Sonarr does not answer: asked so many times, a minute apart
+IMPORT_LOCKS: dict[str, threading.Lock] = {}  # by Sonarr URL
 
 
 def wait_for_import(ep: dict, command_id: int | None, old_file: int | None) -> None:

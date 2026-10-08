@@ -1990,5 +1990,7 @@
  "No such attempt": "Tentativa não encontrada",
  "What is sent for this series' episodes. The bell in the page always keeps everything.": "O que é enviado para os episódios desta série. O sino da página sempre guarda tudo.",
  "default": "padrão",
- "{0} (default)": "{0} (padrão)"
+ "{0} (default)": "{0} (padrão)",
+ "no {0} subtitles on {1}: downloading {2}": "sem legendas {0} em {1}: baixando {2}",
+ "with the forced subtitles only": "só com as legendas forçadas"
 }

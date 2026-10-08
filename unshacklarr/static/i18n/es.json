@@ -1978,5 +1978,7 @@
  "No such attempt": "No existe ese intento",
  "What is sent for this series' episodes. The bell in the page always keeps everything.": "Lo que se envía para los episodios de esta serie. La campana de la página siempre lo guarda todo.",
  "default": "por defecto",
- "{0} (default)": "{0} (por defecto)"
+ "{0} (default)": "{0} (por defecto)",
+ "no {0} subtitles on {1}: downloading {2}": "no hay subtítulos {0} en {1}: descarga {2}",
+ "with the forced subtitles only": "solo con los subtítulos forzados"
 }

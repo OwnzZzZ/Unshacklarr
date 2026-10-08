@@ -1983,5 +1983,7 @@
  "No such attempt": "Kein solcher Versuch",
  "What is sent for this series' episodes. The bell in the page always keeps everything.": "Was für die Episoden dieser Serie gesendet wird. Die Glocke auf der Seite behält immer alles.",
  "default": "Standard",
- "{0} (default)": "{0} (Standard)"
+ "{0} (default)": "{0} (Standard)",
+ "no {0} subtitles on {1}: downloading {2}": "keine {0}-Untertitel auf {1}: Download {2}",
+ "with the forced subtitles only": "nur mit den erzwungenen Untertiteln"
 }

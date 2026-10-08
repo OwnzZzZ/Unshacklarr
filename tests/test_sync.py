@@ -572,7 +572,7 @@ def test_a_download_with_its_own_numbering_leaves_the_series_as_it_is(tmp_path, 
 
 
 def test_the_next_download_starts_while_the_one_before_is_imported(tmp_path, monkeypatch):
-    import threading
+    import threading, time
     import time
     from pathlib import Path
     sync = load(tmp_path, monkeypatch)
@@ -681,7 +681,7 @@ def test_in_a_job_an_episode_has_one_card_whatever_its_tries(tmp_path, monkeypat
 
 
 def test_a_paused_job_ends_its_download_then_waits(tmp_path, monkeypatch):
-    import threading
+    import threading, time
     import time
     sync = load(tmp_path, monkeypatch)
     started = []
@@ -1776,12 +1776,41 @@ def test_subtitles_asked_for_that_the_episode_lacks_do_not_stop_its_download(tmp
     assert downloads[-1].get("no_subs") is None
 
 
+def test_one_import_at_a_time_per_sonarr(tmp_path, monkeypatch):
+    # Three downloads ending together: their imports go one after the other, never several big files at once
+    import threading, time
+    sync = load(tmp_path, monkeypatch)
+    out = tmp_path / "unshackle-111-S02E05"
+    out.mkdir()
+    folder = sync.seen_by("sonarr_downloads", out)
+    candidate = {"path": f"{folder}/Show.S02E05.mkv", "quality": {"quality": {"name": "WEBDL-1080p"}}, "languages": []}
+    monkeypatch.setattr(sync, "sonarr_get", lambda path, **p: [candidate] if path == "manualimport" else {"hasFile": False})
+    now, most = [0], [0]
+
+    def wait(ep, command, old):
+        now[0] += 1
+        most[0] = max(most[0], now[0])
+        time.sleep(.05)
+        now[0] -= 1
+
+    class Answer:
+        def raise_for_status(self): pass
+        def json(self): return {"id": 7}
+    monkeypatch.setattr(sync, "wait_for_import", wait)
+    monkeypatch.setattr(sync.requests, "post", lambda url, **kw: Answer())
+    threads = [threading.Thread(target=sync.import_episode, args=({"id": i, "seriesId": 1}, out)) for i in range(3)]
+    for t in threads: t.start()
+    for t in threads: t.join()
+    assert most[0] == 1
+
 def test_only_the_missing_subtitle_languages_are_dropped(tmp_path, monkeypatch):
     sync = load(tmp_path, monkeypatch)
     assert sync.subs_dropped({"s_lang": ["fr", "en"]}, {"fr"}) == {"s_lang": ["en"]}  # partly there: the rest kept
     assert sync.subs_dropped({"s_lang": ["fr", "-es"]}, {"fr"}) == {"no_subs": True}
     assert sync.subs_dropped({"s_lang": ["fr"], "require_subs": ["fr"]}, {"fr"}) is None  # required: it waits
     assert sync.subs_dropped({"s_lang": ["en"]}, {"fr"}) is None  # nothing to drop
+    # none left, forced subtitles wanted: --no-subs would drop them, --best-available keeps them
+    assert sync.subs_dropped({"s_lang": ["fr"], "forced_s_lang": ["fr"]}, {"fr"}) == {"s_lang": ["fr"], "forced_s_lang": ["fr"], "best_available": True}
 
 
 def test_a_download_stopped_for_missing_subtitles_goes_again_without_them(tmp_path, monkeypatch):
@@ -1797,3 +1826,11 @@ def test_a_download_stopped_for_missing_subtitles_goes_again_without_them(tmp_pa
     monkeypatch.setattr(sync, "run_job", job)
     assert sync.run_job_retrying({"s_lang": ["fr", "en"]}, sleep=lambda s: None) == ["ok"]
     assert asked[1] == {"s_lang": ["en"]}
+
+
+def test_the_official_unshackle_wording_of_missing_subtitles_is_read(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    assert sync.SUBS_MISSING.search("fr, de not found in tracks").group(1) == "fr, de"  # Unshackle 5.x
+    assert sync.SUBS_MISSING.search("fr not found in subtitle tracks").group(1) == "fr"
+    assert not sync.SUBS_MISSING.search("fr not found in audio tracks")
+    assert not sync.SUBS_MISSING.search("fr not found in video tracks")

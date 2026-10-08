@@ -2553,9 +2553,10 @@
  ],
  "no subs": [],
  "no video": [],
- "no {0} subtitles on {1}: downloading": [
+ "no {0} subtitles on {1}: downloading {2}": [
   "', '.join(sorted(missing))",
-  "show['service']"
+  "show['service']",
+  "subs_what(fixed)"
  ],
  "none": [],
  "none on {0}": [
@@ -2781,9 +2782,7 @@
  "with subtitles in {0}": [
   "', '.join(fixed['s_lang'])"
  ],
- "with {0} subtitles": [
-  "', '.join(fixed['s_lang'])"
- ],
+ "with the forced subtitles only": [],
  "without subtitles": [],
  "ws": [],
  "wss": [],
