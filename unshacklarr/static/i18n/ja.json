@@ -1662,7 +1662,6 @@
  "Codec": "コーデック",
  "DV": "DV",
  "Default: the one of Settings, Quality.": "既定：設定 › 画質 のもの。",
- "Default: {0}": "既定：{0}",
  "Dolby Vision": "Dolby Vision",
  "Download only": "ダウンロードのみ",
  "Download only: the file stays in Activity, Waiting in downloads, until you import it.": "ダウンロードのみ：インポートするまで、ファイルは アクティビティ › ダウンロードで待機中 に残ります。",
@@ -1970,11 +1969,10 @@
  "The Sonarr settings of {0} must be an object": "{0} の Sonarr 設定はオブジェクトである必要があります",
  "This series is also in {0}: the quality ladder and After the download here are for Sonarr; each other library sets its own in Sonarr libraries, below. The languages apply to every library.": "このシリーズは {0} にもあります：ここの画質ラダーとダウンロード後は Sonarr 用です。他のライブラリは下の「Sonarr ライブラリ」でそれぞれ設定します。言語はすべてのライブラリに適用されます。",
  "This series is in more than one Sonarr. Each one switched on downloads its own copy of new episodes, by its own ladder (Settings, Sonarr) unless the series says otherwise here.": "このシリーズは複数の Sonarr にあります。オンにした各 Sonarr が新しいエピソードのコピーをそれぞれダウンロードします。ここでシリーズが別に指定しない限り、それぞれのラダー（設定 › Sonarr）を使います。",
- "as for Sonarr ({0})": "Sonarr と同じ（{0}）",
  "none chosen yet": "まだ選ばれていません",
  "the series' ladder": "シリーズのラダー",
- "{0}'s own ({1})": "{0} の設定（{1}）",
  "{0}: no Sonarr named {1} in Settings, Sonarr": "{0}：設定 › Sonarr に {1} という名前の Sonarr がありません",
  "· also in": "· 次にもあり：",
- "New episodes are downloaded for Sonarr, without a quality ladder. After the download: {0}. Both are set in What to get.": "新しいエピソードは画質ラダーなしで Sonarr 用にダウンロードされます。ダウンロード後：{0}。どちらも 取得する内容 で設定します。"
+ "New episodes are downloaded for Sonarr, without a quality ladder. After the download: {0}. Both are set in What to get.": "新しいエピソードは画質ラダーなしで Sonarr 用にダウンロードされます。ダウンロード後：{0}。どちらも 取得する内容 で設定します。",
+ "{0} (default)": "{0}（既定）"
 }

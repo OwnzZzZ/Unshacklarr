@@ -1666,7 +1666,6 @@
  "Codec": "编码",
  "DV": "DV",
  "Default: the one of Settings, Quality.": "默认：设置 › 画质 中的那个。",
- "Default: {0}": "默认：{0}",
  "Dolby Vision": "Dolby Vision",
  "Download only": "仅下载",
  "Download only: the file stays in Activity, Waiting in downloads, until you import it.": "仅下载：文件会留在“活动”›“下载文件夹中等待”中，直到你导入它。",
@@ -1975,11 +1974,10 @@
  "The Sonarr settings of {0} must be an object": "{0} 的 Sonarr 设置必须是一个对象",
  "This series is also in {0}: the quality ladder and After the download here are for Sonarr; each other library sets its own in Sonarr libraries, below. The languages apply to every library.": "此剧集也在 {0} 中：此处的画质阶梯和「下载之后」用于 Sonarr；其他每个媒体库在下方的「Sonarr 媒体库」中各自设置。语言适用于所有媒体库。",
  "This series is in more than one Sonarr. Each one switched on downloads its own copy of new episodes, by its own ladder (Settings, Sonarr) unless the series says otherwise here.": "此剧集位于多个 Sonarr 中。每个已开启的 Sonarr 都会下载自己的一份新单集，使用自己的阶梯（设置 › Sonarr），除非剧集在此处另有设置。",
- "as for Sonarr ({0})": "与 Sonarr 相同（{0}）",
  "none chosen yet": "尚未选择",
  "the series' ladder": "剧集的阶梯",
- "{0}'s own ({1})": "{0} 自己的（{1}）",
  "{0}: no Sonarr named {1} in Settings, Sonarr": "{0}：设置 › Sonarr 中没有名为 {1} 的 Sonarr",
  "· also in": "· 也在",
- "New episodes are downloaded for Sonarr, without a quality ladder. After the download: {0}. Both are set in What to get.": "新剧集为 Sonarr 下载，不使用画质阶梯。下载后：{0}。两者都在 下载什么 中设置。"
+ "New episodes are downloaded for Sonarr, without a quality ladder. After the download: {0}. Both are set in What to get.": "新剧集为 Sonarr 下载，不使用画质阶梯。下载后：{0}。两者都在 下载什么 中设置。",
+ "{0} (default)": "{0}（默认）"
 }

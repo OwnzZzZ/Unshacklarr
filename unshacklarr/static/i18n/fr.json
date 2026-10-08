@@ -1659,7 +1659,6 @@
  "Before each download, Unshacklarr lists the episode's tracks on the service. It downloads the first step of the ladder that the service has, and nothing outside the ladder.": "Avant chaque téléchargement, Unshacklarr liste les pistes de l'épisode sur le service. Il télécharge la première étape de l'échelle que le service propose, et rien en dehors de l'échelle.",
  "Codec": "Codec",
  "Default: the one of Settings, Quality.": "Par défaut : celle de Réglages, Qualité.",
- "Default: {0}": "Par défaut : {0}",
  "Download only": "Téléchargement seul",
  "Download only: the file stays in Activity, Waiting in downloads, until you import it.": "Téléchargement seul: le fichier reste dans Activité, En attente dans les téléchargements, jusqu'à ce que vous l'importiez.",
  "Download only: the file waits in {0}. Import or delete it in Activity, Waiting in downloads.": "Téléchargement seul: le fichier attend dans {0}. Importez-le ou supprimez-le dans Activité, En attente dans les téléchargements.",
@@ -1957,11 +1956,11 @@
  "The Sonarr settings of {0} must be an object": "Les réglages Sonarr de {0} doivent être un objet",
  "This series is also in {0}: the quality ladder and After the download here are for Sonarr; each other library sets its own in Sonarr libraries, below. The languages apply to every library.": "Cette série est aussi dans {0}: l'échelle de qualité et Après le téléchargement, ici, valent pour Sonarr; chaque autre bibliothèque a les siens dans Bibliothèques Sonarr, plus bas. Les langues valent pour toutes les bibliothèques.",
  "This series is in more than one Sonarr. Each one switched on downloads its own copy of new episodes, by its own ladder (Settings, Sonarr) unless the series says otherwise here.": "Cette série est dans plusieurs Sonarr. Chacun, s'il est activé, télécharge sa propre copie des nouveaux épisodes, avec sa propre échelle (Réglages, Sonarr), sauf si la série en décide autrement ici.",
- "as for Sonarr ({0})": "comme pour Sonarr ({0})",
  "none chosen yet": "aucune choisie pour l'instant",
  "the series' ladder": "l'échelle de la série",
- "{0}'s own ({1})": "réglage de {0} ({1})",
  "{0}: no Sonarr named {1} in Settings, Sonarr": "{0}: aucun Sonarr nommé {1} dans Réglages, Sonarr",
  "· also in": "· aussi dans",
- "New episodes are downloaded for Sonarr, without a quality ladder. After the download: {0}. Both are set in What to get.": "Les nouveaux épisodes sont téléchargés pour Sonarr, sans échelle de qualité. Après le téléchargement: {0}. Les deux se règlent dans Quoi récupérer."
+ "New episodes are downloaded for Sonarr, without a quality ladder. After the download: {0}. Both are set in What to get.": "Les nouveaux épisodes sont téléchargés pour Sonarr, sans échelle de qualité. Après le téléchargement: {0}. Les deux se règlent dans Quoi récupérer.",
+ "default": "par défaut",
+ "{0} (default)": "{0} (par défaut)"
 }

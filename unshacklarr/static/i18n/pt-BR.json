@@ -1640,7 +1640,6 @@
  "Codec": "Codec",
  "DV": "DV",
  "Default: the one of Settings, Quality.": "Padrão: a de Configurações, Qualidade.",
- "Default: {0}": "Padrão: {0}",
  "Dolby Vision": "Dolby Vision",
  "Download only": "Só baixar",
  "Download only: the file stays in Activity, Waiting in downloads, until you import it.": "Só baixar: o arquivo fica em Atividade, Aguardando nos downloads, até você importá-lo.",
@@ -1951,11 +1950,11 @@
  "The Sonarr settings of {0} must be an object": "As configurações do Sonarr de {0} devem ser um objeto",
  "This series is also in {0}: the quality ladder and After the download here are for Sonarr; each other library sets its own in Sonarr libraries, below. The languages apply to every library.": "Esta série também está em {0}: a escada de qualidade e Depois do download aqui valem para o Sonarr; cada outra biblioteca define os seus em Bibliotecas do Sonarr, abaixo. Os idiomas valem para todas as bibliotecas.",
  "This series is in more than one Sonarr. Each one switched on downloads its own copy of new episodes, by its own ladder (Settings, Sonarr) unless the series says otherwise here.": "Esta série está em mais de um Sonarr. Cada um ativado baixa sua própria cópia dos episódios novos, com sua própria escada (Configurações, Sonarr), a menos que a série diga outra coisa aqui.",
- "as for Sonarr ({0})": "como para o Sonarr ({0})",
  "none chosen yet": "nenhuma escolhida ainda",
  "the series' ladder": "a escada da série",
- "{0}'s own ({1})": "o de {0} ({1})",
  "{0}: no Sonarr named {1} in Settings, Sonarr": "{0}: nenhum Sonarr chamado {1} em Configurações, Sonarr",
  "· also in": "· também em",
- "New episodes are downloaded for Sonarr, without a quality ladder. After the download: {0}. Both are set in What to get.": "Os novos episódios são baixados para o Sonarr, sem escada de qualidade. Após o download: {0}. Ambos são definidos em O que baixar."
+ "New episodes are downloaded for Sonarr, without a quality ladder. After the download: {0}. Both are set in What to get.": "Os novos episódios são baixados para o Sonarr, sem escada de qualidade. Após o download: {0}. Ambos são definidos em O que baixar.",
+ "default": "padrão",
+ "{0} (default)": "{0} (padrão)"
 }

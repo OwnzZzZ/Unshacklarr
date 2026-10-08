@@ -542,9 +542,6 @@
   "cdmShort(d) || device"
  ],
  "Default: the one of Settings, Quality.": [],
- "Default: {0}": [
-  "instAfter"
- ],
  "Default: {0}'s own, from Settings, Sonarr.": [
   "o.name"
  ],
@@ -2407,9 +2404,6 @@
  "any episode": [],
  "any height": [],
  "any range": [],
- "as for Sonarr ({0})": [
-  "mainAfter"
- ],
  "as {0}": [
   "service_sxxeyy"
  ],
@@ -2762,6 +2756,9 @@
  "yesterday": [],
  "you@gmail.com": [],
  "zh-CN": [],
+ "{0} (default)": [
+  "label"
+ ],
  "{0} (for Unshacklarr)": [
   "name"
  ],
@@ -3339,10 +3336,6 @@
   "key",
   "name ? `${name} · ` : \"\"",
   "parts.map((t) => t.part).join(\" + \")"
- ],
- "{0}'s own ({1})": [
-  "o.name",
-  "said(inst.download_only)"
  ],
  "{0}'s unshackle.yaml (dl:)": [
   "backend.name or 'Unshackle'"

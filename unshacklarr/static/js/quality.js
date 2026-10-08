@@ -39,11 +39,20 @@ function ladderUse(name) {
 
 /* A ladder picker: "" is the level before (named in its label), off is none. */
 function ladderSelect(value, inherited, onchange) {
+  const def = inherited && ladders().some((l) => l.name === inherited) ? inherited : "off";
+  const choice = (name, label) => el("option", { value: name === def ? "" : name, textContent: name === def ? `${label} (default)` : label });
   const sel = el("select", { onchange: (e) => onchange(e.target.value) },
-    el("option", { value: "", textContent: `Default: ${inherited && inherited !== "off" ? inherited : "Off"}` }),
-    el("option", { value: "off", textContent: "Off" }), ...ladders().map((l) => el("option", { value: l.name, textContent: l.name })));
-  sel.value = value || "";
+    choice("off", "Off"), ...ladders().map((l) => choice(l.name, l.name)));
+  sel.value = !value || value === def ? "" : value;
   return sel;
+}
+/* Chips for a setting a series may take from the level before: each choice once, the inherited one marked
+   default; picking it follows that level again, any other is the series' own. */
+function defaultChips(box, choices, own, inherited, pick) {
+  const now = own ?? inherited;
+  box.replaceChildren(...choices.map(([v, label]) => el("button", { type: "button", role: "radio", ariaChecked: String(now === v),
+    onclick: () => pick(v === inherited ? undefined : v) },
+    el("span", { textContent: label }), ...(v === inherited ? [el("small", { className: "chip-default", textContent: "default" })] : []))));
 }
 
 function renderQuality() {
@@ -382,8 +391,6 @@ function fillQualityImport(conf) {
     if (v) conf.ladder = v; else delete conf.ladder;
     dirty();
   }), { id: "d-ladder" }));
-  $("#d-import").options[0].textContent = `Default: ${set.download_only ? "Download only" : "Sonarr imports it"}`;
-  $("#d-import").value = conf.download_only === true ? "only" : conf.download_only === false ? "import" : "";
   importChips();
   $("#d-skip-upgrades").checked = conf.skip_upgrades === true;
 }
@@ -394,17 +401,14 @@ $("#d-skip-upgrades").onchange = (e) => {  // a series Upgrades never asks about
 };
 /* After the download: its choices as chips, the select behind them keeping the value. */
 function importChips() {
-  const sel = $("#d-import");
-  $("#d-import-seg").replaceChildren(...[...sel.options].map((o) => el("button", { type: "button", role: "radio", textContent: o.textContent,
-    ariaChecked: String(o.value === sel.value), onclick: () => { sel.value = o.value; sel.dispatchEvent(new Event("change")); } })));
-}
-$("#d-import").onchange = (e) => {
   const conf = S.config.series[current.tvdbId];
-  if (e.target.value) conf.download_only = e.target.value === "only"; else delete conf.download_only;
-  importChips();
-  renderSeriesSonarrs(conf);
-  dirty();
-};
+  defaultChips($("#d-import-seg"), [[false, "Sonarr imports it"], [true, "Download only"]], conf.download_only, S.config.settings.download_only === true, (v) => {
+    if (v === undefined) delete conf.download_only; else conf.download_only = v;
+    importChips();
+    renderSeriesSonarrs(conf);
+    dirty();
+  });
+}
 
 /* tick the series Activity, Upgrades checks (skip_upgrades on each series) */
 function upgradeSeries() {
@@ -482,9 +486,6 @@ function renderSeriesSonarrs(conf) {
   const said = (only) => only === true ? "Download only" : "Sonarr imports it";
   const mainAfter = said(conf.download_only ?? set.download_only);
   const insts = Object.fromEntries((set.sonarrs || []).map((i) => [i.name, i]));
-  const seg = (value, defLabel, onpick) => el("div", { className: "ax-seg", role: "radiogroup" },
-    ...[["", defLabel], ["import", "Sonarr imports it"], ["only", "Download only"]].map(([v, label]) => el("button", {
-      type: "button", role: "radio", textContent: label, ariaChecked: String(v === value), onclick: () => onpick(v) })));
   const block = (name, link, isOn, onToggle, onNote, offNote, body) => el("div", { className: `d-sonarr${isOn ? "" : " off"}` },
     el("label", { className: "ug-switch" }, el("input", { type: "checkbox", className: "switch", checked: isOn, onchange: (e) => onToggle(e.target.checked) }),
       el("span", {}, el("b", {}, link || name), el("small", { textContent: isOn ? onNote : offNote }))),
@@ -503,10 +504,10 @@ function renderSeriesSonarrs(conf) {
     const cur = all[o.name] || {};
     const instLadder = inst.quality_ladder === "series" ? (conf.ladder || "the series' ladder") : inst.quality_ladder || "none chosen yet";
     const ladder = ladderSelect(cur.ladder, instLadder, (v) => { if (v) per().ladder = v; else delete per().ladder; tidy(); dirty(); });
-    const instAfter = inst.download_only === true || inst.download_only === false ? `${o.name}'s own (${said(inst.download_only)})` : `as for Sonarr (${mainAfter})`;
-    const afterValue = cur.download_only === true ? "only" : cur.download_only === false ? "import" : "";
-    const after = seg(afterValue, `Default: ${instAfter}`, (v) => {
-      if (v) per().download_only = v === "only"; else delete per().download_only; tidy(); dirty(); renderSeriesSonarrs(conf); });
+    const after = el("div", { className: "ax-seg", role: "radiogroup" });  // the inherited choice: that Sonarr's own, else as for Sonarr
+    const inherited = inst.download_only === true || inst.download_only === false ? inst.download_only : (conf.download_only ?? set.download_only) === true;
+    defaultChips(after, [[false, "Sonarr imports it"], [true, "Download only"]], cur.download_only, inherited, (v) => {
+      if (v === undefined) delete per().download_only; else per().download_only = v; tidy(); dirty(); renderSeriesSonarrs(conf); });
     const opts = el("div", { className: "opts" });
     const values = new Proxy(cur.options || {}, {  // written into conf only once an option is added
       set: (t, k, v) => { t[k] = v; per().options = t; dirty(); return true; },

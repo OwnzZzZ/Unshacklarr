@@ -1585,3 +1585,9 @@ input.bad, select.bad { border-color: var(--err) !important; box-shadow: 0 0 0 3
   padding: 2px 6px; border-radius: 4px; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .poster .lib.off { text-decoration: line-through; opacity: .7; } .poster .lib.only { background: var(--accent); color: var(--accent-ink); }
 .d-lib-note { margin: 0 0 12px; padding: 8px 12px; border-radius: 8px; background: rgb(79 179 191 / .08); color: var(--muted); font-size: 13px; }
+/* every choice the same height, its "default" tag inside it on one line */
+.ax-seg button { display: inline-flex; align-items: center; gap: 7px; height: 40px; padding-block: 0; line-height: 1.2; }
+.chip-default { padding: 3px 7px; border-radius: 999px; background: rgb(79 179 191 / .16); color: var(--accent);
+  font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; line-height: 1; }
+.ax-seg button[aria-checked=true] .chip-default { background: var(--accent); color: var(--accent-ink); }
+.ax-seg .chip-default { display: inline-block; margin: 0; }  /* not the help line of a field (.field small) */
