@@ -1746,3 +1746,18 @@ def test_the_series_page_and_upgrades_know_the_other_sonarr(tmp_path, monkeypatc
     web.scan_upgrades("sonarr-4k")
     assert seen == [("sonarr-4k", "4K only")]  # its files, on its own ladder
     assert web.read_json(web.upgrades_file("sonarr-4k"), {})["items"] == [] and not web.UPGRADES_FILE.exists()
+
+
+def test_a_hybrid_dolby_vision_file_stands_where_its_best_layer_does(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    import unshacklarr.web
+    web = importlib.reload(unshacklarr.web)
+    four_k = {"name": "4K only", "steps": [{"codec": "HEVC", "range": "HDR10P", "min": 2160, "max": 0},
+                                           {"codec": "HEVC", "range": "HDR10", "min": 2160, "max": 0},
+                                           {"codec": "HEVC", "range": "DV", "min": 2160, "max": 0}]}
+    track = lambda dynamic: web.ladder_track({"resolution": "3840x1920", "videoCodec": "h265", "videoDynamicRangeType": dynamic})  # noqa: E731
+    assert track("DV HDR10Plus")["layers"] == ["DV", "HDR10P"] and track("DV HDR10")["layers"] == ["DV", "HDR10"]
+    assert sync.step_of(four_k, track("DV HDR10Plus")) == 0  # its HDR10+ layer: step 1, nothing to upgrade
+    assert sync.step_of(four_k, track("DV HDR10")) == 1  # its HDR10 layer: step 2, before plain DV
+    assert sync.step_of(four_k, track("DV")) == 2 and sync.step_of(four_k, track("HDR10Plus")) == 0
+    assert track("")["layers"] == ["SDR"]

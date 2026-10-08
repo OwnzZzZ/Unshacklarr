@@ -418,7 +418,7 @@ async function showMissing() {
 $("#con-missing").onclick = showMissing;
 
 /* Upgrades: the files of the series with a quality ladder that are not on its first step, checked against the
-   service's tracks (one episode at a time, in the background); those it has on an earlier step are replaced. */
+   service's tracks (a series' episodes 10 at a time, in the background; answers kept); those it has on an earlier step are replaced. */
 let upgradeTimer = null, upgradeSkip = new Set(), upgradeSonarr = "";
 async function showUpgrades() {
   picked_run = "upgrades";
@@ -461,7 +461,7 @@ async function showUpgrades() {
   });
   $("#cd-main").replaceChildren(el("div", { style: "display:grid;gap:14px" },
     el("div", { className: "cd-head" }, el("div", {}, el("h3", { textContent: "Upgrades" }),
-      el("small", { className: "line1", textContent: "Files your quality ladder says could be better. Check now asks each service, one episode at a time, what it has. Replace downloads the better ones over your files, even when Sonarr ranks both the same (H.264 and H.265 in 1080p)." }))),
+      el("small", { className: "line1", textContent: "Files your quality ladder says could be better. Check now asks each service what it has, up to 10 episodes of a series at a time, and keeps each answer for the days set in Settings, Upgrades. Replace downloads the better ones over your files, even when Sonarr ranks both the same (H.264 and H.265 in 1080p)." }))),
     ...[sonarrPicker(upgradeSonarr, (n) => { upgradeSonarr = n; upgradeSkip.clear(); showUpgrades(); }), unsetNote(upgradeSonarr)].filter(Boolean),
     el("div", { className: "miss-bar" }, el("span", { className: "muted", textContent: state }), el("span", { className: "up-acts" }, check, go)),
     ...(rows.length ? [el("div", {}, ...rows)] : [el("p", { className: "muted", textContent: scan.running ? "Nothing better found yet." : r.checked ? "Nothing better on the services: every file is already on the best step they have." : "Check now asks each service what it has, one episode at a time." })])));

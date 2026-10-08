@@ -1568,3 +1568,11 @@ input.bad, select.bad { border-color: var(--err) !important; box-shadow: 0 0 0 3
 .ep-sonarr button[aria-checked=true] { background: rgb(79 179 191 / .18); color: var(--accent); font-weight: 600; }
 .ep-sonarr button small { color: var(--muted); font-size: 11.5px; font-weight: 400; }
 .ep-sonarr button em { font-style: normal; font-size: 11.5px; color: var(--warn); font-weight: 500; }
+
+/* Upgrades, series checked */
+.ug-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.ug-tools input { flex: 1 1 200px; min-width: 0; }
+.ug-list { max-height: 320px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 2px 12px;
+  padding: 8px; border: 1px solid var(--line, rgba(127,127,127,.25)); border-radius: 8px; }
+.ug-line { display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; min-width: 0; }
+.ug-line span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -13,10 +13,10 @@ function ladderOfSeries(conf) {
 const HEIGHTS = [4320, 2160, 1440, 1080, 720, 576, 540, 480, 360, 240];  // sync.HEIGHTS: a class within 2% counts as it
 const heightClass = (v) => HEIGHTS.find((h) => Math.abs(v - h) <= h * 0.02) ?? Math.floor(v);
 const eqHeight = (t) => Math.max(heightClass(t.height || 0), heightClass((t.width || 0) * 9 / 16));
-const fitsStep = (st, t) => (!st.codec || t.codec === st.codec) && (!st.range || t.range === st.range)
+const fitsStep = (st, t) => (!st.codec || t.codec === st.codec) && (!st.range || (t.layers?.length ? t.layers : [t.range]).includes(st.range))
   && eqHeight(t) >= (st.min || 0) && (!st.max || eqHeight(t) <= st.max);
 const stepOf = (lad, t) => { const i = lad.steps.findIndex((st) => fitsStep(st, t)); return i < 0 ? lad.steps.length : i; };
-const trackText = (t) => `${eqHeight(t) || "?"}p ${nameOf(CODECS, t.codec) || "?"} ${nameOf(RANGES, t.range) || "?"}`;
+const trackText = (t) => `${eqHeight(t) || "?"}p ${nameOf(CODECS, t.codec) || "?"} ${(t.layers?.length ? t.layers : [t.range]).map((r) => nameOf(RANGES, r) || "?").join(" + ")}`;
 function stepText(st) {
   const height = st.max && st.max !== st.min ? `${st.min || 0}–${st.max}p` : st.max ? `${st.max}p` : st.min ? `${st.min}p and up` : "Any height";
   return [height, st.codec ? nameOf(CODECS, st.codec) : "", st.range ? nameOf(RANGES, st.range) : ""].filter(Boolean).join(" ");
@@ -385,7 +385,13 @@ function fillQualityImport(conf) {
   $("#d-import").options[0].textContent = `Default: ${set.download_only ? "Download only" : "Sonarr imports it"}`;
   $("#d-import").value = conf.download_only === true ? "only" : conf.download_only === false ? "import" : "";
   importChips();
+  $("#d-skip-upgrades").checked = conf.skip_upgrades === true;
 }
+$("#d-skip-upgrades").onchange = (e) => {  // a series Upgrades never asks about
+  const conf = S.config.series[current.tvdbId];
+  if (e.target.checked) conf.skip_upgrades = true; else delete conf.skip_upgrades;
+  dirty();
+};
 /* After the download: its choices as chips, the select behind them keeping the value. */
 function importChips() {
   const sel = $("#d-import");
@@ -397,4 +403,39 @@ $("#d-import").onchange = (e) => {
   if (e.target.value) conf.download_only = e.target.value === "only"; else delete conf.download_only;
   importChips();
   dirty();
+};
+
+/* tick the series Activity, Upgrades checks (skip_upgrades on each series) */
+function upgradeSeries() {
+  const name = Object.fromEntries(S.series.map((s) => [String(s.tvdbId), s.title]));
+  return Object.entries(S.config.series || {}).filter(([, c]) => c.service)
+    .map(([id, c]) => ({ id, conf: c, title: name[id] || c.title || id })).sort((a, b) => a.title.localeCompare(b.title));
+}
+function renderUpgradeSeries() {
+  const box = $("#ug-series");
+  if (!box) return;
+  const find = $("#ug-find").value.trim().toLowerCase(), all = upgradeSeries();
+  const shown = all.filter((s) => !find || s.title.toLowerCase().includes(find));
+  box.replaceChildren(...shown.map((s) => el("label", { className: "ug-line" },
+    el("input", { type: "checkbox", checked: s.conf.skip_upgrades !== true, onchange: (e) => {
+      if (e.target.checked) delete s.conf.skip_upgrades; else s.conf.skip_upgrades = true;
+      dirty(); upgradeSay(all);
+    } }), el("span", { textContent: s.title }))));
+  if (!shown.length) box.replaceChildren(el("p", { className: "dx-empty", textContent: all.length ? "No series matches." : "No series set up yet." }));
+  upgradeSay(all);
+}
+function upgradeSay(all) {
+  const on = all.filter((s) => s.conf.skip_upgrades !== true).length;
+  $("#ug-say").textContent = `${on} of ${all.length} series checked`;
+  const st = $("#ug-state"), days = Number(S.config.settings?.upgrade_recheck_days ?? 30);
+  st.className = `sx-state${on ? " ok" : ""}`;
+  st.querySelector("b").textContent = `${on} of ${all.length} series checked`;
+  st.querySelector("small").textContent = days ? (days === 1 ? "Answers kept 1 day" : `Answers kept ${days} days`) : "Asked every time";
+}
+$("#ug-find").oninput = renderUpgradeSeries;
+for (const [id, on] of [["#ug-all", true], ["#ug-none", false]]) $(id).onclick = () => {  // only the series the search shows
+  const find = $("#ug-find").value.trim().toLowerCase();
+  upgradeSeries().filter((s) => !find || s.title.toLowerCase().includes(find))
+    .forEach((s) => { if (on) delete s.conf.skip_upgrades; else s.conf.skip_upgrades = true; });
+  dirty(); renderUpgradeSeries();
 };

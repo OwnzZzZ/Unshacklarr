@@ -1343,7 +1343,7 @@ def test_upgrades_find_the_files_a_service_has_on_an_earlier_step(tmp_path, monk
     web = importlib.reload(unshacklarr.web)
     sync = web.sonarr_sync
     assert web.ladder_track({"resolution": "1920x800", "videoCodec": "x265", "videoDynamicRangeType": "DV HDR10"}) == \
-        {"height": 800, "width": 1920, "codec": "HEVC", "range": "DV"}
+        {"height": 800, "width": 1920, "codec": "HEVC", "range": "DV", "layers": ["DV", "HDR10"]}
     assert web.ladder_track({"resolution": "1280x720", "videoCodec": "h264", "videoDynamicRangeType": ""})["range"] == "SDR"
     hevc_first = {"name": "HEVC first", "steps": [{"codec": "HEVC", "range": "SDR", "min": 1080, "max": 1080},
                                                   {"codec": "AVC", "range": "SDR", "min": 1080, "max": 1080}]}
@@ -1363,13 +1363,36 @@ def test_upgrades_find_the_files_a_service_has_on_an_earlier_step(tmp_path, monk
     monkeypatch.setattr(sync, "download_request", lambda show, config, wanted, out: {"service": "X", "title_id": "t", "wanted": [wanted]})
     asked = []
     on_service = {"S01E01": [{"height": 1080, "codec": "HEVC", "range": "SDR"}], "S01E03": [{"height": 1080, "codec": "AVC", "range": "SDR"}]}
-    monkeypatch.setattr(sync, "list_tracks", lambda show, config, request, ladder: asked.append(request["wanted"][0]) or [{"video": on_service[request["wanted"][0]]}])
+
+    def list_tracks(show, config, request, ladder):  # one call for the series, each answer titled
+        asked.append(request["wanted"])
+        return [{"title": {"season": 1, "number": int(w[-2:])}, "video": on_service[w]} for w in request["wanted"]]
+    monkeypatch.setattr(sync, "list_tracks", list_tracks)
     monkeypatch.setattr(web, "UPGRADE_PAUSE", 0)
     web.scan_upgrades()
-    assert asked == ["S01E01", "S01E03"]  # S01E02 is on the first step already; the series without a ladder is not asked
+    assert asked == [["S01E01", "S01E03"]]  # S01E02 is on the first step already; the series without a ladder is not asked
     found = web.read_json(web.UPGRADES_FILE, {})["items"]
     assert [(i["sxxeyy"], i["fileStep"], i["betterStep"]) for i in found] == [("S01E01", 2, 1)]  # S01E03: nothing better there
     assert not web.upgrade_scan["running"] and web.upgrade_scan["done"] == 2
+
+    # answers are kept upgrade_recheck_days for the same file, then asked again
+    web.scan_upgrades()
+    assert len(asked) == 1 and [i["sxxeyy"] for i in web.read_json(web.UPGRADES_FILE, {})["items"]] == ["S01E01"]
+    files[0] = {**files[0], "id": 80}
+    eps[0] = {**eps[0], "episodeFileId": 80}  # a new file for S01E01
+    web.scan_upgrades()
+    assert asked[-1] == ["S01E01"]
+    monkeypatch.setitem(sync.SETTINGS, "upgrade_recheck_days", 0)
+    web.scan_upgrades()
+    assert asked[-1] == ["S01E01", "S01E03"]
+    config["series"][1]["skip_upgrades"] = True  # left out on its page, or in Settings, Quality, Upgrades
+    web.scan_upgrades()
+    assert len(asked) == 3 and web.read_json(web.UPGRADES_FILE, {})["items"] == []
+    del config["series"][1]["skip_upgrades"]
+    monkeypatch.setitem(sync.SETTINGS, "upgrade_max_age_years", 1)
+    eps[:] = [{**e, "airDateUtc": "2001-01-01T00:00:00Z"} for e in eps]  # aired too long ago
+    web.scan_upgrades()
+    assert len(asked) == 3
 
 
 def test_automatic_backups_are_kept_listed_and_restore_a_new_install(tmp_path, monkeypatch):

@@ -679,6 +679,8 @@ async def save_config(request):
             series[int(key)]["download_only"] = show["download_only"]
         if ladder := check_ladder_name(show.get("ladder"), ladders, str(key)):
             series[int(key)]["ladder"] = ladder
+        if show.get("skip_upgrades") is True:  # left out of Activity, Upgrades
+            series[int(key)]["skip_upgrades"] = True
     notifications = body.get("notifications") or {}
     targets = check_targets(notifications, [t["url"] for t in sonarr_sync.notification_targets(previous["notifications"])])
     countries = [c for c in body.get("tmdb_countries") or [] if re.fullmatch(r"[A-Z]{2}", c)]
@@ -832,6 +834,7 @@ NUMBER_SETTINGS = {  # name: (smallest, largest)
     "burst_every_seconds": (10, 600), "burst_minutes": (1, 120), "history_keep": (10, 5000), "history_days": (1, 3650),
     "leftovers_days": (0, 365), "min_free_gb": (0, 100000), "upgrade_days": (1, 365),
     "backup_every_days": (0, 30), "backup_keep": (1, 365),
+    "upgrade_recheck_days": (0, 3650), "upgrade_max_age_years": (0, 100),
 }
 
 
@@ -2370,6 +2373,15 @@ def file_summary(f: dict) -> dict:
 LADDER_CODECS = {"H.264": "AVC", "H.265": "HEVC", "AV1": "AV1", "VP9": "VP9", "VP8": "VP8", "VC-1": "VC1"}
 
 
+def layers(dynamic: str) -> list[str]:
+    """every range a file carries: "DV HDR10PLUS" is a DV layer on an HDR10+ base, so both."""
+    d = dynamic.upper()
+    out = ["DV"] if "DV" in d else []
+    out += ["HDR10P"] if "PLUS" in d else ["HDR10"] if "HDR10" in d or "PQ" in d else []
+    out += ["HLG"] if "HLG" in d else []
+    return out or ["SDR"]
+
+
 def ladder_track(mi: dict) -> dict:
     """A file's video, from Sonarr's media info, as a quality ladder reads a track: its height (16:9), codec and range."""
     width, _, height = str(mi.get("resolution") or "").partition("x")
@@ -2377,7 +2389,8 @@ def ladder_track(mi: dict) -> dict:
     return {"height": int(height) if height.isdigit() else 0, "width": int(width) if width.isdigit() else 0,
             "codec": LADDER_CODECS.get(CODECS.get(str(mi.get("videoCodec") or "").lower(), ""), ""),
             "range": "DV" if "DV" in dynamic else "HDR10P" if "PLUS" in dynamic else "HLG" if "HLG" in dynamic
-            else "HDR10" if "HDR" in dynamic or "PQ" in dynamic else "SDR"}
+            else "HDR10" if "HDR" in dynamic or "PQ" in dynamic else "SDR",
+            "layers": layers(dynamic)}  # a hybrid file sits on the earliest step any of its layers fits
 
 
 def instances_of_series() -> dict[int, list[dict]]:
@@ -2937,7 +2950,7 @@ def missing_of_managed(days: int | None, now: datetime | None = None) -> list[di
 
 
 # Upgrades: the files of the series with a quality ladder that are not on its first step, checked against the
-# service's tracks one episode at a time. A list-tracks logs in to the service: a pause between two, and only
+# service's tracks, a series' episodes UPGRADE_BATCH at a time. A list-tracks logs in to the service: a pause between two, and only
 # when asked (Activity, Upgrades).
 UPGRADES_FILE = sonarr_sync.DATA / "upgrades_found.json"  # the last check's finds: {"checked", "items"}; another Sonarr's apart
 
@@ -2954,12 +2967,16 @@ def upgrade_candidates(config: dict) -> list[tuple]:
     work = []
     for tvdb, serie in sonarr_sync.sonarr_series(set(shows)).items():
         show = shows.get(tvdb)
-        ladder = show and sonarr_sync.ladder_of(show, config)
+        ladder = show and not show.get("skip_upgrades") and sonarr_sync.ladder_of(show, config)
         if not ladder:
             continue
         files = {f["id"]: f for f in sonarr_sync.sonarr_get("episodefile", seriesId=serie["id"])}
         for e in sonarr_sync.sonarr_get("episode", seriesId=serie["id"]):
             if not e.get("hasFile") or e.get("seasonNumber", 0) < 1 or e.get("episodeFileId") not in files:
+                continue
+            years = float(sonarr_sync.SETTINGS.get("upgrade_max_age_years") or 0)
+            if years and e.get("airDateUtc") and \
+                    datetime.now(timezone.utc) - sonarr_sync.parse_time(e["airDateUtc"]) > timedelta(days=365.25 * years):
                 continue
             track = ladder_track(files[e["episodeFileId"]].get("mediaInfo") or {})
             if (step := sonarr_sync.step_of(ladder, track)) > 0:
@@ -2975,37 +2992,93 @@ def scan_upgrades(name: str = "") -> None:
         scan_upgrades_in(inst, name)
 
 
+UPGRADE_BATCH = 10  # episodes of one series asked in one list-tracks: one login for them
+
+
+def upgrades_seen_file(name: str = "") -> Path:
+    """Each episode's last answer, kept upgrade_recheck_days: {episode id: {"checked", "file", "item"}}. Another Sonarr's apart."""
+    return sonarr_sync.DATA / (f"upgrades_seen-{name}.json" if name else "upgrades_seen.json")
+
+
+def upgrade_item(serie: dict, ladder: dict, e: dict, track: dict, step: int, best) -> dict | None:
+    """The episode as Upgrades lists it, when the service has it on an earlier step than its file."""
+    if not best or best[0] - 1 >= step:
+        return None
+    number, have = best
+    return {"episodeId": e["id"], "tvdbId": serie["tvdbId"], "series": serie["title"], "ladder": ladder["name"],
+            "sxxeyy": f"S{e['seasonNumber']:02}E{e['episodeNumber']:02}", "title": e.get("title"),
+            "file": sonarr_sync.track_label(track), "fileStep": step + 1 if step < len(ladder["steps"]) else None,
+            "better": sonarr_sync.track_label(have), "betterStep": number}
+
+
 def scan_upgrades_in(inst: dict | None, name: str) -> None:
+    """an answer younger than upgrade_recheck_days is reused for the same file; the rest is asked
+    per series, UPGRADE_BATCH episodes in one list-tracks (each answer names its season and number)."""
     config, found = sonarr_sync.read_file(), []
     config = sonarr_sync.instance_config(inst, config) if inst else config
     upgrade_scan.update(running=True, done=0, total=0, series="", errors=0, stop=False, sonarr=name)
+    now = datetime.now(timezone.utc)
+    keep_days = float(sonarr_sync.SETTINGS.get("upgrade_recheck_days", 30) or 0)
+    seen = read_json(upgrades_seen_file(name), {})
     try:
         work = upgrade_candidates(config)
         upgrade_scan["total"] = len(work)
-        for serie, show, ladder, e, track, step in work:
-            if upgrade_scan["stop"]:
-                break
-            upgrade_scan.update(series=serie["title"], done=upgrade_scan["done"] + 1)
-            wanted = sonarr_sync.service_episode(show, e["seasonNumber"], e["episodeNumber"])
-            if not wanted:
-                continue
-            try:
-                request = sonarr_sync.download_request(show, config, wanted, sonarr_sync.episode_folder({**e, "series": serie}))
-                if request.get("remote"):
-                    continue  # a --remote download lists no tracks
-                best = sonarr_sync.climb(ladder, sonarr_sync.list_tracks(show, config, request, ladder) or [])
-            except (UnshackleError, ValueError) as err:
-                upgrade_scan["errors"] += 1
-                print(f"Upgrades: {serie['title']} {wanted}: {err}", flush=True)
-                continue
-            finally:
-                time.sleep(UPGRADE_PAUSE)
-            if best and best[0] - 1 < step:
-                number, have = best
-                found.append({"episodeId": e["id"], "tvdbId": serie["tvdbId"], "series": serie["title"], "ladder": ladder["name"],
-                              "sxxeyy": f"S{e['seasonNumber']:02}E{e['episodeNumber']:02}", "title": e.get("title"),
-                              "file": sonarr_sync.track_label(track), "fileStep": step + 1 if step < len(ladder["steps"]) else None,
-                              "better": sonarr_sync.track_label(have), "betterStep": number})
+        ask: dict[int, list] = {}
+        for w in work:
+            e = w[3]
+            hit = seen.get(str(e["id"]))
+            if keep_days and hit and hit.get("file") == e.get("episodeFileId") \
+                    and now - datetime.fromisoformat(hit["checked"]) < timedelta(days=keep_days):
+                upgrade_scan["done"] += 1  # answered lately, for this very file: not asked again
+                if hit.get("item"):
+                    found.append(hit["item"])
+            else:
+                ask.setdefault(w[0]["id"], []).append(w)
+        for chunks in ask.values():
+            show = chunks[0][1]
+            size = 1 if int(show.get("parts") or 0) > 1 else UPGRADE_BATCH  # parts: one episode at a time, as before
+            for start in range(0, len(chunks), size):
+                if upgrade_scan["stop"]:
+                    break
+                chunk = chunks[start:start + size]
+                serie, show, ladder = chunk[0][:3]
+                upgrade_scan["series"] = serie["title"]
+                wanted = {}
+                for w in chunk:
+                    if key := sonarr_sync.service_episode(show, w[3]["seasonNumber"], w[3]["episodeNumber"]):
+                        wanted[key] = w
+                try:
+                    if not wanted:
+                        continue
+                    first = next(iter(wanted.values()))[3]
+                    request = sonarr_sync.download_request(show, config, next(iter(wanted)), sonarr_sync.episode_folder({**first, "series": serie}))
+                    if request.get("remote"):
+                        continue  # a --remote download lists no tracks
+                    request["wanted"] = list(wanted)
+                    listed = sonarr_sync.list_tracks(show, config, request, ladder) or []
+                except (UnshackleError, ValueError) as err:
+                    upgrade_scan["errors"] += 1
+                    print(f"Upgrades: {serie['title']} {', '.join(wanted)}: {err}", flush=True)
+                    continue
+                finally:
+                    upgrade_scan["done"] += len(chunk)
+                    time.sleep(UPGRADE_PAUSE)
+                by_key: dict[str, list] = {}
+                for ep in listed:
+                    t = ep.get("title") or {}
+                    if t.get("season") is not None and t.get("number") is not None:
+                        by_key.setdefault(f"S{int(t['season']):02}E{int(t['number']):02}", []).append(ep)
+                if len(wanted) == 1 and listed and not by_key:  # one episode asked, its answer without a title
+                    by_key[next(iter(wanted))] = listed
+                for key, (serie_, show_, ladder_, e, track, step) in wanted.items():
+                    parts = by_key.get(key.split(".")[0])
+                    if parts is None:
+                        continue  # left out of the answer (not on the service now): asked again next time
+                    item = upgrade_item(serie, ladder, e, track, step, sonarr_sync.climb(ladder, parts))
+                    seen[str(e["id"])] = {"checked": now.isoformat(), "file": e.get("episodeFileId"), "item": item}
+                    if item:
+                        found.append(item)
+        write_atomic(upgrades_seen_file(name), json.dumps(seen))
         write_atomic(upgrades_file(name), json.dumps({"checked": datetime.now(timezone.utc).isoformat(), "items": found,
                                                 "stopped": upgrade_scan["stop"]}))
     except requests.RequestException as err:

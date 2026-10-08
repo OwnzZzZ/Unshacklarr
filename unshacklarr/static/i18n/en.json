@@ -60,6 +60,7 @@
  ],
  "-1: service's E04 is Sonarr's E05.": [],
  "0 turns it off. Each backup is saved in the data folder's backups folder, without the password.": [],
+ "0: always ask.": [],
  "0: never delete them. Episodes of a series set to Download only are never deleted automatically.": [],
  "1 episode has another number on {0}: Download takes care of it": [
   "svc"
@@ -156,6 +157,7 @@
  ],
  "Activity": [],
  "Activity history": [],
+ "Activity, Upgrades asks each service what it has for the files your quality ladder says could be better. These settings decide which series it asks about, and how long an answer is kept.": [],
  "Add": [],
  "Add REPACK tag to the output filename.": [],
  "Add a .wvd or .prd file": [],
@@ -219,6 +221,7 @@
  "An API token is 30 letters and digits": [],
  "An address like slack://…": [],
  "An address starting with http:// or https://, without a user name": [],
+ "An answer is reused until it is older than this, unless the file changed.": [],
  "An e-mail address, like you@gmail.com": [],
  "An episode is downloaded and handed to Sonarr": [],
  "An episode is late, a replacement kept the old file, or a code must be entered": [],
@@ -230,6 +233,10 @@
  "Answer in Unshacklarr, for {0} {1}.": [
   "run.card['series']",
   "run.card['sxxeyy']"
+ ],
+ "Answers kept 1 day": [],
+ "Answers kept {0} days": [
+  "days"
  ],
  "Any codec": [],
  "Any height": [],
@@ -251,12 +258,14 @@
  "ArrowUp": [],
  "As shown on Discord, and on a phone (this device, ntfy, Telegram, Pushover…).": [],
  "As the main one": [],
+ "Ask again after": [],
  "Ask {0} which episodes of this series it has, and mark them in the list": [
   "svc"
  ],
  "Asked again before a key is made.": [],
  "Asked again: the file holds secrets.": [],
  "Asked again: the old key stops working.": [],
+ "Asked every time": [],
  "Asked for as": [],
  "Asked to Unshackle": [],
  "Asking Sonarr what your series miss…": [],
@@ -695,8 +704,9 @@
  "File": [],
  "Files Sonarr did not take": [],
  "Files a service has in better quality": [],
- "Files your quality ladder says could be better. Check now asks each service, one episode at a time, what it has. Replace downloads the better ones over your files, even when Sonarr ranks both the same (H.264 and H.265 in 1080p).": [],
+ "Files your quality ladder says could be better. Check now asks each service what it has, up to 10 episodes of a series at a time, and keeps each answer for the days set in Settings, Upgrades. Replace downloads the better ones over your files, even when Sonarr ranks both the same (H.264 and H.265 in 1080p).": [],
  "Filter by service": [],
+ "Find a series": [],
  "Find it on {0}": [
   "svcName(service)"
  ],
@@ -785,6 +795,7 @@
  "History": [],
  "How Unshacklarr reaches Sonarr, to find the missing episodes and hand it the downloads.": [],
  "How it runs": [],
+ "How often": [],
  "If the service refuses the login, the download is tried again with these profiles, in order. Useful for a second account while the first one's cookies are renewed.": [],
  "Import": [],
  "Import anyway": [],
@@ -1074,6 +1085,8 @@
  "No series has a release time yet. Set one on a series' page, in its Settings tab.": [],
  "No series is downloaded by Unshackle yet.": [],
  "No series match these filters.": [],
+ "No series matches.": [],
+ "No series set up yet.": [],
  "No series uses it": [],
  "No service has options of its own yet.": [],
  "No stream in the requested quality. The history in Activity has Unshackle's full output.": [],
@@ -1253,6 +1266,7 @@
  "Off is reserved: it means no ladder": [],
  "Off. Notifications come from the app itself, no other service needed": [],
  "Off. Turn it on to look into a problem, and send the output with the report.": [],
+ "Older episodes are not checked. 0: all of them.": [],
  "Older ones are deleted. To restore one, download it, then use Restore from a file.": [],
  "On": [],
  "On an iPhone: add Unshacklarr to the home screen first (Share, Add to Home Screen), then open it from there.": [],
@@ -1295,6 +1309,7 @@
  "Only download chapter markers.": [],
  "Only download subtitle tracks.": [],
  "Only download video tracks.": [],
+ "Only episodes from the last": [],
  "Only for the episodes picked now. The series keeps its own settings.": [],
  "Only the fields you fill in change. Everything else stays as it is for each series. Save afterwards, as for one series.": [],
  "Only use CDM, or only use Key Vaults for retrieval of Decryption Keys.": [],
@@ -1549,6 +1564,7 @@
  "Sent: the download goes on": [],
  "Series": [],
  "Series URL on the service": [],
+ "Series checked": [],
  "Series hidden from the Schedule": [],
  "Series links from": [],
  "Series settings": [],
@@ -1603,6 +1619,7 @@
  ],
  "Size": [],
  "Skip": [],
+ "Skip upgrades": [],
  "Skipped: the episode offset puts it before the service's first episode.": [],
  "Slack": [],
  "Sonarr": [],
@@ -2016,6 +2033,7 @@
   "label"
  ],
  "Thu": [],
+ "Tick all": [],
  "Time zone": [],
  "TimeoutError": [],
  "Title": [],
@@ -2155,6 +2173,8 @@
  "Unshackle: {0}": [
   "data.unshackle_error"
  ],
+ "Untick a series to leave it out. Its page has the same switch, under What to get.": [],
+ "Untick all": [],
  "Update {0}": [
   "data.update.version"
  ],
@@ -2261,6 +2281,7 @@
  "Which device each service uses": [],
  "Which message": [],
  "Which series": [],
+ "Which series, how often": [],
  "Which streaming services the Schedule shows, and where a series' links are looked for.": [],
  "Whichever limit is reached first applies. The oldest downloads are removed first.": [],
  "Widevine": [],
@@ -2648,6 +2669,7 @@
  "wss": [],
  "wvd": [],
  "yaml": [],
+ "years": [],
  "yes": [],
  "yes (it has its group key)": [],
  "yesterday": [],
@@ -3026,6 +3048,10 @@
  "{0} of {1} on disk": [
   "list.filter((e) => e.hasFile).length",
   "list.length"
+ ],
+ "{0} of {1} series checked": [
+  "on",
+  "all.length"
  ],
  "{0} on disk in a lower resolution than asked: {1} may have better": [
   "upgrades.length",

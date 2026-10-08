@@ -145,6 +145,8 @@ SETTINGS_DEFAULTS = {
     "audio_accept": "",          # a download must have one of these audio languages ("fr, en"); empty: the first asked for
     "audio_prefer": "",          # the audio language to upgrade to: an episode without it is got again once it comes
     "upgrade_days": 30,          # for so many days after its download, checked once a day
+    "upgrade_recheck_days": 30,  # Upgrades: an episode's last answer is kept this long before it is asked again (0: always ask)
+    "upgrade_max_age_years": 0,  # Upgrades: only episodes aired in the last N years (0: all)
     "subs_accept": "",           # and one of these subtitle languages, forced ones aside ("fr"); empty: not checked
     "debug": False,              # Activity's output says more: Unshackle's debug log, every call to Sonarr
     "download_only": False,      # downloaded and tidied, never handed to Sonarr: imported by hand (a series can say otherwise)
@@ -1447,7 +1449,10 @@ def climb(ladder: dict, episodes: list[dict]) -> tuple[int, dict] | None:
 
 
 def step_of(ladder: dict, track: dict) -> int:
-    """Where a track stands on a ladder: the index of the first step it fits, len(steps) when none."""
+    """Where a track stands on a ladder: the index of the first step it fits, len(steps) when none. A file with
+    several layers (DV on an HDR10+ base) stands where its best layer does."""
+    if len(track.get("layers") or []) > 1:
+        return min(step_of(ladder, {**track, "range": r, "layers": None}) for r in track["layers"])
     return next((i for i, step in enumerate(ladder["steps"]) if fits(step, track)), len(ladder["steps"]))
 
 

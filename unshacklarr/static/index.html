@@ -132,6 +132,7 @@
         <div class="set-group" role="group" aria-label="Downloading"><p>Downloading</p>
         <button data-sec="downloads"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span>Download options</span><small>Options for every series</small></button>
         <button data-sec="quality"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20v-5M10 20V10M16 20V6M22 20V3"/></svg><span>Quality</span><small>Ladders of resolutions and codecs</small></button>
+        <button data-sec="upgrades"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg><span>Upgrades</span><small>Which series, how often</small></button>
         <button data-sec="automation"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Automation</span><small>Syncs, release times, retries</small></button>
         </div>
         <div class="set-group" role="group" aria-label="Service access"><p>Service access</p>
@@ -331,6 +332,26 @@
           <div class="ax-seg" id="ql-default" role="radiogroup" aria-label="Every series downloads by"></div>
         </section>
         <div id="ql-list" class="ql-list"></div>
+      </div>
+      <div class="set-sec sx" data-sec="upgrades" hidden>
+        <section class="sx-hero">
+          <span class="sx-logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span>
+          <div class="sx-id"><h2>Upgrades</h2><p class="ax-lead">Activity, Upgrades asks each service what it has for the files your quality ladder says could be better. These settings decide which series it asks about, and how long an answer is kept.</p></div>
+          <div class="sx-state" id="ug-state"><span class="dot"></span><span><b></b><small></small></span></div>
+        </section>
+        <section class="sx-card">
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span><div><h3>How often</h3><p>An answer is reused until it is older than this, unless the file changed.</p></div></div>
+          <div class="sx-grid">
+            <div class="field"><label for="ug-recheck">Ask again after</label><div class="unit"><input id="ug-recheck" type="number" data-set="upgrade_recheck_days" data-num min="0" max="3650"><span>days</span></div><small>0: always ask.</small></div>
+            <div class="field"><label for="ug-age">Only episodes from the last</label><div class="unit"><input id="ug-age" type="number" data-set="upgrade_max_age_years" data-num min="0" max="100"><span>years</span></div><small>Older episodes are not checked. 0: all of them.</small></div>
+          </div>
+        </section>
+        <section class="sx-card">
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><div><h3>Series checked</h3><p>Untick a series to leave it out. Its page has the same switch, under What to get.</p></div></div>
+          <div class="ug-tools"><input type="search" id="ug-find" placeholder="Find a series" autocomplete="off"><button type="button" class="btn small" id="ug-all">Tick all</button><button type="button" class="btn small" id="ug-none">Untick all</button></div>
+          <div class="ug-list" id="ug-series"></div>
+          <small class="muted" id="ug-say"></small>
+        </section>
       </div>
       <div class="set-sec sx" data-sec="cookies" hidden>
         <section class="sx-hero">
@@ -636,6 +657,7 @@
           <label for="d-ladder">Quality ladder</label>
           <select id="d-ladder"></select>
           <small>Its steps are tried in order against the tracks the service has for the episode (Settings, Quality).</small>
+          <label class="ug-line"><input type="checkbox" id="d-skip-upgrades"> Skip upgrades</label>
         </div>
         <div class="field">
           <span id="d-import-l">After the download</span>
