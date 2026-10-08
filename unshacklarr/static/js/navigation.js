@@ -23,7 +23,7 @@ function showSettingsSec(name, fromRoute = false) {
   if (name === "notifications") { renderPush().catch(() => {}); if (S.dlOptions.length) loadSent(); }
   if (name === "automation") { renderAutomation(); renderImportMode(); }
   if (name === "quality") renderQuality();
-  if (name === "upgrades") renderUpgradeSeries();
+  if (name === "upgrades") { renderUpgradeSeries(); renderUpgradeGroups(); }
   if (!fromRoute && currentTab === "settings") navigate(fromList);  // from the list: back returns to it
   if (fromList) scrollTo({ top: 0 });
 }

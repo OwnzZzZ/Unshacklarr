@@ -1937,5 +1937,20 @@
  "no ladder chosen yet": "尚未选择阶梯",
  "this series' ladder": "此剧集的阶梯",
  "{0} has the address of another Sonarr here: each instance has its own": "{0} 的地址与这里另一个 Sonarr 相同：每个实例都有自己的地址",
- "✓ Reached: Sonarr {0}": "✓ 已连接：Sonarr {0}"
+ "✓ Reached: Sonarr {0}": "✓ 已连接：Sonarr {0}",
+ "1 series has no group and is left as it is: {0}. Set a Group Tag in Download options to include it.": "有 1 部剧集没有组，保持不变：{0}。在下载选项中设置 Group Tag 即可纳入。",
+ "A file from another group (a torrent, an older tool) is listed when the service has the episode on the same step, not only a better one.": "来自其他组的文件（种子、旧工具）在服务提供同一阶梯的剧集时也会列出，而不仅是更好的阶梯。",
+ "Could not look it up: {0}": "无法查询：{0}",
+ "For 1 series: {0}.": "适用于 1 部剧集：{0}。",
+ "For every series.": "适用于所有剧集。",
+ "For {0} series: {1}.": "适用于 {0} 部剧集：{1}。",
+ "Looking up your release group…": "正在查询你的发布组…",
+ "No release group is set. Set a Group Tag in Settings, Download options: your downloads then carry it, and this switch can tell them apart.": "未设置发布组。在“设置”›“下载选项”中设置 Group Tag：你的下载会带上它，这个开关就能区分它们。",
+ "Other release groups are replaced": "替换其他发布组",
+ "Release group": "发布组",
+ "Replace files from other release groups": "替换其他发布组的文件",
+ "The group your downloads carry at the end of their file names (-unshackle), which Sonarr reads as the release group. Set it in Download options, Group Tag: Unshacklarr then knows it, and every download carries it.": "你的下载在文件名末尾带有的组（-unshackle），Sonarr 将其识别为发布组。在下载选项的 Group Tag 中设置后，Unshacklarr 就能识别，每次下载都会带上它。",
+ "{0} series have no group and are left as they are: {1}. Set a Group Tag in Download options to include them.": "有 {0} 部剧集没有组，保持不变：{1}。在下载选项中设置 Group Tag 即可纳入。",
+ "no group": "无组",
+ "from {0}": "来自 {0}"
 }

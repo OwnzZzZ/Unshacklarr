@@ -1761,3 +1761,16 @@ def test_a_hybrid_dolby_vision_file_stands_where_its_best_layer_does(tmp_path, m
     assert sync.step_of(four_k, track("DV HDR10")) == 1  # its HDR10 layer: step 2, before plain DV
     assert sync.step_of(four_k, track("DV")) == 2 and sync.step_of(four_k, track("HDR10Plus")) == 0
     assert track("")["layers"] == ["SDR"]
+    assert sync.track_label(track("DV HDR10Plus")) == "2160p HEVC DV + HDR10P"  # labelled by every layer, not DV alone
+    assert sync.track_label(track("DV")) == "2160p HEVC DV"
+
+
+def test_the_release_group_set_only_in_unshackle_yaml_is_read_from_the_file(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    folder = tmp_path / "unshackle-config"
+    folder.mkdir()
+    (folder / "unshackle.yaml").write_text("tag: TiNA\ndl:\n  sub_format: srt\n")
+    monkeypatch.setitem(sync.SETTINGS, "unshackle_config_dir", str(folder))
+    monkeypatch.setattr(sync.UNSHACKLE, "dl_config", lambda: {"sub_format": "srt"})  # serve's /api/config: no tag
+    monkeypatch.setattr(sync, "backend_for", lambda tag, config=None: sync.UNSHACKLE)
+    assert sync.release_group_of({"service": "NF"}, {"settings": {}, "defaults": {}, "service_defaults": {}}) == ("TiNA", "unshackle.yaml (tag:)")

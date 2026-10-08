@@ -347,6 +347,11 @@
           </div>
         </section>
         <section class="sx-card">
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><path d="M7.5 7.5h.01"/></svg></span><div><h3>Release group</h3><p>The group your downloads carry at the end of their file names (-unshackle), which Sonarr reads as the release group. Set it in Download options, Group Tag: Unshacklarr then knows it, and every download carries it.</p></div></div>
+          <label class="ug-switch"><input type="checkbox" class="switch" id="ug-other"><span><b>Replace files from other release groups</b><small>A file from another group (a torrent, an older tool) is listed when the service has the episode on the same step, not only a better one.</small></span></label>
+          <div class="ug-groups" id="ug-groups"></div>
+        </section>
+        <section class="sx-card">
           <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><div><h3>Series checked</h3><p>Untick a series to leave it out. Its page has the same switch, under What to get.</p></div></div>
           <div class="ug-tools"><input type="search" id="ug-find" placeholder="Find a series" autocomplete="off"><button type="button" class="btn small" id="ug-all">Tick all</button><button type="button" class="btn small" id="ug-none">Untick all</button></div>
           <div class="ug-list" id="ug-series"></div>

@@ -1394,6 +1394,31 @@ def test_upgrades_find_the_files_a_service_has_on_an_earlier_step(tmp_path, monk
     web.scan_upgrades()
     assert len(asked) == 3
 
+    # Your release group: a file from another is replaced by the same step too, an empty setting ignores the group
+    monkeypatch.setitem(sync.SETTINGS, "upgrade_max_age_years", 0)
+    monkeypatch.setitem(sync.SETTINGS, "upgrade_recheck_days", 30)
+    on_service["S01E02"] = [{"height": 1080, "codec": "HEVC", "range": "SDR"}]
+    files[:] = [{**f, "releaseGroup": "unshackle" if f["id"] == 71 else "NTb"} for f in files]
+    monkeypatch.setitem(sync.SETTINGS, "upgrade_other_groups", True)
+    monkeypatch.setattr(sync, "backend_for", lambda service, config=None: (_ for _ in ()).throw(sync.UnshackleError("down")))
+    asked_before = len(asked)
+    web.scan_upgrades()
+    assert len(asked) == asked_before  # no group set anywhere (nor in an Unshackle): the switch changes nothing
+    config["defaults"] = {"--tag": "Unshackle"}  # Download options, Group Tag, for every series
+    assert sync.release_group_of(config["series"][1], config) == ("Unshackle", "Download options")
+    web.scan_upgrades()
+    assert asked[-1] == ["S01E01", "S01E03"]  # S01E02 is ours on step 1; the rule changed, so nothing kept is reused
+    found = web.read_json(web.UPGRADES_FILE, {})["items"]
+    assert [(i["sxxeyy"], i["group"], i["fileStep"], i["betterStep"]) for i in found] == [("S01E01", "NTb", 2, 1), ("S01E03", "NTb", 2, 2)]
+    assert found[1]["file"] == "1080p AVC SDR from NTb"
+    files[1] = {**files[1], "releaseGroup": "RAWR"}
+    web.scan_upgrades()
+    assert asked[-1] == ["S01E02"]  # E01 and E03 kept, E02 now from another group, the same step on the service
+    assert [i["sxxeyy"] for i in web.read_json(web.UPGRADES_FILE, {})["items"]] == ["S01E01", "S01E03", "S01E02"]
+    monkeypatch.setattr(web, "read_config", lambda: config)
+    groups = asyncio.run(web.upgrade_groups(None))
+    assert json.loads(groups.text) == {"groups": [{"group": "Unshackle", "where": "Download options", "series": [1, 2]}], "none": []}
+
 
 def test_automatic_backups_are_kept_listed_and_restore_a_new_install(tmp_path, monkeypatch):
     # From #15, by mj23au

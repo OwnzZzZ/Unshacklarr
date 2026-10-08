@@ -75,6 +75,9 @@
  "1 series has a release time: {0}": [
   "timed[0]"
  ],
+ "1 series has no group and is left as it is: {0}. Set a Group Tag in Download options to include it.": [
+  "listed(none)"
+ ],
  "1 series is back, with its options.": [],
  "1 series says otherwise, on its page.": [],
  "1 service or series picks its own": [],
@@ -112,6 +115,7 @@
  "A download of this episode already waits in the downloads folder": [],
  "A download or the sync fails": [],
  "A downloaded episode will look like this.": [],
+ "A file from another group (a torrent, an older tool) is listed when the service has the episode on the same step, not only a better one.": [],
  "A first start of Unshackle takes a few seconds": [],
  "A full path, from / (or a drive letter), without ..": [],
  "A kind of message turned off here goes to no address and not to this device. The bell in the page still shows them all.": [],
@@ -467,6 +471,9 @@
  "Could not load the schedule: {0}": [
   "e.message"
  ],
+ "Could not look it up: {0}": [
+  "e.message"
+ ],
  "Could not reach Sonarr with these settings: {0}": [
   "e"
  ],
@@ -720,12 +727,16 @@
  "Fix what does not answer in Settings: the restore is done.": [],
  "Folders": [],
  "For": [],
+ "For 1 series: {0}.": [
+  "listed(g.series)"
+ ],
  "For Gmail, Outlook or iCloud: use an app password, created in your account's security settings (not your usual password).": [],
  "For a series with a release time, its new episode is tried at that time, then again and again for a while.": [],
  "For at most": [],
  "For every series": [],
  "For every series it downloads, over the series' own (4K for a 4K Sonarr).": [],
  "For every series it downloads, over the series' own.": [],
+ "For every series.": [],
  "For example fr, en. An episode with none of them is not downloaded. It is tried again at each sync.": [],
  "For example fr. The episode must have full subtitles in at least one of them. Forced subtitles do not count.": [],
  "For example http://unshackle:8786 on a shared Docker network.": [],
@@ -736,6 +747,10 @@
  "For when Authelia, Authentik or another proxy already logs you in. The proxy passes your name in a header, and Unshacklarr opens without asking for its own password.": [],
  "For when Sonarr's dates are wrong or missing: set the days the episodes air, used instead of Sonarr's.": [],
  "For when every episode comes in that many parts. Until all parts are out, nothing is imported and the episode is tried again. An episode is never imported half-done.": [],
+ "For {0} series: {1}.": [
+  "g.series.length",
+  "listed(g.series)"
+ ],
  "For, in minutes": [],
  "Force disable all proxy use.": [],
  "Found": [],
@@ -960,6 +975,7 @@
  "Looking for backups…": [],
  "Looking on TMDB…": [],
  "Looking up where to watch it…": [],
+ "Looking up your release group…": [],
  "Looks for the episodes Sonarr is missing, and downloads the ones their service has.": [],
  "Lost the password?": [],
  "Lowest height": [],
@@ -1079,6 +1095,7 @@
  "No ladder yet. Create one with New ladder, or bring back the built-in ones.": [],
  "No license": [],
  "No option matches.": [],
+ "No release group is set. Set a Group Tag in Settings, Download options: your downloads then carry it, and this switch can tell them apart.": [],
  "No remote CDM called {0}": [
   "name"
  ],
@@ -1342,6 +1359,7 @@
  "Other": [],
  "Other Sonarr instances": [],
  "Other Unshackle servers": [],
+ "Other release groups are replaced": [],
  "Other title": [],
  "Outliers ({0})": [
   "outliers"
@@ -1426,6 +1444,7 @@
   "svc"
  ],
  "Regular sync": [],
+ "Release group": [],
  "Release time": [],
  "Release time set to {0}: save to keep it": [
   "sg.time"
@@ -1452,6 +1471,7 @@
  "Repeats": [],
  "Replace": [],
  "Replace anyway": [],
+ "Replace files from other release groups": [],
  "Replace it": [],
  "Replace only if better": [],
  "Replace the key": [],
@@ -1896,6 +1916,7 @@
  "The first language in this list that the episode has full subtitles in is downloaded. Not used when empty, or when --s-lang is set.": [],
  "The first language in this list that the episode has is downloaded (en also matches en-GB). Not used when empty, or when the series or its service sets --a-lang.": [],
  "The folder with unshackle.yaml and the WVD and PRD files, for Settings, CDM. Empty: Unshacklarr asks Unshackle, which works when both run on this computer.": [],
+ "The group your downloads carry at the end of their file names (-unshackle), which Sonarr reads as the release group. Set it in Download options, Group Tag: Unshacklarr then knows it, and every download carries it.": [],
  "The header your proxy sets: Remote-User for Authelia, X-authentik-username for Authentik. Empty: off.": [],
  "The history in Activity has Unshackle's full output.": [],
  "The history is already empty": [],
@@ -2404,6 +2425,9 @@
  ],
  "from season": [],
  "from the PATH. Otherwise, its full path, e.g.": [],
+ "from {0}": [
+  "track['group']"
+ ],
  "gotify": [],
  "gotifys": [],
  "hide": [],
@@ -2438,6 +2462,7 @@
  "no": [],
  "no (no group key: an older .prd)": [],
  "no DRM: no device used": [],
+ "no group": [],
  "no ladder": [],
  "no ladder chosen": [],
  "no ladder chosen yet": [],
@@ -2639,6 +2664,7 @@
  ],
  "unshackle-*": [],
  "unshackle.yaml": [],
+ "unshackle.yaml (tag:)": [],
  "unshackle.yaml changed since you opened it (Settings, CDM writes to it too): open it again": [],
  "unshackle.yaml must hold settings (key: value), not a list or a single value": [],
  "unshackle.yaml sets no device for it and no default device: its downloads are refused. Pick one in Settings, CDM, or No CDM if it has no DRM.": [],
@@ -3121,6 +3147,10 @@
   "timed.length",
   "timed.join(\", \")"
  ],
+ "{0} series have no group and are left as they are: {1}. Set a Group Tag in Download options to include them.": [
+  "none.length",
+  "listed(none)"
+ ],
  "{0} series hidden from the schedule": [
   "n"
  ],
@@ -3248,6 +3278,9 @@
   "key",
   "name ? `${name} · ` : \"\"",
   "parts.map((t) => t.part).join(\" + \")"
+ ],
+ "{0}'s unshackle.yaml (dl:)": [
+  "backend.name or 'Unshackle'"
  ],
  "{0}. Make room, or lower the room kept free in Settings, Unshackle, Folders.": [
   "full"

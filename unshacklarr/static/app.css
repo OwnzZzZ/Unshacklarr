@@ -1576,3 +1576,6 @@ input.bad, select.bad { border-color: var(--err) !important; box-shadow: 0 0 0 3
   padding: 8px; border: 1px solid var(--line, rgba(127,127,127,.25)); border-radius: 8px; }
 .ug-line { display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; min-width: 0; }
 .ug-line span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ug-switch { display: flex; align-items: flex-start; gap: 12px; padding: 4px 0 10px; cursor: pointer; }
+.ug-switch span { display: grid; gap: 2px; } .ug-switch small { color: var(--muted); }
+.ug-groups { display: grid; gap: 6px; } .ug-group small { color: var(--muted); } .ug-group.warn b { color: var(--warn); }

@@ -1929,5 +1929,20 @@
  "no ladder chosen yet": "лестница ещё не выбрана",
  "this series' ladder": "лестница этого сериала",
  "{0} has the address of another Sonarr here: each instance has its own": "У {0} адрес другого Sonarr отсюда: у каждого экземпляра должен быть свой",
- "✓ Reached: Sonarr {0}": "✓ Доступен: Sonarr {0}"
+ "✓ Reached: Sonarr {0}": "✓ Доступен: Sonarr {0}",
+ "1 series has no group and is left as it is: {0}. Set a Group Tag in Download options to include it.": "У 1 сериала нет группы, он остаётся как есть: {0}. Укажите Group Tag в параметрах загрузки, чтобы включить его.",
+ "A file from another group (a torrent, an older tool) is listed when the service has the episode on the same step, not only a better one.": "Файл другой группы (торрент, старый инструмент) попадает в список, если у сервиса есть эпизод на той же ступени, а не только на лучшей.",
+ "Could not look it up: {0}": "Не удалось узнать: {0}",
+ "For 1 series: {0}.": "Для 1 сериала: {0}.",
+ "For every series.": "Для всех сериалов.",
+ "For {0} series: {1}.": "Сериалов: {0} — {1}.",
+ "Looking up your release group…": "Поиск вашей релиз-группы…",
+ "No release group is set. Set a Group Tag in Settings, Download options: your downloads then carry it, and this switch can tell them apart.": "Релиз-группа не задана. Укажите Group Tag в «Настройки», «Параметры загрузки»: ваши загрузки получат его, и этот переключатель сможет их различать.",
+ "Other release groups are replaced": "Другие релиз-группы заменяются",
+ "Release group": "Релиз-группа",
+ "Replace files from other release groups": "Заменять файлы других групп",
+ "The group your downloads carry at the end of their file names (-unshackle), which Sonarr reads as the release group. Set it in Download options, Group Tag: Unshacklarr then knows it, and every download carries it.": "Группа в конце имён файлов ваших загрузок (-unshackle), которую Sonarr считает релиз-группой. Укажите её в параметрах загрузки, Group Tag: тогда Unshacklarr её знает, и каждая загрузка её получает.",
+ "{0} series have no group and are left as they are: {1}. Set a Group Tag in Download options to include them.": "Сериалов без группы: {0}, они остаются как есть: {1}. Укажите Group Tag в параметрах загрузки, чтобы включить их.",
+ "no group": "без группы",
+ "from {0}": "от {0}"
 }

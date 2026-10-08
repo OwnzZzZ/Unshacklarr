@@ -1044,6 +1044,7 @@ def check_settings(body: dict, previous: dict) -> dict:
     settings["debug"] = body.get("debug") is True
     settings["download_only"] = body.get("download_only") is True
     settings["quality_ladder"] = str(body.get("quality_ladder") or "")  # checked against the ladders by save_config
+    settings["upgrade_other_groups"] = body.get("upgrade_other_groups") is True
     settings["backends"] = check_backends(body.get("backends"), previous.get("backends"))
     settings["sonarrs"] = check_sonarrs(body.get("sonarrs"), previous.get("sonarrs"), settings["sonarr_url"])
     return settings
@@ -2962,7 +2963,10 @@ upgrade_scan = {"running": False, "done": 0, "total": 0, "series": "", "errors":
 
 
 def upgrade_candidates(config: dict) -> list[tuple]:
-    """Every file of a series with a ladder that is not on its first step: (series, show, ladder, episode, track, step)."""
+    """Every file of a series with a ladder that is not on its first step, or, with upgrade_other_groups, from another
+    release group than the series' downloads carry: (series, show, ladder, episode, track, step). track["ours"] is that
+    group, track["group"] the file's other one."""
+    other_groups = bool(sonarr_sync.SETTINGS.get("upgrade_other_groups"))
     shows = {int(k): v for k, v in (config.get("series") or {}).items() if v.get("service") and v.get("title")}
     work = []
     for tvdb, serie in sonarr_sync.sonarr_series(set(shows)).items():
@@ -2970,6 +2974,7 @@ def upgrade_candidates(config: dict) -> list[tuple]:
         ladder = show and not show.get("skip_upgrades") and sonarr_sync.ladder_of(show, config)
         if not ladder:
             continue
+        ours = sonarr_sync.release_group_of(show, config)[0] if other_groups else ""
         files = {f["id"]: f for f in sonarr_sync.sonarr_get("episodefile", seriesId=serie["id"])}
         for e in sonarr_sync.sonarr_get("episode", seriesId=serie["id"]):
             if not e.get("hasFile") or e.get("seasonNumber", 0) < 1 or e.get("episodeFileId") not in files:
@@ -2978,8 +2983,13 @@ def upgrade_candidates(config: dict) -> list[tuple]:
             if years and e.get("airDateUtc") and \
                     datetime.now(timezone.utc) - sonarr_sync.parse_time(e["airDateUtc"]) > timedelta(days=365.25 * years):
                 continue
-            track = ladder_track(files[e["episodeFileId"]].get("mediaInfo") or {})
-            if (step := sonarr_sync.step_of(ladder, track)) > 0:
+            file = files[e["episodeFileId"]]
+            track = ladder_track(file.get("mediaInfo") or {})
+            if ours:
+                track["ours"] = ours
+                if str(file.get("releaseGroup") or "").lower() != ours.lower():
+                    track["group"] = file.get("releaseGroup") or "no group"  # not ours: the same step from the service replaces it
+            if (step := sonarr_sync.step_of(ladder, track)) > 0 or track.get("group"):
                 work.append((serie, show, ladder, e, track, step))
     return work
 
@@ -3000,14 +3010,20 @@ def upgrades_seen_file(name: str = "") -> Path:
     return sonarr_sync.DATA / (f"upgrades_seen-{name}.json" if name else "upgrades_seen.json")
 
 
+def file_label(track: dict) -> str:
+    return sonarr_sync.track_label(track) + (f" from {track['group']}" if track.get("group") else "")
+
+
 def upgrade_item(serie: dict, ladder: dict, e: dict, track: dict, step: int, best) -> dict | None:
-    """The episode as Upgrades lists it, when the service has it on an earlier step than its file."""
-    if not best or best[0] - 1 >= step:
+    """The episode as Upgrades lists it, when the service has it on an earlier step than its file (on the same step
+    too, for a file from another release group than ours)."""
+    if not best or best[0] - 1 > step or best[0] - 1 == step and not track.get("group"):
         return None
     number, have = best
+    label = file_label(track)
     return {"episodeId": e["id"], "tvdbId": serie["tvdbId"], "series": serie["title"], "ladder": ladder["name"],
             "sxxeyy": f"S{e['seasonNumber']:02}E{e['episodeNumber']:02}", "title": e.get("title"),
-            "file": sonarr_sync.track_label(track), "fileStep": step + 1 if step < len(ladder["steps"]) else None,
+            "file": label, "group": track.get("group"), "fileStep": step + 1 if step < len(ladder["steps"]) else None,
             "better": sonarr_sync.track_label(have), "betterStep": number}
 
 
@@ -3027,11 +3043,11 @@ def scan_upgrades_in(inst: dict | None, name: str) -> None:
         for w in work:
             e = w[3]
             hit = seen.get(str(e["id"]))
-            if keep_days and hit and hit.get("file") == e.get("episodeFileId") \
+            if keep_days and hit and hit.get("file") == e.get("episodeFileId") and hit.get("groups", "") == w[4].get("ours", "") \
                     and now - datetime.fromisoformat(hit["checked"]) < timedelta(days=keep_days):
                 upgrade_scan["done"] += 1  # answered lately, for this very file: not asked again
                 if hit.get("item"):
-                    found.append(hit["item"])
+                    found.append({**hit["item"], "file": file_label(w[4])})  # labelled as the file is labelled now
             else:
                 ask.setdefault(w[0]["id"], []).append(w)
         for chunks in ask.values():
@@ -3075,7 +3091,7 @@ def scan_upgrades_in(inst: dict | None, name: str) -> None:
                     if parts is None:
                         continue  # left out of the answer (not on the service now): asked again next time
                     item = upgrade_item(serie, ladder, e, track, step, sonarr_sync.climb(ladder, parts))
-                    seen[str(e["id"])] = {"checked": now.isoformat(), "file": e.get("episodeFileId"), "item": item}
+                    seen[str(e["id"])] = {"checked": now.isoformat(), "file": e.get("episodeFileId"), "item": item, "groups": track.get("ours", "")}
                     if item:
                         found.append(item)
         write_atomic(upgrades_seen_file(name), json.dumps(seen))
@@ -3086,6 +3102,25 @@ def scan_upgrades_in(inst: dict | None, name: str) -> None:
         print(f"Upgrades: Sonarr is unreachable: {no_credentials(err)}", flush=True)
     finally:
         upgrade_scan.update(running=False, series="")
+
+
+async def upgrade_groups(_):
+    """Settings, Upgrades: the release group each set-up series' downloads carry, grouped, and where it is set."""
+    config = read_config()
+
+    def found():
+        out, none = {}, []
+        for key, show in (config.get("series") or {}).items():
+            if not show.get("service"):
+                continue
+            tag, where = sonarr_sync.release_group_of(show, config)
+            if tag:
+                out.setdefault((tag, where), []).append(int(key))
+            else:
+                none.append(int(key))
+        return [{"group": t, "where": w, "series": ids} for (t, w), ids in sorted(out.items(), key=lambda x: -len(x[1]))], none
+    groups, none = await asyncio.to_thread(found)
+    return web.json_response({"groups": groups, "none": none})
 
 
 async def upgrades(request):
@@ -3880,6 +3915,7 @@ app.add_routes([
     web.post("/api/download", download),
     web.get("/api/missing", missing),
     web.get("/api/upgrades", upgrades),
+    web.get("/api/upgrades/groups", upgrade_groups),
     web.post(r"/api/upgrades/{action:check|stop}", upgrades_action),
     web.post("/api/probe", probe),
     web.get(r"/api/probe/{tvdb:\d+}", service_list),

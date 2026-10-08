@@ -1913,5 +1913,20 @@
  "no ladder chosen yet": "nenhuma escada escolhida ainda",
  "this series' ladder": "a escada desta série",
  "{0} has the address of another Sonarr here: each instance has its own": "{0} tem o endereço de outro Sonarr daqui: cada instância tem o seu",
- "✓ Reached: Sonarr {0}": "✓ Conectado: Sonarr {0}"
+ "✓ Reached: Sonarr {0}": "✓ Conectado: Sonarr {0}",
+ "1 series has no group and is left as it is: {0}. Set a Group Tag in Download options to include it.": "1 série não tem grupo e fica como está: {0}. Defina um Group Tag nas Opções de download para incluí-la.",
+ "A file from another group (a torrent, an older tool) is listed when the service has the episode on the same step, not only a better one.": "Um arquivo de outro grupo (um torrent, uma ferramenta antiga) é listado quando o serviço tem o episódio no mesmo degrau, não só em um melhor.",
+ "Could not look it up: {0}": "Não foi possível consultar: {0}",
+ "For 1 series: {0}.": "Para 1 série: {0}.",
+ "For every series.": "Para todas as séries.",
+ "For {0} series: {1}.": "Para {0} séries: {1}.",
+ "Looking up your release group…": "Buscando seu grupo de release…",
+ "No release group is set. Set a Group Tag in Settings, Download options: your downloads then carry it, and this switch can tell them apart.": "Nenhum grupo de release definido. Defina um Group Tag em Configurações, Opções de download: seus downloads passam a tê-lo, e esta opção consegue distingui-los.",
+ "Other release groups are replaced": "Outros grupos de release são substituídos",
+ "Release group": "Grupo de release",
+ "Replace files from other release groups": "Substituir arquivos de outros grupos",
+ "The group your downloads carry at the end of their file names (-unshackle), which Sonarr reads as the release group. Set it in Download options, Group Tag: Unshacklarr then knows it, and every download carries it.": "O grupo que seus downloads levam no fim do nome (-unshackle), que o Sonarr lê como grupo de release. Defina-o nas Opções de download, Group Tag: o Unshacklarr passa a conhecê-lo, e todo download o leva.",
+ "{0} series have no group and are left as they are: {1}. Set a Group Tag in Download options to include them.": "{0} séries não têm grupo e ficam como estão: {1}. Defina um Group Tag nas Opções de download para incluí-las.",
+ "no group": "sem grupo",
+ "from {0}": "de {0}"
 }

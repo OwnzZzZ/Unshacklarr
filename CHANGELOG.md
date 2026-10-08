@@ -13,6 +13,8 @@ Every change worth knowing, newest first. The format follows
   download, and imported into it. A series' page says which other Sonarr has it; its Episodes tab, Catch up
   and Upgrades switch to another Sonarr's episodes and download for it. Each one's ladder is chosen when it is
   added (a ladder, Off, or Same as each series): one saved without it is paused and said so. (#10, with mj23au)
+- **Replace files from other release groups.** In Settings › Upgrades: a file from another group is listed when the
+  service has the same quality, not only a better one. The group is your Group Tag, or `tag:` in unshackle.yaml. (#10, by mj23au)
 - **Upgrades you choose.** Settings › Upgrades: which series are checked, how long an answer is kept, and how far
   back. Answers are reused, and a service is asked about up to 10 episodes at once. (#10, by mj23au)
 

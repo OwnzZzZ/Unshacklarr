@@ -430,7 +430,8 @@ function upgradeSay(all) {
   const st = $("#ug-state"), days = Number(S.config.settings?.upgrade_recheck_days ?? 30);
   st.className = `sx-state${on ? " ok" : ""}`;
   st.querySelector("b").textContent = `${on} of ${all.length} series checked`;
-  st.querySelector("small").textContent = days ? (days === 1 ? "Answers kept 1 day" : `Answers kept ${days} days`) : "Asked every time";
+  st.querySelector("small").textContent = [days ? (days === 1 ? "Answers kept 1 day" : `Answers kept ${days} days`) : "Asked every time",
+    S.config.settings?.upgrade_other_groups ? "Other release groups are replaced" : ""].filter(Boolean).join(" · ");
 }
 $("#ug-find").oninput = renderUpgradeSeries;
 for (const [id, on] of [["#ug-all", true], ["#ug-none", false]]) $(id).onclick = () => {  // only the series the search shows
@@ -439,3 +440,27 @@ for (const [id, on] of [["#ug-all", true], ["#ug-none", false]]) $(id).onclick =
     .forEach((s) => { if (on) delete s.conf.skip_upgrades; else s.conf.skip_upgrades = true; });
   dirty(); renderUpgradeSeries();
 };
+
+/* Settings, Upgrades, Release group: the switch, and the group each series' downloads carry (asked of the server) */
+let ugGroups = null;
+async function renderUpgradeGroups(fetch = true) {
+  const on = !!S.config.settings?.upgrade_other_groups, box = $("#ug-groups");
+  $("#ug-other").checked = on;
+  if (fetch || !ugGroups) {
+    box.replaceChildren(el("small", { className: "muted", textContent: "Looking up your release group…" }));
+    try { ugGroups = await api("/api/upgrades/groups"); } catch (e) { box.replaceChildren(el("small", { className: "bad", textContent: `Could not look it up: ${e.message}` })); return; }
+  }
+  const name = Object.fromEntries(S.series.map((s) => [s.tvdbId, s.title])), { groups, none } = ugGroups;
+  const all = groups.length + (none.length ? 1 : 0) > 1;
+  $("#ug-other").disabled = !groups.length && !on;
+  const listed = (ids) => ids.map((id) => name[id] || id).slice(0, 6).join(", ") + (ids.length > 6 ? "…" : "");
+  box.replaceChildren(...groups.map((g) => el("div", { className: "ug-group" },
+    el("span", {}, el("b", { textContent: g.group }), el("small", { textContent: ` · ${g.where}` })),
+    el("small", { textContent: !all ? "For every series." : g.series.length === 1 ? `For 1 series: ${listed(g.series)}.` : `For ${g.series.length} series: ${listed(g.series)}.` }))),
+    ...(none.length ? [el("div", { className: "ug-group warn" },
+      el("small", { textContent: !groups.length
+        ? "No release group is set. Set a Group Tag in Settings, Download options: your downloads then carry it, and this switch can tell them apart."
+        : none.length === 1 ? `1 series has no group and is left as it is: ${listed(none)}. Set a Group Tag in Download options to include it.`
+        : `${none.length} series have no group and are left as they are: ${listed(none)}. Set a Group Tag in Download options to include them.` }))] : []));
+}
+$("#ug-other").onchange = (e) => { S.config.settings.upgrade_other_groups = e.target.checked; dirty(); renderUpgradeSeries(); renderUpgradeGroups(false); };

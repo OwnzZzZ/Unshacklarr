@@ -147,6 +147,7 @@ SETTINGS_DEFAULTS = {
     "upgrade_days": 30,          # for so many days after its download, checked once a day
     "upgrade_recheck_days": 30,  # Upgrades: an episode's last answer is kept this long before it is asked again (0: always ask)
     "upgrade_max_age_years": 0,  # Upgrades: only episodes aired in the last N years (0: all)
+    "upgrade_other_groups": False,  # Upgrades: a file from another release group than ours is replaced by the same step too
     "subs_accept": "",           # and one of these subtitle languages, forced ones aside ("fr"); empty: not checked
     "debug": False,              # Activity's output says more: Unshackle's debug log, every call to Sonarr
     "download_only": False,      # downloaded and tidied, never handed to Sonarr: imported by hand (a series can say otherwise)
@@ -1140,6 +1141,32 @@ def no_cdm(tag: str, config: dict | None = None) -> str:
             "Pick one in Settings, CDM, or No CDM if it has no DRM")
 
 
+def release_group_of(show: dict, config: dict) -> tuple[str, str]:
+    """The release group the series' downloads carry, and where it is set: the Group Tag of its download options
+    (series, then service, then every series), else the tag under dl: in its Unshackle's unshackle.yaml. ("", "") when
+    none is set or its Unshackle can't be asked. serve's /api/config does not report unshackle.yaml's own tag: (nor its
+    tag_rules), so a group set only there is not seen: set it in Download options."""
+    dl = stacked(show, config)[0]
+    if tag := str(dl.get("--tag") or dl.get("tag") or "").strip():  # saved by its flag, as the page adds it
+        return tag, "Download options"
+    try:
+        backend = backend_for(show["service"], config)
+        tag = str(options.from_dl_config(backend.dl_config(), show["service"]).get("tag") or "").strip()
+    except (UnshackleError, requests.RequestException, ValueError):
+        return "", ""
+    if tag:
+        return tag, f"{backend.name or 'Unshackle'}'s unshackle.yaml (dl:)"
+    # its own tag: (serve's /api/config leaves it out): read from the file, when this is the Unshackle whose folder is here
+    if backend is UNSHACKLE and (folder := str(SETTINGS.get("unshackle_config_dir") or "")):
+        try:
+            own = yaml.safe_load((Path(folder) / "unshackle.yaml").read_text(encoding="utf8")) or {}
+        except (OSError, yaml.YAMLError):
+            own = {}
+        if isinstance(own, dict) and (tag := str(own.get("tag") or "").strip()):
+            return tag, "unshackle.yaml (tag:)"
+    return "", ""
+
+
 def download_request(show: dict, config: dict, service_sxxeyy: str, out: Path) -> dict:
     """The same download, as unshackle serve's /api/download takes it."""
     if why := no_cdm(show["service"], config):
@@ -1463,7 +1490,8 @@ def step_label(step: dict) -> str:
 
 
 def track_label(t: dict) -> str:
-    return f"{eq_height(t) or '?'}p {t.get('codec') or '?'} {t.get('range') or '?'}"
+    layers = t.get("layers") or []  # a hybrid file: "DV + HDR10P", not DV alone
+    return f"{eq_height(t) or '?'}p {t.get('codec') or '?'} {' + '.join(layers) if len(layers) > 1 else t.get('range') or '?'}"
 
 
 def apply_ladder(show: dict, config: dict, request: dict) -> None:
@@ -1846,7 +1874,7 @@ def sync_instance(inst: dict, config: dict, settings: dict) -> int:
     if unset_ladder(inst):  # told once, then nothing downloads for it until a ladder is chosen
         if first_warning(f"sonarr-unset:{inst['name']}"):
             notify(settings, "warning", f"Sonarr {inst['name']} has no quality ladder chosen",
-                   f"Nothing is downloaded for it until you choose one in Settings, Sonarr: a ladder, Off, or Same as each series.")
+                   "Nothing is downloaded for it until you choose one in Settings, Sonarr: a ladder, Off, or Same as each series.")
         return 0
     with on_instance(inst):
         try:
