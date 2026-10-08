@@ -1985,5 +1985,11 @@
  "Interface": "Interface",
  "Language, no spoilers": "Idioma, sem spoilers",
  "Where you watch, and the time zone that release times and syncs follow.": "Onde você assiste e o fuso horário seguido pelos horários de lançamento e sincronizações.",
- "found by its title · {0}": "encontrada pelo título · {0}"
+ "found by its title · {0}": "encontrada pelo título · {0}",
+ "Diagnostic": "Diagnóstico",
+ "A file to attach to a GitHub issue: versions, settings and this attempt's log, without passwords, keys or tokens": "Um arquivo para anexar a uma issue do GitHub: versões, configurações e o log desta tentativa, sem senhas, chaves nem tokens",
+ "Diagnostic downloaded: check it, then attach it to the issue": "Diagnóstico baixado: confira e anexe à issue",
+ "Failures only": "Só falhas",
+ "No such attempt": "Tentativa não encontrada",
+ "What is sent for this series' episodes. The bell in the page always keeps everything.": "O que é enviado para os episódios desta série. O sino da página sempre guarda tudo."
 }

@@ -2002,5 +2002,11 @@
  "Interface": "Интерфейс",
  "Language, no spoilers": "Язык, без спойлеров",
  "Where you watch, and the time zone that release times and syncs follow.": "Где вы смотрите и часовой пояс для времени выхода и синхронизаций.",
- "found by its title · {0}": "найдено по названию · {0}"
+ "found by its title · {0}": "найдено по названию · {0}",
+ "Diagnostic": "Диагностика",
+ "A file to attach to a GitHub issue: versions, settings and this attempt's log, without passwords, keys or tokens": "Файл для issue на GitHub: версии, настройки и журнал этой попытки, без паролей, ключей и токенов",
+ "Diagnostic downloaded: check it, then attach it to the issue": "Диагностика скачана: проверьте её и приложите к issue",
+ "Failures only": "Только ошибки",
+ "No such attempt": "Такой попытки нет",
+ "What is sent for this series' episodes. The bell in the page always keeps everything.": "Что отправляется по эпизодам этого сериала. Колокольчик на странице всегда хранит всё."
 }

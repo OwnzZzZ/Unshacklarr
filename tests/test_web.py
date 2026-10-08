@@ -1600,3 +1600,29 @@ def test_an_episode_only_link_gives_way_to_the_series_found_by_its_title(tmp_pat
     series_link = {"service": "HMAX", "url": "https://play.hbomax.com/show/x", "country": "AU"}
     use(Backend([{"title": "War", "url": "/show/abc"}]))
     assert web.searched_in_place([series_link], 55) == [series_link]  # a series link already: nothing searched
+
+
+def test_health_answers_without_login_and_says_only_yes_or_no(tmp_path, monkeypatch):
+    import asyncio
+    from aiohttp.test_utils import TestClient, TestServer
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    web.health.update(sonarr={"ok": False, "error": "http://secret@sonarr:8989 refused"}, unshackle={"ok": True})
+
+    async def go():
+        async with TestClient(TestServer(web.app)) as client:
+            plain, strict = await client.get("/health"), await client.get("/health?strict=1")
+            return plain.status, await plain.json(), strict.status
+
+    status, body, strict = asyncio.run(go())
+    assert status == 200 and strict == 503 and body == {"ok": False, "unshacklarr": True, "sonarr": False, "unshackle": True}
+
+
+def test_a_diagnostic_keeps_no_token_key_or_address():
+    from unshacklarr import web
+    text = web.scrubbed("GET https://api.netflix.com/license?playbackContextId=abc123&esn=NFCDIE key=" + "a" * 40 + " mail me@example.com")
+    assert "playbackContextId" not in text and "a" * 40 not in text and "me@example.com" not in text
+    assert "https://api.netflix.com/license?…" in text

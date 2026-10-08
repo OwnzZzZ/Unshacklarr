@@ -2010,5 +2010,11 @@
  "Interface": "界面",
  "Language, no spoilers": "语言、防剧透",
  "Where you watch, and the time zone that release times and syncs follow.": "你的观看地区，以及发布时间和同步所遵循的时区。",
- "found by its title · {0}": "按标题找到 · {0}"
+ "found by its title · {0}": "按标题找到 · {0}",
+ "Diagnostic": "诊断",
+ "A file to attach to a GitHub issue: versions, settings and this attempt's log, without passwords, keys or tokens": "附加到 GitHub Issue 的文件：版本、设置和本次尝试的日志，不含密码、密钥和令牌",
+ "Diagnostic downloaded: check it, then attach it to the issue": "诊断已下载：检查后附加到 Issue",
+ "Failures only": "仅失败",
+ "No such attempt": "没有这次尝试",
+ "What is sent for this series' episodes. The bell in the page always keeps everything.": "为该剧集的剧集发送的内容。页面中的铃铛始终保留全部内容。"
 }

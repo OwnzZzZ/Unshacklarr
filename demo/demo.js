@@ -254,6 +254,10 @@
       return realFetch(path.startsWith("/") ? path.slice(1) : input, opts);  // the page's own files, next to it
     }
     await new Promise((r) => setTimeout(r, 120 + Math.random() * 200));  // a server's pace
+    if (/\/api\/runs\/[^/]+\/diagnostic$/.test(path)) {  // a made-up file, as the server would give it
+      return new Response("# Unshacklarr diagnostic (demo)\n\nIn the real app: versions, the series' settings and the settings (secrets masked),\n"
+        + "then the attempt's card and the end of its log, with tokens, keys and e-mail addresses removed.\n", { headers: { "Content-Type": "text/markdown" } });
+    }
     try {
       const body = opts.body ? JSON.parse(opts.body) : null;
       return new Response(JSON.stringify(route((opts.method || "GET").toUpperCase(), path, body)), { headers: { "Content-Type": "application/json" } });

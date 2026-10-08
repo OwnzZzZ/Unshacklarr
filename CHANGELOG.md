@@ -15,6 +15,10 @@ Every change worth knowing, newest first. The format follows
 - **Remote backup.** Your backups, encrypted, on a WebDAV folder or an S3 bucket. In Settings › Account.
 - **No spoilers.** Episode titles stay blurred until you click them. In Settings › Interface.
 - **What's new.** Click the version in the header to see what changed in each version.
+- **Notifications per series.** All, failures only, or none, on the series page. The bell keeps everything.
+- **A diagnostic to attach to an issue.** In Activity, on an attempt: versions, settings and its log, without
+  passwords, keys or tokens.
+- **A health check.** `/health` for Docker and Uptime Kuma; the image checks itself.
 
 The new options are off until you turn them on.
 

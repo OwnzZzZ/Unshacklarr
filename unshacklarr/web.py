@@ -684,6 +684,8 @@ async def save_config(request):
             series[int(key)]["fallback_profiles"] = ", ".join(dict.fromkeys(profiles))
         if (alt := show.get("fallback") or {}) and (alt.get("service") or alt.get("title")):
             series[int(key)]["fallback"] = check_fallback(alt, known, dl_specs, str(key))
+        if show.get("notify") in ("failures", "none"):  # absent: every notification, as the settings say
+            series[int(key)]["notify"] = show["notify"]
         if isinstance(show.get("spoiler_free"), bool):  # absent: the settings say
             series[int(key)]["spoiler_free"] = show["spoiler_free"]
         if isinstance(show.get("download_only"), bool):  # absent: the settings say
@@ -1511,6 +1513,16 @@ def check_health() -> None:
             sonarr_sync.notify(settings, "error", f"{label} is unreachable", f"{state.get('error')}\nDownloads wait until it is back.")
         elif was_down and state["ok"]:
             sonarr_sync.notify(settings, "success", f"{label} is back", "Downloads carry on.")
+
+
+async def health_check(request):
+    """For Docker's HEALTHCHECK, Uptime Kuma and the like, no login: Unshacklarr answers, and whether Sonarr and
+    Unshackle did at the last check (every few minutes, not asked again here). 200 while Unshacklarr runs; with
+    ?strict=1, 503 when Sonarr or Unshackle is down. Only yes or no: no address, no error text."""
+    parts = {name: health[name].get("ok") for name in ("sonarr", "unshackle")}
+    down = any(ok is False for ok in parts.values())
+    return web.json_response({"ok": not down, "unshacklarr": True, **parts},
+                             status=503 if down and request.query.get("strict") else 200)
 
 
 async def watch_health():
@@ -3142,6 +3154,46 @@ async def missing(request):
 
 
 RUN_ID = re.compile(r"\d{8}-\d{6}-\d{6}-\d+-S\d+E\d+")
+# What a diagnostic never shows: a URL's query (tokens, license contexts), long keys and hashes, e-mail addresses
+SECRET_LIKE = [(re.compile(r"(https?://[^\s\"'?]+)\?[^\s\"']+"), r"\1?…"), (re.compile(r"[A-Za-z0-9_+/=-]{32,}"), "…"),
+               (re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+"), "…@…")]
+
+
+def scrubbed(text: str) -> str:
+    text = no_credentials(text)
+    for pattern, by in SECRET_LIKE:
+        text = pattern.sub(by, text)
+    return text
+
+
+def diagnostic(run_id: str) -> str:
+    """One attempt, as an issue needs it: versions, the series' settings and the settings (secrets masked, as the
+    page gets them), what was up, then the attempt's card and the end of its log, scrubbed of tokens and keys."""
+    card = json.loads((sonarr_sync.RUNS_DIR / f"{run_id}.json").read_text())
+    log = sonarr_sync.RUNS_DIR / f"{run_id}.log"
+    tail = log.read_text(encoding="utf8", errors="replace").splitlines()[-300:] if log.exists() else []
+    config = public_config(read_config())
+    show = config["series"].get(card.get("tvdbId")) or config["series"].get(str(card.get("tvdbId"))) or {}
+    settings = {k: v for k, v in config["settings"].items() if not k.endswith("_url") and k not in ("proxy_auth_from",)}
+    parts = [
+        f"# Unshacklarr diagnostic: {card.get('series')} {card.get('sxxeyy')}",
+        f"Unshacklarr {__version__} · Unshackle {health['unshackle'].get('version') or '?'} · Python {sys.version.split()[0]}",
+        f"Sonarr up: {health['sonarr'].get('ok')} · Unshackle up: {health['unshackle'].get('ok')}",
+        "## The series' settings", "```json", json.dumps(show, indent=1, ensure_ascii=False), "```",
+        "## Settings", "```json", json.dumps(settings, indent=1, ensure_ascii=False), "```",
+        "## The attempt", "```json", json.dumps({k: v for k, v in card.items() if k != "live"}, indent=1, ensure_ascii=False), "```",
+        f"## Its log (last {len(tail)} lines)", "```", *tail, "```",
+    ]
+    return scrubbed("\n".join(parts)) + "\n"
+
+
+async def run_diagnostic(request):
+    run_id = request.match_info["run_id"]
+    if not RUN_ID.fullmatch(run_id) or not (sonarr_sync.RUNS_DIR / f"{run_id}.json").exists():
+        raise web.HTTPNotFound(text="No such attempt")
+    text = await asyncio.to_thread(diagnostic, run_id)
+    return web.Response(text=text, content_type="text/markdown",
+                        headers={"Content-Disposition": f'attachment; filename="unshacklarr-diagnostic-{run_id}.md"'})
 
 
 cards_read: tuple[int, list[dict]] = (0, [])
@@ -3333,7 +3385,7 @@ STATIC = {"/apple-touch-icon.png": "image/png", "/icon-192.png": "image/png", "/
           "/xterm.js": "text/javascript", "/xterm-fit.js": "text/javascript", "/xterm.css": "text/css"}  # Activity's terminal, served here: no CDN
 STATIC |= {f"/i18n/{f.name}": "application/json" for f in (HERE / "static" / "i18n").glob("*.json")}  # the page's languages, the login's too
 PAGE_FILES = {"/app.css": "text/css", **{f"/js/{f.name}": "text/javascript" for f in (HERE / "static" / "js").glob("*.js")}}
-OPEN_PATHS = {"/", "/api/session", "/api/login", "/api/logout", *STATIC, *PAGE_FILES}
+OPEN_PATHS = {"/", "/health", "/api/session", "/api/login", "/api/logout", *STATIC, *PAGE_FILES}
 SETUP_PATHS = {"/api/setup", "/api/setup/found", "/api/setup/backups", "/api/setup/restore", "/api/sonarr/test", "/api/unshackle/test"}  # open only until a password exists
 failed_logins: dict[str, list[float]] = {}
 
@@ -3987,6 +4039,7 @@ app.add_routes([
     web.get("/api/networks", networks),
     web.get("/api/schedule", schedule),
     web.get("/api/calendar", calendar),
+    web.get("/health", health_check),
     web.get("/api/session", session),
     web.post("/api/login", login),
     web.post("/api/logout", logout),
@@ -4025,6 +4078,7 @@ app.add_routes([
     web.post(r"/api/queue/{episode_id:\d+}/remove", unqueue),
     web.post(r"/api/queue/{episode_id:\d+}/add", requeue),
     web.delete(r"/api/runs/{run_id}", delete_run),
+    web.get(r"/api/runs/{run_id}/diagnostic", run_diagnostic),
     web.post(r"/api/runs/{run_id}/input", answer_run),
     web.post("/api/runs/clear", clear_runs),
     web.post("/api/password", change_password),

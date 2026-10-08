@@ -557,8 +557,20 @@ function runActs(c) {
     live && c.job_id ? el("button", { className: "btn small danger", textContent: "Stop", onclick: (e) => stopRun(c, e.target) }) : "",
     !live && c.outcome === "kept" ? el("button", { className: "btn small primary", textContent: "Import anyway", onclick: (e) => importKept(c, e.target) }) : "",
     !live && c.episodeId && c.outcome !== "downloaded" && c.outcome !== "kept" ? el("button", { className: "btn small primary", textContent: "Retry", onclick: (e) => retryRun(c, e.target) }) : "",
+    !live ? el("button", { className: "btn small", textContent: "Diagnostic", title: "A file to attach to a GitHub issue: versions, settings and this attempt's log, without passwords, keys or tokens",
+      onclick: () => downloadDiagnostic(c) }) : "",
     !live ? el("button", { className: "btn small", textContent: "Delete", onclick: (e) => deleteRun(c, e.target) }) : "",
   ].filter(Boolean);
+}
+async function downloadDiagnostic(c) {
+  try {
+    const r = await fetch(`/api/runs/${encodeURIComponent(c.id)}/diagnostic`);
+    if (!r.ok) throw new Error(await r.text() || r.statusText);
+    const a = el("a", { href: URL.createObjectURL(await r.blob()), download: `unshacklarr-diagnostic-${c.id}.md` });
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast("Diagnostic downloaded: check it, then attach it to the issue");
+  } catch (e) { toast(e.message, true); }
 }
 /* A track as serve names it ("Part 1 · audio fr 2.0"): an icon for its kind, the kind, then what it is in chips. */
 const TRACK_KINDS = {

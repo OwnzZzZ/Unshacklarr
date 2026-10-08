@@ -1998,5 +1998,11 @@
  "Interface": "Interfaccia",
  "Language, no spoilers": "Lingua, niente spoiler",
  "Where you watch, and the time zone that release times and syncs follow.": "Dove guardi e il fuso orario seguito dagli orari di uscita e dalle sincronizzazioni.",
- "found by its title · {0}": "trovata dal titolo · {0}"
+ "found by its title · {0}": "trovata dal titolo · {0}",
+ "Diagnostic": "Diagnostica",
+ "A file to attach to a GitHub issue: versions, settings and this attempt's log, without passwords, keys or tokens": "Un file da allegare a una issue GitHub: versioni, impostazioni e log di questo tentativo, senza password, chiavi né token",
+ "Diagnostic downloaded: check it, then attach it to the issue": "Diagnostica scaricata: controllala, poi allegala alla issue",
+ "Failures only": "Solo errori",
+ "No such attempt": "Tentativo inesistente",
+ "What is sent for this series' episodes. The bell in the page always keeps everything.": "Cosa viene inviato per gli episodi di questa serie. La campanella della pagina conserva sempre tutto."
 }

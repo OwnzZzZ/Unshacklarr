@@ -113,6 +113,7 @@
  "A download of this episode already waits in the downloads folder": [],
  "A download or the sync fails": [],
  "A downloaded episode will look like this.": [],
+ "A file to attach to a GitHub issue: versions, settings and this attempt's log, without passwords, keys or tokens": [],
  "A first start of Unshackle takes a few seconds": [],
  "A folder in it is allowed: my-bucket/unshacklarr.": [],
  "A full path, from / (or a drive letter), without ..": [],
@@ -553,6 +554,8 @@
  "Device name": [],
  "Device type": [],
  "Devices": [],
+ "Diagnostic": [],
+ "Diagnostic downloaded: check it, then attach it to the issue": [],
  "Disable folder creation for TV Shows.": [],
  "Disable the source tag from the output file name and path.": [],
  "Discard": [],
@@ -726,6 +729,7 @@
   "label"
  ],
  "Failing": [],
+ "Failures only": [],
  "Fair": [],
  "Fallback service": [],
  "File": [],
@@ -1137,6 +1141,7 @@
  "No streaming in {0}": [
   "net.country"
  ],
+ "No such attempt": [],
  "No such cookie file": [],
  "No such device": [],
  "No such download": [],
@@ -1745,6 +1750,10 @@
   "Path(c['path']).name",
   "c['quality']['quality']['name']"
  ],
+ "Sonarr up: {0} · Unshackle up: {1}": [
+  "health['sonarr'].get('ok')",
+  "health['unshackle'].get('ok')"
+ ],
  "Sonarr's address in your browser": [],
  "Sonarr's calendar": [],
  "Sonarr's episode = the service's episode, comma-separated. Takes priority over the settings above. Add .2 to take only part 2 of a split episode.": [],
@@ -2217,6 +2226,11 @@
  "Unshacklarr {0} is out: see what's new": [
   "data.update.version"
  ],
+ "Unshacklarr {0} · Unshackle {1} · Python {2}": [
+  "__version__",
+  "health['unshackle'].get('version') or '?'",
+  "sys.version.split()[0]"
+ ],
  "Unshacklarr · Today at {0}": [
   "now"
  ],
@@ -2326,6 +2340,7 @@
  "What downloads the episodes": [],
  "What happens, warnings and errors": [],
  "What is kept": [],
+ "What is sent for this series' episodes. The bell in the page always keeps everything.": [],
  "What to get": [],
  "What to send, and when": [],
  "What {0} gets": [
@@ -2382,6 +2397,7 @@
  "Your region": [],
  "Your settings and series stay as they are. Every device must log in again.": [],
  "Your user key is shown on pushover.net once you log in. Create an application there to get the API token.": [],
+ "```json": [],
  "a week before": [],
  "action needed": [],
  "aired {0}": [
@@ -2415,6 +2431,9 @@
   "request['title_id']",
   "wanted",
   "request['output_dir']"
+ ],
+ "attachment; filename=\"unshacklarr-diagnostic-{0}.md\"": [
+  "run_id"
  ],
  "audio of {0}: {1} (accepted: {2})": [
   "f.name",

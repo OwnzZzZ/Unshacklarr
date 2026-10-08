@@ -275,6 +275,17 @@ function fillQualityImport(conf) {
   $("#d-import").value = conf.download_only === true ? "only" : conf.download_only === false ? "import" : "";
   importChips();
   spoilerChips(conf);
+  notifyChips(conf);
+}
+/* What is sent for this series: every notification, its failures only, or nothing (the bell keeps all). */
+function notifyChips(conf) {
+  const opts = [["", "All"], ["failures", "Failures only"], ["none", "None"]];
+  $("#d-notify-seg").replaceChildren(...opts.map(([v, label]) => el("button", { type: "button", role: "radio", textContent: label,
+    ariaChecked: String((conf.notify || "") === v), onclick: () => {
+      if (v) conf.notify = v; else delete conf.notify;
+      notifyChips(conf);
+      dirty();
+    } })));
 }
 /* Episode titles: Default (the settings' No spoilers), hidden or shown, for this series. */
 function spoilerChips(conf) {

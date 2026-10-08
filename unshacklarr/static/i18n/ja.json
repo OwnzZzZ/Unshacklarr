@@ -2005,5 +2005,11 @@
  "Interface": "インターフェース",
  "Language, no spoilers": "言語、ネタバレ防止",
  "Where you watch, and the time zone that release times and syncs follow.": "視聴する国と、公開時刻と同期が従うタイムゾーン。",
- "found by its title · {0}": "タイトルで検索 · {0}"
+ "found by its title · {0}": "タイトルで検索 · {0}",
+ "Diagnostic": "診断",
+ "A file to attach to a GitHub issue: versions, settings and this attempt's log, without passwords, keys or tokens": "GitHub の Issue に添付するファイル：バージョン、設定、この試行のログ。パスワード、キー、トークンは含みません",
+ "Diagnostic downloaded: check it, then attach it to the issue": "診断をダウンロードしました。確認してから Issue に添付してください",
+ "Failures only": "失敗のみ",
+ "No such attempt": "その試行は見つかりません",
+ "What is sent for this series' episodes. The bell in the page always keeps everything.": "このシリーズのエピソードで送信する内容。ページのベルには常にすべて残ります。"
 }

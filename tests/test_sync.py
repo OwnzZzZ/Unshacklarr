@@ -1692,3 +1692,13 @@ def test_the_preferred_audio_is_added_to_the_file_it_has(tmp_path, monkeypatch):
 
     monkeypatch.setattr(sync, "sonarr_get", lambda path, **p: {"path": "/tv/Show/Gone.mkv"})
     assert sync.add_track(205, "fr") is False  # out of reach here: downloaded again as before
+
+
+def test_a_series_can_send_only_its_failures_or_nothing(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    sent, boxed = [], []
+    monkeypatch.setattr(sync, "notify", lambda settings, level, title, message, *a, **k: sent.append(level) or True)
+    monkeypatch.setattr(sync, "inbox_add", lambda level, title, message, action=None, batch=None: boxed.append(level))
+    for mode, level in (("failures", "success"), ("failures", "error"), ("none", "error"), (None, "success")):
+        sync.notify_series({"notify": mode} if mode else {}, {}, level, "t", "m")
+    assert sent == ["error", "success"] and boxed == ["success", "error"]  # the bell keeps what is not sent

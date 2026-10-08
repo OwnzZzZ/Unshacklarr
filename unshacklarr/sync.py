@@ -431,6 +431,19 @@ def deliver(settings: dict, level: str, title: str, message: str, details: dict 
     return any(t["ok"] for t in to if t["app"] != "This device")
 
 
+def notify_series(show: dict | None, settings: dict, level: str, title: str, message: str, *args, **kwargs) -> bool:
+    """An episode's notification, as its series asks (notify: all, failures or none): the bell keeps them all, only
+    what the series lets through goes out."""
+    mode = (show or {}).get("notify") or "all"
+    if mode == "none" or (mode == "failures" and level != "error"):
+        try:
+            inbox_add(level, title, message, kwargs.get("action"), kwargs.get("batch"))
+        except OSError as e:
+            print(f"Inbox not written: {e}", file=sys.stderr)
+        return False
+    return notify(settings, level, title, message, *args, **kwargs)
+
+
 def notify(settings: dict, level: str, title: str, message: str, action: dict | None = None, batch: str | None = None,
            details: dict | None = None) -> bool:
     try:
@@ -1751,7 +1764,7 @@ def learn_release(ep: dict, show: dict, settings: dict) -> None:
         return
     on_release_learned(tvdb, found["time"], found["day"])
     when = {0: "the day it airs", 1: "the day after"}.get(found["day"], f"{-found['day']} days before")
-    notify(settings, "success", f"Release time set: {ep['series']['title']}",
+    notify_series(show, settings, "success", f"Release time set: {ep['series']['title']}",
            f"{found['episodes']} episodes came out on {show['service']} at {found['time']}, {when}. New episodes are now downloaded at that time. "
            "You can change it on the series page.")
 
@@ -1970,7 +1983,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                 run.say(f"{label}: downloaded but not imported (download only). It waits in {where}")
                 run.step("done")
                 run.finish("kept", "Download only: not imported", f"The download waits in {where}")
-                notify(settings, "success", f"Downloaded, not imported: {label}",
+                notify_series(show, settings, "success", f"Downloaded, not imported: {label}",
                        f"Download only: the file waits in {where}. Import or delete it in Activity, Waiting in downloads.",
                        batch=batch, details=episode_details(ep, show, run))
                 return
@@ -1980,7 +1993,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
             # Deliberate: the library keeps its better (or equal) file; ours waits in the downloads folder.
             run.say(f"{label}: not imported, the library keeps its file: {e}")
             run.finish("kept", f"Not better: {e}", f"The download waits in {seen_by('sonarr_downloads', out)}")
-            notify(settings, "warning", f"Kept the existing file: {label}",
+            notify_series(show, settings, "warning", f"Kept the existing file: {label}",
                    f"Not better: {e}.\nThe new download is in {seen_by('sonarr_downloads', out)}; delete it or import it by hand.", batch=batch)
             return
         except (RuntimeError, subprocess.CalledProcessError, requests.RequestException) as e:
@@ -1989,7 +2002,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                 failures += 1
             run.say(f"{label}: {e}")
             run.finish("failed", str(e), f"The files are in {seen_by('sonarr_downloads', out)}")
-            notify(settings, "error", f"Not imported: {label}", f"{e}\nThe files are in {seen_by('sonarr_downloads', out)}.", batch=batch)
+            notify_series(show, settings, "error", f"Not imported: {label}", f"{e}\nThe files are in {seen_by('sonarr_downloads', out)}.", batch=batch)
             return
         if not videos_in(out):
             shutil.rmtree(out, ignore_errors=True)  # Sonarr moved the file: nothing left to keep
@@ -2000,7 +2013,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
         run.step("done")
         imported_at[ep["id"]] = time.monotonic()
         run.finish("downloaded", "", "Imported by Sonarr")
-        notify(settings, "success", f"Downloaded: {label}", "Imported by Sonarr.", batch=batch, details=episode_details(ep, show, run))
+        notify_series(show, settings, "success", f"Downloaded: {label}", "Imported by Sonarr.", batch=batch, details=episode_details(ep, show, run))
 
     def finishing_loop() -> None:
         """One episode at a time, in the order they were downloaded, while the next ones download."""
@@ -2091,7 +2104,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                     run.say(f"{label}: {why}, not downloaded")
                     run.finish("unavailable", why)
                     if first_warning(f"{out.name}:{e.kind}"):
-                        notify(settings, "warning", title,
+                        notify_series(show, settings, "warning", title,
                                f"{why}. The episode is tried again at each sync, and downloaded when one is there.", batch=batch, details=episode_details(ep, show))
 
                 def ask(wanted: str, profile: str = "", use: dict | None = None) -> None:
@@ -2124,7 +2137,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                         if not wrong:
                             why = f"{service_sxxeyy} on {show['service']} is another episode, by its title"
                             run.say(f"{label}: {why}, not downloaded")
-                            tell_failure(run, why, lambda: notify(settings, "error", f"Failed: {label}", f"{why}.\nCheck its Numbering, then try again.",
+                            tell_failure(run, why, lambda: notify_series(show, settings, "error", f"Failed: {label}", f"{why}.\nCheck its Numbering, then try again.",
                                                                   batch=batch))
                             with counted:
                                 failures += 1
@@ -2224,7 +2237,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                         failures += 1
                     where = seen_by("sonarr_downloads", out)
                     run.say(f"\r\n\x1b[31m{label}: Unshackle FAILED after {parts_in(out)} part(s)\x1b[0m\n{error}".replace("\n", "\r\n"))
-                    tell_failure(run, cause, lambda: notify(settings, "error", f"Failed: {label}", f"{cause[:1500]}\nThe parts that came are in {where}.", batch=batch, details=episode_details(ep, show)))
+                    tell_failure(run, cause, lambda: notify_series(show, settings, "error", f"Failed: {label}", f"{cause[:1500]}\nThe parts that came are in {where}.", batch=batch, details=episode_details(ep, show)))
                     run.finish("failed", cause, f"The parts that came are in {where}")
                     continue
                 if not videos_in(out):
@@ -2235,10 +2248,10 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                         run.say(f"\r\n\x1b[31m{label}: Unshackle FAILED\x1b[0m\n{error}".replace("\n", "\r\n"))
                         if LOGIN.search(cause):
                             hint = f"{show['service']} refused Unshackle: its cookies may have expired. Update them in Settings, Cookies."
-                            tell_failure(run, cause, lambda: notify(settings, "error", f"Login failed on {show['service']}: {label}", f"{hint}\n{cause[:1200]}", batch=batch))
+                            tell_failure(run, cause, lambda: notify_series(show, settings, "error", f"Login failed on {show['service']}: {label}", f"{hint}\n{cause[:1200]}", batch=batch))
                             run.finish("failed", cause, hint)
                         else:
-                            tell_failure(run, cause, lambda: notify(settings, "error", f"Failed: {label}", f"{cause[:1500]}\nThe history in Activity has Unshackle's full output.", batch=batch, details=episode_details(ep, show)))
+                            tell_failure(run, cause, lambda: notify_series(show, settings, "error", f"Failed: {label}", f"{cause[:1500]}\nThe history in Activity has Unshackle's full output.", batch=batch, details=episode_details(ep, show)))
                             run.finish("failed", cause)
                     else:
                         run.say(f"{label}: not on {show['service']} yet{missing}")
@@ -2246,7 +2259,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                         note_availability(ep, out, False, datetime.now(timezone.utc))
                         aired = ep.get("airDateUtc")
                         if LATE_AFTER and aired and datetime.now(timezone.utc) - parse_time(aired) > LATE_AFTER and first_warning(out.name):
-                            notify(settings, "warning", f"Still unavailable: {label}", f"Aired {aired[:10]}, still not on {show['service']}{missing}.", batch=batch, details=episode_details(ep, show))
+                            notify_series(show, settings, "warning", f"Still unavailable: {label}", f"Aired {aired[:10]}, still not on {show['service']}{missing}.", batch=batch, details=episode_details(ep, show))
                     continue
 
                 # Downloaded: the rest (parts, name, audio, Sonarr) goes on aside, the next download starts now
@@ -2259,7 +2272,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                 print(f"{label}: {type(e).__name__}: {e}", flush=True)
                 if run and not run.card.get("ended"):
                     run.finish("failed", f"{type(e).__name__}: {e}")
-                notify(settings, "error", f"Failed: {label}", f"{type(e).__name__}: {e}", batch=batch)
+                notify_series(show, settings, "error", f"Failed: {label}", f"{type(e).__name__}: {e}", batch=batch)
             finally:
                 if not handed:
                     lock.__exit__(None, None, None)
