@@ -25,6 +25,8 @@ The new options are off until you turn them on.
 ### Fixed
 
 - **A series' link found by its title** when its service is only linked by an episode (HBO Max). (#12, by mj23au)
+- **An import Sonarr confirms late** is no longer failed: Unshacklarr waits longer, checks whether Sonarr did it,
+  and asks again. (#10, by mj23au)
 - **No more "may be an episode" warning** for a series that is simply new. (#12, reported by mj23au)
 
 ## [1.4.0] - 2026-10-07

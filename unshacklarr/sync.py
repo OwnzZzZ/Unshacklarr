@@ -1700,18 +1700,33 @@ def import_episode(ep: dict, out: Path, replace: bool = False) -> None:
         }
         for c in candidates
     ]
-    r = requests.post(
-        f"{SONARR}/api/v3/command",
-        headers=HEADERS,
-        json={"name": "ManualImport", "files": files, "importMode": "move"},
-        timeout=30,
-    )
+    old_file = ep.get("episodeFileId") if ep.get("hasFile") else None
+    for attempt in range(1, IMPORT_ASKS + 1):
+        try:
+            r = requests.post(
+                f"{SONARR}/api/v3/command",
+                headers=HEADERS,
+                json={"name": "ManualImport", "files": files, "importMode": "move"},
+                timeout=120,  # as long as its reads: a Sonarr busy moving another big file answers late
+            )
+            break
+        except (requests.Timeout, requests.ConnectionError) as e:
+            # It may have taken it and imported all the same: the episode's file says, before asking again
+            time.sleep(IMPORT_RETRY_WAIT)
+            now = sonarr_get(f"episode/{ep['id']}")
+            if now.get("hasFile") and now.get("episodeFileId") != old_file:
+                trace(f"Sonarr did not answer the import ({type(e).__name__}), but the episode has its new file: imported")
+                return
+            if attempt == IMPORT_ASKS:
+                raise RuntimeError(f"Sonarr did not answer the import {IMPORT_ASKS} times ({no_credentials(str(e))})") from e
+            trace(f"Sonarr did not answer the import ({type(e).__name__}): asked again ({attempt + 1} of {IMPORT_ASKS})")
     r.raise_for_status()
     trace(f"Sonarr's import asked (command {r.json().get('id')}), moving {len(files)} file{'s' if len(files) != 1 else ''}{', replacing its file' if replace else ''}")
-    wait_for_import(ep, r.json().get("id"), ep.get("episodeFileId") if ep.get("hasFile") else None)
+    wait_for_import(ep, r.json().get("id"), old_file)
 
 
 IMPORT_WAIT, IMPORT_POLL = 300, 3  # seconds
+IMPORT_ASKS, IMPORT_RETRY_WAIT = 3, 60  # an import Sonarr does not answer: asked so many times, a minute apart
 
 
 def wait_for_import(ep: dict, command_id: int | None, old_file: int | None) -> None:

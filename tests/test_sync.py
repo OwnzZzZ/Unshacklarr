@@ -1702,3 +1702,52 @@ def test_a_series_can_send_only_its_failures_or_nothing(tmp_path, monkeypatch):
     for mode, level in (("failures", "success"), ("failures", "error"), ("none", "error"), (None, "success")):
         sync.notify_series({"notify": mode} if mode else {}, {}, level, "t", "m")
     assert sent == ["error", "success"] and boxed == ["success", "error"]  # the bell keeps what is not sent
+
+
+def test_an_import_sonarr_does_not_answer_is_asked_again(tmp_path, monkeypatch):
+    # Sonarr busy moving another big file: the import's answer times out. Asked again, a minute apart (here none);
+    # an import it did all the same is not asked twice; one it never answers fails after IMPORT_ASKS
+    sync = load(tmp_path, monkeypatch)
+    monkeypatch.setattr(sync, "IMPORT_RETRY_WAIT", 0)
+    out = tmp_path / "unshackle-111-S02E05"
+    out.mkdir()
+    folder = sync.seen_by("sonarr_downloads", out)
+    candidate = {"path": f"{folder}/Show.S02E05.mkv", "quality": {"quality": {"name": "WEBDL-1080p"}}, "languages": []}
+    state = {"hasFile": False, "episodeFileId": 0}
+    monkeypatch.setattr(sync, "sonarr_get", lambda path, **p: [candidate] if path == "manualimport" else dict(state))
+    monkeypatch.setattr(sync, "wait_for_import", lambda ep, command, old: None)
+    posts = []
+
+    class Answer:
+        def raise_for_status(self): pass
+        def json(self): return {"id": 7}
+
+    def post(url, answers, **kw):
+        posts.append(kw["timeout"])
+        answer = answers.pop(0)
+        if state.pop("on_post", None):  # Sonarr takes it, then answers too late
+            state.update(hasFile=True, episodeFileId=9)
+        if isinstance(answer, Exception):
+            raise answer
+        return answer
+    ep = {"id": 5, "seriesId": 1}
+    answers = [sync.requests.Timeout("read timed out"), Answer()]
+    monkeypatch.setattr(sync.requests, "post", lambda url, **kw: post(url, answers, **kw))
+    sync.import_episode(dict(ep), out)
+    assert posts == [120, 120]  # asked again once, each time as patiently as its reads
+
+    posts.clear()
+    answers[:] = [sync.requests.Timeout("read timed out")]
+    state["on_post"] = True  # it imported it all the same
+    sync.import_episode(dict(ep), out)
+    assert posts == [120]
+
+    posts.clear()
+    state.update(hasFile=False, episodeFileId=0)
+    answers[:] = [sync.requests.ConnectionError("refused")] * 3
+    try:
+        sync.import_episode(dict(ep), out)
+        raise AssertionError("an import Sonarr never answered passed")
+    except RuntimeError as e:
+        assert "did not answer the import 3 times" in str(e)
+    assert len(posts) == 3

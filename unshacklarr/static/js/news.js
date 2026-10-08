@@ -8,6 +8,7 @@ const NEWS = [
   { id: "add-audio", version: "1.5.0", title: "Add audio track", sec: "downloads", target: ".up-mode" },
   { id: "fallback-service", version: "1.5.0", title: "Fallback service", series: true, target: "#d-fb" },
   { id: "offsite-backups", version: "1.5.0", title: "Remote backup", sec: "account", target: "#bo-card" },
+  { id: "series-notify", version: "1.5.0", title: "Notifications per series", series: true, target: "#d-notify-l" },
   { id: "no-spoilers", version: "1.5.0", title: "No spoilers", sec: "interface", target: "#rg-spoiler-card" },
 ];
 const NEWS_KINDS = { new: "New", improved: "Improved", fix: "Fix", security: "Security", note: "Note" };
@@ -25,7 +26,7 @@ async function markNews(ids, list = false) {
 
 /* The badges: on each new option's title (its card outlined), on its Settings section in the list, and a strip at
    the top of that section saying how many, with a way down to them. */
-const newsTitle = (box) => box.querySelector(".sx-head h3, summary b, .sub");
+const newsTitle = (box) => box.querySelector(".sx-head h3, summary b, .sub") || (box.matches("label, span[id]") ? box : null);  // a field's own label
 function renderNews() {
   const unseen = newsUnseen(), ids = new Set(unseen.map((n) => n.id));
   document.querySelectorAll(".new-badge").forEach((b) => { if (!ids.has(b.dataset.news)) b.remove(); });
