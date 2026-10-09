@@ -2104,5 +2104,13 @@
  "Name each other Sonarr with a letter, then letters, digits or dashes, like sonarr-2": "Назовите каждый другой Sonarr: буква, затем буквы, цифры или дефисы, например sonarr-2",
  "Name the Sonarr with a letter, then letters, digits or dashes, like sonarr-1080p": "Назовите Sonarr: буква, затем буквы, цифры или дефисы, например sonarr-1080p",
  "Shown on the series of each library when you have more than one Sonarr. Empty: Sonarr.": "Показывается у сериалов каждой библиотеки, когда у вас больше одного Sonarr. Пусто: Sonarr.",
- "Sonarr name": "Имя Sonarr"
+ "Sonarr name": "Имя Sonarr",
+ "A service is waiting for you to sign in before Unshackle can go on. Open this link on any device and enter the code.": "Сервис ждёт, пока вы войдёте, чтобы Unshackle мог продолжить. Откройте эту ссылку на любом устройстве и введите код.",
+ "OK": "ОК",
+ "Other release groups": "Другие релиз-группы",
+ "Upgrades you choose": "Улучшения на выбор",
+ "Sign in": "Вход",
+ "Signed in": "Вход выполнен",
+ "the service": "сервис",
+ "{0} is slow to answer. It may be waiting for you to sign in: look at Unshackle's log.": "{0} отвечает медленно. Возможно, он ждёт, пока вы войдёте: посмотрите журнал Unshackle."
 }

@@ -145,6 +145,8 @@ async function api(path, opts = {}) {
   return r.json();
 }
 
+/* Asking a service that is slow to answer: after 20 s, it may be waiting for a sign-in only Unshackle's log shows. */
+const slowHint = (svc) => setTimeout(() => toast(`${svc} is slow to answer. It may be waiting for you to sign in: look at Unshackle's log.`, false, ["OK", () => {}]), 20000);
 function toast(msg, err = false, action = null) {  // action: [label, onclick], e.g. ["Undo", …]
   const t = document.createElement("div");
   t.className = "toast" + (err ? " err" : "") + (action ? " act" : "");

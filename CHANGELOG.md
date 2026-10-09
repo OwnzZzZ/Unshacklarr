@@ -37,6 +37,8 @@ Every change worth knowing, newest first. The format follows
 - **Remote backup.** Your backups, encrypted, on WebDAV or S3. In Settings › Account.
 - **A diagnostic to attach to an issue**, without passwords, keys or tokens. In Activity.
 - **A health check.** `/health` for Docker and Uptime Kuma.
+- **Sign-in codes.** A service slow to answer may be waiting for you to sign in: you are told. With Unshackle run
+  by Unshacklarr, a popup gives the link and the code.
 
 The new options are off until you turn them on.
 

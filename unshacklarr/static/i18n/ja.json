@@ -2107,5 +2107,13 @@
  "Name each other Sonarr with a letter, then letters, digits or dashes, like sonarr-2": "他の Sonarr には、英字で始まり英数字かハイフンが続く名前を付けてください（例：sonarr-2）",
  "Name the Sonarr with a letter, then letters, digits or dashes, like sonarr-1080p": "Sonarr には、英字で始まり英数字かハイフンが続く名前を付けてください（例：sonarr-1080p）",
  "Shown on the series of each library when you have more than one Sonarr. Empty: Sonarr.": "Sonarr が複数あるとき、各ライブラリのシリーズに表示されます。空欄：Sonarr。",
- "Sonarr name": "Sonarr の名前"
+ "Sonarr name": "Sonarr の名前",
+ "A service is waiting for you to sign in before Unshackle can go on. Open this link on any device and enter the code.": "Unshackle が続行するには、サービスへのサインインが必要です。任意のデバイスでこのリンクを開き、コードを入力してください。",
+ "OK": "OK",
+ "Other release groups": "他のリリースグループ",
+ "Upgrades you choose": "選べるアップグレード",
+ "Sign in": "サインイン",
+ "Signed in": "サインインしました",
+ "the service": "サービス",
+ "{0} is slow to answer. It may be waiting for you to sign in: look at Unshackle's log.": "{0} の応答が遅れています。サインインを待っている可能性があります。Unshackle のログを確認してください。"
 }

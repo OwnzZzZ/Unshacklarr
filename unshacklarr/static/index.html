@@ -859,6 +859,15 @@
   </div>
 </aside>
 <div class="toasts" id="toasts" aria-live="polite"></div>
+<dialog class="modal" id="signin-dlg" aria-labelledby="signin-title">
+  <form method="dialog">
+    <h2 id="signin-title">Sign in</h2>
+    <p>A service is waiting for you to sign in before Unshackle can go on. Open this link on any device and enter the code.</p>
+    <a class="signin-url" id="signin-url" target="_blank" rel="noopener"></a>
+    <div class="signin-code" id="signin-code"></div>
+    <div class="modal-actions"><button class="btn" id="signin-copy" type="button">Copy the code</button><button class="btn primary" value="close" autofocus>Close</button></div>
+  </form>
+</dialog>
 <dialog class="modal wide" id="inbox-dialog" aria-labelledby="inbox-title">
   <div class="inbox-head"><div><h2 id="inbox-title" tabindex="-1" autofocus>Notifications</h2><small id="inbox-summary"></small></div>
     <button class="inbox-clear" id="inbox-clear" type="button" title="Clear the notifications already seen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg>Clear</button>

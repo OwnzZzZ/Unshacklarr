@@ -3579,7 +3579,8 @@ async def stats(_):
 
 async def busy(_):
     """How many downloads run and wait now: the menu's Activity says so, whatever page is open."""
-    return web.json_response({"running": len(sonarr_sync.EpisodeRun.active), "queued": len(sonarr_sync.waiting)})
+    return web.json_response({"running": len(sonarr_sync.EpisodeRun.active), "queued": len(sonarr_sync.waiting),
+                              "sign_in": UNSHACKLE.sign_in()})  # a service waiting for a code (local mode only)
 
 
 async def runs(request):

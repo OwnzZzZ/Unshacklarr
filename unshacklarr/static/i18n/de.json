@@ -2095,5 +2095,13 @@
  "Name each other Sonarr with a letter, then letters, digits or dashes, like sonarr-2": "Benennen Sie jedes weitere Sonarr mit einem Buchstaben, dann Buchstaben, Ziffern oder Bindestrichen, z. B. sonarr-2",
  "Name the Sonarr with a letter, then letters, digits or dashes, like sonarr-1080p": "Benennen Sie das Sonarr mit einem Buchstaben, dann Buchstaben, Ziffern oder Bindestrichen, z. B. sonarr-1080p",
  "Shown on the series of each library when you have more than one Sonarr. Empty: Sonarr.": "Wird bei den Serien jeder Bibliothek angezeigt, wenn Sie mehr als ein Sonarr haben. Leer: Sonarr.",
- "Sonarr name": "Sonarr-Name"
+ "Sonarr name": "Sonarr-Name",
+ "A service is waiting for you to sign in before Unshackle can go on. Open this link on any device and enter the code.": "Ein Dienst wartet auf Ihre Anmeldung, bevor Unshackle weitermachen kann. Öffnen Sie diesen Link auf einem beliebigen Gerät und geben Sie den Code ein.",
+ "OK": "OK",
+ "Other release groups": "Andere Release-Gruppen",
+ "Upgrades you choose": "Upgrades nach Wahl",
+ "Sign in": "Anmelden",
+ "Signed in": "Angemeldet",
+ "the service": "der Dienst",
+ "{0} is slow to answer. It may be waiting for you to sign in: look at Unshackle's log.": "{0} antwortet langsam. Vielleicht wartet es auf Ihre Anmeldung: sehen Sie im Protokoll von Unshackle nach."
 }

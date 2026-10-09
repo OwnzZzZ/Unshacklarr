@@ -850,7 +850,7 @@ def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float) -> l
     timed: dict[str, list] = {}  # each track's [first seen, done]: how long it took
     labels: dict[str, str] = {}  # a track's key (its part and its place, or its label from an older serve): its label
     titles: list[str] = []
-    misses = 0
+    misses, since, hinted = 0, time.monotonic(), False
     while True:
         try:
             job = backend.job(job_id)
@@ -870,6 +870,11 @@ def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float) -> l
             time.sleep(max(poll, 5))
             continue
         status = job.get("status")
+        if run and not hinted and status not in ("queued", *TERMINAL) and not job.get("track_progress") \
+                and time.monotonic() - since > SIGN_IN_HINT:  # nothing moves: the service may wait for a sign-in
+            hinted = True
+            run.say(f"\r\n\x1b[33mNothing downloads yet: {run.card.get('service') or 'the service'} may be waiting for you "
+                    f"to sign in. Look at Unshackle's log.\x1b[0m")
         if run:
             title = job.get("current_title") or ""
             if title and title not in titles:
@@ -935,6 +940,7 @@ TRANSIENT = re.compile(r"timed? ?out|timeout|connection (reset|refused|aborted|e
                        r"max retries|\b50[234]\b|service unavailable|bad gateway|name resolution|network is unreachable", re.IGNORECASE)
 RETRY_AFTER = (30, 120)  # seconds before each retry
 SERVE_RETRY_AFTER = (60, 180, 600)  # serve itself too slow to answer (its disks saturated): longer, once more (#10)
+SIGN_IN_HINT = 30  # seconds without a track before a download says the service may be waiting for a sign-in
 POLL_MISSES = 12  # job statuses missed in a row (5 s apart at least) before the job counts as lost
 # The service turned Unshackle away: cookies or credentials out of date, most of the time.
 LOGIN = re.compile(r"\b40[13]\b|unauthori[sz]ed|forbidden|not logged|log ?in|sign ?in|cookie|expired|session|"

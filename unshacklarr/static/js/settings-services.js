@@ -231,6 +231,7 @@ $("#d-probe").onclick = async () => {
   $("#d-probe").disabled = true;
   state.replaceChildren(loading("Asking the service… (up to a minute)"));
   out.replaceChildren();
+  const slow = slowHint(svcName(conf.service));
   try {
     const r = await api("/api/probe", { method: "POST", signal: AbortSignal.timeout(120000),
       body: JSON.stringify({ show: conf, seriesId: current.id, title: current.title }) });
@@ -262,7 +263,7 @@ $("#d-probe").onclick = async () => {
       el("div", { className: "head" }, "Found ", el("b", { textContent: r.series || "the series" }), `: ${r.count} episodes${seasons ? ` · ${seasons}` : ""}`),
       ...single, ...apply, ...rows));
   } catch (e) { state.replaceChildren(failed(e.message)); }
-  finally { $("#d-probe").disabled = false; }
+  finally { $("#d-probe").disabled = false; clearTimeout(slow); }
 };
 
 /* This device's notifications (Web Push): allowed here, sent by the server through the browser's push service. */

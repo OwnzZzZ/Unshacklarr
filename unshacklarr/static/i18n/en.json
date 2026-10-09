@@ -137,6 +137,7 @@
  "A remote unshackle serve is restarted where it runs": [],
  "A remote unshackle serve keeps its log where it runs": [],
  "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes come with the automatic sync: release times stay with the Sonarr above.": [],
+ "A service is waiting for you to sign in before Unshackle can go on. Open this link on any device and enter the code.": [],
  "A service that logs in with a username and password (set in unshackle.yaml) needs no cookies.": [],
  "A sync is already running": [],
  "A sync is running.": [],
@@ -1387,6 +1388,7 @@
  "Numbering": [],
  "Numbering and file names": [],
  "Numbering and file names, for this download": [],
+ "OK": [],
  "Off": [],
  "Off for every series": [],
  "Off is reserved: it means no ladder": [],
@@ -1470,6 +1472,7 @@
  "Other": [],
  "Other Sonarr instances": [],
  "Other Unshackle servers": [],
+ "Other release groups": [],
  "Other release groups are replaced": [],
  "Other title": [],
  "Outliers ({0})": [
@@ -1774,8 +1777,10 @@
  "Shown": [],
  "Shown in Unshacklarr's log when it starts (docker logs unshacklarr), or the SETUP_TOKEN you set.": [],
  "Shown on the series of each library when you have more than one Sonarr. Empty: Sonarr.": [],
+ "Sign in": [],
  "Sign in through a reverse proxy": [],
  "Signal": [],
+ "Signed in": [],
  "Signed in by your reverse proxy as {0}": [
   "s.proxy_user"
  ],
@@ -2401,6 +2406,7 @@
  ],
  "Upgrade the audio to": [],
  "Upgrades": [],
+ "Upgrades you choose": [],
  "Use a remote unshackle server from remote_services in unshackle.yaml for the service's own calls and its licences; the files still download here. Set it for one service in Per service.": [],
  "Use an https:// address: over http://, the WebDAV password would cross the network unencrypted": [],
  "Use exact language matching (no variants). With this flag, -l es-419 matches ONLY es-419, not es-ES or other variants.": [],
@@ -2843,6 +2849,7 @@
   "ago(oldest)"
  ],
  "the series": [],
+ "the service": [],
  "the service defaults": [],
  "the settings": [],
  "these": [],
@@ -3248,6 +3255,9 @@
  ],
  "{0} is out": [
   "st.latest"
+ ],
+ "{0} is slow to answer. It may be waiting for you to sign in: look at Unshackle's log.": [
+  "svc"
  ],
  "{0} is still downloading from its last try": [
   "c['sxxeyy']"

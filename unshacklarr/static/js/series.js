@@ -616,11 +616,13 @@ async function askService(s) {
   const conf = S.config.series[s.tvdbId], svc = svcName(conf.service), check = $(".ep-check");
   if (check) { check.disabled = true; check.replaceChildren(el("span", { className: "spinner", ariaHidden: "true" }), ` Asking ${svc}…`); }
   let r = null;
+  const slow = slowHint(svc);
   try {
     r = await api("/api/probe", { method: "POST", signal: AbortSignal.timeout(120000), body: JSON.stringify({ show: conf, seriesId: s.id ?? S.sonarrsOf?.[s.tvdbId]?.[0]?.id, tvdbId: s.tvdbId, title: s.title,
       ...(s.id ? {} : { sonarr: S.sonarrsOf?.[s.tvdbId]?.[0]?.name }) }) });  // in no main Sonarr: its own Sonarr's episodes
     if (current === s) { epAvail = viewAvail(r.available); epTitles = r.titles || []; epChecked = r.checked; localTitles(r.local_titles); $("#ep-avail").hidden = false; renderSeason(); renderPreview(); }
   } catch (e) { toast(e.message, true); }
+  clearTimeout(slow);
   if (current === s && $(".ep-check")) { $(".ep-check").disabled = false; checkLabel(epAvail ? `Refresh what's on ${svc}` : `What's on ${svc}?`); }
   return r;
 }

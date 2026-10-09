@@ -343,6 +343,23 @@ let busyStarted = false;
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden && busyStarted) { refreshHealth(); refreshInbox(); refreshLog(); }
 });
+/* A service waiting for a code to sign in (MAX's device linking), read from Unshackle's log in local mode: shown once
+   per code, closed once signed in. */
+let signInShown = "";
+function showSignIn(s) {
+  const dlg = $("#signin-dlg");
+  if (!s) {
+    if (dlg.open && signInShown) { dlg.close(); toast("Signed in"); }
+    signInShown = "";
+    return;
+  }
+  if (s.code === signInShown) return;
+  signInShown = s.code;
+  $("#signin-url").href = $("#signin-url").textContent = s.url;
+  $("#signin-code").textContent = s.code;
+  $("#signin-copy").onclick = () => copyCode(s.code);
+  if (!dlg.open) dlg.showModal();
+}
 async function refreshBusy() {
   if (!document.hidden) {
     try {
@@ -351,6 +368,7 @@ async function refreshBusy() {
       badge.textContent = b.running || b.queued;
       badge.classList.toggle("queued", !b.running);
       badge.title = [b.running && `${b.running} downloading`, b.queued && `${b.queued} queued`].filter(Boolean).join(", ");
+      showSignIn(b.sign_in);
     } catch { /* offline a moment: the next round */ }
   }
   setTimeout(refreshBusy, 5000);

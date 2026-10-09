@@ -499,7 +499,7 @@ def test_the_menu_counts_the_downloads_going_on(tmp_path, monkeypatch):
     monkeypatch.setattr(web.sonarr_sync.EpisodeRun, "active", {"a", "b"})
     monkeypatch.setattr(web.sonarr_sync, "waiting", {7: {}})
     r = asyncio.run(web.busy(None))
-    assert json.loads(r.body) == {"running": 2, "queued": 1}
+    assert json.loads(r.body) == {"running": 2, "queued": 1, "sign_in": None}
 
 
 def test_a_broadcast_schedule_is_checked_on_save(tmp_path, monkeypatch):
@@ -1708,3 +1708,23 @@ def test_a_job_serve_never_confirmed_stopped_is_asked_about_first(monkeypatch):
     status["s"] = "failed"
     assert web.still_on_serve([5]) is None  # it ended there: a new download is fine
     assert web.still_on_serve([6]) is None  # nothing left unconfirmed
+
+
+def test_a_sign_in_code_is_read_from_our_own_serve_log(tmp_path):
+    # MAX's device linking only writes its link and code to the log: local mode reads them while they wait
+    from unshacklarr.backend import Local
+    local = Local(tmp_path / "serve.log")
+
+    class Alive:
+        def poll(self): return None
+    local.process = Alive()
+    box = " ║  Go to: https://www.hbomax.com/signin  ║\n ║  Enter code: 798933  ║\n + Waiting for device to be linked...\n"
+    local.log_file.write_text("+ Bootstrapping API endpoints...\n" + box + "GET /api/health 200\n")
+    assert local.sign_in() == {"url": "https://www.hbomax.com/signin", "code": "798933"}
+    local.log_file.write_text(box + " + Device linked successfully!\n")
+    assert local.sign_in() is None  # signed in: nothing waits
+    local.log_file.write_text(box)
+    local.codes_seen["798933"] -= 601
+    assert local.sign_in() is None  # MAX stops waiting after 10 minutes
+    local.process = None
+    assert local.sign_in() is None  # no serve of our own

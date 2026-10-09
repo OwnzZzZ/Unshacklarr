@@ -73,6 +73,12 @@ def unshackle_python(command: str) -> tuple[str, Path]:
 EXAMPLE_KEYS = {"change-me-to-a-long-random-string", "the-UNSHACKLE_API_KEY-of-.env"}
 
 
+# A service signing in by a code on another device (MAX's device linking) only writes it to its log
+SIGN_IN = re.compile(r"Go to:\s*(https?://\S+).{0,600}?(?:Enter|Use)(?: the)? code:\s*([A-Za-z0-9-]{4,16})", re.S)
+SIGNED_IN = re.compile(r"linked successfully|linking timed out|signed in|logged in", re.I)
+SIGN_IN_WAIT = 600  # seconds a code stays worth showing (MAX waits 10 minutes)
+
+
 class Local:
     """A serve of our own, started on demand and restarted if it dies."""
 
@@ -83,6 +89,7 @@ class Local:
         self.url = self.key = ""
         self.command = None
         self.lock = threading.Lock()
+        self.codes_seen: dict[str, float] = {}  # a sign-in code and when it was first read
 
     def endpoint(self, command: str) -> tuple[str, str]:
         with self.lock:
@@ -132,6 +139,24 @@ class Local:
                 time.sleep(0.5)
         self.stop()
         raise UnshackleError(f"unshackle serve did not answer within 90 s: {self.tail()}")
+
+    def sign_in(self) -> dict | None:
+        """The code a service waits for you to enter to sign in, read from our serve's log: {"url", "code"} while it
+        waits, None once signed in, timed out, or with no serve of our own. Only a serve we started has its log here."""
+        if not (self.process and self.process.poll() is None):
+            return None
+        try:
+            with self.log_file.open("rb") as f:
+                f.seek(max(0, f.seek(0, os.SEEK_END) - 40_000))
+                text = f.read().decode(errors="replace")
+        except OSError:
+            return None
+        found = list(SIGN_IN.finditer(text))
+        if not found or SIGNED_IN.search(text, found[-1].end()):
+            return None
+        url, code = found[-1].group(1), found[-1].group(2)
+        first = self.codes_seen.setdefault(code, time.monotonic())
+        return {"url": url, "code": code} if time.monotonic() - first < SIGN_IN_WAIT else None
 
     def tail(self, lines: int = 3, sep: str = " / ") -> str:
         try:
@@ -189,6 +214,10 @@ class Unshackle:
         self._services = (0.0, [])
         self._remote = (0.0, [])
         self._config = (0.0, {})
+
+    def sign_in(self) -> dict | None:
+        """A sign-in code a service waits for, when serve runs here (local): see Local.sign_in."""
+        return self.local.sign_in() if self.mode == "local" else None
 
     @property
     def mode(self) -> str:

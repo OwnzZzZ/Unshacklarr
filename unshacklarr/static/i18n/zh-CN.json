@@ -2112,5 +2112,13 @@
  "Name each other Sonarr with a letter, then letters, digits or dashes, like sonarr-2": "为其他每个 Sonarr 命名：以字母开头，后接字母、数字或连字符，例如 sonarr-2",
  "Name the Sonarr with a letter, then letters, digits or dashes, like sonarr-1080p": "为 Sonarr 命名：以字母开头，后接字母、数字或连字符，例如 sonarr-1080p",
  "Shown on the series of each library when you have more than one Sonarr. Empty: Sonarr.": "当您有多个 Sonarr 时，显示在各媒体库的剧集上。留空：Sonarr。",
- "Sonarr name": "Sonarr 名称"
+ "Sonarr name": "Sonarr 名称",
+ "A service is waiting for you to sign in before Unshackle can go on. Open this link on any device and enter the code.": "某个服务正在等待您登录，Unshackle 才能继续。请在任意设备上打开此链接并输入代码。",
+ "OK": "好",
+ "Other release groups": "其他发布组",
+ "Upgrades you choose": "可选的升级",
+ "Sign in": "登录",
+ "Signed in": "已登录",
+ "the service": "该服务",
+ "{0} is slow to answer. It may be waiting for you to sign in: look at Unshackle's log.": "{0} 响应缓慢，可能正在等待您登录：请查看 Unshackle 的日志。"
 }
