@@ -49,23 +49,21 @@ $("#hist-clear").onclick = () => {
   }, { once: true });
 };
 /* A job's failed episodes, again, in one go: in the same job. */
-// Another Sonarr's copy is not retried from here yet: its episode ids are its own, the main Sonarr would get another one
-const otherSonarr = (cards) => cards.some((c) => c.instance) && (toast("This copy is for another Sonarr: the next sync tries it again.", true), true);
+// Another Sonarr's copy goes again for that Sonarr: its episode ids are its own (a job is one Sonarr's)
+const forSonarr = (cards) => (cards[0]?.instance ? { sonarr: cards[0].instance } : {});
 async function retryJob(j, cards, button) {
-  if (otherSonarr(cards)) return;
   button.disabled = true;
   try {
-    await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: cards.map((c) => c.episodeId), retry: true, batch: j.job }) });
+    await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: cards.map((c) => c.episodeId), retry: true, batch: j.job, ...forSonarr(cards) }) });
     toast(`${cards.length} episode${cards.length > 1 ? "s" : ""} downloading again`);
     picked_run = `job:${j.job}`;
     setTimeout(openActivity, 1500);
   } catch (e) { button.disabled = false; toast(e.message, true); }
 }
 async function retryRun(c, button) {
-  if (otherSonarr([c])) return;
   button.disabled = true;
   try {
-    await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: [c.episodeId], retry: true, ...(c.batch ? { batch: c.batch } : {}) }) });
+    await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: [c.episodeId], retry: true, ...(c.batch ? { batch: c.batch } : {}), ...forSonarr([c]) }) });
     toast(`${c.series} ${c.sxxeyy}: downloading again`);
     picked_run = c.batch ? `job:${c.batch}` : null;  // a job's episode: the job stays in view
     setTimeout(openActivity, 1500);

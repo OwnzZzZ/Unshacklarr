@@ -887,7 +887,7 @@ def check_sonarrs(given, saved, main_url: str) -> list[dict]:
 NUMBER_SETTINGS = {  # name: (smallest, largest)
     "sync_every_hours": (1, 24), "auto_days": (1, 90), "late_warning_hours": (0, 720),
     "burst_every_seconds": (10, 600), "burst_minutes": (1, 120), "history_keep": (10, 5000), "history_days": (1, 3650),
-    "leftovers_days": (0, 365), "min_free_gb": (0, 100000), "upgrade_days": (1, 365),
+    "leftovers_days": (0, 365), "min_free_gb": (0, 100000), "upgrade_days": (1, 365), "downloads_at_once": (0, 10),
     "backup_every_days": (0, 30), "backup_keep": (1, 365),
     "upgrade_recheck_days": (0, 3650), "upgrade_max_age_years": (0, 100),
 }
@@ -2207,8 +2207,13 @@ async def stop_run(request):
     except (OSError, ValueError):
         card = {}
     job_id = card.get("job_id")
-    if not job_id or run_id not in sonarr_sync.EpisodeRun.active:
+    if run_id not in sonarr_sync.EpisodeRun.active:
         raise web.HTTPConflict(text="This download is not running")
+    if not job_id:  # waiting for a free slot (Downloads at once): it ends there instead of starting
+        with sonarr_sync.slots:
+            sonarr_sync.stop_waiting.add(run_id)
+            sonarr_sync.slots.notify_all()
+        return web.json_response({"stopping": True})
     try:
         await asyncio.to_thread(sonarr_sync.backend_named(card.get("backend")).cancel, job_id)
     except UnshackleError as e:
@@ -3175,7 +3180,7 @@ async def download(request):
         raise web.HTTPBadRequest(text=why)
     if numbering is None and body.get("retry") is True:  # the same numbering as the attempt it retries
         numbering = await asyncio.to_thread(retried_numbering, ids, batch)
-    if batch and len(ids) == 1 and await join_job(batch, ids[0]):
+    if batch and len(ids) == 1 and not inst and await join_job(batch, ids[0]):  # join_job reads the main Sonarr's ids
         return web.json_response({"running": True})  # the job still runs: at the end of its queue, one download at a time
     room_for_one_more()
     run_sync(ids, replace=replace, kind="retry" if body.get("retry") is True else "manual", numbering=numbering, batch=batch or None,

@@ -2063,7 +2063,6 @@
  "That is the Sonarr above": "それは上の Sonarr です",
  "The Sonarr named {0} is no longer in Settings, Sonarr": "{0} という名前の Sonarr は 設定 › Sonarr にもうありません",
  "The downloads folder, as this Sonarr sees it. Empty: as the main Sonarr sees it.": "この Sonarr から見たダウンロードフォルダー。空欄：メインの Sonarr から見たパス。",
- "This copy is for another Sonarr: the next sync tries it again.": "このコピーは別の Sonarr 用です。次回の同期で再試行します。",
  "Two Sonarr instances are named {0}": "2 つの Sonarr インスタンスが {0} という名前です",
  "Which Sonarr": "どの Sonarr",
  "Which Sonarr's episodes": "どの Sonarr のエピソード",
@@ -2105,5 +2104,9 @@
  "Open the episodes missing in {0}": "{0} で欠けているエピソードを開く",
  "Switched off": "オフ",
  "no {0} subtitles on {1}: downloading {2}": "{1} に {0} 字幕なし：{2} でダウンロード",
- "with the forced subtitles only": "強制字幕のみ"
+ "with the forced subtitles only": "強制字幕のみ",
+ "Downloads at once": "同時ダウンロード数",
+ "per server": "サーバーごと",
+ "Stopped before it started": "開始前に停止しました",
+ "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": "各 Unshackle サーバーが同時にダウンロードするエピソード数。小型 NAS には 1 が負担の少ない設定です。0：Unshackle が許す数（既定は 2）。"
 }

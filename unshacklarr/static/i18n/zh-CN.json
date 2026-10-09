@@ -2068,7 +2068,6 @@
  "That is the Sonarr above": "这就是上面的 Sonarr",
  "The Sonarr named {0} is no longer in Settings, Sonarr": "名为 {0} 的 Sonarr 已不在“设置”›“Sonarr”中",
  "The downloads folder, as this Sonarr sees it. Empty: as the main Sonarr sees it.": "这个 Sonarr 看到的下载文件夹路径。留空：与主 Sonarr 看到的相同。",
- "This copy is for another Sonarr: the next sync tries it again.": "这份副本属于另一个 Sonarr：下次同步会再试。",
  "Two Sonarr instances are named {0}": "有两个 Sonarr 实例都叫 {0}",
  "Which Sonarr": "哪个 Sonarr",
  "Which Sonarr's episodes": "哪个 Sonarr 的单集",
@@ -2110,5 +2109,9 @@
  "Open the episodes missing in {0}": "打开 {0} 中缺少的剧集",
  "Switched off": "已关闭",
  "no {0} subtitles on {1}: downloading {2}": "{1} 上没有 {0} 字幕：下载{2}",
- "with the forced subtitles only": "仅含强制字幕"
+ "with the forced subtitles only": "仅含强制字幕",
+ "Downloads at once": "同时下载数",
+ "per server": "每台服务器",
+ "Stopped before it started": "开始前已停止",
+ "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": "每台 Unshackle 服务器同时下载的剧集数。小型 NAS 设为 1 更轻松。0：按 Unshackle 允许的数量，默认 2。"
 }

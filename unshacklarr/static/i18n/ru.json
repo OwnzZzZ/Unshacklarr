@@ -2060,7 +2060,6 @@
  "That is the Sonarr above": "Это Sonarr выше",
  "The Sonarr named {0} is no longer in Settings, Sonarr": "Sonarr с именем {0} больше нет в «Настройки», «Sonarr»",
  "The downloads folder, as this Sonarr sees it. Empty: as the main Sonarr sees it.": "Папка загрузок, как её видит этот Sonarr. Пусто: как её видит основной Sonarr.",
- "This copy is for another Sonarr: the next sync tries it again.": "Эта копия для другого Sonarr: следующая синхронизация попробует снова.",
  "Two Sonarr instances are named {0}": "Два экземпляра Sonarr называются {0}",
  "Which Sonarr": "Какой Sonarr",
  "Which Sonarr's episodes": "Эпизоды какого Sonarr",
@@ -2102,5 +2101,9 @@
  "Open the episodes missing in {0}": "Открыть эпизоды, которых нет в {0}",
  "Switched off": "Выключена",
  "no {0} subtitles on {1}: downloading {2}": "нет субтитров {0} на {1}: загрузка {2}",
- "with the forced subtitles only": "только с принудительными субтитрами"
+ "with the forced subtitles only": "только с принудительными субтитрами",
+ "Downloads at once": "Одновременных загрузок",
+ "per server": "на сервер",
+ "Stopped before it started": "Остановлено до начала",
+ "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": "Сколько эпизодов каждый сервер Unshackle загружает одновременно. 1 бережёт небольшой NAS. 0: столько, сколько позволяет Unshackle, по умолчанию 2."
 }

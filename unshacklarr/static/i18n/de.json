@@ -2049,7 +2049,6 @@
  "That is the Sonarr above": "Das ist das Sonarr oben",
  "The Sonarr named {0} is no longer in Settings, Sonarr": "Das Sonarr namens {0} ist nicht mehr unter Einstellungen, Sonarr",
  "The downloads folder, as this Sonarr sees it. Empty: as the main Sonarr sees it.": "Der Download-Ordner, wie dieses Sonarr ihn sieht. Leer: wie das Haupt-Sonarr ihn sieht.",
- "This copy is for another Sonarr: the next sync tries it again.": "Diese Kopie ist für ein anderes Sonarr: Die nächste Synchronisierung versucht es erneut.",
  "Two Sonarr instances are named {0}": "Zwei Sonarr-Instanzen heißen {0}",
  "Upgrades": "Upgrades",
  "Video": "Video",
@@ -2093,5 +2092,9 @@
  "Open the episodes missing in {0}": "Die in {0} fehlenden Folgen öffnen",
  "Switched off": "Ausgeschaltet",
  "no {0} subtitles on {1}: downloading {2}": "keine {0}-Untertitel auf {1}: Download {2}",
- "with the forced subtitles only": "nur mit den erzwungenen Untertiteln"
+ "with the forced subtitles only": "nur mit den erzwungenen Untertiteln",
+ "Downloads at once": "Gleichzeitige Downloads",
+ "per server": "pro Server",
+ "Stopped before it started": "Vor dem Start gestoppt",
+ "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": "Wie viele Folgen jeder Unshackle-Server gleichzeitig lädt. 1 schont einen kleinen NAS. 0: so viele, wie Unshackle erlaubt, standardmäßig 2."
 }

@@ -136,6 +136,7 @@ SETTINGS_DEFAULTS = {
     "burst_every_seconds": 30,   # at a series' release time, a try every…
     "burst_minutes": 10,         # … for this long
     "leftovers_days": 14,        # what waits in the downloads folder goes after this long (0: never)
+    "downloads_at_once": 0,      # per Unshackle server: episodes downloading together (0: as many as serve takes)
     "history_keep": 300,
     "history_days": 60,
     "backup_every_days": 0,      # the settings saved in the data folder's backups/ this often, in days (0: never)
@@ -801,10 +802,43 @@ def ask_for_input(run: EpisodeRun, prompt: str | None) -> None:
         run.say(f"\r\n\x1b[32m{had['service']}: answered, going on\x1b[0m")
 
 
+slots = threading.Condition()
+slots_busy: dict[str, int] = {}  # by server name ("" the main one): its downloads going on now
+stop_waiting: set[str] = set()  # runs stopped from Activity while they waited for a slot
+
+
+@contextlib.contextmanager
+def download_slot(server: str, run: EpisodeRun | None = None):
+    """Settings › Unshackle, Downloads at once: past that many on a server, a download waits for one to end
+    (a small NAS kept to one; by mj23au, #10). 0: as many as serve takes, which queues the rest itself."""
+    with slots:
+        told = False
+        while (limit := int(SETTINGS.get("downloads_at_once") or 0)) and slots_busy.get(server, 0) >= limit:
+            if run and run.id in stop_waiting:
+                stop_waiting.discard(run.id)
+                raise JobFailed("Stopped before it started", "cancelled")
+            if run and not told:
+                run.say(f"\r\n\x1b[90mWaiting: {limit} download{'s' if limit > 1 else ''} at once on this server\x1b[0m")
+                told = True
+            slots.wait(2)
+        slots_busy[server] = slots_busy.get(server, 0) + 1
+    try:
+        yield
+    finally:
+        with slots:
+            slots_busy[server] -= 1
+            slots.notify_all()
+
+
 def run_job(payload: dict, run: EpisodeRun | None = None, poll: float = 0.5) -> list[str]:
     """Hand the download to unshackle serve (the run's own, when another one has its service) and follow it to
     the end, drawing its progress in the run's log (the web page's terminal). Returns the files it made."""
     backend = backend_named(run.card.get("backend") if run else None)
+    with download_slot(backend.name or "", run):
+        return follow_job(backend, payload, run, poll)
+
+
+def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float) -> list[str]:
     job_id = backend.download(payload)
     trace(f"unshackle serve{f' {backend.name}' if backend.name else ''} took it as job {job_id}")
     if run:  # what Activity's Stop button cancels
@@ -897,6 +931,7 @@ def run_job(payload: dict, run: EpisodeRun | None = None, poll: float = 0.5) -> 
 TRANSIENT = re.compile(r"timed? ?out|timeout|connection (reset|refused|aborted|error)|remote end closed|temporarily|"
                        r"max retries|\b50[234]\b|service unavailable|bad gateway|name resolution|network is unreachable", re.IGNORECASE)
 RETRY_AFTER = (30, 120)  # seconds before each retry
+SERVE_RETRY_AFTER = (60, 180, 600)  # serve itself too slow to answer (its disks saturated): longer, once more (#10)
 POLL_MISSES = 12  # job statuses missed in a row (5 s apart at least) before the job counts as lost
 # The service turned Unshackle away: cookies or credentials out of date, most of the time.
 LOGIN = re.compile(r"\b40[13]\b|unauthori[sz]ed|forbidden|not logged|log ?in|sign ?in|cookie|expired|session|"
@@ -945,14 +980,17 @@ def subs_what(fixed: dict) -> str:
 
 def run_job_retrying(payload: dict, run: EpisodeRun | None = None, sleep=time.sleep) -> list[str]:
     """run_job, tried again after 30 s then 2 min when it failed on the network or a service
-    hiccup (a timeout, a 502...); at once, without them, when subtitles asked for are missing. Other failures
+    hiccup (a timeout, a 502...), after 1, 3 then 10 min when serve itself did not answer; at once, without them,
+    when subtitles asked for are missing. Other failures
     (not found, login, a language missing) end it."""
-    subs_tried = False
-    for wait in (*RETRY_AFTER, None):
+    subs_tried, tries = False, 0
+    while True:
         try:
             return run_job(payload, run)
         except (JobFailed, UnshackleError) as e:
             cause = getattr(e, "cause", str(e))
+            waits = SERVE_RETRY_AFTER if "unshackle serve is unreachable" in cause else RETRY_AFTER
+            wait = waits[tries] if tries < len(waits) else None
             if not subs_tried and (m := SUBS_MISSING.search(f"{cause}\n{e}")):  # its one line, else all it said
                 missing = {base_lang(x) for x in re.split(r"[,\s]+", m.group(1)) if x.strip(" '[]")} if m.group(1) else None
                 if fixed := subs_dropped(payload, missing):
@@ -967,6 +1005,7 @@ def run_job_retrying(payload: dict, run: EpisodeRun | None = None, sleep=time.sl
             if run:
                 run.say(f"\r\n\x1b[33mTemporary failure ({cause[:120]}): trying again in {wait} s\x1b[0m")
                 run.card["attempts"] = run.card.get("attempts", 1) + 1
+            tries += 1
             sleep(wait)
 
 

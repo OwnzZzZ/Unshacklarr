@@ -18,6 +18,7 @@ Every change worth knowing, newest first. The format follows
 - **Notifications per series.** All, failures only, or none, on the series page. The bell keeps everything.
 - **A diagnostic to attach to an issue.** In Activity, on an attempt: versions, settings and its log, without
   passwords, keys or tokens.
+- **Downloads at once.** How many episodes each Unshackle server downloads together, 1 for a small NAS. In Settings › Unshackle. (#10, by mj23au)
 - **A health check.** `/health` for Docker and Uptime Kuma; the image checks itself.
 - **More than one Sonarr** (a 4K one beside the 1080p one), in Settings › Sonarr › Other Sonarr instances: the
   series set up here are downloaded for each one that has them, with its own quality ladder and After the
@@ -37,10 +38,12 @@ The new options are off until you turn them on.
 ### Changed
 
 - **One import at a time per Sonarr.** Downloads still run side by side; big files no longer reach Sonarr together. (#10, by mj23au)
+- **A slow Unshackle server no longer fails downloads.** They wait 1, 3 then 10 minutes before giving up, instead of 30 s and 2 min. (#10, by mj23au)
 - **Clearer selection in Series.** Select turns into Done, each poster gets a check, the ones not picked are dimmed.
 
 ### Fixed
 
+- **Retry works for another Sonarr's copy.** A failed episode picked by hand goes again for that Sonarr, instead of waiting for a sync that never comes. (#10, by mj23au)
 - **Hybrid Dolby Vision files** are no longer listed as upgrades: a file counts by its best layer (DV with HDR10+
   is HDR10+). (#10, by mj23au)
 - **A series' link found by its title** when its service is only linked by an episode (HBO Max). (#12, by mj23au)
