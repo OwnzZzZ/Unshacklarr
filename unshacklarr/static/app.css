@@ -643,7 +643,7 @@ input[type=checkbox].switch:checked { background: var(--accent); } input[type=ch
 .wiz-step.fwd { animation: wiz-in-r .28s ease-out; } .wiz-step.bwd { animation: wiz-in-l .28s ease-out; }
 @keyframes wiz-in-r { from { opacity: 0; transform: translateX(24px); } } @keyframes wiz-in-l { from { opacity: 0; transform: translateX(-24px); } }
 .wiz-note:empty { display: none; }
-input.bad { border-color: var(--err); } .url-hint { display: block; margin-top: var(--gap-help); color: var(--err); font-size: 12.5px; }
+input.bad { border-color: var(--err); } .field small.bad { color: var(--err); } .url-hint { display: block; margin-top: var(--gap-help); color: var(--err); font-size: 12.5px; }
 .wiz-step input.bad, .wiz-step select.bad { border-color: var(--err); box-shadow: 0 0 0 3px color-mix(in srgb, var(--err) 18%, transparent); }
 .wiz-step input.good { border-color: var(--ok); }
 .wiz-panel { overflow: visible; } .wiz-step .field { position: relative; }

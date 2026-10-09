@@ -148,6 +148,15 @@ document.querySelectorAll("[data-set]").forEach((f) => f[f.tagName === "SELECT" 
   S.config.settings[key] = "num" in f.dataset ? Number(f.value) : key === "country" ? f.value.toUpperCase() : f.value.trim();
   dirty();
 });
+/* The main Sonarr's name: checked as it is typed, like the other Sonarr's names */
+$("#sx-name").addEventListener("input", (e) => {
+  const v = e.target.value.trim(), help = $("#sx-name-help");
+  const why = !v ? "" : (S.config.settings.sonarrs || []).some((i) => i.name === v) ? "Another Sonarr has this name"
+    : !/^[A-Za-z][A-Za-z0-9-]{0,23}$/.test(v) ? "A letter, then letters, digits or dashes" : "";
+  e.target.classList.toggle("bad", !!why);
+  help.classList.toggle("bad", !!why);
+  help.textContent = why || "Shown on the series of each library when you have more than one Sonarr. Empty: Sonarr.";
+});
 function showMode() {
   $(".set-sec[data-sec=unshackle]").dataset.mode = $("#mode-select").value;
   document.querySelectorAll(".ux-tiles .wz-tile").forEach((t) => t.setAttribute("aria-checked", String(t.dataset.value === $("#mode-select").value)));

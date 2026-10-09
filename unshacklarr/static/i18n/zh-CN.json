@@ -2037,7 +2037,6 @@
  "years": "年",
  "{0} of {1} series checked": "检查的剧集：{0}/{1}",
  "A letter, then letters, digits or dashes": "以字母开头，后面是字母、数字或连字符",
- "A second Sonarr, a 4K one for example. The series set up here are also downloaded for it when it has them, with its own quality ladder. Only the automatic sync downloads for it: release times and episodes you pick by hand stay with the Sonarr above.": "第二个 Sonarr，例如 4K 的。这里设置的剧集如果它也有，也会按它自己的画质阶梯为它下载。只有自动同步会为它下载：发布时间和手动选择的单集仍归上面的 Sonarr。",
  "Add a Sonarr": "添加 Sonarr",
  "Another Sonarr has this name": "另一个 Sonarr 已使用此名称",
  "Checking {0} of {1}{2}{3}…": "正在检查 {0}/{1}{2}{3}…",
@@ -2048,12 +2047,9 @@
  "Downloading {0} episode{1}{2}: follow it in Activity": "正在下载 {0} 集{2}：可在“活动”中查看",
  "Each series' own": "各剧集自己的",
  "Enter the API key of {0}": "输入 {0} 的 API 密钥",
- "For every series it downloads, over the series' own (4K for a 4K Sonarr).": "用于它下载的所有剧集，优先于剧集自己的设置（4K Sonarr 用 4K）。",
  "For every series it downloads, over the series' own.": "用于它下载的所有剧集，优先于剧集自己的设置。",
  "In Sonarr: Settings, General. Empty keeps the saved one.": "在 Sonarr 中：Settings › General。留空则保留已保存的密钥。",
- "It starts the folders of its downloads: sonarr-4k.": "它会作为其下载文件夹名称的开头：sonarr-4k。",
  "Library": "媒体库",
- "Name each other Sonarr with a letter, then letters, digits or dashes, like sonarr-4k": "为每个其他 Sonarr 命名：以字母开头，后面是字母、数字或连字符，例如 sonarr-4k",
  "New Sonarr": "新 Sonarr",
  "No Sonarr named {0} in Settings, Sonarr": "“设置”›“Sonarr”中没有名为 {0} 的 Sonarr",
  "None: every series downloads for the Sonarr above only.": "无：所有剧集只为上面的 Sonarr 下载。",
@@ -2107,5 +2103,11 @@
  "Downloads at once": "同时下载数",
  "per server": "每台服务器",
  "Stopped before it started": "开始前已停止",
- "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": "每台 Unshackle 服务器同时下载的剧集数。小型 NAS 设为 1 更轻松。0：按 Unshackle 允许的数量，默认 2。"
+ "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": "每台 Unshackle 服务器同时下载的剧集数。小型 NAS 设为 1 更轻松。0：按 Unshackle 允许的数量，默认 2。",
+ "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes come with the automatic sync: release times stay with the Sonarr above.": "第二个 Sonarr，拥有自己的媒体库。这里设置的剧集如果它也有，也会按它自己的画质阶梯为它下载。它的新剧集随自动同步到来：上映时间仍由上面的 Sonarr 负责。",
+ "It names this library on series and starts the folders of its downloads: sonarr-2.": "在剧集上标示此媒体库，并作为其下载文件夹名的开头：sonarr-2。",
+ "Name each other Sonarr with a letter, then letters, digits or dashes, like sonarr-2": "为其他每个 Sonarr 命名：以字母开头，后接字母、数字或连字符，例如 sonarr-2",
+ "Name the Sonarr with a letter, then letters, digits or dashes, like sonarr-1080p": "为 Sonarr 命名：以字母开头，后接字母、数字或连字符，例如 sonarr-1080p",
+ "Shown on the series of each library when you have more than one Sonarr. Empty: Sonarr.": "当您有多个 Sonarr 时，显示在各媒体库的剧集上。留空：Sonarr。",
+ "Sonarr name": "Sonarr 名称"
 }

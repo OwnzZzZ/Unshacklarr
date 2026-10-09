@@ -2001,7 +2001,6 @@
  "years": "años",
  "{0} of {1} series checked": "Series comprobadas: {0} de {1}",
  "A letter, then letters, digits or dashes": "Una letra, luego letras, cifras o guiones",
- "A second Sonarr, a 4K one for example. The series set up here are also downloaded for it when it has them, with its own quality ladder. Only the automatic sync downloads for it: release times and episodes you pick by hand stay with the Sonarr above.": "Un segundo Sonarr, uno 4K por ejemplo. Las series configuradas aquí también se descargan para él cuando las tiene, con su propia escalera de calidad. Solo la sincronización automática descarga para él: las horas de publicación y los episodios elegidos a mano se quedan en el Sonarr de arriba.",
  "Add a Sonarr": "Añadir un Sonarr",
  "Another Sonarr has this name": "Otro Sonarr tiene este nombre",
  "Audio": "Audio",
@@ -2014,12 +2013,9 @@
  "Downloading {0} episode{1}{2}: follow it in Activity": "Descargando {0} episodio{1}{2}: síguelo en Actividad",
  "Each series' own": "La de cada serie",
  "Enter the API key of {0}": "Introduce la clave de API de {0}",
- "For every series it downloads, over the series' own (4K for a 4K Sonarr).": "Para todas las series que descarga, en lugar de la de la serie (4K para un Sonarr 4K).",
  "For every series it downloads, over the series' own.": "Para todas las series que descarga, en lugar del ajuste de la serie.",
  "In Sonarr: Settings, General. Empty keeps the saved one.": "En Sonarr: Settings, General. Vacío conserva la guardada.",
- "It starts the folders of its downloads: sonarr-4k.": "Encabeza el nombre de las carpetas de sus descargas: sonarr-4k.",
  "Library": "Biblioteca",
- "Name each other Sonarr with a letter, then letters, digits or dashes, like sonarr-4k": "Nombra cada otro Sonarr con una letra, luego letras, cifras o guiones, como sonarr-4k",
  "New Sonarr": "Nuevo Sonarr",
  "No Sonarr named {0} in Settings, Sonarr": "Ningún Sonarr llamado {0} en Ajustes, Sonarr",
  "None: every series downloads for the Sonarr above only.": "Ninguno: cada serie se descarga solo para el Sonarr de arriba.",
@@ -2074,5 +2070,11 @@
  "Downloads at once": "Descargas a la vez",
  "per server": "por servidor",
  "Stopped before it started": "Detenida antes de empezar",
- "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": "Cuántos episodios descarga a la vez cada servidor de Unshackle. 1 es más suave para un NAS pequeño. 0: tantos como permita Unshackle, 2 por defecto."
+ "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": "Cuántos episodios descarga a la vez cada servidor de Unshackle. 1 es más suave para un NAS pequeño. 0: tantos como permita Unshackle, 2 por defecto.",
+ "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes come with the automatic sync: release times stay with the Sonarr above.": "Un segundo Sonarr, con su propia biblioteca. Las series configuradas aquí también se descargan para él cuando las tiene, con su propia escala de calidad. Sus episodios nuevos llegan con la sincronización automática: las horas de estreno siguen con el Sonarr de arriba.",
+ "It names this library on series and starts the folders of its downloads: sonarr-2.": "Nombra esta biblioteca en las series y encabeza las carpetas de sus descargas: sonarr-2.",
+ "Name each other Sonarr with a letter, then letters, digits or dashes, like sonarr-2": "Nombre cada otro Sonarr con una letra, luego letras, cifras o guiones, como sonarr-2",
+ "Name the Sonarr with a letter, then letters, digits or dashes, like sonarr-1080p": "Nombre el Sonarr con una letra, luego letras, cifras o guiones, como sonarr-1080p",
+ "Shown on the series of each library when you have more than one Sonarr. Empty: Sonarr.": "Se muestra en las series de cada biblioteca cuando tiene más de un Sonarr. Vacío: Sonarr.",
+ "Sonarr name": "Nombre de Sonarr"
 }

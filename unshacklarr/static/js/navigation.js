@@ -122,7 +122,7 @@ function renderLibraryFilter() {
   const main = S.series.filter((s) => s.id).length;
   f.querySelectorAll("option.lib-opt").forEach((o) => o.remove());
   f.options[0].textContent = `All libraries (${S.series.length})`;
-  f.append(el("option", { className: "lib-opt", value: "-", textContent: `Sonarr (${main})` }),  // "-": the main one
+  f.append(el("option", { className: "lib-opt", value: "-", textContent: `${mainSonarr()} (${main})` }),  // "-": the main one
     ...names.map((name) => el("option", { className: "lib-opt", value: name, textContent: `${name} (${n(name)})` })));
   f.value = [...f.options].some((o) => o.value === keep) ? keep : "";
 }

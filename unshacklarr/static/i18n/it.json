@@ -2026,7 +2026,6 @@
  "years": "anni",
  "{0} of {1} series checked": "Serie controllate: {0} di {1}",
  "A letter, then letters, digits or dashes": "Una lettera, poi lettere, cifre o trattini",
- "A second Sonarr, a 4K one for example. The series set up here are also downloaded for it when it has them, with its own quality ladder. Only the automatic sync downloads for it: release times and episodes you pick by hand stay with the Sonarr above.": "Un secondo Sonarr, per esempio uno 4K. Le serie configurate qui vengono scaricate anche per lui quando le ha, con la sua scala di qualità. Solo la sincronizzazione automatica scarica per lui: gli orari di uscita e gli episodi scelti a mano restano al Sonarr sopra.",
  "Add a Sonarr": "Aggiungi un Sonarr",
  "Another Sonarr has this name": "Un altro Sonarr ha questo nome",
  "Checking {0} of {1}{2}{3}…": "Controllo {0} di {1}{2}{3}…",
@@ -2037,12 +2036,9 @@
  "Downloading {0} episode{1}{2}: follow it in Activity": "Download in corso{2}, episodi: {0}. Seguilo in Attività",
  "Each series' own": "Quella di ogni serie",
  "Enter the API key of {0}": "Inserisci la chiave API di {0}",
- "For every series it downloads, over the series' own (4K for a 4K Sonarr).": "Per tutte le serie che scarica, al posto di quella della serie (4K per un Sonarr 4K).",
  "For every series it downloads, over the series' own.": "Per tutte le serie che scarica, al posto dell'impostazione della serie.",
  "In Sonarr: Settings, General. Empty keeps the saved one.": "In Sonarr: Settings, General. Vuoto mantiene quella salvata.",
- "It starts the folders of its downloads: sonarr-4k.": "Apre il nome delle cartelle dei suoi download: sonarr-4k.",
  "Library": "Libreria",
- "Name each other Sonarr with a letter, then letters, digits or dashes, like sonarr-4k": "Dai a ogni altro Sonarr un nome con una lettera, poi lettere, cifre o trattini, come sonarr-4k",
  "New Sonarr": "Nuovo Sonarr",
  "No Sonarr named {0} in Settings, Sonarr": "Nessun Sonarr chiamato {0} in Impostazioni, Sonarr",
  "None: every series downloads for the Sonarr above only.": "Nessuno: ogni serie viene scaricata solo per il Sonarr sopra.",
@@ -2096,5 +2092,11 @@
  "Downloads at once": "Download simultanei",
  "per server": "per server",
  "Stopped before it started": "Fermato prima di iniziare",
- "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": "Quanti episodi scarica insieme ogni server Unshackle. 1 è più leggero per un piccolo NAS. 0: quanti ne consente Unshackle, 2 di default."
+ "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": "Quanti episodi scarica insieme ogni server Unshackle. 1 è più leggero per un piccolo NAS. 0: quanti ne consente Unshackle, 2 di default.",
+ "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes come with the automatic sync: release times stay with the Sonarr above.": "Un secondo Sonarr, con la sua libreria. Le serie configurate qui vengono scaricate anche per lui quando le ha, con la sua scala di qualità. I suoi nuovi episodi arrivano con la sincronizzazione automatica: gli orari di uscita restano al Sonarr qui sopra.",
+ "It names this library on series and starts the folders of its downloads: sonarr-2.": "Indica questa libreria sulle serie e apre le cartelle dei suoi download: sonarr-2.",
+ "Name each other Sonarr with a letter, then letters, digits or dashes, like sonarr-2": "Dai a ogni altro Sonarr un nome con una lettera, poi lettere, cifre o trattini, come sonarr-2",
+ "Name the Sonarr with a letter, then letters, digits or dashes, like sonarr-1080p": "Dai al Sonarr un nome con una lettera, poi lettere, cifre o trattini, come sonarr-1080p",
+ "Shown on the series of each library when you have more than one Sonarr. Empty: Sonarr.": "Mostrato sulle serie di ogni libreria quando hai più di un Sonarr. Vuoto: Sonarr.",
+ "Sonarr name": "Nome di Sonarr"
 }

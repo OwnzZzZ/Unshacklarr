@@ -2032,7 +2032,6 @@
  "years": "年",
  "{0} of {1} series checked": "確認するシリーズ：{0} / {1}",
  "A letter, then letters, digits or dashes": "先頭は英字、その後は英字・数字・ハイフン",
- "A second Sonarr, a 4K one for example. The series set up here are also downloaded for it when it has them, with its own quality ladder. Only the automatic sync downloads for it: release times and episodes you pick by hand stay with the Sonarr above.": "2 台目の Sonarr（たとえば 4K 用）。ここで設定したシリーズは、その Sonarr にもある場合、その Sonarr 自身の画質ラダーでダウンロードされます。その Sonarr 向けにダウンロードするのは自動同期だけです。公開時刻や手動で選んだエピソードは上の Sonarr のままです。",
  "Add a Sonarr": "Sonarr を追加",
  "Another Sonarr has this name": "この名前は別の Sonarr が使っています",
  "Checking {0} of {1}{2}{3}…": "{0} / {1} を確認中{2}{3}…",
@@ -2043,12 +2042,9 @@
  "Downloading {0} episode{1}{2}: follow it in Activity": "{0} エピソードをダウンロード中{2}：アクティビティで確認できます",
  "Each series' own": "各シリーズのもの",
  "Enter the API key of {0}": "{0} の API キーを入力してください",
- "For every series it downloads, over the series' own (4K for a 4K Sonarr).": "この Sonarr でダウンロードするすべてのシリーズに、シリーズ側の設定より優先して使います（4K 用 Sonarr なら 4K）。",
  "For every series it downloads, over the series' own.": "この Sonarr でダウンロードするすべてのシリーズに、シリーズ側の設定より優先して使います。",
  "In Sonarr: Settings, General. Empty keeps the saved one.": "Sonarr の Settings › General にあります。空欄なら保存済みのものを使います。",
- "It starts the folders of its downloads: sonarr-4k.": "ダウンロードのフォルダー名の先頭に付きます：sonarr-4k。",
  "Library": "ライブラリ",
- "Name each other Sonarr with a letter, then letters, digits or dashes, like sonarr-4k": "追加の Sonarr にはそれぞれ、英字で始まり英字・数字・ハイフンが続く名前を付けてください（例：sonarr-4k）",
  "New Sonarr": "新しい Sonarr",
  "No Sonarr named {0} in Settings, Sonarr": "設定 › Sonarr に {0} という名前の Sonarr はありません",
  "None: every series downloads for the Sonarr above only.": "なし：すべてのシリーズは上の Sonarr 向けにのみダウンロードされます。",
@@ -2102,5 +2098,11 @@
  "Downloads at once": "同時ダウンロード数",
  "per server": "サーバーごと",
  "Stopped before it started": "開始前に停止しました",
- "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": "各 Unshackle サーバーが同時にダウンロードするエピソード数。小型 NAS には 1 が負担の少ない設定です。0：Unshackle が許す数（既定は 2）。"
+ "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": "各 Unshackle サーバーが同時にダウンロードするエピソード数。小型 NAS には 1 が負担の少ない設定です。0：Unshackle が許す数（既定は 2）。",
+ "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes come with the automatic sync: release times stay with the Sonarr above.": "独自のライブラリを持つ 2 台目の Sonarr。ここで設定したシリーズは、その Sonarr にもあれば、それ自身の画質ラダーでダウンロードされます。新しいエピソードは自動同期で届きます。公開時刻は上の Sonarr のままです。",
+ "It names this library on series and starts the folders of its downloads: sonarr-2.": "シリーズ上でこのライブラリを示し、ダウンロードフォルダ名の先頭になります：sonarr-2。",
+ "Name each other Sonarr with a letter, then letters, digits or dashes, like sonarr-2": "他の Sonarr には、英字で始まり英数字かハイフンが続く名前を付けてください（例：sonarr-2）",
+ "Name the Sonarr with a letter, then letters, digits or dashes, like sonarr-1080p": "Sonarr には、英字で始まり英数字かハイフンが続く名前を付けてください（例：sonarr-1080p）",
+ "Shown on the series of each library when you have more than one Sonarr. Empty: Sonarr.": "Sonarr が複数あるとき、各ライブラリのシリーズに表示されます。空欄：Sonarr。",
+ "Sonarr name": "Sonarr の名前"
 }

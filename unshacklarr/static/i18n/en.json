@@ -136,7 +136,7 @@
  "A remote CDM's name: letters, digits, _ . - @": [],
  "A remote unshackle serve is restarted where it runs": [],
  "A remote unshackle serve keeps its log where it runs": [],
- "A second Sonarr, a 4K one for example. The series set up here are also downloaded for it when it has them, with its own quality ladder. Only the automatic sync downloads for it: release times and episodes you pick by hand stay with the Sonarr above.": [],
+ "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes come with the automatic sync: release times stay with the Sonarr above.": [],
  "A service that logs in with a username and password (set in unshackle.yaml) needs no cookies.": [],
  "A sync is already running": [],
  "A sync is running.": [],
@@ -802,7 +802,6 @@
  "For a series with a release time, its new episode is tried at that time, then again and again for a while.": [],
  "For at most": [],
  "For every series": [],
- "For every series it downloads, over the series' own (4K for a 4K Sonarr).": [],
  "For every series it downloads, over the series' own.": [],
  "For every series.": [],
  "For example fr, en. An episode with none of them is not downloaded. It is tried again at each sync.": [],
@@ -930,8 +929,8 @@
  "It is first tried at {0}: fix it before then.": [
   "when"
  ],
+ "It names this library on series and starts the folders of its downloads: sonarr-2.": [],
  "It only opens the /api/v1 routes: never the password, the cookies or the settings.": [],
- "It starts the folders of its downloads: sonarr-4k.": [],
  "Italiano": [],
  "Its address, API key, and TMDB": [],
  "Its address: http(s)://…": [],
@@ -1124,8 +1123,9 @@
  "NFD": [],
  "NFKD": [],
  "Name": [],
- "Name each other Sonarr with a letter, then letters, digits or dashes, like sonarr-4k": [],
+ "Name each other Sonarr with a letter, then letters, digits or dashes, like sonarr-2": [],
  "Name of the remote server from remote_services, when several are configured. Only with --remote.": [],
+ "Name the Sonarr with a letter, then letters, digits or dashes, like sonarr-1080p": [],
  "Needed to manage them in Settings, Cookies. Empty: Unshacklarr asks Unshackle, which works when both run on this computer.": [],
  "Needs a look": [],
  "Needs a look is turned off above, so this message will not be sent.": [],
@@ -1773,6 +1773,7 @@
  ],
  "Shown": [],
  "Shown in Unshacklarr's log when it starts (docker logs unshacklarr), or the SETUP_TOKEN you set.": [],
+ "Shown on the series of each library when you have more than one Sonarr. Empty: Sonarr.": [],
  "Sign in through a reverse proxy": [],
  "Signal": [],
  "Signed in by your reverse proxy as {0}": [
@@ -1784,9 +1785,6 @@
  "Skipped: the episode offset puts it before the service's first episode.": [],
  "Slack": [],
  "Sonarr": [],
- "Sonarr ({0})": [
-  "main"
- ],
  "Sonarr GET {0} {1} → {2}, {3} bytes": [
   "path",
   "params or ''",
@@ -1833,6 +1831,7 @@
  ],
  "Sonarr kept its own file": [],
  "Sonarr lists no episode for this series.": [],
+ "Sonarr name": [],
  "Sonarr numbers it {0}: this series' Numbering settings map it there": [
   "sxxeyy"
  ],

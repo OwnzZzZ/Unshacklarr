@@ -861,7 +861,7 @@ def check_sonarrs(given, saved, main_url: str) -> list[dict]:
     for i in given or []:
         name, url = str(i.get("name") or "").strip(), str(i.get("url") or "").strip().rstrip("/")
         if not re.fullmatch(r"[A-Za-z][A-Za-z0-9-]{0,23}", name):
-            raise web.HTTPBadRequest(text="Name each other Sonarr with a letter, then letters, digits or dashes, like sonarr-4k")
+            raise web.HTTPBadRequest(text="Name each other Sonarr with a letter, then letters, digits or dashes, like sonarr-2")
         if name in {o["name"] for o in out}:
             raise web.HTTPBadRequest(text=f"Two Sonarr instances are named {name}")
         if not URL.fullmatch(url) or "@" in urlparse(url).netloc:
@@ -1161,6 +1161,11 @@ def check_settings(body: dict, previous: dict) -> dict:
     settings["upgrade_other_groups"] = body.get("upgrade_other_groups") is True
     settings["backends"] = check_backends(body.get("backends"), previous.get("backends"))
     settings["sonarrs"] = check_sonarrs(body.get("sonarrs"), previous.get("sonarrs"), settings["sonarr_url"])
+    name = settings["sonarr_name"] = str(body.get("sonarr_name") or "").strip()
+    if name and not re.fullmatch(r"[A-Za-z][A-Za-z0-9-]{0,23}", name):
+        raise web.HTTPBadRequest(text="Name the Sonarr with a letter, then letters, digits or dashes, like sonarr-1080p")
+    if name and name in {i["name"] for i in settings["sonarrs"]}:
+        raise web.HTTPBadRequest(text=f"Two Sonarr instances are named {name}")
     return settings
 
 

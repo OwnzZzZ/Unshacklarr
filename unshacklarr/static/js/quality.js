@@ -286,9 +286,9 @@ function sonarrBlock(i) {
     if (!why) i[key] = v;
     dirty();
   } });
-  const name = text("name", {}, "It starts the folders of its downloads: sonarr-4k.", (v) => !v ? "Give it a name"
-    : list.some((o) => o !== i && o.name === v) ? "Another Sonarr has this name" : !/^[A-Za-z][A-Za-z0-9-]{0,23}$/.test(v) ? "A letter, then letters, digits or dashes" : "");
-  const url = text("url", { type: "url", placeholder: "http://sonarr-4k:8989" }, "Where Unshacklarr reaches it.",
+  const name = text("name", {}, "It names this library on series and starts the folders of its downloads: sonarr-2.", (v) => !v ? "Give it a name"
+    : list.some((o) => o !== i && o.name === v) || v === S.config.settings.sonarr_name ? "Another Sonarr has this name" : !/^[A-Za-z][A-Za-z0-9-]{0,23}$/.test(v) ? "A letter, then letters, digits or dashes" : "");
+  const url = text("url", { type: "url", placeholder: "http://sonarr-2:8989" }, "Where Unshacklarr reaches it.",
     (v) => !URL_OK.test(v) ? "An address starting with http:// or https://, without a user name"
       : v.replace(/\/+$/, "") === (S.config.settings.sonarr_url || "").replace(/\/+$/, "") ? "That is the Sonarr above" : "");
   const key = el("input", { type: "password", autocomplete: "off", placeholder: i.api_key_set ? "Type a new key to replace it" : "",
@@ -306,7 +306,7 @@ function sonarrBlock(i) {
     ladder.nextElementSibling?.classList.toggle("bad", unset);
     if (ladder.nextElementSibling) ladder.nextElementSibling.textContent = unset
       ? "Choose one: nothing is downloaded for this Sonarr until you do."
-      : "For every series it downloads, over the series' own (4K for a 4K Sonarr).";
+      : "For every series it downloads, over the series' own.";
   };
   queueMicrotask(showChoice);
   const after = el("select", { onchange: (e) => { i.download_only = e.target.value === "" ? null : e.target.value === "only"; dirty(); } },
@@ -335,7 +335,7 @@ function sonarrBlock(i) {
     el("div", { className: "svc-block-head" }, head, el("span", { className: "ub-acts" }, state, test, remove)),
     el("div", { className: "sx-grid" }, withHelp("Name", name), withHelp("Address", url), withHelp("API key", key, i.api_key_set),
       withHelp("Downloads folder, as it sees it", dl),
-      withHelp("Quality ladder", ladder, false, "For every series it downloads, over the series' own (4K for a 4K Sonarr)."),
+      withHelp("Quality ladder", ladder, false, "For every series it downloads, over the series' own."),
       withHelp("After the download", after, false, "For every series it downloads, over the series' own.")));
 }
 let sonarrStates = {};
@@ -350,9 +350,9 @@ function paintSonarrs(states = sonarrStates) {
 }
 $("#sn-add").onclick = () => {
   const list = (S.config.settings.sonarrs ??= []);
-  let n = list.length + 1;
-  while (list.some((o) => o.name === `sonarr${n}`)) n++;
-  list.push({ name: list.length ? `sonarr${n}` : "sonarr-4k", url: "", downloads: "", quality_ladder: "", download_only: null });  // its ladder: to choose
+  let n = list.length + 2;  // the main one is the first
+  while (list.some((o) => o.name === `sonarr-${n}`)) n++;
+  list.push({ name: `sonarr-${n}`, url: "", downloads: "", quality_ladder: "", download_only: null });  // its ladder: to choose
   dirty(); renderSonarrs();
   $("#sn-list .ub-block:last-child input[type=url]")?.focus();
 };
@@ -563,17 +563,17 @@ function renderLibraries(conf) {
   };
   const said = (ladder, only) => `${!ladder || ladder === "off" ? "No quality ladder" : ladder} · ${only ? "Download only" : "Sonarr imports it"}`;
   const view = (name) => { epSonarr = name; epSonarrOf = current.tvdbId; showDrawerTab("episodes"); loadEpisodes(current); };
-  const chip = (name, on, says, missing, toggle) => el("div", { className: `d-lib${on ? " on" : ""}` },
+  const chip = (name, on, says, missing, toggle, lib = name) => el("div", { className: `d-lib${on ? " on" : ""}` },
     el("button", { type: "button", className: "d-lib-sw", ariaPressed: String(on), onclick: toggle },
       el("b", { textContent: name }), el("small", { textContent: on ? says : "Switched off" })),
     ...(missing ? [el("button", { type: "button", className: "d-lib-miss", textContent: `${missing} missing`,
-      title: `Open the episodes missing in ${name}`, onclick: () => view(name === "Sonarr" ? "" : name) })] : []));
+      title: `Open the episodes missing in ${name}`, onclick: () => view(lib) })] : []));
   const mainMissing = S.series.find((x) => x.tvdbId === current.tvdbId)?.missing;
   $("#d-libs").replaceChildren(
-    ...(current.id ? [chip("Sonarr", !conf.main_off, said(own, after), mainMissing, () => {  // in the main Sonarr too
+    ...(current.id ? [chip(mainSonarr(), !conf.main_off, said(own, after), mainMissing, () => {  // in the main Sonarr too
       if (conf.main_off) delete conf.main_off; else conf.main_off = true;
       dirty(); renderLibraries(conf);
-    })] : []),
+    }, "")] : []),
     ...found.map((o) => {
       const inst = insts[o.name] || {}, on = !all[o.name]?.off;
       const ladder = inst.quality_ladder === "series" ? own : inst.quality_ladder;

@@ -1674,3 +1674,13 @@ def test_a_diagnostic_keeps_no_token_key_or_address():
     text = web.scrubbed("GET https://api.netflix.com/license?playbackContextId=abc123&esn=NFCDIE key=" + "a" * 40 + " mail me@example.com")
     assert "playbackContextId" not in text and "a" * 40 not in text and "me@example.com" not in text
     assert "https://api.netflix.com/license?…" in text
+
+
+def test_the_main_sonarr_can_be_named():
+    from unshacklarr import web
+    saved = {**web.sonarr_sync.SETTINGS_DEFAULTS}
+    assert web.check_settings({"sonarr_name": " sonarr-1080p "}, saved)["sonarr_name"] == "sonarr-1080p"
+    assert web.check_settings({}, saved)["sonarr_name"] == ""  # empty: shown as Sonarr
+    assert _raises(lambda: web.check_settings({"sonarr_name": "1080p sonarr"}, saved))
+    other = {"name": "sonarr-4k", "url": "http://sonarr-4k:8989", "api_key": "k", "quality_ladder": "4K"}
+    assert _raises(lambda: web.check_settings({"sonarr_name": "sonarr-4k", "sonarrs": [other]}, saved))  # each name once

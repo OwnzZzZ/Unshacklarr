@@ -371,7 +371,7 @@ function sonarrPicker(picked, pick) {
   const others = S.config.settings.sonarrs || [];
   if (!others.length) return null;
   return el("div", { className: "ax-seg", role: "radiogroup", ariaLabel: "Which Sonarr" },
-    ...["", ...others.map((i) => i.name)].map((n) => el("button", { type: "button", role: "radio", textContent: n || "Sonarr",
+    ...["", ...others.map((i) => i.name)].map((n) => el("button", { type: "button", role: "radio", textContent: n || mainSonarr(),
       ariaChecked: String(picked === n), onclick: () => pick(n) })));
 }
 function unsetNote(name) {

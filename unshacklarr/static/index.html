@@ -203,6 +203,7 @@
         <section class="sx-card">
           <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 1 1 0 10h-2M8 12h8"/></svg></span><div><h3>Connection</h3><p>How Unshacklarr reaches Sonarr, to find the missing episodes and hand it the downloads.</p></div></div>
           <div class="sx-grid">
+            <div class="field" id="sx-name-field"><label for="sx-name">Name</label><input id="sx-name" type="text" data-set="sonarr_name" placeholder="Sonarr" spellcheck="false"><small id="sx-name-help">Shown on the series of each library when you have more than one Sonarr. Empty: Sonarr.</small></div>
             <div class="field"><label for="sx-url">Sonarr URL</label><input id="sx-url" type="url" data-set="sonarr_url" placeholder="http://sonarr:8989"><small>The address Unshacklarr uses to reach Sonarr, e.g. http://sonarr:8989 on a shared Docker network.</small></div>
             <div class="field"><label for="sx-key">API key <span class="sx-saved" id="sx-key-saved" hidden>✓ Saved</span></label><input id="sx-key" type="password" data-set="sonarr_api_key" autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true"><small>In Sonarr: Settings, General. Leave empty to keep the saved key. A new URL needs its key too.</small></div>
           </div>
@@ -214,7 +215,7 @@
           </div>
         </section>
         <section class="sx-card">
-          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/><path d="M6 6.5h.01M6 17.5h.01"/></svg></span><div><h3>Other Sonarr instances</h3><p>A second Sonarr, a 4K one for example. The series set up here are also downloaded for it when it has them, with its own quality ladder. Only the automatic sync downloads for it: release times and episodes you pick by hand stay with the Sonarr above.</p></div>
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/><path d="M6 6.5h.01M6 17.5h.01"/></svg></span><div><h3>Other Sonarr instances</h3><p>A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes come with the automatic sync: release times stay with the Sonarr above.</p></div>
             <button class="btn small dx-add" id="sn-add" type="button">Add a Sonarr</button></div>
           <div id="sn-list"></div>
         </section>

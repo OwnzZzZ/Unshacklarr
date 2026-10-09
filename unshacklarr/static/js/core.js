@@ -283,6 +283,7 @@ function optionPicker(free, onPick) {
   return el("div", { className: "picker" }, input, list);
 }
 
+const mainSonarr = () => S.config?.settings?.sonarr_name || "Sonarr";  // the main Sonarr where libraries are named
 const SEL = { on: false, ids: new Set() };  // the series picked to change together (js/bulk.js)
 function renderWall() {
   const q = $("#search").value.trim().toLowerCase();
@@ -326,7 +327,7 @@ function renderWall() {
       if (s.poster) art.append(el("img", { src: s.poster, alt: "", loading: "lazy", decoding: "async" }));
       if (conf?.service) art.append(el("span", { className: "svc", textContent: conf.service }));
       if (libsOf(s).length) art.append(el("span", { className: "lib" },  // the Sonarr libraries it is in, by their names
-        ...[...(s.id ? ["Sonarr"] : []), ...libsOf(s).map((o) => o.name)].flatMap((n, i) => [...(i ? [" · "] : []), el("span", { textContent: n })])));
+        ...[...(s.id ? [mainSonarr()] : []), ...libsOf(s).map((o) => o.name)].flatMap((n, i) => [...(i ? [" · "] : []), el("span", { textContent: n })])));
       const sick = conf?.service && S.health[s.tvdbId];
       if (sick) art.append(el("span", { className: "sick", title: `Its last ${sick.failing} downloads failed${sick.cause ? `: ${sick.cause}` : ""}`, textContent: "!" }));
       if (S.config.hidden_series.includes(s.tvdbId)) {

@@ -122,6 +122,7 @@ SETTINGS_DEFAULTS = {
     "unshackle_downloads": "",   # the same folder, as unshackle serve sees it (empty: the same path)
     "cookies_dir": "",           # Unshackle's Cookies folder, as Unshacklarr sees it (local: asked to unshackle)
     "unshackle_config_dir": "",  # the folder of unshackle.yaml, WVDs and PRDs, as Unshacklarr sees it (local: asked)
+    "sonarr_name": "",           # the main Sonarr's name where libraries are named (empty: Sonarr)
     "sonarr_url": "",
     "sonarr_public_url": "",     # Sonarr in the browser, for links (empty: sonarr_url, when a browser can reach it)
     "sonarr_api_key": "",

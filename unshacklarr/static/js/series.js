@@ -215,7 +215,7 @@ function sonarrSwitch(s) {
   const conf = S.config.series[s.tvdbId] || {};
   const own = conf.ladder || S.config.service_defaults?.[conf.service]?.ladder || S.config.settings?.quality_ladder || "";
   const shown = (l) => !l || l === "off" ? "" : l === "series" ? (own && own !== "off" ? own : "") : l;  // "series": the series' own
-  const opts = [...(s.id ? [{ name: "", label: "Sonarr", ladder: shown(own), missing: S.series.find((x) => x.tvdbId === s.tvdbId)?.missing }] : []),
+  const opts = [...(s.id ? [{ name: "", label: mainSonarr(), ladder: shown(own), missing: S.series.find((x) => x.tvdbId === s.tvdbId)?.missing }] : []),
     ...others.map((i) => ({ name: i.name, label: i.name, ladder: i.ladder ? shown(i.ladder) : "no ladder chosen", missing: i.missing }))];
   return el("div", { className: "ep-sonarr", role: "radiogroup", ariaLabel: "Which Sonarr's episodes" },
     el("span", { className: "ep-sonarr-label", textContent: "Library" }),
