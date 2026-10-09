@@ -1834,3 +1834,40 @@ def test_the_official_unshackle_wording_of_missing_subtitles_is_read(tmp_path, m
     assert sync.SUBS_MISSING.search("fr not found in subtitle tracks").group(1) == "fr"
     assert not sync.SUBS_MISSING.search("fr not found in audio tracks")
     assert not sync.SUBS_MISSING.search("fr not found in video tracks")
+
+
+def test_downloads_at_once_per_server_and_a_slow_serve_waited_for(tmp_path, monkeypatch):
+    # Downloads at once 1: a second download on the same server waits for the first; another server doesn't (#10)
+    import threading, time
+    sync = load(tmp_path, monkeypatch)
+    monkeypatch.setitem(sync.SETTINGS, "downloads_at_once", 1)
+    now, most = {"": 0, "b": 0}, {"": 0, "b": 0}
+
+    def busy(server):
+        with sync.download_slot(server):
+            now[server] += 1
+            most[server] = max(most[server], now[server])
+            time.sleep(.05)
+            now[server] -= 1
+    threads = [threading.Thread(target=busy, args=(s,)) for s in ("", "", "", "b", "b")]
+    for t in threads: t.start()
+    for t in threads: t.join()
+    assert most == {"": 1, "b": 1}
+    monkeypatch.setitem(sync.SETTINGS, "downloads_at_once", 0)  # 0: no limit here
+    threads = [threading.Thread(target=busy, args=("",)) for _ in range(3)]
+    for t in threads: t.start()
+    for t in threads: t.join()
+    assert most[""] == 3
+
+    # serve too slow to answer: waited for 1, 3 then 10 min; another hiccup 30 s then 2 min
+    slept = []
+    for cause, waits in (("unshackle serve is unreachable at http://x: Read timed out. (read timeout=60)", [60, 180, 600]),
+                         ("502 Bad Gateway", [30, 120])):
+        slept.clear()
+        monkeypatch.setattr(sync, "run_job", lambda payload, run=None: (_ for _ in ()).throw(sync.UnshackleError(cause)))
+        try:
+            sync.run_job_retrying({}, sleep=slept.append)
+            raise AssertionError("it never failed")
+        except sync.UnshackleError:
+            pass
+        assert slept == waits

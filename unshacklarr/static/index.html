@@ -170,6 +170,7 @@
             <div class="field only-local"><label for="ux-cmd">Unshackle command</label><input id="ux-cmd" type="text" data-set="unshackle_command" placeholder="unshackle" spellcheck="false"><small>Empty: uses <code>unshackle</code> from the PATH. Otherwise, its full path, e.g. <code>.venv/bin/unshackle</code> in a git clone.</small></div>
             <div class="field only-remote"><label for="ux-url">Address of <code>unshackle serve</code></label><input id="ux-url" type="url" data-set="unshackle_url" placeholder="http://unshackle:8786"><small>For example http://unshackle:8786 on a shared Docker network.</small></div>
             <div class="field only-remote"><label for="ux-key">API key <span class="sx-saved" id="ux-key-saved" hidden>✓ Saved</span></label><input id="ux-key" type="password" data-set="unshackle_api_key" autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true"><small>The <code>serve: api_secret</code> value of its unshackle.yaml. Leave empty to keep the saved key.</small></div>
+            <div class="field" id="ux-at-once-field"><label for="ux-at-once">Downloads at once</label><div class="unit-input"><input id="ux-at-once" type="number" data-set="downloads_at_once" data-num min="0" max="10" step="1" inputmode="numeric"><span>per server</span></div><small>How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.</small></div>
           </div>
         </section>
         <section class="sx-card">

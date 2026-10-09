@@ -2016,5 +2016,9 @@
  "What is sent for this series' episodes. The bell in the page always keeps everything.": "为该剧集的剧集发送的内容。页面中的铃铛始终保留全部内容。",
  "{0} (default)": "{0}（默认）",
  "no {0} subtitles on {1}: downloading {2}": "{1} 上没有 {0} 字幕：下载{2}",
- "with the forced subtitles only": "仅含强制字幕"
+ "with the forced subtitles only": "仅含强制字幕",
+ "Downloads at once": "同时下载数",
+ "per server": "每台服务器",
+ "Stopped before it started": "开始前已停止",
+ "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": "每台 Unshackle 服务器同时下载的剧集数。小型 NAS 设为 1 更轻松。0：按 Unshackle 允许的数量，默认 2。"
 }

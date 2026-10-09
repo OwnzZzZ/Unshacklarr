@@ -607,6 +607,7 @@
  ],
  "Downloads": [],
  "Downloads are using the current command: test another one when they are done": [],
+ "Downloads at once": [],
  "Downloads carry on.": [],
  "Downloads folder": [],
  "Downloads folder, as Sonarr sees it": [],
@@ -824,6 +825,7 @@
  "History": [],
  "How Unshacklarr reaches Sonarr, to find the missing episodes and hand it the downloads.": [],
  "How it runs": [],
+ "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": [],
  "How the page looks: its language, and episode titles hidden or not.": [],
  "If the service refuses the login, the download is tried again with these profiles, in order. Useful for a second account while the first one's cookies are renewed.": [],
  "If this service numbers episodes differently, set its numbering in config.yaml.": [],
@@ -1813,6 +1815,7 @@
  "Stop the check": [],
  "Stop the job": [],
  "Stopped": [],
+ "Stopped before it started": [],
  "Stopping {0} {1}": [
   "c.series",
   "c.sxxeyy"
@@ -2609,6 +2612,7 @@
  ],
  "password set at the first run": [],
  "pause": [],
+ "per server": [],
  "pick the day of its first episode": [],
  "prd": [],
  "property": [],
@@ -2735,6 +2739,7 @@
   "self.tail()"
  ],
  "unshackle serve downloads the episodes: started here by Unshacklarr, or running elsewhere.": [],
+ "unshackle serve is unreachable": [],
  "unshackle serve is unreachable at {0}: {1}": [
   "url",
   "e"

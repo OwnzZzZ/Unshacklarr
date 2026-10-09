@@ -1998,5 +1998,9 @@
  "default": "par défaut",
  "{0} (default)": "{0} (par défaut)",
  "no {0} subtitles on {1}: downloading {2}": "pas de sous-titres {0} sur {1} : téléchargement {2}",
- "with the forced subtitles only": "avec les sous-titres forcés seulement"
+ "with the forced subtitles only": "avec les sous-titres forcés seulement",
+ "Downloads at once": "Téléchargements simultanés",
+ "per server": "par serveur",
+ "Stopped before it started": "Arrêté avant de commencer",
+ "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": "Combien d’épisodes chaque serveur Unshackle télécharge en même temps. 1 ménage un petit NAS. 0 : autant qu’Unshackle le permet, 2 par défaut."
 }

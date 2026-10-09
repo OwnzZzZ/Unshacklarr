@@ -2008,5 +2008,9 @@
  "What is sent for this series' episodes. The bell in the page always keeps everything.": "Что отправляется по эпизодам этого сериала. Колокольчик на странице всегда хранит всё.",
  "{0} (default)": "{0} (по умолчанию)",
  "no {0} subtitles on {1}: downloading {2}": "нет субтитров {0} на {1}: загрузка {2}",
- "with the forced subtitles only": "только с принудительными субтитрами"
+ "with the forced subtitles only": "только с принудительными субтитрами",
+ "Downloads at once": "Одновременных загрузок",
+ "per server": "на сервер",
+ "Stopped before it started": "Остановлено до начала",
+ "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": "Сколько эпизодов каждый сервер Unshackle загружает одновременно. 1 бережёт небольшой NAS. 0: столько, сколько позволяет Unshackle, по умолчанию 2."
 }

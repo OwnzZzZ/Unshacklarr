@@ -2011,5 +2011,9 @@
  "What is sent for this series' episodes. The bell in the page always keeps everything.": "このシリーズのエピソードで送信する内容。ページのベルには常にすべて残ります。",
  "{0} (default)": "{0}（既定）",
  "no {0} subtitles on {1}: downloading {2}": "{1} に {0} 字幕なし：{2} でダウンロード",
- "with the forced subtitles only": "強制字幕のみ"
+ "with the forced subtitles only": "強制字幕のみ",
+ "Downloads at once": "同時ダウンロード数",
+ "per server": "サーバーごと",
+ "Stopped before it started": "開始前に停止しました",
+ "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": "各 Unshackle サーバーが同時にダウンロードするエピソード数。小型 NAS には 1 が負担の少ない設定です。0：Unshackle が許す数（既定は 2）。"
 }

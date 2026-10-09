@@ -190,6 +190,10 @@ each series you want.
 **Updating:** `docker compose pull && docker compose up -d` brings a new Unshacklarr; for a new
 Unshackle, `docker compose build --pull unshackle && docker compose up -d`.
 
+**On a Synology NAS:** its shutdown marks the containers as stopped, so `restart: unless-stopped` leaves them off
+after a reboot. Use `restart: always` there. On a small NAS, Settings › Unshackle › Downloads at once set to 1
+keeps the disks from being saturated.
+
 <details>
 <summary><b>🍴 A fork of Unshackle, or a <code>serve</code> that already runs elsewhere</b></summary>
 
