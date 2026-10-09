@@ -231,13 +231,6 @@
  "Already downloaded: waiting for Sonarr's import": [],
  "Already set up": [],
  "Also apply to release-time downloads": [],
- "Also in {0} ({1})": [
-  "name",
-  "n(name)"
- ],
- "Also in {0}.": [
-  "names.join(\", \")"
- ],
  "Also tell me when": [],
  "Always remove it": [],
  "Amount of tracks to download concurrently.": [],
@@ -1442,9 +1435,6 @@
  "Only download video tracks.": [],
  "Only episodes from the last": [],
  "Only for the episodes picked now. The series keeps its own settings.": [],
- "Only in Sonarr ({0})": [
-  "only"
- ],
  "Only the fields you fill in change. Everything else stays as it is for each series. Save afterwards, as for one series.": [],
  "Only the new audio track is downloaded and added to the existing file. Unshacklarr needs access to your library: set its folder below. If the file can't be found, the whole episode is downloaded instead.": [],
  "Only use CDM, or only use Key Vaults for retrieval of Decryption Keys.": [],
@@ -1794,6 +1784,9 @@
  "Skipped: the episode offset puts it before the service's first episode.": [],
  "Slack": [],
  "Sonarr": [],
+ "Sonarr ({0})": [
+  "main"
+ ],
  "Sonarr GET {0} {1} → {2}, {3} bytes": [
   "path",
   "params or ''",
@@ -1952,10 +1945,6 @@
  "Sure? They log in again": [],
  "Sure? Your own ladders will be deleted": [],
  "Switched off": [],
- "Switched off for Sonarr.": [],
- "Switched off for {0}.": [
-  "offs.join(\", \")"
- ],
  "Sync running…": [],
  "Syncs, release times, retries": [],
  "System ID": [],
@@ -2747,6 +2736,7 @@
  ],
  "one file, nothing to join": [],
  "oninput": [],
+ "only": [],
  "open {0} and enter {1}": [
   "need.get('url')",
   "need.get('code')"
@@ -3729,7 +3719,6 @@
  "· Unshackle {0}": [
   "st.version"
  ],
- "· also in": [],
  "· checking…": [],
  "· in": [],
  "· in use": [],

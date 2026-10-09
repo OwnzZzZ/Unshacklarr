@@ -26,8 +26,9 @@ Every change worth knowing, newest first. The format follows
   and Upgrades switch to another Sonarr's episodes and download for it. Each one's ladder is chosen when it is
   added (a ladder, Off, or Same as each series): one saved without it is paused and said so. (#10, with mj23au)
 - **Sonarr libraries per series.** In Source on a series' page, each Sonarr that has it, switched on or off, with the
-  ladder it downloads by and what it misses. Options for one library stay under Advanced. The Series list filters by
-  library. (#10, by mj23au)
+  ladder it downloads by and what it misses. Options for one library stay under Advanced. (#10, by mj23au)
+- **Series from every Sonarr.** A series only in another Sonarr is listed and set up too. A badge names the Sonarr
+  libraries a series is in, and the Series list filters by them. (#10, by mj23au)
 - **Replace files from other release groups.** In Settings › Upgrades: a file from another group is listed when the
   service has the same quality, not only a better one. The group is your Group Tag, or `tag:` in unshackle.yaml. (#10, by mj23au)
 - **Upgrades you choose.** Settings › Upgrades: which series are checked, how long an answer is kept, and how far

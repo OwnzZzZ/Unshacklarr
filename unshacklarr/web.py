@@ -421,11 +421,14 @@ def write_config(config: dict) -> None:
 def sonarr_series() -> list[dict]:
     r = requests.get(f"{sonarr_sync.SONARR}/api/v3/series", headers=sonarr_sync.HEADERS, timeout=30)
     r.raise_for_status()
-    series = []
-    for s in r.json():
-        stats = s.get("statistics") or {}
-        poster = next((i.get("remoteUrl") for i in s.get("images", []) if i.get("coverType") == "poster"), None)
-        series.append({
+    return sorted((series_entry(s) for s in r.json()), key=lambda s: s["title"].lower())
+
+
+def series_entry(s: dict) -> dict:
+    """A Sonarr series as the page lists it."""
+    stats = s.get("statistics") or {}
+    poster = next((i.get("remoteUrl") for i in s.get("images", []) if i.get("coverType") == "poster"), None)
+    return {
             "id": s["id"],
             "tvdbId": s["tvdbId"],
             "tmdbId": s.get("tmdbId"),
@@ -437,8 +440,7 @@ def sonarr_series() -> list[dict]:
             "network": s.get("network"),  # its channel: its catch-up service when TMDB links to none
             "missing": max(0, stats.get("episodeCount", 0) - stats.get("episodeFileCount", 0)),
             "poster": poster,
-        })
-    return sorted(series, key=lambda s: s["title"].lower())
+        }
 
 
 page_cache: tuple[tuple, str] = ((), "")
@@ -515,6 +517,8 @@ async def state(_):
     except requests.RequestException as e:
         raise web.HTTPBadGateway(text=f"Sonarr is unreachable: {no_credentials(e)}")
     cards = await asyncio.to_thread(run_cards) if sonarr_sync.RUNS_DIR.exists() else []
+    others, only_there = await asyncio.to_thread(sonarrs_of_series, {s["tvdbId"] for s in series})
+    series = sorted(series + only_there, key=lambda s: s["title"].lower())
     return web.json_response({
         "series": series,
         "health": {str(k): v for k, v in series_health(cards).items()},
@@ -532,7 +536,7 @@ async def state(_):
         "backups": backups_info(),
         "network_services": {str(s["tvdbId"]): tag for s in series if (tag := service_for_network(s.get("network"), set(services)))},
         "instances": {str(k): v for k, v in (await asyncio.to_thread(instances_of_series)).items()},
-        "sonarrs_of": {str(k): v for k, v in (await asyncio.to_thread(sonarrs_of_series)).items()},
+        "sonarrs_of": {str(k): v for k, v in others.items()},
     })
 
 
@@ -2640,10 +2644,13 @@ def instances_of_series() -> dict[int, list[dict]]:
     return out
 
 
-def sonarrs_of_series() -> dict[int, list[dict]]:
-    """Every series of the other Sonarr instances, set up here or not: {tvdb: [{"name", "url", "slug", "missing"}]}, so a series'
-    page says where it is before it is set up. An instance the health check finds down is skipped."""
+def sonarrs_of_series(main: set[int] = frozenset()) -> tuple[dict[int, list[dict]], list[dict]]:
+    """Every series of the other Sonarr instances, set up here or not: {tvdb: [{"name", "url", "slug", "missing", "id"}]},
+    so a series' page says where it is before it is set up; and the series none of `main` (the main Sonarr's) has, as the
+    Series list shows them, without a main Sonarr id (#10, by mj23au). An instance the health check finds down is
+    skipped."""
     out: dict[int, list[dict]] = {}
+    only: dict[int, dict] = {}
     for inst in list(sonarr_sync.SONARRS.values()):
         if health.get("sonarrs", {}).get(inst["name"], {}).get("ok") is False:
             continue
@@ -2654,8 +2661,11 @@ def sonarrs_of_series() -> dict[int, list[dict]]:
         for tvdb, serie in found.items():
             stats = serie.get("statistics") or {}
             out.setdefault(tvdb, []).append({"name": inst["name"], "url": inst["url"], "slug": serie.get("titleSlug") or "",
-                                             "missing": max(0, stats.get("episodeCount", 0) - stats.get("episodeFileCount", 0))})
-    return out
+                                             "missing": max(0, stats.get("episodeCount", 0) - stats.get("episodeFileCount", 0)),
+                                             "id": serie["id"]})
+            if tvdb not in main and tvdb not in only:
+                only[tvdb] = {**series_entry(serie), "id": None}
+    return out, list(only.values())
 
 
 def sonarr_named(name: str) -> dict | None:
@@ -3036,7 +3046,8 @@ async def probe(request):
         raise web.HTTPBadRequest(text="Pick a service and its URL first")
     show = {**show, "season_map": {int(k): int(v) for k, v in (show.get("season_map") or {}).items()}}
     try:
-        found = await asyncio.to_thread(probe_series, show, int(body.get("seriesId") or 0), str(body.get("title") or ""))
+        inst = sonarr_named(str(body.get("sonarr") or ""))  # a series in another Sonarr only: its episodes there
+        found = await asyncio.to_thread(on_sonarr, inst, probe_series, show, int(body.get("seriesId") or 0), str(body.get("title") or ""))
         if body.get("tvdbId"):
             await asyncio.to_thread(keep_service_list, int(body["tvdbId"]), show, found)
         return web.json_response({**found, "checked": datetime.now(timezone.utc).isoformat()})

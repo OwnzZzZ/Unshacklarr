@@ -119,11 +119,11 @@ function renderLibraryFilter() {
   const f = $("#f-library"), keep = f.value, names = (S.config.settings?.sonarrs || []).map((i) => i.name);
   f.hidden = !names.length;
   const n = (name) => S.series.filter((s) => (S.sonarrsOf?.[s.tvdbId] || []).some((o) => o.name === name)).length;
-  const only = S.series.filter((s) => !(S.sonarrsOf?.[s.tvdbId] || []).length).length;
+  const main = S.series.filter((s) => s.id).length;
   f.querySelectorAll("option.lib-opt").forEach((o) => o.remove());
   f.options[0].textContent = `All libraries (${S.series.length})`;
-  f.append(...names.map((name) => el("option", { className: "lib-opt", value: name, textContent: `Also in ${name} (${n(name)})` })),
-    el("option", { className: "lib-opt", value: "-", textContent: `Only in Sonarr (${only})` }));
+  f.append(el("option", { className: "lib-opt", value: "-", textContent: `Sonarr (${main})` }),  // "-": the main one
+    ...names.map((name) => el("option", { className: "lib-opt", value: name, textContent: `${name} (${n(name)})` })));
   f.value = [...f.options].some((o) => o.value === keep) ? keep : "";
 }
 window.addEventListener("beforeunload", (e) => { if (!$("#savebar").hidden) e.preventDefault(); });

@@ -200,7 +200,7 @@ let epSonarr = "", epSonarrOf = null, mainKeys = null, epAvailRaw = null;
 const sxxOf = (e) => `S${pad2(e.seasonNumber)}E${pad2(e.episodeNumber)}`;
 function viewAvail(raw) {
   epAvailRaw = raw;
-  if (!raw || !epSonarr) return raw;
+  if (!raw || !epSonarr || !current?.id) return raw;  // a series in no main Sonarr: listed by its own Sonarr's ids
   if (!mainKeys) return null;  // until the main Sonarr's numbers are known
   const byKey = {};
   for (const list of Object.values(epSeasons)) for (const e of list) byKey[sxxOf(e)] = e.id;
@@ -209,12 +209,13 @@ function viewAvail(raw) {
 /* Which library's episodes: each Sonarr with the ladder it downloads by and how many episodes it misses. From #10,
    by mj23au. */
 function sonarrSwitch(s) {
-  const others = S.instances?.[s.tvdbId] || [];
-  if (!others.length) return "";
+  const insts = Object.fromEntries((S.config.settings?.sonarrs || []).map((i) => [i.name, i]));
+  const others = (S.sonarrsOf?.[s.tvdbId] || []).map((o) => ({ ...o, ladder: insts[o.name]?.quality_ladder }));
+  if (!others.length || (!s.id && others.length < 2)) return "";  // one library: nothing to switch
   const conf = S.config.series[s.tvdbId] || {};
   const own = conf.ladder || S.config.service_defaults?.[conf.service]?.ladder || S.config.settings?.quality_ladder || "";
   const shown = (l) => !l || l === "off" ? "" : l === "series" ? (own && own !== "off" ? own : "") : l;  // "series": the series' own
-  const opts = [{ name: "", label: "Sonarr", ladder: shown(own), missing: S.series.find((x) => x.tvdbId === s.tvdbId)?.missing },
+  const opts = [...(s.id ? [{ name: "", label: "Sonarr", ladder: shown(own), missing: S.series.find((x) => x.tvdbId === s.tvdbId)?.missing }] : []),
     ...others.map((i) => ({ name: i.name, label: i.name, ladder: i.ladder ? shown(i.ladder) : "no ladder chosen", missing: i.missing }))];
   return el("div", { className: "ep-sonarr", role: "radiogroup", ariaLabel: "Which Sonarr's episodes" },
     el("span", { className: "ep-sonarr-label", textContent: "Library" }),
@@ -226,8 +227,9 @@ function sonarrSwitch(s) {
 }
 async function loadEpisodes(s, keep = false) {  // keep: a reload after a download ended, same season and selection
   const box = $("#d-episodes");
-  if (epSonarrOf !== s.tvdbId) { epSonarr = ""; epSonarrOf = s.tvdbId; }  // another series: the main Sonarr's first
-  const inst = (S.instances?.[s.tvdbId] || []).find((i) => i.name === epSonarr);
+  const libs = S.sonarrsOf?.[s.tvdbId] || [];
+  if (epSonarrOf !== s.tvdbId) { epSonarr = s.id ? "" : libs[0]?.name || ""; epSonarrOf = s.tvdbId; }  // the main Sonarr's first
+  const inst = libs.find((i) => i.name === epSonarr);
   if (!inst) epSonarr = "";
   if (!keep) {
     epAvail = epTitles = epAvailRaw = null;
@@ -246,7 +248,7 @@ async function loadEpisodes(s, keep = false) {  // keep: a reload after a downlo
   let eps;
   try {
     eps = await api(inst ? `/api/series/${inst.id}/episodes?sonarr=${encodeURIComponent(inst.name)}` : `/api/series/${s.id}/episodes`);
-    mainKeys = inst ? Object.fromEntries((await api(`/api/series/${s.id}/episodes`)).map((e) => [e.id, sxxOf(e)])) : null;
+    mainKeys = inst && s.id ? Object.fromEntries((await api(`/api/series/${s.id}/episodes`)).map((e) => [e.id, sxxOf(e)])) : null;
   }
   catch (e) { if (current === s) box.replaceChildren(failed(`Could not load the episodes: ${e.message}`, () => loadEpisodes(s))); return; }
   if (current !== s) return;
@@ -615,7 +617,8 @@ async function askService(s) {
   if (check) { check.disabled = true; check.replaceChildren(el("span", { className: "spinner", ariaHidden: "true" }), ` Asking ${svc}…`); }
   let r = null;
   try {
-    r = await api("/api/probe", { method: "POST", signal: AbortSignal.timeout(120000), body: JSON.stringify({ show: conf, seriesId: s.id, tvdbId: s.tvdbId, title: s.title }) });
+    r = await api("/api/probe", { method: "POST", signal: AbortSignal.timeout(120000), body: JSON.stringify({ show: conf, seriesId: s.id ?? S.sonarrsOf?.[s.tvdbId]?.[0]?.id, tvdbId: s.tvdbId, title: s.title,
+      ...(s.id ? {} : { sonarr: S.sonarrsOf?.[s.tvdbId]?.[0]?.name }) }) });  // in no main Sonarr: its own Sonarr's episodes
     if (current === s) { epAvail = viewAvail(r.available); epTitles = r.titles || []; epChecked = r.checked; localTitles(r.local_titles); $("#ep-avail").hidden = false; renderSeason(); renderPreview(); }
   } catch (e) { toast(e.message, true); }
   if (current === s && $(".ep-check")) { $(".ep-check").disabled = false; checkLabel(epAvail ? `Refresh what's on ${svc}` : `What's on ${svc}?`); }

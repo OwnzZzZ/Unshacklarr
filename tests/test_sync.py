@@ -1738,10 +1738,14 @@ def test_the_series_page_and_upgrades_know_the_other_sonarr(tmp_path, monkeypatc
     monkeypatch.setattr(web.sonarr_sync, "sonarr_series", lambda wanted: libraries[(web.sonarr_sync.instance() or {}).get("name", "")])
     assert web.instances_of_series() == {1: [{"name": "sonarr-4k", "id": 77, "ladder": "4K only", "download_only": None, "missing": 5}]}
     libraries["sonarr-4k"][3] = {"id": 78, "titleSlug": "tehran"}  # in sonarr-4k, not set up here yet
-    assert web.sonarrs_of_series() == {1: [{"name": "sonarr-4k", "url": web.sonarr_sync.SONARRS["sonarr-4k"]["url"], "slug": "", "missing": 5}],
-                                       3: [{"name": "sonarr-4k", "url": web.sonarr_sync.SONARRS["sonarr-4k"]["url"], "slug": "tehran", "missing": 0}]}
+    libraries["sonarr-4k"][3].update(tvdbId=3, title="Tehran")
+    url = web.sonarr_sync.SONARRS["sonarr-4k"]["url"]
+    others, only = web.sonarrs_of_series({1, 2})
+    assert others == {1: [{"name": "sonarr-4k", "url": url, "slug": "", "missing": 5, "id": 77}],
+                      3: [{"name": "sonarr-4k", "url": url, "slug": "tehran", "missing": 0, "id": 78}]}
+    assert [(s["tvdbId"], s["title"], s["id"]) for s in only] == [(3, "Tehran", None)]  # in sonarr-4k only: listed, no main id
     web.health["sonarrs"] = {"sonarr-4k": {"ok": False}}
-    assert web.instances_of_series() == {} and web.sonarrs_of_series() == {}  # down: the page opens without waiting for it
+    assert web.instances_of_series() == {} and web.sonarrs_of_series() == ({}, [])  # down: the page opens without waiting for it
     assert web.upgrades_file("") == web.UPGRADES_FILE and web.upgrades_file("sonarr-4k").name == "upgrades_found-sonarr-4k.json"
     seen = []
     monkeypatch.setattr(web, "upgrade_candidates", lambda config: seen.append(((web.sonarr_sync.instance() or {}).get("name"),

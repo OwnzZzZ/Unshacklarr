@@ -570,10 +570,10 @@ function renderLibraries(conf) {
       title: `Open the episodes missing in ${name}`, onclick: () => view(name === "Sonarr" ? "" : name) })] : []));
   const mainMissing = S.series.find((x) => x.tvdbId === current.tvdbId)?.missing;
   $("#d-libs").replaceChildren(
-    chip("Sonarr", !conf.main_off, said(own, after), mainMissing, () => {
+    ...(current.id ? [chip("Sonarr", !conf.main_off, said(own, after), mainMissing, () => {  // in the main Sonarr too
       if (conf.main_off) delete conf.main_off; else conf.main_off = true;
       dirty(); renderLibraries(conf);
-    }),
+    })] : []),
     ...found.map((o) => {
       const inst = insts[o.name] || {}, on = !all[o.name]?.off;
       const ladder = inst.quality_ladder === "series" ? own : inst.quality_ladder;
