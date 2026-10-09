@@ -326,8 +326,12 @@ function renderWall() {
       const art = el("span", { className: "art" });
       if (s.poster) art.append(el("img", { src: s.poster, alt: "", loading: "lazy", decoding: "async" }));
       if (conf?.service) art.append(el("span", { className: "svc", textContent: conf.service }));
-      if (libsOf(s).length) art.append(el("span", { className: "lib" },  // the Sonarr libraries it is in, by their names
-        ...[...(s.id ? [mainSonarr()] : []), ...libsOf(s).map((o) => o.name)].flatMap((n, i) => [...(i ? [" · "] : []), el("span", { textContent: n })])));
+      if (libsOf(s).length) {  // the Sonarr libraries it is in, by their names; one switched off for it dimmed (by mj23au, #10)
+        const off = (name, main) => Boolean(conf?.service) && Boolean(main ? conf.main_off : conf.sonarrs?.[name]?.off);
+        art.append(el("span", { className: "lib" }, ...[...(s.id ? [[mainSonarr(), true]] : []), ...libsOf(s).map((o) => [o.name, false])]
+          .flatMap(([n, main], i) => [...(i ? [" · "] : []),
+            el("span", { textContent: n, ...(off(n, main) ? { className: "lib-off", title: "Switched off" } : {}) })])));
+      }
       const sick = conf?.service && S.health[s.tvdbId];
       if (sick) art.append(el("span", { className: "sick", title: `Its last ${sick.failing} downloads failed${sick.cause ? `: ${sick.cause}` : ""}`, textContent: "!" }));
       if (S.config.hidden_series.includes(s.tvdbId)) {

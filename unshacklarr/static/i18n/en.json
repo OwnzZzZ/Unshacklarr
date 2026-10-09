@@ -2372,6 +2372,9 @@
  "Unshackle answers": [],
  "Unshackle command": [],
  "Unshackle config folder": [],
+ "Unshackle doesn't answer yet: the last try of {0} may still be downloading there": [
+  "c['sxxeyy']"
+ ],
  "Unshackle downloads the episodes: here, started by Unshacklarr, or elsewhere, as unshackle serve.": [],
  "Unshackle downloads them again, then replaces a file only if the new one ranks higher in the series' quality profile in Sonarr. Otherwise the download waits in the downloads folder and you get a warning.": [],
  "Unshackle made {0} file{1}:": [
@@ -3139,6 +3142,9 @@
   "files.length",
   "files.length === 1 ? \"\" : \"s\""
  ],
+ "{0} finished after all: import it from Activity, Waiting in downloads": [
+  "c['sxxeyy']"
+ ],
  "{0} finishing": [
   "n.finishing"
  ],
@@ -3241,6 +3247,9 @@
  ],
  "{0} is out": [
   "st.latest"
+ ],
+ "{0} is still downloading from its last try": [
+  "c['sxxeyy']"
  ],
  "{0} is unreachable": [
   "label"

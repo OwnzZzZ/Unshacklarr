@@ -1617,7 +1617,7 @@ input.bad, select.bad { border-color: var(--err) !important; box-shadow: 0 0 0 3
 @media (max-width: 700px) { .d-lib { flex: 1 1 100%; } .d-lib-sw { flex: 1; } }
 .poster .lib { position: absolute; left: 6px; bottom: 6px; background: rgb(0 0 0 / .72); color: #fff; font-size: 11px; font-weight: 600;
   padding: 2px 6px; border-radius: 4px; max-width: calc(100% - 12px); line-height: 1.35; }
-.poster .lib span { white-space: nowrap; }  /* every name whole, on two lines if need be */
+.poster .lib span { white-space: nowrap; } .poster .lib .lib-off { opacity: .45; text-decoration: line-through; }  /* every name whole, on two lines if need be */
 .poster .svc ~ .lib { bottom: 30px; }  /* above the service's badge */
 /* Languages, how the audio is upgraded; Automation, the window's checkbox */
 .up-mode { margin-top: var(--gap-field); padding-top: 14px; border-top: 1px solid var(--line); }

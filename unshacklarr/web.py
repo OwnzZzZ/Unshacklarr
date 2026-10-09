@@ -3196,6 +3196,8 @@ async def download(request):
         raise web.HTTPBadRequest(text=why)
     if numbering is None and body.get("retry") is True:  # the same numbering as the attempt it retries
         numbering = await asyncio.to_thread(retried_numbering, ids, batch)
+    if why := await asyncio.to_thread(still_on_serve, ids, inst["name"] if inst else ""):
+        raise web.HTTPConflict(text=why)
     if batch and len(ids) == 1 and not inst and await join_job(batch, ids[0]):  # join_job reads the main Sonarr's ids
         return web.json_response({"running": True})  # the job still runs: at the end of its queue, one download at a time
     room_for_one_more()
@@ -3499,6 +3501,28 @@ def cards_on_disk() -> list[dict]:
                 continue  # gone meanwhile
         cards_read = (stamp, cards)
     return cards_read[1]
+
+
+def still_on_serve(ids: list[int], instance: str = "") -> str | None:
+    """Why these episodes can't download now: an earlier attempt's job that serve never confirmed stopped (it didn't
+    answer the cancel) may still run there, or have finished unseen; a second download would land in the same folder.
+    By mj23au, #10."""
+    latest: dict[int, dict] = {}
+    for c in cards_on_disk() if sonarr_sync.RUNS_DIR.exists() else []:  # newest first: each episode's last attempt
+        if c.get("episodeId") in ids and c.get("instance", "") == instance:
+            latest.setdefault(c["episodeId"], c)
+    for c in latest.values():
+        if not (u := c.get("unconfirmed_job")):
+            continue
+        try:
+            status = sonarr_sync.backend_named(u.get("backend") or None).job(u["job_id"]).get("status")
+        except UnshackleError:
+            return f"Unshackle doesn't answer yet: the last try of {c['sxxeyy']} may still be downloading there"
+        if status in ("queued", "downloading"):
+            return f"{c['sxxeyy']} is still downloading from its last try"
+        if status == "completed":
+            return f"{c['sxxeyy']} finished after all: import it from Activity, Waiting in downloads"
+    return None
 
 
 def run_cards() -> list[dict]:

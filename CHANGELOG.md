@@ -28,7 +28,7 @@ Every change worth knowing, newest first. The format follows
 - **Sonarr libraries per series.** In Source on a series' page, each Sonarr that has it, switched on or off, with the
   ladder it downloads by and what it misses. Options for one library stay under Advanced. (#10, by mj23au)
 - **Series from every Sonarr.** A series only in another Sonarr is listed and set up too. A badge names the Sonarr
-  libraries a series is in, and the Series list filters by them. The main Sonarr can be named too, in Settings ›
+  libraries a series is in, a library switched off for it dimmed, and the Series list filters by them. The main Sonarr can be named too, in Settings ›
   Sonarr. (#10, by mj23au)
 - **Replace files from other release groups.** In Settings › Upgrades: a file from another group is listed when the
   service has the same quality, not only a better one. The group is your Group Tag, or `tag:` in unshackle.yaml. (#10, by mj23au)
@@ -48,6 +48,7 @@ The new options are off until you turn them on.
 - **Retry works for another Sonarr's copy.** A failed episode picked by hand goes again for that Sonarr, instead of waiting for a sync that never comes. (#10, by mj23au)
 - **Hybrid Dolby Vision files** are no longer listed as upgrades: a file counts by its best layer (DV with HDR10+
   is HDR10+). (#10, by mj23au)
+- **No second download of an episode Unshackle may still be fetching.** When serve was too slow to take a cancel, a new download of that episode first asks serve about the earlier try. (#10, by mj23au)
 - **A series' link found by its title** when its service is only linked by an episode (HBO Max). (#12, by mj23au)
 - **Missing subtitles no longer stop a download.** The episode comes with the subtitle languages it has, or none,
   unless subtitles are required. (#16, by mj23au)

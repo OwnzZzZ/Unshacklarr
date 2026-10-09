@@ -863,7 +863,9 @@ def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float) -> l
                 try:
                     backend.cancel(job_id)  # gone for good: nothing of it may go on behind a retry
                 except UnshackleError:
-                    pass
+                    if run:  # serve didn't answer even that: the job may go on there and finish (by mj23au, #10)
+                        run.card["unconfirmed_job"] = {"backend": backend.name or "", "job_id": job_id}
+                        run.save()
                 raise
             time.sleep(max(poll, 5))
             continue
