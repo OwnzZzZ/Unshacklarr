@@ -202,6 +202,7 @@ TMDB_PAGES = threading.Lock()  # TMDB's site answers 429 to a burst: its pages a
 TMDB_GAP = 0.4  # seconds between two of them
 # Its own name: TMDB's site answers 403 to a client calling itself a browser ("Mozilla/5.0") that does not
 # talk like one, and lets an honest one through
+BUILD = os.environ.get("UNSHACKLARR_BUILD", "").strip()  # a test build of a branch ("features-aed807a"); a release: empty
 TMDB_HEADERS = {"User-Agent": f"Unshacklarr/{__version__} (+https://github.com/OwnzZzZ/Unshacklarr)"}
 tmdb_last = 0.0
 
@@ -522,6 +523,7 @@ async def state(_):
         "service_names": names,
         "unshackle_error": unshackle_error,
         "version": __version__,
+        "build": BUILD,
         "update": update_info(),
         "dl_options": options.dl_specs(),
         "cdm": {str(k): v for k, v in cdm.items()},
@@ -3184,7 +3186,7 @@ def diagnostic(run_id: str) -> str:
     settings = {k: v for k, v in config["settings"].items() if not k.endswith("_url") and k not in ("proxy_auth_from",)}
     parts = [
         f"# Unshacklarr diagnostic: {card.get('series')} {card.get('sxxeyy')}",
-        f"Unshacklarr {__version__} · Unshackle {health['unshackle'].get('version') or '?'} · Python {sys.version.split()[0]}",
+        f"Unshacklarr {__version__}{f' ({BUILD})' if BUILD else ''} · Unshackle {health['unshackle'].get('version') or '?'} · Python {sys.version.split()[0]}",
         f"Sonarr up: {health['sonarr'].get('ok')} · Unshackle up: {health['unshackle'].get('ok')}",
         "## The series' settings", "```json", json.dumps(show, indent=1, ensure_ascii=False), "```",
         "## Settings", "```json", json.dumps(settings, indent=1, ensure_ascii=False), "```",
