@@ -10,7 +10,10 @@ const NEWS = [
   { id: "offsite-backups", version: "1.5.0", title: "Remote backup", sec: "account", target: "#bo-card" },
   { id: "series-notify", version: "1.5.0", title: "Notifications per series", series: true, target: "#d-notify-l" },
   { id: "no-spoilers", version: "1.5.0", title: "No spoilers", sec: "interface", target: "#rg-spoiler-card" },
+  { id: "more-sonarr", version: "1.5.0", title: "Other Sonarr instances", sec: "sonarr", target: "#sn-card" },
   { id: "sonarr-name", version: "1.5.0", title: "Sonarr name", sec: "sonarr", target: "#sx-name-field" },
+  { id: "upgrade-series", version: "1.5.0", title: "Upgrades you choose", sec: "upgrades", target: "#ug-series-card" },
+  { id: "other-groups", version: "1.5.0", title: "Other release groups", sec: "upgrades", target: "#ug-other-card" },
   { id: "downloads-at-once", version: "1.5.0", title: "Downloads at once", sec: "unshackle", target: "#ux-at-once-field" },
 ];
 const NEWS_KINDS = { new: "New", improved: "Improved", fix: "Fix", security: "Security", note: "Note" };

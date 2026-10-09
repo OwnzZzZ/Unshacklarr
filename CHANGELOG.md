@@ -6,54 +6,54 @@ Every change worth knowing, newest first. The format follows
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-10-09
+
 ### Added
 
+**More than one Sonarr**
+- **Other Sonarr instances.** A second Sonarr with its own library, its own quality ladder and After the download.
+  In Settings › Sonarr. (#10, with mj23au)
+- **Libraries per series.** In Source, each Sonarr that has the series, switched on or off, with what it misses. (#10)
+- **Series from every Sonarr.** A series only in another Sonarr is listed too; a badge names its libraries, and the
+  Series list filters by them. (#10)
+- **Sonarr name.** The main Sonarr can be named, like the others.
+- **Episodes, Catch up and Upgrades per Sonarr.** Pick the library, download for it.
+
+**Downloads**
 - **Add audio track.** Get only the new audio, not the whole episode again. In Settings › Download options.
-- **Fallback service.** A second service for a series, used when the main one doesn't have the episode. On the series page.
+- **Fallback service.** A second service for a series, used when the main one doesn't have the episode.
+- **Download window.** Automatic downloads run only between two times. In Settings › Automation.
 - **Auto release times.** A series gets the time its episodes usually come out. In Settings › Automation.
-- **Download window.** Automatic downloads run only between two times, at night for example. In Settings › Automation.
-- **Remote backup.** Your backups, encrypted, on a WebDAV folder or an S3 bucket. In Settings › Account.
+- **Downloads at once.** How many episodes each Unshackle server downloads together, 1 for a small NAS. (#10)
+
+**Upgrades**
+- **Upgrades you choose.** Which series are checked, how long an answer is kept, how far back. (#10, by mj23au)
+- **Other release groups.** A file from another group is replaced by the same quality too. (#10, by mj23au)
+
+**Everywhere**
+- **What's new.** Click the version in the header to see what changed.
 - **No spoilers.** Episode titles stay blurred until you click them. In Settings › Interface.
-- **What's new.** Click the version in the header to see what changed in each version.
-- **Notifications per series.** All, failures only, or none, on the series page. The bell keeps everything.
-- **A diagnostic to attach to an issue.** In Activity, on an attempt: versions, settings and its log, without
-  passwords, keys or tokens.
-- **Downloads at once.** How many episodes each Unshackle server downloads together, 1 for a small NAS. In Settings › Unshackle. (#10, by mj23au)
-- **A health check.** `/health` for Docker and Uptime Kuma; the image checks itself.
-- **More than one Sonarr**, each with its own library, in Settings › Sonarr › Other Sonarr instances: the
-  series set up here are downloaded for each one that has them, with its own quality ladder and After the
-  download, and imported into it. A series' page says which other Sonarr has it; its Episodes tab, Catch up
-  and Upgrades switch to another Sonarr's episodes and download for it. Each one's ladder is chosen when it is
-  added (a ladder, Off, or Same as each series): one saved without it is paused and said so. (#10, with mj23au)
-- **Sonarr libraries per series.** In Source on a series' page, each Sonarr that has it, switched on or off, with the
-  ladder it downloads by and what it misses. Options for one library stay under Advanced. (#10, by mj23au)
-- **Series from every Sonarr.** A series only in another Sonarr is listed and set up too. A badge names the Sonarr
-  libraries a series is in, a library switched off for it dimmed, and the Series list filters by them. The main Sonarr can be named too, in Settings ›
-  Sonarr. (#10, by mj23au)
-- **Replace files from other release groups.** In Settings › Upgrades: a file from another group is listed when the
-  service has the same quality, not only a better one. The group is your Group Tag, or `tag:` in unshackle.yaml. (#10, by mj23au)
-- **Upgrades you choose.** Settings › Upgrades: which series are checked, how long an answer is kept, and how far
-  back. Answers are reused, and a service is asked about up to 10 episodes at once. (#10, by mj23au)
+- **Notifications per series.** All, failures only, or none. The bell keeps everything.
+- **Remote backup.** Your backups, encrypted, on WebDAV or S3. In Settings › Account.
+- **A diagnostic to attach to an issue**, without passwords, keys or tokens. In Activity.
+- **A health check.** `/health` for Docker and Uptime Kuma.
 
 The new options are off until you turn them on.
 
 ### Changed
 
-- **One import at a time per Sonarr.** Downloads still run side by side; big files no longer reach Sonarr together. (#10, by mj23au)
-- **A slow Unshackle server no longer fails downloads.** They wait 1, 3 then 10 minutes before giving up, instead of 30 s and 2 min. (#10, by mj23au)
-- **Clearer selection in Series.** Select turns into Done, each poster gets a check, the ones not picked are dimmed.
+- **One import at a time per Sonarr:** big files no longer reach Sonarr together. (#10, by mj23au)
+- **A slow Unshackle server is waited for** 1, 3 then 10 minutes before a download fails. (#10, by mj23au)
+- **Clearer selection in Series:** a check on each poster, the others dimmed.
 
 ### Fixed
 
-- **Retry works for another Sonarr's copy.** A failed episode picked by hand goes again for that Sonarr, instead of waiting for a sync that never comes. (#10, by mj23au)
-- **Hybrid Dolby Vision files** are no longer listed as upgrades: a file counts by its best layer (DV with HDR10+
-  is HDR10+). (#10, by mj23au)
-- **No second download of an episode Unshackle may still be fetching.** When serve was too slow to take a cancel, a new download of that episode first asks serve about the earlier try. (#10, by mj23au)
-- **A series' link found by its title** when its service is only linked by an episode (HBO Max). (#12, by mj23au)
-- **Missing subtitles no longer stop a download.** The episode comes with the subtitle languages it has, or none,
-  unless subtitles are required. (#16, by mj23au)
-- **An import Sonarr confirms late** is no longer failed: Unshacklarr waits longer, checks whether Sonarr did it,
-  and asks again. (#10, by mj23au)
+- **Missing subtitles no longer stop a download:** it comes with the languages it has. (#16, by mj23au)
+- **An import Sonarr confirms late** is no longer failed. (#10, by mj23au)
+- **No second download** of an episode Unshackle may still be fetching. (#10, by mj23au)
+- **Retry works for another Sonarr's copy.** (#10, by mj23au)
+- **Hybrid Dolby Vision files** are no longer listed as upgrades. (#10, by mj23au)
+- **A series' link found by its title** when the service only links an episode (HBO Max). (#12, by mj23au)
 - **No more "may be an episode" warning** for a series that is simply new. (#12, reported by mj23au)
 
 ## [1.4.0] - 2026-10-07
@@ -249,6 +249,7 @@ The new options are off until you turn them on.
 - **Every tool in the images** is pinned and checked.
 - **oauthlib 4.0.0**, for two advisories.
 
+[1.5.0]: https://github.com/OwnzZzZ/Unshacklarr/releases/tag/v1.5.0
 [1.4.0]: https://github.com/OwnzZzZ/Unshacklarr/releases/tag/v1.4.0
 [1.3.2]: https://github.com/OwnzZzZ/Unshacklarr/releases/tag/v1.3.2
 [1.3.1]: https://github.com/OwnzZzZ/Unshacklarr/releases/tag/v1.3.1

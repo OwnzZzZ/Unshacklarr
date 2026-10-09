@@ -214,7 +214,7 @@
             <div class="field"><label for="sx-dl">Downloads folder, as Sonarr sees it</label><input id="sx-dl" type="text" data-set="sonarr_downloads" placeholder="Same path" spellcheck="false"><small>Its path on Sonarr's side, e.g. inside Sonarr's container. Empty: the same path as for Unshacklarr.</small></div>
           </div>
         </section>
-        <section class="sx-card">
+        <section class="sx-card" id="sn-card">
           <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/><path d="M6 6.5h.01M6 17.5h.01"/></svg></span><div><h3>Other Sonarr instances</h3><p>A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes come with the automatic sync: release times stay with the Sonarr above.</p></div>
             <button class="btn small dx-add" id="sn-add" type="button">Add a Sonarr</button></div>
           <div id="sn-list"></div>
@@ -388,12 +388,12 @@
             <div class="field"><label for="ug-age">Only episodes from the last</label><div class="unit"><input id="ug-age" type="number" data-set="upgrade_max_age_years" data-num min="0" max="100"><span>years</span></div><small>Older episodes are not checked. 0: all of them.</small></div>
           </div>
         </section>
-        <section class="sx-card">
+        <section class="sx-card" id="ug-other-card">
           <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><path d="M7.5 7.5h.01"/></svg></span><div><h3>Release group</h3><p>The group your downloads carry at the end of their file names (-unshackle), which Sonarr reads as the release group. Set it in Download options, Group Tag: Unshacklarr then knows it, and every download carries it.</p></div></div>
           <label class="ug-switch"><input type="checkbox" class="switch" id="ug-other"><span><b>Replace files from other release groups</b><small>A file from another group (a torrent, an older tool) is listed when the service has the episode on the same step, not only a better one.</small></span></label>
           <div class="ug-groups" id="ug-groups"></div>
         </section>
-        <section class="sx-card">
+        <section class="sx-card" id="ug-series-card">
           <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><div><h3>Series checked</h3><p>Untick a series to leave it out. Its page has the same switch, under What to get.</p></div></div>
           <div class="ug-tools"><input type="search" id="ug-find" placeholder="Find a series" autocomplete="off"><button type="button" class="btn small" id="ug-all">Tick all</button><button type="button" class="btn small" id="ug-none">Untick all</button></div>
           <div class="ug-list" id="ug-series"></div>
