@@ -645,7 +645,7 @@ input[type=checkbox].switch:checked { background: var(--accent); } input[type=ch
 .wiz-step.fwd { animation: wiz-in-r .28s ease-out; } .wiz-step.bwd { animation: wiz-in-l .28s ease-out; }
 @keyframes wiz-in-r { from { opacity: 0; transform: translateX(24px); } } @keyframes wiz-in-l { from { opacity: 0; transform: translateX(-24px); } }
 .wiz-note:empty { display: none; }
-input.bad { border-color: var(--err); } .url-hint { display: block; margin-top: var(--gap-help); color: var(--err); font-size: 12.5px; }
+input.bad { border-color: var(--err); } .field small.bad { color: var(--err); } .url-hint { display: block; margin-top: var(--gap-help); color: var(--err); font-size: 12.5px; }
 .wiz-step input.bad, .wiz-step select.bad { border-color: var(--err); box-shadow: 0 0 0 3px color-mix(in srgb, var(--err) 18%, transparent); }
 .wiz-step input.good { border-color: var(--ok); }
 .wiz-panel { overflow: visible; } .wiz-step .field { position: relative; }
@@ -1576,6 +1576,51 @@ input.bad, select.bad { border-color: var(--err) !important; box-shadow: 0 0 0 3
 .wz-restore-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--field-bg); color: var(--text); font: inherit; cursor: pointer; text-align: left; }
 .wz-restore-row:hover { border-color: var(--accent); } .wz-restore-row b { flex: 1; font-weight: 600; } .wz-restore-row small { color: var(--muted); } .wz-restore-row span { color: var(--accent); font-weight: 600; }
 .wz-sum li.wz-bad { color: var(--err); }
+/* A card head with a button: its text shrinks beside it ("Add a Sonarr" stays in the card). From #10, by mj23au */
+.sx-head:has(> .btn) > div { flex: 1; min-width: 0; }
+.d-also { display: grid; gap: 4px; margin-top: var(--gap-field); padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; }
+.d-also[hidden] { display: none; } .d-also p { margin: 0; } .d-also span { color: var(--muted); }
+/* Which library's episodes, under the series' tabs: each Sonarr, its ladder, what it misses. From #10, by mj23au */
+.ep-sonarr { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px; margin: 4px 0 12px; padding: 3px;
+  border: 1.5px solid var(--line); border-radius: 999px; background: var(--field-bg); max-width: 100%; }
+.ep-sonarr-label { padding: 0 10px 0 12px; color: var(--muted); font-size: 12.5px; }
+.ep-sonarr button { display: inline-flex; align-items: baseline; gap: 6px; padding: 6px 14px; border: 0; border-radius: 999px;
+  background: none; color: var(--text); font: inherit; font-size: 13.5px; cursor: pointer; }
+.ep-sonarr button:hover { background: rgb(79 179 191 / .08); }
+.ep-sonarr button[aria-checked=true] { background: rgb(79 179 191 / .18); color: var(--accent); font-weight: 600; }
+.ep-sonarr button small { color: var(--muted); font-size: 11.5px; font-weight: 400; }
+.ep-sonarr button em { font-style: normal; font-size: 11.5px; color: var(--warn); font-weight: 500; }
+
+/* Upgrades, series checked */
+.ug-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.ug-tools input { flex: 1 1 200px; min-width: 0; }
+.ug-list { max-height: 320px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 2px 12px;
+  padding: 8px; border: 1px solid var(--line, rgba(127,127,127,.25)); border-radius: 8px; }
+.ug-line { display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; min-width: 0; }
+.ug-line span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ug-switch { display: flex; align-items: flex-start; gap: 12px; padding: 4px 0 10px; cursor: pointer; }
+.ug-switch span { display: grid; gap: 2px; } .ug-switch small { color: var(--muted); }
+.ug-groups { display: grid; gap: 6px; } .ug-group small { color: var(--muted); } .ug-group.warn b { color: var(--warn); }
+/* A series' libraries: one chip each, lit when it gets new episodes; what it misses one click from Episodes */
+.d-libs { display: flex; flex-wrap: wrap; gap: 8px; }
+.d-lib { display: inline-flex; align-items: stretch; border: 1.5px solid var(--line); border-radius: 12px; background: var(--field-bg); overflow: hidden; }
+.d-lib.on { border-color: var(--accent); background: rgb(79 179 191 / .1); }
+.d-lib-sw { display: grid; gap: 2px; text-align: left; padding: 8px 14px 8px 36px; border: 0; background: none; color: var(--text); font: inherit; cursor: pointer; position: relative; }
+.d-lib-sw::before { content: ""; position: absolute; left: 12px; top: 50%; width: 14px; height: 14px; margin-top: -8px; border: 1.5px solid var(--muted); border-radius: 4px; }
+.d-lib.on .d-lib-sw::before { border-color: var(--accent); background: var(--accent) center / 11px no-repeat
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230d2a2e' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E"); }
+.d-lib-sw b { font-size: 14px; } .d-lib-sw small { color: var(--muted); font-size: 12px; }
+.d-lib:not(.on) .d-lib-sw b { color: var(--muted); }
+.d-lib-miss { border: 0; border-left: 1px solid var(--line); background: none; color: var(--warn); font: inherit; font-size: 12.5px; font-weight: 600; padding: 0 12px; cursor: pointer; }
+.d-lib-miss:hover, .d-lib-sw:hover { background: rgb(79 179 191 / .08); }
+.d-libs-adv { margin-top: 10px; } .d-libs-adv summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+.d-libs-adv[open] summary { margin-bottom: 8px; } #d-libs-adv-body { display: grid; gap: 12px; }
+#d-libs-field[hidden] { display: none; }
+@media (max-width: 700px) { .d-lib { flex: 1 1 100%; } .d-lib-sw { flex: 1; } }
+.poster .lib { position: absolute; left: 6px; bottom: 6px; background: rgb(0 0 0 / .72); color: #fff; font-size: 11px; font-weight: 600;
+  padding: 2px 6px; border-radius: 4px; max-width: calc(100% - 12px); line-height: 1.35; }
+.poster .lib span { white-space: nowrap; } .poster .lib .lib-off { opacity: .45; text-decoration: line-through; }  /* every name whole, on two lines if need be */
+.poster .svc ~ .lib { bottom: 30px; }  /* above the service's badge */
 /* Languages, how the audio is upgraded; Automation, the window's checkbox */
 .up-mode { margin-top: var(--gap-field); padding-top: 14px; border-top: 1px solid var(--line); }
 .up-mode .sub { display: block; font-weight: 600; font-size: 13.5px; margin-bottom: 8px; }

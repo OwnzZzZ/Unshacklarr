@@ -49,10 +49,12 @@ $("#hist-clear").onclick = () => {
   }, { once: true });
 };
 /* A job's failed episodes, again, in one go: in the same job. */
+// Another Sonarr's copy goes again for that Sonarr: its episode ids are its own (a job is one Sonarr's)
+const forSonarr = (cards) => (cards[0]?.instance ? { sonarr: cards[0].instance } : {});
 async function retryJob(j, cards, button) {
   button.disabled = true;
   try {
-    await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: cards.map((c) => c.episodeId), retry: true, batch: j.job }) });
+    await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: cards.map((c) => c.episodeId), retry: true, batch: j.job, ...forSonarr(cards) }) });
     toast(`${cards.length} episode${cards.length > 1 ? "s" : ""} downloading again`);
     picked_run = `job:${j.job}`;
     setTimeout(openActivity, 1500);
@@ -61,7 +63,7 @@ async function retryJob(j, cards, button) {
 async function retryRun(c, button) {
   button.disabled = true;
   try {
-    await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: [c.episodeId], retry: true, ...(c.batch ? { batch: c.batch } : {}) }) });
+    await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: [c.episodeId], retry: true, ...(c.batch ? { batch: c.batch } : {}), ...forSonarr([c]) }) });
     toast(`${c.series} ${c.sxxeyy}: downloading again`);
     picked_run = c.batch ? `job:${c.batch}` : null;  // a job's episode: the job stays in view
     setTimeout(openActivity, 1500);

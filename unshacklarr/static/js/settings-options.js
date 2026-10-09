@@ -92,6 +92,7 @@ function renderSettings() {
   renderUnshackleState();
   renderAutomation();
   renderBackends();
+  renderSonarrs();
   renderQuality();
   renderImportMode();
   renderUpgradeMode();
@@ -146,6 +147,15 @@ document.querySelectorAll("[data-set]").forEach((f) => f[f.tagName === "SELECT" 
   const key = f.dataset.set;
   S.config.settings[key] = "num" in f.dataset ? Number(f.value) : key === "country" ? f.value.toUpperCase() : f.value.trim();
   dirty();
+});
+/* The main Sonarr's name: checked as it is typed, like the other Sonarr's names */
+$("#sx-name").addEventListener("input", (e) => {
+  const v = e.target.value.trim(), help = $("#sx-name-help");
+  const why = !v ? "" : (S.config.settings.sonarrs || []).some((i) => i.name === v) ? "Another Sonarr has this name"
+    : !/^[A-Za-z][A-Za-z0-9-]{0,23}$/.test(v) ? "A letter, then letters, digits or dashes" : "";
+  e.target.classList.toggle("bad", !!why);
+  help.classList.toggle("bad", !!why);
+  help.textContent = why || "Shown on the series of each library when you have more than one Sonarr. Empty: Sonarr.";
 });
 function showMode() {
   $(".set-sec[data-sec=unshackle]").dataset.mode = $("#mode-select").value;
@@ -678,6 +688,10 @@ async function refreshLog() {
   $("#log-state").textContent = running
     ? "A sync is running."
     : `No sync running. One starts automatically every ${S.config?.settings?.sync_every_hours == 1 ? "hour" : `${S.config?.settings?.sync_every_hours ?? 2} hours`}, or run one now.`;
+  // another Sonarr whose ladder was never chosen: nothing downloads for it, said here too
+  const paused = (S.config?.settings?.sonarrs || []).filter((i) => !i.quality_ladder).map((i) => i.name);
+  if (paused.length) $("#log-state").append(el("span", { className: "status-err", textContent:
+    ` Paused for ${paused.join(", ")}: choose a quality ladder in Settings, Sonarr.` }));
   $("#sync").disabled = running;
   $("#sync span").textContent = running ? "Sync running…" : "Run sync now";
   $("#sync").classList.toggle("spin", running);

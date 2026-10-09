@@ -1,3 +1,4 @@
+import asyncio
 import importlib
 import json
 import shutil
@@ -7,6 +8,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import responses
+from aiohttp import web as aioweb
+from aiohttp.test_utils import TestClient, TestServer
 
 SONARR = "http://sonarr:8989"
 SINCE = "2026-01-01T00:00:00+00:00"
@@ -1341,7 +1344,7 @@ def test_the_missing_episodes_come_from_the_calendar_and_the_library_is_asked_on
     assert library.call_count == 1  # kept: the whole library is one big answer
     clock = [sync.time.monotonic()]
     monkeypatch.setattr(sync.time, "monotonic", lambda: clock[0])
-    sync._series_by_tvdb = (clock[0], {111: {"id": 7}})
+    sync._series_by_tvdb[""] = (clock[0], {111: {"id": 7}})  # the main Sonarr's entry
     sync.sonarr_series({222})  # a series added since, but asked less than a minute ago: not again yet
     assert library.call_count == 1
     clock[0] += 61
@@ -1589,6 +1592,229 @@ def test_a_number_its_title_gives_to_another_episode_is_not_downloaded(tmp_path,
     sync.sync(sync.read_file(), {}, [episode(111, 2, 5)], manual=True, kind="manual")
     assert asked == ["S03E01", "S02E05", "S02E05"]
 
+@responses.activate
+def test_another_sonarr_gets_its_own_copy_with_its_own_ladder(tmp_path, monkeypatch):
+    # From #10, by mj23au: sonarr for 1080p, sonarr-4k for 4K, the same series set up once
+    sync = load(tmp_path, monkeypatch)
+    sync.apply_settings({**sync.SETTINGS, "sonarrs": [{"name": "sonarr-4k", "url": "http://sonarr-4k:8989", "api_key": "k4",
+                                                        "downloads": "/4k-sees", "quality_ladder": "4K, then 1080p"}]})
+    responses.get(f"{SONARR}/api/v3/calendar", json=[episode(111, 2, 5)])
+    responses.get("http://sonarr-4k:8989/api/v3/calendar", json=[{**episode(111, 2, 5), "id": 9905}, episode(999, 1, 1)])  # 999: not set up here
+    responses.post(re.compile(re.escape(WEBHOOK)))
+    asked, imported = [], []
+
+    def dl(out, wanted):
+        out.mkdir(parents=True)
+        (out / "Show.S02E05.mkv").write_bytes(b"x")
+
+    def fake_import(ep, out, replace=False):
+        imported.append((sync.sonarr_url(), sync.seen_by("sonarr_downloads", out), ep["id"]))
+        for f in out.rglob("*.mkv"):
+            f.unlink()
+
+    listed = []
+
+    def listing(show, ep):  # each Sonarr's episode ids are its own: one listing each
+        listed.append(ep["id"])
+        return {"available": {ep["id"]: {"service": "S02E05"}}, "listed": {"S02E05"}, "titled": {"S02E05"}}
+
+    use_tools(monkeypatch, sync, fake_tools([], dl, {}))
+    monkeypatch.setattr(sync, "find_by_title", listing)
+    monkeypatch.setattr(sync, "import_episode", fake_import)
+    monkeypatch.setattr(sync, "apply_ladder", lambda show, config, request: asked.append((sync.instance() or {}).get("name"), ) or
+                        asked.append(sync.ladder_of(show, config) and sync.ladder_of(show, config)["name"]))
+    assert sync.main() == 0
+    assert imported == [(SONARR, str(tmp_path / "unshackle-111-S02E05"), 205),
+                        ("http://sonarr-4k:8989", "/4k-sees/unshackle-sonarr-4k-111-S02E05", 9905)]  # each into its own Sonarr
+    assert asked == [None, None, "sonarr-4k", "4K, then 1080p"]  # its ladder over the series' (none here)
+    assert listed == [205, 9905]  # the main Sonarr's list never answers for the other's ids
+    cards = sorted((json.loads(p.read_text()) for p in (tmp_path / "runs").glob("*.json")), key=lambda c: c["id"])
+    assert [(c.get("instance"), c["series"], c["outcome"]) for c in cards] == [(None, "Show", "downloaded"), ("sonarr-4k", "Show · sonarr-4k", "downloaded")]
+    m = sync.FOLDER.fullmatch("unshackle-sonarr-4k-111-S02E05")
+    assert m.groups() == ("sonarr-4k", "111", "02", "05") and sync.FOLDER.fullmatch("unshackle-111-S02E05").group(1) is None
+
+
+# From #10, by mj23au: another Sonarr picked by hand, its own series list, Catch up
+FOURK = {"name": "sonarr-4k", "url": "http://sonarr4k:8989", "api_key": "k4", "downloads": "", "quality_ladder": "4K only",
+         "download_only": None}
+
+
+def with_4k(sync):
+    sync.apply_settings({**sync.SETTINGS, "sonarrs": [FOURK]})
+    return sync.SONARRS["sonarr-4k"]
+
+
+@responses.activate
+def test_another_sonarr_needs_a_ladder_chosen_and_waits_until_it_is(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    import unshacklarr.web
+    web = importlib.reload(unshacklarr.web)
+    try:  # a new one: chosen before it is saved
+        web.check_sonarrs([{**FOURK, "quality_ladder": ""}], [], "http://sonarr:8989")
+        raise AssertionError("a new instance without a ladder chosen was kept")
+    except aioweb.HTTPBadRequest as e:
+        assert "Choose a quality ladder" in e.text
+    assert web.check_sonarrs([FOURK], [], "http://sonarr:8989")[0]["quality_ladder"] == "4K only"
+    same = web.check_sonarrs([{**FOURK, "quality_ladder": "series"}], [], "http://sonarr:8989")[0]
+    assert sync.instance_config(same, {"series": {1: {"ladder": "1080p"}}})["series"][1]["ladder"] == "1080p"  # each series' own
+    # one saved before (a test build): kept as it is, so other settings still save, but paused and told once
+    old = {**FOURK, "quality_ladder": ""}
+    assert web.check_sonarrs([{**old, "api_key": ""}], [old], "http://sonarr:8989")[0]["quality_ladder"] == ""
+    told = []
+    monkeypatch.setattr(sync, "notify", lambda settings, level, title, *a, **k: told.append(title))
+    monkeypatch.setattr(sync, "missing_episodes", lambda: (_ for _ in ()).throw(AssertionError("asked Sonarr for a paused instance")))
+    assert sync.sync_instance(old, sync.read_file(), {}) == 0 and sync.sync_instance(old, sync.read_file(), {}) == 0
+    assert told == ["Sonarr sonarr-4k has no quality ladder chosen"]
+    sync.apply_settings({**sync.SETTINGS, "sonarrs": [old]})
+    try:
+        sync.main([5], sonarr="sonarr-4k")
+        raise AssertionError("a hand-picked download went to a paused instance")
+    except RuntimeError as e:
+        assert "Choose a quality ladder" in str(e)
+
+
+def test_each_sonarr_keeps_its_own_series_list(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    inst = with_4k(sync)
+    libraries = {"": [{"tvdbId": 1, "id": 10}], "sonarr-4k": [{"tvdbId": 1, "id": 77}]}
+    monkeypatch.setattr(sync, "sonarr_get", lambda path, **_: libraries[(sync.instance() or {}).get("name", "")])
+    assert sync.sonarr_series({1})[1]["id"] == 10
+    with sync.on_instance(inst):
+        assert sync.sonarr_series({1})[1]["id"] == 77  # not the main Sonarr's id, cached a moment ago
+    assert sync.sonarr_series({1})[1]["id"] == 10
+
+
+def test_episodes_picked_in_another_sonarr_download_for_it_with_its_ladder(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    with_4k(sync)
+    seen = {}
+    monkeypatch.setattr(sync, "chosen_episodes", lambda ids: seen.setdefault("asked_in", (sync.instance() or {}).get("name")) and [])
+    monkeypatch.setattr(sync, "sync", lambda config, settings, episodes, **kw: seen.update(
+        ran_in=(sync.instance() or {}).get("name"), ladder=config["series"][111].get("ladder"), manual=kw.get("manual")) or 0)
+    sync.main([5], sonarr="sonarr-4k")
+    assert seen == {"asked_in": "sonarr-4k", "ran_in": "sonarr-4k", "ladder": "4K only", "manual": True}
+    seen.clear()
+    sync.main([5])
+    assert seen["ran_in"] is None and seen["ladder"] is None  # the main Sonarr, the series' own ladder
+
+
+def test_episodes_catch_up_and_download_name_another_sonarr(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    import unshacklarr.web
+    web = importlib.reload(unshacklarr.web)
+    with_4k(web.sonarr_sync)
+    asked = []
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_get", lambda path, **_: asked.append((path, (web.sonarr_sync.instance() or {}).get("name"))) or [])
+    monkeypatch.setattr(web, "missing_of_managed", lambda days: [{"from": (web.sonarr_sync.instance() or {}).get("name")}])
+    monkeypatch.setattr(web, "cdm_refusal", lambda ids: asked.append(("cdm", (web.sonarr_sync.instance() or {}).get("name"))) or "")
+    started = []
+    monkeypatch.setattr(web, "run_sync", lambda ids, **kw: started.append(kw.get("sonarr")))
+    monkeypatch.setattr(web, "room_for_one_more", lambda: None)
+    web.app._middlewares = type(web.app._middlewares)([web.same_origin_only])  # logged in, for this test
+    h = {"X-Unshackle": "1"}
+
+    async def go():
+        async with TestClient(TestServer(web.app)) as client:
+            eps = (await client.get("/api/series/77/episodes?sonarr=sonarr-4k", headers=h)).status
+            bad = (await client.get("/api/series/77/episodes?sonarr=nope", headers=h)).status
+            caught = await (await client.get("/api/missing?sonarr=sonarr-4k", headers=h)).json()
+            down = (await client.post("/api/download", json={"episodeIds": [5], "sonarr": "sonarr-4k"}, headers=h)).status
+            return eps, bad, caught, down
+
+    eps, bad, caught, down = asyncio.run(go())
+    assert eps == 200 and bad == 400
+    assert ("episode", "sonarr-4k") in asked and ("episodefile", "sonarr-4k") in asked and ("cdm", "sonarr-4k") in asked
+    assert caught["items"] == [{"from": "sonarr-4k"}]
+    assert down == 200 and started == ["sonarr-4k"]
+
+
+def test_the_series_page_and_upgrades_know_the_other_sonarr(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    import unshacklarr.web
+    web = importlib.reload(unshacklarr.web)
+    web.write_config({**web.read_config(), "series": {1: {"service": "X", "title": "t"}, 2: {"service": "X", "title": "u"}}})
+    with_4k(web.sonarr_sync)  # after: writing the config applies its settings
+    libraries = {"": {1: {"id": 10}, 2: {"id": 20}}, "sonarr-4k": {1: {"id": 77, "statistics": {"episodeCount": 6, "episodeFileCount": 1}}}}
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_series", lambda wanted: libraries[(web.sonarr_sync.instance() or {}).get("name", "")])
+    assert web.instances_of_series() == {1: [{"name": "sonarr-4k", "id": 77, "ladder": "4K only", "download_only": None, "missing": 5}]}
+    libraries["sonarr-4k"][3] = {"id": 78, "titleSlug": "tehran"}  # in sonarr-4k, not set up here yet
+    libraries["sonarr-4k"][3].update(tvdbId=3, title="Tehran")
+    url = web.sonarr_sync.SONARRS["sonarr-4k"]["url"]
+    others, only = web.sonarrs_of_series({1, 2})
+    assert others == {1: [{"name": "sonarr-4k", "url": url, "slug": "", "missing": 5, "id": 77}],
+                      3: [{"name": "sonarr-4k", "url": url, "slug": "tehran", "missing": 0, "id": 78}]}
+    assert [(s["tvdbId"], s["title"], s["id"]) for s in only] == [(3, "Tehran", None)]  # in sonarr-4k only: listed, no main id
+    web.health["sonarrs"] = {"sonarr-4k": {"ok": False}}
+    assert web.instances_of_series() == {} and web.sonarrs_of_series() == ({}, [])  # down: the page opens without waiting for it
+    assert web.upgrades_file("") == web.UPGRADES_FILE and web.upgrades_file("sonarr-4k").name == "upgrades_found-sonarr-4k.json"
+    seen = []
+    monkeypatch.setattr(web, "upgrade_candidates", lambda config: seen.append(((web.sonarr_sync.instance() or {}).get("name"),
+                                                                              config["series"][1].get("ladder"))) or [])
+    web.scan_upgrades("sonarr-4k")
+    assert seen == [("sonarr-4k", "4K only")]  # its files, on its own ladder
+    assert web.read_json(web.upgrades_file("sonarr-4k"), {})["items"] == [] and not web.UPGRADES_FILE.exists()
+
+
+def test_a_hybrid_dolby_vision_file_stands_where_its_best_layer_does(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    import unshacklarr.web
+    web = importlib.reload(unshacklarr.web)
+    four_k = {"name": "4K only", "steps": [{"codec": "HEVC", "range": "HDR10P", "min": 2160, "max": 0},
+                                           {"codec": "HEVC", "range": "HDR10", "min": 2160, "max": 0},
+                                           {"codec": "HEVC", "range": "DV", "min": 2160, "max": 0}]}
+    track = lambda dynamic: web.ladder_track({"resolution": "3840x1920", "videoCodec": "h265", "videoDynamicRangeType": dynamic})  # noqa: E731
+    assert track("DV HDR10Plus")["layers"] == ["DV", "HDR10P"] and track("DV HDR10")["layers"] == ["DV", "HDR10"]
+    assert sync.step_of(four_k, track("DV HDR10Plus")) == 0  # its HDR10+ layer: step 1, nothing to upgrade
+    assert sync.step_of(four_k, track("DV HDR10")) == 1  # its HDR10 layer: step 2, before plain DV
+    assert sync.step_of(four_k, track("DV")) == 2 and sync.step_of(four_k, track("HDR10Plus")) == 0
+    assert track("")["layers"] == ["SDR"]
+    assert sync.track_label(track("DV HDR10Plus")) == "2160p HEVC DV + HDR10P"  # labelled by every layer, not DV alone
+    assert sync.track_label(track("DV")) == "2160p HEVC DV"
+
+
+def test_the_release_group_set_only_in_unshackle_yaml_is_read_from_the_file(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    folder = tmp_path / "unshackle-config"
+    folder.mkdir()
+    (folder / "unshackle.yaml").write_text("tag: TiNA\ndl:\n  sub_format: srt\n")
+    monkeypatch.setitem(sync.SETTINGS, "unshackle_config_dir", str(folder))
+    monkeypatch.setattr(sync.UNSHACKLE, "dl_config", lambda: {"sub_format": "srt"})  # serve's /api/config: no tag
+    monkeypatch.setattr(sync, "backend_for", lambda tag, config=None: sync.UNSHACKLE)
+    assert sync.release_group_of({"service": "NF"}, {"settings": {}, "defaults": {}, "service_defaults": {}}) == ("TiNA", "unshackle.yaml (tag:)")
+
+
+def test_a_series_switches_another_sonarr_off_or_adds_options_for_it(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    import unshacklarr.web
+    web = importlib.reload(unshacklarr.web)
+    inst = {"name": "sonarr-4k", "quality_ladder": "4K only", "download_only": None}
+    config = {"series": {1: {"service": "X", "options": {"--tag": "a"}},
+                         2: {"service": "X", "options": {"--tag": "a"}, "sonarrs": {"sonarr-4k": {"options": {"--atmos": True}}}},
+                         3: {"service": "X", "sonarrs": {"sonarr-4k": {"off": True}}}}}
+    got = sync.instance_config(inst, config)["series"]
+    assert got[1]["ladder"] == "4K only" and "download_only" not in got[1]  # that Sonarr's own, for every series
+    assert got[2]["ladder"] == "4K only" and got[2]["options"] == {"--tag": "a", "--atmos": True}  # that Sonarr's ladder, its own options
+    assert config["series"][2]["options"] == {"--tag": "a"}  # the main Sonarr's copy keeps the series' own
+    assert [sync.off_in(inst, s) for s in config["series"].values()] == [False, False, True]
+    assert sync.off_in(None, {"main_off": True}) and not sync.off_in(None, config["series"][3])  # the main Sonarr's own switch
+
+    downloads = []
+    monkeypatch.setattr(sync, "run_episodes", lambda config, settings, episodes, *a, **k: downloads.append([e["id"] for e in episodes]) or 0)
+    eps = [{"id": n, "series": {"tvdbId": n, "title": "S"}, "seasonNumber": 1, "episodeNumber": n} for n in (1, 2)]
+    off = {"series": {1: {"service": "X", "main_off": True}, 2: {"service": "X"}}}
+    sync.sync(off, {}, eps, kind="auto")
+    sync.sync(off, {}, eps, kind="burst")
+    assert downloads == [[2], [2]]  # switched off for the main Sonarr: none of its new episodes (picked ones aren't filtered)
+
+    body = {"settings": {"sonarrs": [{"name": "sonarr-4k"}]}}
+    specs = [{"flag": "--atmos", "is_flag": True, "choices": []}]
+    assert web.check_series_sonarrs({"sonarr-4k": {"off": True, "ladder": "1080p", "options": {}}}, body, specs, "1") == {"sonarr-4k": {"off": True}}  # a ladder is that Sonarr's
+    assert web.check_series_sonarrs({"sonarr-4k": {}}, body, specs, "1") == {}  # nothing of its own: left out
+    try:
+        web.check_series_sonarrs({"nope": {"off": True}}, body, specs, "1")
+        raise AssertionError("a Sonarr not in Settings was taken")
+    except web.web.HTTPBadRequest:
+        pass
 
 def test_the_download_window_keeps_the_automatic_sync_to_its_hours(tmp_path, monkeypatch):
     sync = load(tmp_path, monkeypatch)

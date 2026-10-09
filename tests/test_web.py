@@ -1343,7 +1343,7 @@ def test_upgrades_find_the_files_a_service_has_on_an_earlier_step(tmp_path, monk
     web = importlib.reload(unshacklarr.web)
     sync = web.sonarr_sync
     assert web.ladder_track({"resolution": "1920x800", "videoCodec": "x265", "videoDynamicRangeType": "DV HDR10"}) == \
-        {"height": 800, "width": 1920, "codec": "HEVC", "range": "DV"}
+        {"height": 800, "width": 1920, "codec": "HEVC", "range": "DV", "layers": ["DV", "HDR10"]}
     assert web.ladder_track({"resolution": "1280x720", "videoCodec": "h264", "videoDynamicRangeType": ""})["range"] == "SDR"
     hevc_first = {"name": "HEVC first", "steps": [{"codec": "HEVC", "range": "SDR", "min": 1080, "max": 1080},
                                                   {"codec": "AVC", "range": "SDR", "min": 1080, "max": 1080}]}
@@ -1363,13 +1363,61 @@ def test_upgrades_find_the_files_a_service_has_on_an_earlier_step(tmp_path, monk
     monkeypatch.setattr(sync, "download_request", lambda show, config, wanted, out: {"service": "X", "title_id": "t", "wanted": [wanted]})
     asked = []
     on_service = {"S01E01": [{"height": 1080, "codec": "HEVC", "range": "SDR"}], "S01E03": [{"height": 1080, "codec": "AVC", "range": "SDR"}]}
-    monkeypatch.setattr(sync, "list_tracks", lambda show, config, request, ladder: asked.append(request["wanted"][0]) or [{"video": on_service[request["wanted"][0]]}])
+
+    def list_tracks(show, config, request, ladder):  # one call for the series, each answer titled
+        asked.append(request["wanted"])
+        return [{"title": {"season": 1, "number": int(w[-2:])}, "video": on_service[w]} for w in request["wanted"]]
+    monkeypatch.setattr(sync, "list_tracks", list_tracks)
     monkeypatch.setattr(web, "UPGRADE_PAUSE", 0)
     web.scan_upgrades()
-    assert asked == ["S01E01", "S01E03"]  # S01E02 is on the first step already; the series without a ladder is not asked
+    assert asked == [["S01E01", "S01E03"]]  # S01E02 is on the first step already; the series without a ladder is not asked
     found = web.read_json(web.UPGRADES_FILE, {})["items"]
     assert [(i["sxxeyy"], i["fileStep"], i["betterStep"]) for i in found] == [("S01E01", 2, 1)]  # S01E03: nothing better there
     assert not web.upgrade_scan["running"] and web.upgrade_scan["done"] == 2
+
+    # answers are kept upgrade_recheck_days for the same file, then asked again
+    web.scan_upgrades()
+    assert len(asked) == 1 and [i["sxxeyy"] for i in web.read_json(web.UPGRADES_FILE, {})["items"]] == ["S01E01"]
+    files[0] = {**files[0], "id": 80}
+    eps[0] = {**eps[0], "episodeFileId": 80}  # a new file for S01E01
+    web.scan_upgrades()
+    assert asked[-1] == ["S01E01"]
+    monkeypatch.setitem(sync.SETTINGS, "upgrade_recheck_days", 0)
+    web.scan_upgrades()
+    assert asked[-1] == ["S01E01", "S01E03"]
+    config["series"][1]["skip_upgrades"] = True  # left out on its page, or in Settings, Quality, Upgrades
+    web.scan_upgrades()
+    assert len(asked) == 3 and web.read_json(web.UPGRADES_FILE, {})["items"] == []
+    del config["series"][1]["skip_upgrades"]
+    monkeypatch.setitem(sync.SETTINGS, "upgrade_max_age_years", 1)
+    eps[:] = [{**e, "airDateUtc": "2001-01-01T00:00:00Z"} for e in eps]  # aired too long ago
+    web.scan_upgrades()
+    assert len(asked) == 3
+
+    # Your release group: a file from another is replaced by the same step too, an empty setting ignores the group
+    monkeypatch.setitem(sync.SETTINGS, "upgrade_max_age_years", 0)
+    monkeypatch.setitem(sync.SETTINGS, "upgrade_recheck_days", 30)
+    on_service["S01E02"] = [{"height": 1080, "codec": "HEVC", "range": "SDR"}]
+    files[:] = [{**f, "releaseGroup": "unshackle" if f["id"] == 71 else "NTb"} for f in files]
+    monkeypatch.setitem(sync.SETTINGS, "upgrade_other_groups", True)
+    monkeypatch.setattr(sync, "backend_for", lambda service, config=None: (_ for _ in ()).throw(sync.UnshackleError("down")))
+    asked_before = len(asked)
+    web.scan_upgrades()
+    assert len(asked) == asked_before  # no group set anywhere (nor in an Unshackle): the switch changes nothing
+    config["defaults"] = {"--tag": "Unshackle"}  # Download options, Group Tag, for every series
+    assert sync.release_group_of(config["series"][1], config) == ("Unshackle", "Download options")
+    web.scan_upgrades()
+    assert asked[-1] == ["S01E01", "S01E03"]  # S01E02 is ours on step 1; the rule changed, so nothing kept is reused
+    found = web.read_json(web.UPGRADES_FILE, {})["items"]
+    assert [(i["sxxeyy"], i["group"], i["fileStep"], i["betterStep"]) for i in found] == [("S01E01", "NTb", 2, 1), ("S01E03", "NTb", 2, 2)]
+    assert found[1]["file"] == "1080p AVC SDR from NTb"
+    files[1] = {**files[1], "releaseGroup": "RAWR"}
+    web.scan_upgrades()
+    assert asked[-1] == ["S01E02"]  # E01 and E03 kept, E02 now from another group, the same step on the service
+    assert [i["sxxeyy"] for i in web.read_json(web.UPGRADES_FILE, {})["items"]] == ["S01E01", "S01E03", "S01E02"]
+    monkeypatch.setattr(web, "read_config", lambda: config)
+    groups = asyncio.run(web.upgrade_groups(None))
+    assert json.loads(groups.text) == {"groups": [{"group": "Unshackle", "where": "Download options", "series": [1, 2]}], "none": []}
 
 
 def test_automatic_backups_are_kept_listed_and_restore_a_new_install(tmp_path, monkeypatch):
@@ -1628,6 +1676,14 @@ def test_a_diagnostic_keeps_no_token_key_or_address():
     assert "https://api.netflix.com/license?…" in text
 
 
+def test_the_main_sonarr_can_be_named():
+    from unshacklarr import web
+    saved = {**web.sonarr_sync.SETTINGS_DEFAULTS}
+    assert web.check_settings({"sonarr_name": " sonarr-1080p "}, saved)["sonarr_name"] == "sonarr-1080p"
+    assert web.check_settings({}, saved)["sonarr_name"] == ""  # empty: shown as Sonarr
+    assert _raises(lambda: web.check_settings({"sonarr_name": "1080p sonarr"}, saved))
+    other = {"name": "sonarr-4k", "url": "http://sonarr-4k:8989", "api_key": "k", "quality_ladder": "4K"}
+    assert _raises(lambda: web.check_settings({"sonarr_name": "sonarr-4k", "sonarrs": [other]}, saved))  # each name once
 def test_a_job_serve_never_confirmed_stopped_is_asked_about_first(monkeypatch):
     # serve too slow to take the cancel: that job may go on and finish; a second download would share its folder (#10)
     from unshacklarr import web
