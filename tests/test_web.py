@@ -1626,3 +1626,29 @@ def test_a_diagnostic_keeps_no_token_key_or_address():
     text = web.scrubbed("GET https://api.netflix.com/license?playbackContextId=abc123&esn=NFCDIE key=" + "a" * 40 + " mail me@example.com")
     assert "playbackContextId" not in text and "a" * 40 not in text and "me@example.com" not in text
     assert "https://api.netflix.com/license?…" in text
+
+
+def test_a_job_serve_never_confirmed_stopped_is_asked_about_first(monkeypatch):
+    # serve too slow to take the cancel: that job may go on and finish; a second download would share its folder (#10)
+    from unshacklarr import web
+    from unshacklarr.backend import UnshackleError
+    cards = [{"episodeId": 5, "sxxeyy": "S01E05", "unconfirmed_job": {"backend": "", "job_id": "j1"}},
+             {"episodeId": 6, "sxxeyy": "S01E06"}]
+    monkeypatch.setattr(web, "cards_on_disk", lambda: cards)
+    monkeypatch.setattr(web.sonarr_sync.RUNS_DIR.__class__, "exists", lambda self: True)
+    status = {"s": "downloading"}
+
+    class Serve:
+        def job(self, job_id):
+            if status["s"] is None:
+                raise UnshackleError("unreachable")
+            return {"status": status["s"]}
+    monkeypatch.setattr(web.sonarr_sync, "backend_named", lambda name: Serve())
+    assert "still downloading" in web.still_on_serve([5])
+    status["s"] = "completed"
+    assert "finished after all" in web.still_on_serve([5])
+    status["s"] = None
+    assert "doesn't answer" in web.still_on_serve([5])
+    status["s"] = "failed"
+    assert web.still_on_serve([5]) is None  # it ended there: a new download is fine
+    assert web.still_on_serve([6]) is None  # nothing left unconfirmed

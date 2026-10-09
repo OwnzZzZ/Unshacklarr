@@ -1984,5 +1984,8 @@
  "Downloads at once": "Descargas a la vez",
  "per server": "por servidor",
  "Stopped before it started": "Detenida antes de empezar",
- "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": "Cuántos episodios descarga a la vez cada servidor de Unshackle. 1 es más suave para un NAS pequeño. 0: tantos como permita Unshackle, 2 por defecto."
+ "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": "Cuántos episodios descarga a la vez cada servidor de Unshackle. 1 es más suave para un NAS pequeño. 0: tantos como permita Unshackle, 2 por defecto.",
+ "Unshackle doesn't answer yet: the last try of {0} may still be downloading there": "Unshackle aún no responde: el último intento de {0} puede seguir descargándose allí",
+ "{0} finished after all: import it from Activity, Waiting in downloads": "{0} terminó después de todo: impórtelo desde Actividad, En espera en descargas",
+ "{0} is still downloading from its last try": "{0} todavía se está descargando desde su último intento"
 }

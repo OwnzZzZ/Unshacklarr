@@ -2015,5 +2015,8 @@
  "Downloads at once": "同時ダウンロード数",
  "per server": "サーバーごと",
  "Stopped before it started": "開始前に停止しました",
- "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": "各 Unshackle サーバーが同時にダウンロードするエピソード数。小型 NAS には 1 が負担の少ない設定です。0：Unshackle が許す数（既定は 2）。"
+ "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": "各 Unshackle サーバーが同時にダウンロードするエピソード数。小型 NAS には 1 が負担の少ない設定です。0：Unshackle が許す数（既定は 2）。",
+ "Unshackle doesn't answer yet: the last try of {0} may still be downloading there": "Unshackle がまだ応答しません：{0} の前回の試行がまだダウンロード中かもしれません",
+ "{0} finished after all: import it from Activity, Waiting in downloads": "{0} は結局完了しました：アクティビティの「ダウンロードで待機中」からインポートしてください",
+ "{0} is still downloading from its last try": "{0} は前回の試行からまだダウンロード中です"
 }

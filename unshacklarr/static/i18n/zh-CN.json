@@ -2020,5 +2020,8 @@
  "Downloads at once": "同时下载数",
  "per server": "每台服务器",
  "Stopped before it started": "开始前已停止",
- "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": "每台 Unshackle 服务器同时下载的剧集数。小型 NAS 设为 1 更轻松。0：按 Unshackle 允许的数量，默认 2。"
+ "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": "每台 Unshackle 服务器同时下载的剧集数。小型 NAS 设为 1 更轻松。0：按 Unshackle 允许的数量，默认 2。",
+ "Unshackle doesn't answer yet: the last try of {0} may still be downloading there": "Unshackle 尚未响应：{0} 的上一次尝试可能仍在那里下载",
+ "{0} finished after all: import it from Activity, Waiting in downloads": "{0} 最终已完成：请在“活动 › 下载中等待”里导入",
+ "{0} is still downloading from its last try": "{0} 仍在下载上一次尝试的内容"
 }

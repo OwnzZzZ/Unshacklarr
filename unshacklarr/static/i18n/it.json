@@ -2009,5 +2009,8 @@
  "Downloads at once": "Download simultanei",
  "per server": "per server",
  "Stopped before it started": "Fermato prima di iniziare",
- "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": "Quanti episodi scarica insieme ogni server Unshackle. 1 è più leggero per un piccolo NAS. 0: quanti ne consente Unshackle, 2 di default."
+ "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": "Quanti episodi scarica insieme ogni server Unshackle. 1 è più leggero per un piccolo NAS. 0: quanti ne consente Unshackle, 2 di default.",
+ "Unshackle doesn't answer yet: the last try of {0} may still be downloading there": "Unshackle non risponde ancora: l'ultimo tentativo di {0} potrebbe essere ancora in download",
+ "{0} finished after all: import it from Activity, Waiting in downloads": "{0} è stato completato comunque: importalo da Attività, In attesa nei download",
+ "{0} is still downloading from its last try": "{0} è ancora in download dal suo ultimo tentativo"
 }

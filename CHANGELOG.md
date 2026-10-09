@@ -31,6 +31,7 @@ The new options are off until you turn them on.
 
 ### Fixed
 
+- **No second download of an episode Unshackle may still be fetching.** When serve was too slow to take a cancel, a new download of that episode first asks serve about the earlier try. (#10, by mj23au)
 - **A series' link found by its title** when its service is only linked by an episode (HBO Max). (#12, by mj23au)
 - **Missing subtitles no longer stop a download.** The episode comes with the subtitle languages it has, or none,
   unless subtitles are required. (#16, by mj23au)
