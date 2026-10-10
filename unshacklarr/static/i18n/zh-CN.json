@@ -2120,5 +2120,13 @@
  "Sign in": "登录",
  "Signed in": "已登录",
  "the service": "该服务",
- "{0} is slow to answer. It may be waiting for you to sign in: look at Unshackle's log.": "{0} 响应缓慢，可能正在等待您登录：请查看 Unshackle 的日志。"
+ "{0} is slow to answer. It may be waiting for you to sign in: look at Unshackle's log.": "{0} 响应缓慢，可能正在等待您登录：请查看 Unshackle 的日志。",
+ "Downloaded, but Sonarr didn't import it: {0}": "已下载，但 Sonarr 未导入：{0}",
+ "Downloaded, import needed": "已下载，需要导入",
+ "Downloaded; Sonarr didn't import it. Import it from Waiting in downloads: {0}": "已下载；Sonarr 未导入。请在“下载中等待”里导入：{0}",
+ "Import it from Activity, Waiting in downloads ({0}).": "请在“活动 › 下载中等待”里导入（{0}）。",
+ "Import needed": "需要导入",
+ "Import needed: {0}": "需要导入：{0}",
+ "No Sonarr named {0}": "没有名为 {0} 的 Sonarr",
+ "Sonarr refused the import ({0}): asked again ({1} of {2})": "Sonarr 拒绝了导入（{0}）：已再次请求（第 {1} 次，共 {2} 次）"
 }

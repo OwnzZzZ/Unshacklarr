@@ -2097,5 +2097,13 @@
  "Sign in": "Entrar",
  "Signed in": "Conectado",
  "the service": "o serviço",
- "{0} is slow to answer. It may be waiting for you to sign in: look at Unshackle's log.": "{0} está demorando a responder. Talvez esteja esperando você entrar: veja o log do Unshackle."
+ "{0} is slow to answer. It may be waiting for you to sign in: look at Unshackle's log.": "{0} está demorando a responder. Talvez esteja esperando você entrar: veja o log do Unshackle.",
+ "Downloaded, but Sonarr didn't import it: {0}": "Baixado, mas o Sonarr não o importou: {0}",
+ "Downloaded, import needed": "Baixado, falta importar",
+ "Downloaded; Sonarr didn't import it. Import it from Waiting in downloads: {0}": "Baixado; o Sonarr não o importou. Importe-o em Aguardando nos downloads: {0}",
+ "Import it from Activity, Waiting in downloads ({0}).": "Importe-o em Atividade, Aguardando nos downloads ({0}).",
+ "Import needed": "Falta importar",
+ "Import needed: {0}": "Falta importar: {0}",
+ "No Sonarr named {0}": "Nenhum Sonarr chamado {0}",
+ "Sonarr refused the import ({0}): asked again ({1} of {2})": "O Sonarr recusou a importação ({0}): pedida de novo ({1} de {2})"
 }

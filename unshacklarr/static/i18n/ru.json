@@ -2112,5 +2112,13 @@
  "Sign in": "Вход",
  "Signed in": "Вход выполнен",
  "the service": "сервис",
- "{0} is slow to answer. It may be waiting for you to sign in: look at Unshackle's log.": "{0} отвечает медленно. Возможно, он ждёт, пока вы войдёте: посмотрите журнал Unshackle."
+ "{0} is slow to answer. It may be waiting for you to sign in: look at Unshackle's log.": "{0} отвечает медленно. Возможно, он ждёт, пока вы войдёте: посмотрите журнал Unshackle.",
+ "Downloaded, but Sonarr didn't import it: {0}": "Загружено, но Sonarr не импортировал: {0}",
+ "Downloaded, import needed": "Загружено, нужен импорт",
+ "Downloaded; Sonarr didn't import it. Import it from Waiting in downloads: {0}": "Загружено; Sonarr не импортировал. Импортируйте в «Ожидает в загрузках»: {0}",
+ "Import it from Activity, Waiting in downloads ({0}).": "Импортируйте его в «Активность», «Ожидает в загрузках» ({0}).",
+ "Import needed": "Нужен импорт",
+ "Import needed: {0}": "Нужен импорт: {0}",
+ "No Sonarr named {0}": "Нет Sonarr с именем {0}",
+ "Sonarr refused the import ({0}): asked again ({1} of {2})": "Sonarr отклонил импорт ({0}): запрошен снова ({1} из {2})"
 }

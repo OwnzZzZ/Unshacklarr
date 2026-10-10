@@ -2115,5 +2115,13 @@
  "Sign in": "サインイン",
  "Signed in": "サインインしました",
  "the service": "サービス",
- "{0} is slow to answer. It may be waiting for you to sign in: look at Unshackle's log.": "{0} の応答が遅れています。サインインを待っている可能性があります。Unshackle のログを確認してください。"
+ "{0} is slow to answer. It may be waiting for you to sign in: look at Unshackle's log.": "{0} の応答が遅れています。サインインを待っている可能性があります。Unshackle のログを確認してください。",
+ "Downloaded, but Sonarr didn't import it: {0}": "ダウンロード済みですが、Sonarr がインポートしませんでした：{0}",
+ "Downloaded, import needed": "ダウンロード済み、インポートが必要",
+ "Downloaded; Sonarr didn't import it. Import it from Waiting in downloads: {0}": "ダウンロード済み。Sonarr がインポートしませんでした。「ダウンロードで待機中」からインポートしてください：{0}",
+ "Import it from Activity, Waiting in downloads ({0}).": "アクティビティの「ダウンロードで待機中」からインポートしてください（{0}）。",
+ "Import needed": "インポートが必要",
+ "Import needed: {0}": "インポートが必要：{0}",
+ "No Sonarr named {0}": "{0} という名前の Sonarr はありません",
+ "Sonarr refused the import ({0}): asked again ({1} of {2})": "Sonarr がインポートを拒否しました（{0}）：再要求（{2} 回中 {1} 回目）"
 }

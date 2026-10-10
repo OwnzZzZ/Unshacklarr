@@ -490,7 +490,7 @@ def series_health(cards: list[dict]) -> dict[int, dict]:
     health: dict[int, dict] = {}
     by_series: dict[int, list[dict]] = {}
     for c in cards:  # newest first
-        if c.get("ended") and c.get("outcome") in ("downloaded", "failed", "kept") and not c.get("instance"):  # the main Sonarr's
+        if c.get("ended") and c.get("outcome") in ("downloaded", "failed", "kept", "import") and not c.get("instance"):  # the main Sonarr's
             by_series.setdefault(c["tvdbId"], []).append(c)
     for tvdb, runs in by_series.items():
         streak = 0
@@ -3518,8 +3518,10 @@ def still_on_serve(ids: list[int], instance: str = "") -> str | None:
             continue
         try:
             status = sonarr_sync.backend_named(u.get("backend") or None).job(u["job_id"]).get("status")
-        except UnshackleError:
-            return f"Unshackle doesn't answer yet: the last try of {c['sxxeyy']} may still be downloading there"
+        except UnshackleError as e:
+            if sonarr_sync.UNREACHABLE in str(e):
+                return f"Unshackle doesn't answer yet: the last try of {c['sxxeyy']} may still be downloading there"
+            continue  # serve answered (404: it has no such job): nothing of it can still be running (by mj23au, #10)
         if status in ("queued", "downloading"):
             return f"{c['sxxeyy']} is still downloading from its last try"
         if status == "completed":
@@ -3538,7 +3540,7 @@ def stats_of(cards: list[dict], now: datetime) -> dict:
     """What the history adds up to: the last 30 days, 8 weeks of downloads, and each service."""
     def when(c):
         return datetime.fromisoformat(c["started"])
-    ended = [c for c in cards if c.get("ended") and c.get("outcome") in ("downloaded", "failed", "kept")]
+    ended = [c for c in cards if c.get("ended") and c.get("outcome") in ("downloaded", "failed", "kept", "import")]
     recent = [c for c in ended if now - when(c) <= timedelta(days=30)]
     took = lambda c: (datetime.fromisoformat(c["ended"]) - when(c)).total_seconds()
     week0 = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
@@ -3546,11 +3548,11 @@ def stats_of(cards: list[dict], now: datetime) -> dict:
     for i in range(7, -1, -1):
         start = week0 - timedelta(weeks=i)
         these = [c for c in ended if start <= when(c) < start + timedelta(weeks=1)]
-        weeks.append({"start": start.date().isoformat(), **{o: sum(c["outcome"] == o for c in these) for o in ("downloaded", "failed", "kept")}})
+        weeks.append({"start": start.date().isoformat(), **{o: sum(c["outcome"] == o or (o == "kept" and c["outcome"] == "import") for c in these) for o in ("downloaded", "failed", "kept")}})
     services = {}
     for c in ended:
         sv = services.setdefault(c["service"], {"service": c["service"], "downloaded": 0, "failed": 0, "kept": 0, "last_success": None, "took": []})
-        sv[c["outcome"]] += 1
+        sv["kept" if c["outcome"] == "import" else c["outcome"]] += 1  # downloaded, not imported: with kept
         if c["outcome"] == "downloaded":
             sv["took"].append(took(c))
             sv["last_success"] = max(sv["last_success"] or "", c["ended"])
@@ -3563,7 +3565,7 @@ def stats_of(cards: list[dict], now: datetime) -> dict:
     tries = sum(c["outcome"] in ("downloaded", "failed") for c in recent)
     return {
         "month": {"downloaded": len(done), "failed": sum(c["outcome"] == "failed" for c in recent),
-                  "kept": sum(c["outcome"] == "kept" for c in recent),
+                  "kept": sum(c["outcome"] in ("kept", "import") for c in recent),
                   "success": round(100 * len(done) / tries) if tries else None,
                   "average": round(sum(map(took, done)) / len(done)) if done else None},
         "weeks": weeks,
@@ -3895,27 +3897,32 @@ def episode_ids_of(tvdb: int, episodes: list[str]) -> list[int]:
 
 async def v1_start_download(request):
     """Episodes by Sonarr's ids, or by the series' TVDB id and S01E02: downloaded as the page's Download does,
-    a file Sonarr has replaced only by a better one."""
+    a file Sonarr has replaced only by a better one. "sonarr": for another Sonarr (its ids), "retry": as a retry."""
     body = await json_object(request)
     ids, tvdb = body.get("episodeIds"), body.get("tvdbId")
+    inst = sonarr_named(str(body.get("sonarr") or ""))  # None: the main Sonarr (by mj23au, #10)
+    if body.get("sonarr") and not inst:
+        raise web.HTTPBadRequest(text=f"No Sonarr named {body['sonarr']}")
     names = [str(x).upper() for x in body.get("episodes") or []] if isinstance(body.get("episodes"), list) else []
     if type(tvdb) is int and names and all(re.fullmatch(r"S\d+E\d+", x) for x in names):
         if not (read_config()["series"].get(tvdb) or {}).get("service"):
             raise web.HTTPNotFound(text=f"Unshacklarr downloads no series with TVDB id {tvdb}: set it up on its page first")
         names = [f"S{int(m[1]):02}E{int(m[2]):02}" for m in (re.fullmatch(r"S(\d+)E(\d+)", x) for x in names)]
         try:
-            ids = await asyncio.to_thread(episode_ids_of, tvdb, names)
+            ids = await asyncio.to_thread(on_sonarr, inst, episode_ids_of, tvdb, names)
         except requests.RequestException as e:
             raise web.HTTPBadGateway(text=f"Sonarr is unreachable: {no_credentials(e)}")
     if not ids or not isinstance(ids, list) or not all(type(i) is int and i > 0 for i in ids):
         raise web.HTTPBadRequest(text='Give "episodeIds", or "tvdbId" and "episodes" such as ["S01E02"]')
     if len(ids) > 100:
         raise web.HTTPBadRequest(text="At most 100 episodes at a time")
-    if why := await asyncio.to_thread(cdm_refusal, ids):
+    if why := await asyncio.to_thread(on_sonarr, inst, cdm_refusal, ids):
         raise web.HTTPBadRequest(text=why)
+    if why := await asyncio.to_thread(still_on_serve, ids, inst["name"] if inst else ""):
+        raise web.HTTPConflict(text=why)
     room_for_one_more()
     # never "replace": a key kept in another program must not be able to swap the library's files
-    run_sync(ids)
+    run_sync(ids, **({"kind": "retry"} if body.get("retry") is True else {}), **({"sonarr": inst["name"]} if inst else {}))
     return web.json_response({"queued": len(ids)})
 
 

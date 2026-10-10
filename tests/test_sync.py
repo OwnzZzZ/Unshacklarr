@@ -731,7 +731,8 @@ def test_finalize_reports_joining_then_renaming(tmp_path, monkeypatch):
 
 
 @responses.activate
-def test_an_import_sonarr_did_not_do_is_a_failure(tmp_path, monkeypatch):
+def test_an_import_sonarr_did_not_do_is_an_import_left_to_do(tmp_path, monkeypatch):
+    # Downloaded whole, only Sonarr's import failed: not a failed download, an import to do (by mj23au, #10)
     sync = load(tmp_path, monkeypatch)
     responses.get(f"{SONARR}/api/v3/calendar", json=[episode(111, 2, 5)])
     responses.post(re.compile(re.escape(WEBHOOK)))
@@ -743,10 +744,12 @@ def test_an_import_sonarr_did_not_do_is_a_failure(tmp_path, monkeypatch):
         (out / "Show.S02E05.mkv").touch()
 
     use_tools(monkeypatch, sync, fake_tools([], dl, {}))
-    assert sync.main() == 1
+    assert sync.main() == 0  # nothing failed to download
     [message] = discord_messages()
-    assert "Not imported: Show S02E05" in message and "disk full" in message
-    assert (tmp_path / "unshackle-111-S02E05" / "Show.S02E05.mkv").exists()  # kept for a second try
+    assert "Import needed: Show S02E05" in message and "disk full" in message
+    assert (tmp_path / "unshackle-111-S02E05" / "Show.S02E05.mkv").exists()  # kept, to import
+    [card] = [json.loads(p.read_text()) for p in sync.RUNS_DIR.glob("*.json")]
+    assert card["outcome"] == "import"
 
 
 @responses.activate
@@ -1945,6 +1948,7 @@ def test_an_import_sonarr_does_not_answer_is_asked_again(tmp_path, monkeypatch):
     posts = []
 
     class Answer:
+        status_code = 200
         def raise_for_status(self): pass
         def json(self): return {"id": 7}
 
@@ -1976,6 +1980,24 @@ def test_an_import_sonarr_does_not_answer_is_asked_again(tmp_path, monkeypatch):
         raise AssertionError("an import Sonarr never answered passed")
     except RuntimeError as e:
         assert "did not answer the import 3 times" in str(e)
+    assert len(posts) == 3
+
+    class Locked(Answer):  # Sonarr's 500 while its database is locked (by mj23au, #10): nothing queued
+        status_code = 500
+        def raise_for_status(self): raise sync.requests.HTTPError("500 Server Error: Internal Server Error")
+
+    posts.clear()
+    answers[:] = [Locked(), Answer()]  # refused once while busy, taken the next time
+    sync.import_episode(dict(ep), out)
+    assert len(posts) == 2
+
+    posts.clear()
+    answers[:] = [Locked()] * 3  # refused every time: it fails, as before
+    try:
+        sync.import_episode(dict(ep), out)
+        raise AssertionError("an import Sonarr refused 3 times passed")
+    except sync.requests.HTTPError:
+        pass
     assert len(posts) == 3
 
 
@@ -2020,6 +2042,7 @@ def test_one_import_at_a_time_per_sonarr(tmp_path, monkeypatch):
         now[0] -= 1
 
     class Answer:
+        status_code = 200
         def raise_for_status(self): pass
         def json(self): return {"id": 7}
     monkeypatch.setattr(sync, "wait_for_import", wait)
@@ -2097,3 +2120,54 @@ def test_downloads_at_once_per_server_and_a_slow_serve_waited_for(tmp_path, monk
         except sync.UnshackleError:
             pass
         assert slept == waits
+
+
+def test_an_attempt_that_got_through_keeps_nothing_unconfirmed(tmp_path, monkeypatch):
+    # By mj23au (#10): a cancel serve answered (404, no such job) marks nothing; one it couldn't be reached for does,
+    # and an attempt that then downloads after all clears its own mark
+    sync = load(tmp_path, monkeypatch)
+    from unshacklarr.backend import UnshackleError
+
+    class Serve:
+        name = ""
+        def __init__(self, cancel_error): self.cancel_error = cancel_error
+        def download(self, payload): return "j1"
+        def job(self, job_id): raise UnshackleError("unshackle serve: Job not found")  # not transient: gives up at once
+        def cancel(self, job_id): raise UnshackleError(self.cancel_error)
+
+    for cancel_error, marked in (("unshackle serve: Job not found", False),
+                                 ("unshackle serve is unreachable at http://serve:8786: Read timed out", True)):
+        run = sync.EpisodeRun({"id": 5, "seriesId": 1, "series": {"title": "Show", "tvdbId": 111}, "seasonNumber": 1,
+                               "episodeNumber": 5}, {"service": "X"}, "manual")
+        try:
+            sync.follow_job(Serve(cancel_error), {"service": "X"}, run, 0)
+        except UnshackleError:
+            pass
+        assert ("unconfirmed_job" in run.card) is marked
+        run.finish("downloaded")
+        assert "unconfirmed_job" not in run.card  # got through after all: nothing left to ask about
+
+
+def test_downloads_waiting_for_a_slot_go_in_the_order_they_came(tmp_path, monkeypatch):
+    # By mj23au (#10): a slot that frees up goes to the one waiting longest, not to whoever checks first
+    import threading, time
+    sync = load(tmp_path, monkeypatch)
+    monkeypatch.setitem(sync.SETTINGS, "downloads_at_once", 1)
+    order, hold = [], threading.Event()
+
+    def take(name, wait=None):
+        with sync.download_slot(""):
+            order.append(name)
+            if wait:
+                wait.wait(2)
+    first = threading.Thread(target=take, args=("first", hold))
+    first.start()
+    time.sleep(.05)
+    waiters = []
+    for name in ("a", "b", "c"):  # they come one after the other while the slot is taken
+        waiters.append(threading.Thread(target=take, args=(name,)))
+        waiters[-1].start()
+        time.sleep(.05)
+    hold.set()
+    for t in [first, *waiters]: t.join()
+    assert order == ["first", "a", "b", "c"]

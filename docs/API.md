@@ -72,6 +72,10 @@ replaced only by a better one, as the series' quality profile ranks them: the AP
 replacement (the page can). Answers `{"queued": 2}`, or `429` while too many downloads asked are still
 going.
 
+Two optional fields: `"sonarr": "sonarr-2"` downloads for another Sonarr set up in Settings › Sonarr (its own
+episode ids and TVDB lookup, its ladder, imported into it), and `"retry": true` marks the download as a retry, as the
+page's Retry does. `409` when an earlier try of one of the episodes may still be downloading on Unshackle.
+
 ### `GET /api/v1/downloads?limit=50`
 
 Downloads, the queued and running ones first, then the history from newest to oldest. `limit`: 1
@@ -98,10 +102,10 @@ to 500, 50 by default.
 
 | Field | |
 |---|---|
-| `state` | `queued`, `running`, `downloaded`, `failed`, `kept` (the file Sonarr has is not worse), `unavailable` (not on the service yet), `stopped`, `cancelled`, `interrupted` (Unshacklarr restarted during it) |
+| `state` | `queued`, `running`, `downloaded`, `failed`, `kept` (the file Sonarr has is not worse), `import` (downloaded, Sonarr did not import it: to import by hand), `unavailable` (not on the service yet), `stopped`, `cancelled`, `interrupted` (Unshacklarr restarted during it) |
 | `step` | While running: `queued`, `downloading`, `joining` (parts), `renaming`, `importing`, `done` |
 | `question` | While running: what the service asks (a code sent by e-mail, a PIN), to answer below |
-| `error` | Why it failed, was kept or is unavailable |
+| `error` | Why it failed, was kept, needs an import or is unavailable |
 
 A queued download's `id` is `waiting-<episodeId>` until it starts.
 

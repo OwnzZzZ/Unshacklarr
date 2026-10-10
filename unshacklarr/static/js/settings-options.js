@@ -127,7 +127,7 @@ function renderHistory() {
   const box = $("#hs-state");
   if (hsCards) {
     const count = (...o) => hsCards.filter((c) => o.includes(c.outcome)).length;
-    const done = count("downloaded", "kept"), failed = count("failed", "interrupted"), missing = count("unavailable");
+    const done = count("downloaded", "kept", "import"), failed = count("failed", "interrupted"), missing = count("unavailable");
     const oldest = hsCards.map((c) => c.started).sort()[0];
     box.className = "sx-state";  // a count, neither good nor bad
     box.querySelector("b").textContent = hsCards.length ? `${hsCards.length} download${hsCards.length === 1 ? "" : "s"} kept` : "Nothing kept yet";

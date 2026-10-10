@@ -1697,7 +1697,9 @@ def test_a_job_serve_never_confirmed_stopped_is_asked_about_first(monkeypatch):
     class Serve:
         def job(self, job_id):
             if status["s"] is None:
-                raise UnshackleError("unreachable")
+                raise UnshackleError("unshackle serve is unreachable at http://serve:8786: Read timed out")
+            if status["s"] == "gone":
+                raise UnshackleError("unshackle serve: Job not found")
             return {"status": status["s"]}
     monkeypatch.setattr(web.sonarr_sync, "backend_named", lambda name: Serve())
     assert "still downloading" in web.still_on_serve([5])
@@ -1707,6 +1709,8 @@ def test_a_job_serve_never_confirmed_stopped_is_asked_about_first(monkeypatch):
     assert "doesn't answer" in web.still_on_serve([5])
     status["s"] = "failed"
     assert web.still_on_serve([5]) is None  # it ended there: a new download is fine
+    status["s"] = "gone"
+    assert web.still_on_serve([5]) is None  # serve answered it has no such job: not running, a new download is fine
     assert web.still_on_serve([6]) is None  # nothing left unconfirmed
 
 

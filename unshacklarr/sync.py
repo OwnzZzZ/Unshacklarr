@@ -671,6 +671,8 @@ class EpisodeRun:
         EpisodeRun.active.discard(self.id)
         self.log.close()
         self.card.update(ended=datetime.now(timezone.utc).isoformat(), outcome=outcome)
+        if outcome in ("downloaded", "kept", "import"):  # a later try of this attempt got through: nothing left unconfirmed (#10)
+            self.card.pop("unconfirmed_job", None)
         self.fold_checks()
         self.save()
         prune_runs()
@@ -806,22 +808,30 @@ def ask_for_input(run: EpisodeRun, prompt: str | None) -> None:
 slots = threading.Condition()
 slots_busy: dict[str, int] = {}  # by server name ("" the main one): its downloads going on now
 stop_waiting: set[str] = set()  # runs stopped from Activity while they waited for a slot
+slot_line: dict[str, list[str]] = {}  # by server: the downloads waiting, in the order they came (by mj23au, #10)
 
 
 @contextlib.contextmanager
 def download_slot(server: str, run: EpisodeRun | None = None):
     """Settings › Unshackle, Downloads at once: past that many on a server, a download waits for one to end
     (a small NAS kept to one; by mj23au, #10). 0: as many as serve takes, which queues the rest itself."""
+    me = run.id if run else uuid.uuid4().hex
     with slots:
+        line = slot_line.setdefault(server, [])
+        line.append(me)
         told = False
-        while (limit := int(SETTINGS.get("downloads_at_once") or 0)) and slots_busy.get(server, 0) >= limit:
-            if run and run.id in stop_waiting:
-                stop_waiting.discard(run.id)
-                raise JobFailed("Stopped before it started", "cancelled")
-            if run and not told:
-                run.say(f"\r\n\x1b[90mWaiting: {limit} download{'s' if limit > 1 else ''} at once on this server\x1b[0m")
-                told = True
-            slots.wait(2)
+        try:  # first come, first served: a slot that frees up goes to the one waiting longest
+            while (limit := int(SETTINGS.get("downloads_at_once") or 0)) and (slots_busy.get(server, 0) >= limit or line[0] != me):
+                if run and run.id in stop_waiting:
+                    stop_waiting.discard(run.id)
+                    raise JobFailed("Stopped before it started", "cancelled")
+                if run and not told:
+                    run.say(f"\r\n\x1b[90mWaiting: {limit} download{'s' if limit > 1 else ''} at once on this server\x1b[0m")
+                    told = True
+                slots.wait(2)
+        finally:
+            line.remove(me)
+            slots.notify_all()
         slots_busy[server] = slots_busy.get(server, 0) + 1
     try:
         yield
@@ -862,8 +872,10 @@ def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float) -> l
             if misses >= POLL_MISSES or not TRANSIENT.search(str(e)):
                 try:
                     backend.cancel(job_id)  # gone for good: nothing of it may go on behind a retry
-                except UnshackleError:
-                    if run:  # serve didn't answer even that: the job may go on there and finish (by mj23au, #10)
+                except UnshackleError as refused:
+                    # serve couldn't be reached even for that: the job may go on there and finish (by mj23au, #10).
+                    # An answer (404: no such job) means it is gone: nothing to keep
+                    if run and UNREACHABLE in str(refused):
                         run.card["unconfirmed_job"] = {"backend": backend.name or "", "job_id": job_id}
                         run.save()
                 raise
@@ -940,6 +952,7 @@ TRANSIENT = re.compile(r"timed? ?out|timeout|connection (reset|refused|aborted|e
                        r"max retries|\b50[234]\b|service unavailable|bad gateway|name resolution|network is unreachable", re.IGNORECASE)
 RETRY_AFTER = (30, 120)  # seconds before each retry
 SERVE_RETRY_AFTER = (60, 180, 600)  # serve itself too slow to answer (its disks saturated): longer, once more (#10)
+UNREACHABLE = "unshackle serve is unreachable"  # Unshackle.call's words when it can't reach serve, not an answer
 SIGN_IN_HINT = 30  # seconds without a track before a download says the service may be waiting for a sign-in
 POLL_MISSES = 12  # job statuses missed in a row (5 s apart at least) before the job counts as lost
 # The service turned Unshackle away: cookies or credentials out of date, most of the time.
@@ -998,7 +1011,7 @@ def run_job_retrying(payload: dict, run: EpisodeRun | None = None, sleep=time.sl
             return run_job(payload, run)
         except (JobFailed, UnshackleError) as e:
             cause = getattr(e, "cause", str(e))
-            waits = SERVE_RETRY_AFTER if "unshackle serve is unreachable" in cause else RETRY_AFTER
+            waits = SERVE_RETRY_AFTER if UNREACHABLE in cause else RETRY_AFTER
             wait = waits[tries] if tries < len(waits) else None
             if not subs_tried and (m := SUBS_MISSING.search(f"{cause}\n{e}")):  # its one line, else all it said
                 missing = {base_lang(x) for x in re.split(r"[,\s]+", m.group(1)) if x.strip(" '[]")} if m.group(1) else None
@@ -1895,7 +1908,6 @@ def import_episode(ep: dict, out: Path, replace: bool = False) -> None:
                     json={"name": "ManualImport", "files": files, "importMode": "move"},
                     timeout=120,  # as long as its reads: a Sonarr busy moving another big file answers late
                 )
-                break
             except (requests.Timeout, requests.ConnectionError) as e:
                 # It may have taken it and imported all the same: the episode's file says, before asking again
                 time.sleep(IMPORT_RETRY_WAIT)
@@ -1906,6 +1918,14 @@ def import_episode(ep: dict, out: Path, replace: bool = False) -> None:
                 if attempt == IMPORT_ASKS:
                     raise RuntimeError(f"Sonarr did not answer the import {IMPORT_ASKS} times ({no_credentials(str(e))})") from e
                 trace(f"Sonarr did not answer the import ({type(e).__name__}): asked again ({attempt + 1} of {IMPORT_ASKS})")
+                continue
+            # Sonarr refused it (500: "database is locked" while it is busy; by mj23au, #10): StartCommand queued
+            # nothing, so asking again cannot import twice
+            if r.status_code >= 500 and attempt < IMPORT_ASKS:
+                trace(f"Sonarr refused the import ({r.status_code}): asked again ({attempt + 1} of {IMPORT_ASKS})")
+                time.sleep(IMPORT_RETRY_WAIT)
+                continue
+            break
         r.raise_for_status()
         trace(f"Sonarr's import asked (command {r.json().get('id')}), moving {len(files)} file{'s' if len(files) != 1 else ''}{', replacing its file' if replace else ''}")
         wait_for_import(ep, r.json().get("id"), old_file)
@@ -2056,7 +2076,7 @@ def import_into_sonarr(out: Path, inst: str, tvdb: int, season: int, number: int
         c = json.loads(card.read_text())
         if c.get("instance", "") != inst:
             continue  # the same episode, for another Sonarr
-        if c.get("outcome") == "kept":  # its history line: imported after all
+        if c.get("outcome") in ("kept", "import"):  # its history line: imported after all
             by_hand = str(c.get("cause") or "").startswith("Download only")
             c.update(outcome="downloaded", detail="Imported by hand" if by_hand else "Imported anyway: it replaced the library's file")
             write_atomic(card, json.dumps(c))
@@ -2279,6 +2299,13 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
             return
         except (RuntimeError, subprocess.CalledProcessError, requests.RequestException) as e:
             # The files stay in the downloads folder: nothing is imported, nothing is downloaded again.
+            if run.card.get("step") == "importing":  # downloaded whole, only Sonarr's import failed: an import is what's left
+                run.say(f"{label}: {e}")       # to do, not a download (by mj23au, #10)
+                where = seen_by("sonarr_downloads", out)
+                run.finish("import", str(e), f"Downloaded; Sonarr didn't import it. Import it from Waiting in downloads: {where}")
+                notify_series(show, settings, "warning", f"Import needed: {label}",
+                              f"Downloaded, but Sonarr didn't import it: {e}\nImport it from Activity, Waiting in downloads ({where}).", batch=batch)
+                return
             with counted:
                 failures += 1
             run.say(f"{label}: {e}")

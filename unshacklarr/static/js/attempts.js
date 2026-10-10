@@ -11,11 +11,11 @@ async function importKept(c, button) {
   const worded = !button.classList.contains("jact");  // a card's icon button keeps its icon
   button.disabled = true;
   if (worded) button.textContent = "Importing…";
-  try {
-    await api("/api/leftovers/import", { method: "POST", signal: AbortSignal.timeout(360000), body: JSON.stringify({ folder: `unshackle-${c.tvdbId}-${c.sxxeyy}` }) });
+  try {  // another Sonarr's copy waits in a folder named after it
+    await api("/api/leftovers/import", { method: "POST", signal: AbortSignal.timeout(360000), body: JSON.stringify({ folder: `unshackle-${c.instance ? `${c.instance}-` : ""}${c.tvdbId}-${c.sxxeyy}` }) });
     toast(`${c.series} ${c.sxxeyy}: imported by Sonarr`);
     openActivity();
-  } catch (e) { button.disabled = false; if (worded) button.textContent = "Import anyway"; toast(e.message, true); }
+  } catch (e) { button.disabled = false; if (worded) button.textContent = c.outcome === "kept" ? "Import anyway" : "Import"; toast(e.message, true); }
 }
 async function deleteRun(c, button) {
   button.disabled = true;

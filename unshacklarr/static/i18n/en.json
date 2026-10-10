@@ -629,11 +629,18 @@
   "svcName(conf.service)"
  ],
  "Downloaded, 30 days": [],
+ "Downloaded, but Sonarr didn't import it: {0}": [
+  "e"
+ ],
+ "Downloaded, import needed": [],
  "Downloaded, not imported: {0}": [
   "label"
  ],
  "Downloaded: {0}": [
   "label"
+ ],
+ "Downloaded; Sonarr didn't import it. Import it from Waiting in downloads: {0}": [
+  "where"
  ],
  "Downloading": [],
  "Downloading now": [],
@@ -887,7 +894,14 @@
  "If this service numbers episodes differently, set its numbering in config.yaml.": [],
  "Import": [],
  "Import anyway": [],
+ "Import it from Activity, Waiting in downloads ({0}).": [
+  "where"
+ ],
  "Import it or delete it in Activity, Waiting in downloads, then try again": [],
+ "Import needed": [],
+ "Import needed: {0}": [
+  "label"
+ ],
  "Imported anyway: it replaced the library's file": [],
  "Imported by Sonarr": [],
  "Imported by Sonarr.": [],
@@ -1163,6 +1177,9 @@
   "tag"
  ],
  "No DRM, nothing to decrypt": [],
+ "No Sonarr named {0}": [
+  "body['sonarr']"
+ ],
  "No Sonarr named {0} in Settings, Sonarr": [
   "name"
  ],
@@ -1841,6 +1858,11 @@
   "sxxeyy"
  ],
  "Sonarr refused the API key": [],
+ "Sonarr refused the import ({0}): asked again ({1} of {2})": [
+  "r.status_code",
+  "attempt + 1",
+  "IMPORT_ASKS"
+ ],
  "Sonarr says an episode has aired, but its service still does not have it.": [],
  "Sonarr season {0} as {1}": [
   "a",

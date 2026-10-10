@@ -1,7 +1,7 @@
 /* Activity. The list holds what runs, then the history; the picked download shows
    its steps, a bar per track and why it ended, with Unshackle's raw output (xterm) folded underneath. */
 const TERM_COLS = 110;
-const OUTCOME = { running: "Running", downloaded: "Downloaded", failed: "Failed", kept: "Kept", interrupted: "Interrupted", stopped: "Stopped", unavailable: "Not out yet", cancelled: "Cancelled" };
+const OUTCOME = { running: "Running", downloaded: "Downloaded", failed: "Failed", kept: "Kept", import: "Import needed", interrupted: "Interrupted", stopped: "Stopped", unavailable: "Not out yet", cancelled: "Cancelled" };
 const KIND = { auto: "automatic sync", burst: "release time", manual: "started by hand", retry: "retried by hand", upgrade: "better language" };
 let term = null, termFit = null, termSocket = null, termFor = null, runsShown = 50, runsTimer = null;
 let runCards = [], picked_run = null, conFilter = "all";
@@ -75,7 +75,7 @@ function renderConsole(liveOnly = false) {  // liveOnly: a tick of the live feed
   if (!liveOnly) {  // the history and its counts: unchanged while the same downloads only move on
     const q = $("#con-search").value.trim().toLowerCase();
     const groups = { all: () => true, downloaded: (c) => c.outcome === "downloaded", failed: (c) => c.outcome === "failed",
-      kept: (c) => c.outcome === "kept", stopped: (c) => ["stopped", "interrupted", "cancelled"].includes(c.outcome) };
+      kept: (c) => c.outcome === "kept" || c.outcome === "import", stopped: (c) => ["stopped", "interrupted", "cancelled"].includes(c.outcome) };
     const searched = runCards.filter((c) => !isLive(c) && (!q || c.series.toLowerCase().includes(q)));
     document.querySelectorAll("#tab-log .con-filters button").forEach((b) => b.querySelector("span").textContent = `(${searched.filter(groups[b.dataset.f]).length})`);
     const pastItems = jobsOf(searched.filter(groups[conFilter]).filter((c) => !liveJobs.has(c.batch)));
@@ -142,9 +142,9 @@ function jobState(j) {
   const n = { done: 0, failed: 0, stopped: 0, cancelled: 0, downloading: 0, finishing: 0, queued: 0 };
   let progress = 0;
   for (const c of j.cards) {
-    if (c.waiting) n.queued++;
+    if (c.waiting || (isLive(c) && c.step === "queued")) n.queued++;  // waiting for a slot counts as queued (by mj23au, #10)
     else if (isLive(c)) { if (FINISHING.has(c.step)) { n.finishing++; progress += 0.95; } else { n.downloading++; progress += (Number(c.live?.progress) || 0) / 100 * 0.9; } }
-    else if (c.outcome === "downloaded" || c.outcome === "kept") { n.done++; progress += 1; }
+    else if (["downloaded", "kept", "import"].includes(c.outcome)) { n.done++; progress += 1; }
     else if (c.outcome === "failed") { n.failed++; progress += 1; }
     else if (c.outcome === "cancelled") { n.cancelled++; progress += 1; }
     else { n.stopped++; progress += 1; }
@@ -234,7 +234,7 @@ function renderJob(j) {
     const live = isLive(c);
     const label = c.waiting ? "Queued" : live ? (FINISHING.has(c.step) ? { joining: "Joining parts", finishing: "Finishing", renaming: "Renaming", importing: "Importing" }[c.step]
       : isQueued(c) ? "Waiting for a slot" : afterTracks(c) || `Downloading ${Math.round(Number(c.live?.progress) || 0)}%`) : OUTCOME[c.outcome] || c.outcome;
-    const tone = c.waiting ? "" : live ? "now" : c.outcome === "downloaded" ? "ok" : c.outcome === "failed" ? "err" : c.outcome === "kept" ? "warn" : "";
+    const tone = c.waiting ? "" : live ? "now" : c.outcome === "downloaded" ? "ok" : c.outcome === "failed" ? "err" : c.outcome === "kept" || c.outcome === "import" ? "warn" : "";
     const downloading = isDownloading(c);
     const detail = downloading ? el("div", { className: "jmeta" },  // how fast, how long still: in sight, not a grey line
         ...[...(afterTracks(c) ? [[ICON_CLOCK, `${afterTracks(c)}: the tracks are in`]] : [[ICON_SPEED, speedOf(c)], [ICON_CLOCK, timeLeft(c) && `${timeLeft(c)} left`]]), [ICON_GLOBE, proxyOf(c), "extra"],
@@ -291,7 +291,7 @@ function jobTotals(j) {
 function jobDone(j, st) {
   const tried = j.cards.filter((c) => c.ended && c.outcome !== "cancelled");
   const first = Math.min(...tried.map((c) => new Date(c.started))), last = Math.max(...tried.map((c) => new Date(c.ended)));
-  const done = j.cards.filter((c) => c.outcome === "downloaded" || c.outcome === "kept"), bytes = done.reduce((n, c) => n + (c.size || 0), 0);
+  const done = j.cards.filter((c) => ["downloaded", "kept", "import"].includes(c.outcome)), bytes = done.reduce((n, c) => n + (c.size || 0), 0);
   const took = tried.length ? last - first : 0;
   const per = done.length ? done.reduce((n, c) => n + (new Date(c.ended) - new Date(c.started)), 0) / done.length : 0;
   const tone = st.n.failed ? "err" : done.length === j.cards.length ? "ok" : "mut";
@@ -524,7 +524,7 @@ function stepStates(c) {
   return STEPS.map((_, i) => {
     if (i === 2 && c.parts === 1) return "skip";  // one file: nothing to join
     if (c.outcome === "downloaded") return "done";
-    if (c.outcome === "kept") return i < 4 ? "done" : "warn";
+    if (c.outcome === "kept" || c.outcome === "import") return i < 4 ? "done" : "warn";
     if (i < at) return "done";
     if (i === at) return { running: "now", failed: "fail", stopped: "halt", interrupted: "halt", unavailable: "halt" }[c.outcome] || "halt";
     return "";
@@ -564,7 +564,8 @@ function cardActs(c) {
     setupButton(c),
     live && c.job_id ? act("stop", "Stop", stopRun, "danger") : "",
     !live && c.outcome === "kept" ? act("import", "Import anyway", importKept, "primary") : "",
-    !live && c.episodeId && c.outcome !== "downloaded" && c.outcome !== "kept" ? act("retry", "Retry", retryRun, "primary") : "",
+    !live && c.outcome === "import" ? act("import", "Import", importKept, "primary") : "",
+    !live && c.episodeId && !["downloaded", "kept", "import"].includes(c.outcome) ? act("retry", "Retry", retryRun, "primary") : "",
     !live ? act("delete", "Delete", deleteRun, "danger") : "",
   ].filter(Boolean);
 }
@@ -574,8 +575,8 @@ function runActs(c) {
   return [
     setupButton(c),
     live && c.job_id ? el("button", { className: "btn small danger", textContent: "Stop", onclick: (e) => stopRun(c, e.target) }) : "",
-    !live && c.outcome === "kept" ? el("button", { className: "btn small primary", textContent: "Import anyway", onclick: (e) => importKept(c, e.target) }) : "",
-    !live && c.episodeId && c.outcome !== "downloaded" && c.outcome !== "kept" ? el("button", { className: "btn small primary", textContent: "Retry", onclick: (e) => retryRun(c, e.target) }) : "",
+    !live && (c.outcome === "kept" || c.outcome === "import") ? el("button", { className: "btn small primary", textContent: c.outcome === "kept" ? "Import anyway" : "Import", onclick: (e) => importKept(c, e.target) }) : "",
+    !live && c.episodeId && !["downloaded", "kept", "import"].includes(c.outcome) ? el("button", { className: "btn small primary", textContent: "Retry", onclick: (e) => retryRun(c, e.target) }) : "",
     !live ? el("button", { className: "btn small", textContent: "Diagnostic", title: "A file to attach to a GitHub issue: versions, settings and this attempt's log, without passwords, keys or tokens",
       onclick: () => downloadDiagnostic(c) }) : "",
     !live ? el("button", { className: "btn small", textContent: "Delete", onclick: (e) => deleteRun(c, e.target) }) : "",
@@ -640,7 +641,7 @@ function runBody(c) {
         ...partStat(c), [partStat(c).length ? "Tracks in it" : "Tracks", lv.total_tracks ? `${lv.completed_tracks || 0} of ${lv.total_tracks}` : "–"]]
         .map(([k, v]) => el("div", {}, el("small", { textContent: k }), el("b", { textContent: v })))));
   } else {
-    const note = { downloaded: ["ok", "Downloaded"], failed: ["err", "Failed"], kept: ["warn", "Sonarr kept its own file"],
+    const note = { downloaded: ["ok", "Downloaded"], failed: ["err", "Failed"], kept: ["warn", "Sonarr kept its own file"], import: ["warn", "Downloaded, import needed"],
       stopped: ["mut", "Stopped"], interrupted: ["mut", "Interrupted: Unshacklarr stopped during it"],
       unavailable: ["mut", "Not out yet: nothing to download"] }[c.outcome] || ["mut", c.outcome];
     if (c.outcome === "downloaded") {  // all went well: one quiet line, not a block

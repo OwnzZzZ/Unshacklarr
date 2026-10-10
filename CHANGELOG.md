@@ -24,7 +24,8 @@ Every change worth knowing, newest first. The format follows
 - **Fallback service.** A second service for a series, used when the main one doesn't have the episode.
 - **Download window.** Automatic downloads run only between two times. In Settings › Automation.
 - **Auto release times.** A series gets the time its episodes usually come out. In Settings › Automation.
-- **Downloads at once.** How many episodes each Unshackle server downloads together, 1 for a small NAS. (#10)
+- **Downloads at once.** How many episodes each Unshackle server downloads together, 1 for a small NAS, first come
+  first served. (#10)
 
 **Upgrades**
 - **Upgrades you choose.** Which series are checked, how long an answer is kept, how far back. (#10, by mj23au)
@@ -47,11 +48,13 @@ The new options are off until you turn them on.
 - **One import at a time per Sonarr:** big files no longer reach Sonarr together. (#10, by mj23au)
 - **A slow Unshackle server is waited for** 1, 3 then 10 minutes before a download fails. (#10, by mj23au)
 - **Clearer selection in Series:** a check on each poster, the others dimmed.
+- **An import Sonarr didn't do is not a failed download:** it shows *Import needed*, with Import instead of Retry. (#10, by mj23au)
+- **The API downloads for another Sonarr**, and as a retry: `sonarr` and `retry` in `/api/v1/downloads`. (#10, by mj23au)
 
 ### Fixed
 
 - **Missing subtitles no longer stop a download:** it comes with the languages it has. (#16, by mj23au)
-- **An import Sonarr confirms late** is no longer failed. (#10, by mj23au)
+- **An import Sonarr confirms late, or refuses while busy** ("database is locked"), is asked again. (#10, by mj23au)
 - **No second download** of an episode Unshackle may still be fetching. (#10, by mj23au)
 - **Retry works for another Sonarr's copy.** (#10, by mj23au)
 - **Hybrid Dolby Vision files** are no longer listed as upgrades. (#10, by mj23au)
