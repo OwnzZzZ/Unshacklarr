@@ -24,8 +24,8 @@ Every change worth knowing, newest first. The format follows
 - **Fallback service.** A second service for a series, used when the main one doesn't have the episode.
 - **Download window.** Automatic downloads run only between two times. In Settings › Automation.
 - **Auto release times.** A series gets the time its episodes usually come out. In Settings › Automation.
-- **Downloads at once.** How many episodes each Unshackle server downloads together, 1 for a small NAS, first come
-  first served. (#10)
+- **Downloads at once.** How many episodes each Unshackle server downloads together, 1 for a small NAS. Picks run
+  whole, in the order they were made. (#10, with mj23au)
 
 **Upgrades**
 - **Upgrades you choose.** Which series are checked, how long an answer is kept, how far back. (#10, by mj23au)
@@ -57,6 +57,7 @@ The new options are off until you turn them on.
 - **An import Sonarr confirms late, or refuses while busy** ("database is locked"), is asked again. (#10, by mj23au)
 - **No second download** of an episode Unshackle may still be fetching. (#10, by mj23au)
 - **Retry works for another Sonarr's copy.** (#10, by mj23au)
+- **An empty episode folder** no longer stops the episode from downloading again. (#10, by mj23au)
 - **Hybrid Dolby Vision files** are no longer listed as upgrades. (#10, by mj23au)
 - **A series' link found by its title** when the service only links an episode (HBO Max). (#12, by mj23au)
 - **No more "may be an episode" warning** for a series that is simply new. (#12, reported by mj23au)

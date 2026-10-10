@@ -947,11 +947,20 @@ def test_a_click_on_an_episode_waiting_in_downloads_says_why_nothing_happens(tmp
     sync = load(tmp_path, monkeypatch)
     ep = episode(111, 2, 5)
     (tmp_path / "unshackle-111-S02E05").mkdir()  # a kept download, not imported
+    (tmp_path / "unshackle-111-S02E05" / "Show.S02E05.mkv").write_bytes(b"x")
     config = sync.read_file()
     assert sync.sync(config, {}, [ep]) == 0 and not (tmp_path / "runs").exists()  # the automatic sync: quiet
     sync.sync(config, {}, [ep], manual=True, kind="manual")
     cards = [json.loads(p.read_text()) for p in (tmp_path / "runs").glob("*.json")]
     assert [(c["outcome"], c["cause"]) for c in cards] == [("failed", "A download of this episode already waits in the downloads folder")]
+
+    # By mj23au (#10): its file gone (imported or deleted) but the folder left empty: nothing waits, so a new try goes
+    (tmp_path / "unshackle-111-S02E05" / "Show.S02E05.mkv").unlink()
+    started = []
+    monkeypatch.setattr(sync, "run_job_retrying", lambda payload, run=None: started.append(payload.get("wanted")) or [])
+    monkeypatch.setattr(sync, "no_cdm", lambda tag, config=None: "")
+    sync.sync(config, {}, [ep], manual=True, kind="manual")
+    assert started == [["S02E05"]]  # downloaded again, not refused
 
 
 def test_a_login_code_is_sent_once_and_leaves_the_card_once_done(tmp_path, monkeypatch):
@@ -2171,3 +2180,82 @@ def test_downloads_waiting_for_a_slot_go_in_the_order_they_came(tmp_path, monkey
     hold.set()
     for t in [first, *waiters]: t.join()
     assert order == ["first", "a", "b", "c"]
+
+
+def test_a_job_keeps_its_slot_so_picks_run_whole_in_order(tmp_path, monkeypatch):
+    # By mj23au (#10): Downloads at once 1 and Season 1, then Season 2, picked as two jobs: all of Season 1 first,
+    # not the two taking turns; a job paused between episodes lets the next one through
+    import threading, time
+    sync = load(tmp_path, monkeypatch)
+    monkeypatch.setitem(sync.SETTINGS, "downloads_at_once", 1)
+    order = []
+
+    class Run:
+        def __init__(self, batch, n): self.card, self.id = {"batch": batch}, f"{batch}-{n}"
+        def say(self, text): pass
+
+    def job(batch, episodes, pause_after=None):
+        for n in range(1, episodes + 1):
+            with sync.download_slot("", Run(batch, n)):
+                order.append(f"{batch}{n}")
+                time.sleep(.05)
+            if n == pause_after:
+                sync.pause_job(batch, True)
+                time.sleep(.3)  # the other job goes meanwhile
+                sync.pause_job(batch, False)
+            time.sleep(.02)  # between episodes: the next one asks a moment later, as a real job does
+        sync.release_job(batch)
+
+    s1 = threading.Thread(target=job, args=("S1", 3))
+    s1.start(); time.sleep(.01)
+    s2 = threading.Thread(target=job, args=("S2", 2))
+    s2.start(); s1.join(); s2.join()
+    assert order == ["S11", "S12", "S13", "S21", "S22"]  # whole picks, in the order they were made
+
+    order.clear()
+    a = threading.Thread(target=job, args=("A", 3, 1))  # paused after its first episode
+    a.start(); time.sleep(.01)
+    b = threading.Thread(target=job, args=("B", 1))
+    b.start(); a.join(); b.join()
+    assert order == ["A1", "B1", "A2", "A3"]  # paused: B's turn; resumed, A goes on
+    assert sync.slot_jobs[""] == [] and not sync.slot_line.get("")
+
+
+def test_picks_keep_their_order_whichever_is_ready_to_download_first(tmp_path, monkeypatch):
+    # By mj23au (#10): Season 3 picked before Season 4, but Season 4's first episode done checking the service sooner:
+    # when the slot frees up, Season 3 still goes first
+    import threading, time
+    sync = load(tmp_path, monkeypatch)
+    monkeypatch.setitem(sync.SETTINGS, "downloads_at_once", 1)
+    order = []
+
+    class Run:
+        def __init__(self, batch, n): self.card, self.id = {"batch": batch}, f"{batch}-{n}"
+        def say(self, text): pass
+
+    def job(batch, ready_after):
+        time.sleep(ready_after)  # checking the service before the download
+        with sync.download_slot("", Run(batch, 1)):
+            order.append(batch)
+            time.sleep(.1)
+        sync.release_job(batch)
+
+    for b in ("S02", "S03", "S04"):
+        sync.number_job(b)  # picked in this order
+    jobs = [threading.Thread(target=job, args=a) for a in (("S02", 0), ("S03", .03), ("S04", .01))]  # both waiting before S02 ends
+    for t in jobs: t.start()
+    for t in jobs: t.join()
+    assert order == ["S02", "S03", "S04"]  # S04 waited first, but S03 was picked first
+    assert sync.job_order == {}
+
+
+def test_a_paused_job_marks_its_waiting_episodes_whether_or_not_one_downloads(tmp_path, monkeypatch):
+    # Its queued episodes say "paused" in Activity, and lose it once resumed, while one of them downloads too
+    sync = load(tmp_path, monkeypatch)
+    monkeypatch.setattr(sync, "waiting", {7: {"batch": "J"}, 8: {"batch": "other"}})
+    for active in (set(), {"J"}):
+        monkeypatch.setattr(sync, "slot_active", active)
+        sync.pause_job("J", True)
+        assert sync.waiting[7]["paused"] is True and "paused" not in sync.waiting[8]
+        sync.pause_job("J", False)
+        assert sync.waiting[7]["paused"] is False

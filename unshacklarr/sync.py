@@ -63,6 +63,7 @@ it works whatever the service calls the show.
 
 import contextlib
 import copy
+import itertools
 import json
 import queue
 import os
@@ -553,6 +554,8 @@ def pause_job(batch: str, pause: bool) -> None:
         for card in list(waiting.values()):
             if card.get("batch") == batch:
                 card["paused"] = pause
+    if pause and batch not in slot_active:  # paused between episodes: its slot goes to the next in line now (else
+        release_job(batch)                   # when its episode ends); resumed, it asks again at the end of the line (#10)
 
 
 def job_episodes(episodes: list, batch: str | None):
@@ -806,39 +809,75 @@ def ask_for_input(run: EpisodeRun, prompt: str | None) -> None:
 
 
 slots = threading.Condition()
-slots_busy: dict[str, int] = {}  # by server name ("" the main one): its downloads going on now
+slot_jobs: dict[str, list[str]] = {}  # by server name ("" the main one): the jobs holding its download slots
+slot_line: dict[str, list[str]] = {}  # by server name: the jobs waiting for one, in the order they asked
 stop_waiting: set[str] = set()  # runs stopped from Activity while they waited for a slot
-slot_line: dict[str, list[str]] = {}  # by server: the downloads waiting, in the order they came (by mj23au, #10)
+slot_active: set[str] = set()  # jobs with an episode downloading now
+job_order: dict[str, int] = {}  # job -> its place: numbered when picked, so the line keeps the order picks were made
+job_numbers = itertools.count()
+
+
+def number_job(job: str) -> None:
+    """A job's place in the line for download slots, taken when it is picked (sync), not when its first episode is
+    ready to download: an episode checks the service first, and a later pick's may be ready sooner (#10)."""
+    with slots:
+        job_order.setdefault(job, next(job_numbers))
+
+
+def slot_job(run: EpisodeRun | None) -> str:
+    """Who holds a download slot: an episode's job (its batch: episodes picked together), else the episode itself."""
+    return (run.card.get("batch") if run else None) or (run.id if run else uuid.uuid4().hex)
 
 
 @contextlib.contextmanager
 def download_slot(server: str, run: EpisodeRun | None = None):
     """Settings › Unshackle, Downloads at once: past that many on a server, a download waits for one to end
-    (a small NAS kept to one; by mj23au, #10). 0: as many as serve takes, which queues the rest itself."""
-    me = run.id if run else uuid.uuid4().hex
+    (a small NAS kept to one; by mj23au, #10). 0: as many as serve takes, which queues the rest itself.
+    A slot is a job's, not an episode's: a job keeps it from one episode to its next until it ends (release_job), so
+    picks run whole, in the order they were made: Season 1 picked before Season 2 is done first (#10, by mj23au)."""
+    job = slot_job(run)
     with slots:
-        line = slot_line.setdefault(server, [])
-        line.append(me)
-        told = False
-        try:  # first come, first served: a slot that frees up goes to the one waiting longest
-            while (limit := int(SETTINGS.get("downloads_at_once") or 0)) and (slots_busy.get(server, 0) >= limit or line[0] != me):
-                if run and run.id in stop_waiting:
-                    stop_waiting.discard(run.id)
-                    raise JobFailed("Stopped before it started", "cancelled")
-                if run and not told:
-                    run.say(f"\r\n\x1b[90mWaiting: {limit} download{'s' if limit > 1 else ''} at once on this server\x1b[0m")
-                    told = True
-                slots.wait(2)
-        finally:
-            line.remove(me)
-            slots.notify_all()
-        slots_busy[server] = slots_busy.get(server, 0) + 1
+        holders = slot_jobs.setdefault(server, [])
+        if job not in holders:  # its job doesn't hold a slot yet: in line, first asked, first served
+            line = slot_line.setdefault(server, [])
+            job_order.setdefault(job, next(job_numbers))  # an episode on its own: numbered as it comes
+            line.append(job)
+            line.sort(key=job_order.__getitem__)  # in the order picked, whenever each got here
+            told = False
+            try:
+                while (limit := int(SETTINGS.get("downloads_at_once") or 0)) and (len(holders) >= limit or line[0] != job):
+                    if run and run.id in stop_waiting:
+                        stop_waiting.discard(run.id)
+                        raise JobFailed("Stopped before it started", "cancelled")
+                    if run and not told:
+                        run.say(f"\r\n\x1b[90mWaiting: {limit} download{'s' if limit > 1 else ''} at once on this server\x1b[0m")
+                        told = True
+                    slots.wait(2)
+            finally:
+                line.remove(job)
+                slots.notify_all()
+            holders.append(job)
+        slot_active.add(job)
     try:
         yield
     finally:
         with slots:
-            slots_busy[server] -= 1
-            slots.notify_all()
+            slot_active.discard(job)
+        batch = run.card.get("batch") if run else None
+        if not batch or batch in paused_jobs:  # on its own (or the sync's), or its job paused: the slot goes with it
+            release_job(job)
+
+
+def release_job(job: str | None) -> None:
+    """A job's download slots, back for the next in line: when it ends, or is paused (#10)."""
+    if not job:
+        return
+    with slots:
+        for holders in slot_jobs.values():
+            while job in holders:
+                holders.remove(job)
+        job_order.pop(job, None)  # over, or paused: resumed, it is numbered again, at the end of the line
+        slots.notify_all()
 
 
 def run_job(payload: dict, run: EpisodeRun | None = None, poll: float = 0.5) -> list[str]:
@@ -2235,6 +2274,7 @@ def sync(config: dict, settings: dict, episodes, manual: bool = False, replace: 
                 with jobs_lock:
                     waiting[ep["id"]] = job["stubs"][ep["id"]] = queued_card(ep, show, kind, batch)
     if batch:
+        number_job(batch)  # its place for a download slot: the order it was picked in (#10)
         with jobs_lock:
             running_jobs[batch] = job  # a job's episode started again once it closed takes its place here
     try:
@@ -2248,6 +2288,7 @@ def sync(config: dict, settings: dict, episodes, manual: bool = False, replace: 
             if running_jobs.get(batch) is job:
                 running_jobs.pop(batch)
                 paused_jobs.discard(batch)
+        release_job(batch)  # the job is over: its download slot goes to the next pick in line (#10)
 
 
 def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, replace: bool, kind: str, batch: str | None = None,
@@ -2371,7 +2412,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
             if not service_sxxeyy:
                 continue  # the episode offset puts it before the service's first episode
             out = episode_folder(ep)
-            if out.exists():
+            if out.exists() and videos_in(out):  # an empty folder (its file gone, or none made) blocks nothing (#10)
                 print(f"{label}: already in the downloads folder ({out.name}), waiting for Sonarr to import it")
                 with episode_lock(out) as mine:
                     if manual and mine:  # asked for by hand: say why nothing happens, not a silent skip
