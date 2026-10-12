@@ -711,7 +711,7 @@ def test_a_new_password_or_logging_out_others_forgets_every_push_device(tmp_path
     assert asyncio.run(go()) == (0, 0)
 
 
-def test_every_answer_refuses_frames_and_the_api_never_forces_a_replacement(tmp_path, monkeypatch):
+def test_every_answer_refuses_frames_and_the_api_replaces_only_when_asked(tmp_path, monkeypatch):
     import asyncio
     from aiohttp.test_utils import TestClient, TestServer
     monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
@@ -731,13 +731,14 @@ def test_every_answer_refuses_frames_and_the_api_never_forces_a_replacement(tmp_
             api = {"X-Api-Key": key}
             r1 = await client.post("/api/v1/downloads", json={"episodeIds": [5], "replace": True}, headers=api)
             r2 = await client.post("/api/v1/downloads", json={"episodeIds": list(range(1, 102))}, headers=api)
+            await client.post("/api/v1/downloads", json={"episodeIds": [6]}, headers=api)
             return page.headers, denied.headers, r1.status, r2.status
 
     page, denied, ok, too_many = asyncio.run(go())
     for headers in (page, denied):
         assert headers["X-Frame-Options"] == "DENY" and "frame-ancestors 'none'" in headers["Content-Security-Policy"]
         assert headers["X-Content-Type-Options"] == "nosniff"
-    assert ok == 200 and started == [([5], {})]  # "replace" is not passed on
+    assert ok == 200 and started == [([5], {"replace": True}), ([6], {})]  # Replace anyway only when asked
     assert too_many == 400
 
 

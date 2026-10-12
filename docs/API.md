@@ -68,8 +68,8 @@ Downloads episodes, as the page's Download button does. Name them by the series'
 ```
 
 or by Sonarr's episode ids: `{"episodeIds": [1234, 1235]}`, 100 at most. A file Sonarr already has is
-replaced only by a better one, as the series' quality profile ranks them: the API cannot force a
-replacement (the page can). Answers `{"queued": 2}`, or `429` while too many downloads asked are still
+replaced only by a better one, as the series' quality profile ranks them; `"replace": true` replaces it
+anyway, as the page's Replace anyway. Answers `{"queued": 2}`, or `429` while too many downloads asked are still
 going.
 
 Two optional fields: `"sonarr": "sonarr-2"` downloads for another Sonarr set up in Settings › Sonarr (its own

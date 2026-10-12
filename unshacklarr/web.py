@@ -3918,8 +3918,10 @@ def episode_ids_of(tvdb: int, episodes: list[str]) -> list[int]:
 
 async def v1_start_download(request):
     """Episodes by Sonarr's ids, or by the series' TVDB id and S01E02: downloaded as the page's Download does,
-    a file Sonarr has replaced only by a better one. "sonarr": for another Sonarr (its ids), "retry": as a retry."""
+    a file Sonarr has replaced only by a better one. "sonarr": for another Sonarr (its ids), "retry": as a retry,
+    "replace": Replace anyway, as the page's button."""
     body = await json_object(request)
+    replace = body.get("replace") is True
     ids, tvdb = body.get("episodeIds"), body.get("tvdbId")
     inst = sonarr_named(str(body.get("sonarr") or ""))  # None: the main Sonarr (by mj23au, #10)
     if body.get("sonarr") and not inst:
@@ -3942,8 +3944,8 @@ async def v1_start_download(request):
     if why := await asyncio.to_thread(still_on_serve, ids, inst["name"] if inst else ""):
         raise web.HTTPConflict(text=why)
     room_for_one_more()
-    # never "replace": a key kept in another program must not be able to swap the library's files
-    run_sync(ids, **({"kind": "retry"} if body.get("retry") is True else {}), **({"sonarr": inst["name"]} if inst else {}))
+    run_sync(ids, **({"kind": "retry"} if body.get("retry") is True else {}), **({"sonarr": inst["name"]} if inst else {}),
+             **({"replace": True} if replace else {}))
     return web.json_response({"queued": len(ids)})
 
 

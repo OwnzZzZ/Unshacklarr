@@ -6,6 +6,10 @@ Every change worth knowing, newest first. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **Replace through the API.** `POST /api/v1/downloads` takes `"replace": true`: Replace anyway, as the page's button.
+
 ## [1.5.0] - 2026-10-09
 
 ### Added
