@@ -6,10 +6,6 @@ Every change worth knowing, newest first. The format follows
 
 ## [Unreleased]
 
-### Added
-
-- **Replace through the API.** `POST /api/v1/downloads` takes `"replace": true`: Replace anyway, as the page's button.
-
 ## [1.5.0] - 2026-10-09
 
 ### Added
@@ -58,7 +54,8 @@ The new options are off until you turn them on.
   shown live. (#18, by mj23au)
 - **One schedule per series:** a series with its own broadcast schedule shows only that one in the Schedule.
 - **An import Sonarr didn't do is not a failed download:** it shows *Import needed*, with Import instead of Retry. (#10, by mj23au)
-- **The API downloads for another Sonarr**, and as a retry: `sonarr` and `retry` in `/api/v1/downloads`. (#10, by mj23au)
+- **The API downloads for another Sonarr**, as a retry, or replacing a file: `sonarr`, `retry` and `replace` in
+  `/api/v1/downloads`. (#10, by mj23au)
 
 ### Fixed
 
