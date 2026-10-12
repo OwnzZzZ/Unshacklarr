@@ -71,6 +71,7 @@ The new options are off until you turn them on.
 - **Hybrid Dolby Vision files** are no longer listed as upgrades. (#10, by mj23au)
 - **A series' link found by its title** when the service only links an episode (HBO Max). (#12, by mj23au)
 - **No more "may be an episode" warning** for a series that is simply new. (#12, reported by mj23au)
+- **A new season not translated on TVDB yet** is no longer taken for other episodes on a service in another language.
 
 ## [1.4.0] - 2026-10-07
 

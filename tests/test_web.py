@@ -1817,3 +1817,23 @@ def test_a_check_of_chosen_series_leaves_the_others_finds(tmp_path, monkeypatch)
     web.scan_upgrades("", {2})  # asked afresh although the answer is kept; series 1 is not asked and stays listed
     after = web.read_json(web.UPGRADES_FILE, {})
     assert asked == ["a", "b", "b"] and {i["tvdbId"] for i in after["items"]} == {1, 2} and after["checked"] == first["checked"]
+
+
+def test_tvdb_titles_keep_only_true_translations(tmp_path, monkeypatch):
+    # TVDB's page in French shows the English title of an episode not translated yet (Ted Lasso's new season): kept,
+    # it would contradict a French service's own title and the episode would be taken for another one
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    web.sonarr_sync.SETTINGS["country"] = "FR"
+    row = '<span class="episode-label">{}</span> <a href="/x">{}</a>'
+    pages = {"fra": row.format("S01E01", "Le pilote") + row.format("S04E01", "Home"),
+             "eng": row.format("S01E01", "Pilot") + row.format("S04E01", "Home")}
+
+    class Page:
+        def __init__(self, text, url="https://thetvdb.com/series/ted-lasso"): self.text, self.url = text, url
+        def raise_for_status(self): pass
+    monkeypatch.setattr(web.requests, "get", lambda url, params=None, **k: Page(pages.get((params or {}).get("lang"), "")))
+    assert web.tvdb_titles(383203) == {"S01E01": "Le pilote"}  # Home is English on both: not a French title
