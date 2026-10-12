@@ -1817,6 +1817,9 @@ def test_a_check_of_chosen_series_leaves_the_others_finds(tmp_path, monkeypatch)
     web.scan_upgrades("", {2})  # asked afresh although the answer is kept; series 1 is not asked and stays listed
     after = web.read_json(web.UPGRADES_FILE, {})
     assert asked == ["a", "b", "b"] and {i["tvdbId"] for i in after["items"]} == {1, 2} and after["checked"] == first["checked"]
+    assert list(after["series_checked"]) == ["2"]  # its card says when it was checked on its own
+    web.scan_upgrades()
+    assert web.read_json(web.UPGRADES_FILE, {})["series_checked"] == {}  # a full check: the header's date holds for all
 
 
 def test_tvdb_titles_keep_only_true_translations(tmp_path, monkeypatch):
@@ -1837,3 +1840,22 @@ def test_tvdb_titles_keep_only_true_translations(tmp_path, monkeypatch):
         def raise_for_status(self): pass
     monkeypatch.setattr(web.requests, "get", lambda url, params=None, **k: Page(pages.get((params or {}).get("lang"), "")))
     assert web.tvdb_titles(383203) == {"S01E01": "Le pilote"}  # Home is English on both: not a French title
+
+
+def test_upgrades_ask_the_service_for_the_episode_its_title_found():
+    from unshacklarr import web
+    # 24 Hours in Police Custody: Channel 4 numbers apart, its listing kept by Episodes (or the sync)
+    show = {"service": "ALL4", "title": "https://c4/24-hours"}
+    serie = {"tvdbId": 286362}
+    lists = {"286362": {"service": "ALL4", "title": "https://c4/24-hours", "available": {
+        "501": {"service": "S02E10", "name": "A Moment of Madness", "match": "title"},     # Sonarr's S05E01
+        "13": {"service": "S04E01", "name": "The Murder of Rikki Neave - Part 1", "match": "title"},  # Sonarr's S00E13
+        "601": {"service": "S06E01", "name": "Sex and Corruption", "match": "title"}}}}
+    ep = lambda id_, s, n: {"id": id_, "seasonNumber": s, "episodeNumber": n}
+    assert web.upgrade_number(lists, serie, show, ep(501, 5, 1)) == "S02E10"  # found by its title, under another number
+    assert web.upgrade_number(lists, serie, show, ep(401, 4, 1)) is None  # its number is another episode's: not asked
+    assert web.upgrade_number(lists, serie, show, ep(601, 6, 1)) == "S06E01"
+    assert web.upgrade_number(lists, serie, show, ep(701, 7, 2)) == "S07E02"  # nothing says otherwise: its number
+    assert web.upgrade_number({}, serie, show, ep(401, 4, 1)) == "S04E01"  # no listing: as before
+    other = {"286362": {**lists["286362"], "title": "https://c4/another"}}
+    assert web.upgrade_number(other, serie, show, ep(401, 4, 1)) == "S04E01"  # a listing of another URL: as before

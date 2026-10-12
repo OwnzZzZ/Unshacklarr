@@ -659,15 +659,19 @@ $("#d-fallback").oninput = (e) => { S.config.series[current.tvdbId].fallback_pro
 /* Each episode its own programme (BBC Documentaries and the like): found by its title, or by a URL pasted here. */
 function fillProgrammes(conf) {
   $("#d-programmes").checked = !!conf.programmes;
-  $("#d-progmap-field").hidden = !conf.programmes;
-  $("#d-probe").hidden = $("#d-probe-state").hidden = !!conf.programmes;  // it lists a series URL's episodes
+  showProgrammes(!!conf.programmes);
   $("#d-progmap").value = Object.entries(conf.programme_map || {}).map(([a, b]) => `${a} ${b}`).join("\n");
+}
+function showProgrammes(on) {
+  $("#d-progmap-field").hidden = !on;
+  $("#d-probe").hidden = $("#d-probe-state").hidden = on;  // it lists a series URL's episodes
+  // each episode's number comes from its programme: the series' numbering does nothing then
+  for (const id of ["#d-seasons", "#d-offset", "#d-soffset", "#d-epmap"]) $(id).closest(".field").hidden = on;
 }
 $("#d-programmes").onchange = (e) => {
   const conf = S.config.series[current.tvdbId];
   if (e.target.checked) conf.programmes = true; else delete conf.programmes;
-  $("#d-progmap-field").hidden = !e.target.checked;
-  $("#d-probe").hidden = $("#d-probe-state").hidden = e.target.checked;
+  showProgrammes(e.target.checked);
   dirty();
   renderSeriesState();
 };

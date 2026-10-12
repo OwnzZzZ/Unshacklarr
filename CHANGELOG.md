@@ -50,7 +50,7 @@ The new options are off until you turn them on.
 - **One import at a time per Sonarr:** big files no longer reach Sonarr together. (#10, by mj23au)
 - **A slow Unshackle server is waited for** 1, 3 then 10 minutes before a download fails. (#10, by mj23au)
 - **Clearer selection in Series:** a check on each poster, the others dimmed.
-- **Upgrades, one card per series:** nothing ticked at first, one series checked on its own, and what is being replaced
+- **Upgrades, one card per series:** nothing ticked at first, one series checked on its own (its card says when), and what is being replaced
   shown live. (#18, by mj23au)
 - **One schedule per series:** a series with its own broadcast schedule shows only that one in the Schedule.
 - **An import Sonarr didn't do is not a failed download:** it shows *Import needed*, with Import instead of Retry. (#10, by mj23au)
@@ -68,6 +68,7 @@ The new options are off until you turn them on.
 - **Hybrid Dolby Vision files** are no longer listed as upgrades. (#10, by mj23au)
 - **A series' link found by its title** when the service only links an episode (HBO Max). (#12, by mj23au)
 - **No more "may be an episode" warning** for a series that is simply new. (#12, reported by mj23au)
+- **Upgrades ask for the right episode** when the service numbers it apart, found by its title. (#12, by mj23au)
 - **A new season not translated on TVDB yet** is no longer taken for other episodes on a service in another language.
 
 ## [1.4.0] - 2026-10-07

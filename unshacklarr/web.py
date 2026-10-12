@@ -3353,6 +3353,22 @@ def upgrade_item(serie: dict, ladder: dict, e: dict, track: dict, step: int, bes
             "better": sonarr_sync.track_label(have), "betterStep": number}
 
 
+def upgrade_number(lists: dict, serie: dict, show: dict, e: dict) -> str | None:
+    """The episode's number on the service, for Upgrades: where the series' last listing there found it by its title
+    (24 Hours in Police Custody's S05E01 is Channel 4's S02E10); None when that listing gives its own number to
+    another episode's title (Channel 4's S04E01 is another episode); else the series' numbering, as before."""
+    own = sonarr_sync.service_episode(show, e["seasonNumber"], e["episodeNumber"])
+    hit = lists.get(str(serie["tvdbId"]))
+    if not hit or hit.get("service") != show.get("service") or hit.get("title") != str(show.get("title")):
+        return own  # no listing, or one of another service or URL: nothing to go by
+    available = hit.get("available") or {}
+    if found := available.get(str(e["id"])):
+        return found["service"]
+    if own and any(m.get("match") == "title" and m["service"].split(".")[0] == own.split(".")[0] for m in available.values()):
+        return None
+    return own
+
+
 def scan_upgrades_in(inst: dict | None, name: str, only: set | None = None) -> None:
     """an answer younger than upgrade_recheck_days is reused for the same file; the rest is asked
     per series, UPGRADE_BATCH episodes in one list-tracks (each answer names its season and number)."""
@@ -3362,6 +3378,7 @@ def scan_upgrades_in(inst: dict | None, name: str, only: set | None = None) -> N
     now = datetime.now(timezone.utc)
     keep_days = float(sonarr_sync.SETTINGS.get("upgrade_recheck_days", 30) or 0)
     seen = read_json(upgrades_seen_file(name), {})
+    lists = {} if inst else read_json(SERVICE_LISTS, {})  # kept with the main Sonarr's episode ids only
     try:
         work = upgrade_candidates(config)
         if only:
@@ -3390,7 +3407,7 @@ def scan_upgrades_in(inst: dict | None, name: str, only: set | None = None) -> N
                 upgrade_scan["series"] = serie["title"]
                 wanted = {}
                 for w in chunk:
-                    if key := sonarr_sync.service_episode(show, w[3]["seasonNumber"], w[3]["episodeNumber"]):
+                    if key := upgrade_number(lists, serie, show, w[3]):
                         wanted[key] = w
                 try:
                     if not wanted:
@@ -3427,8 +3444,11 @@ def scan_upgrades_in(inst: dict | None, name: str, only: set | None = None) -> N
         before = read_json(upgrades_file(name), {}) if only else {}
         if only:  # the checked series replace their own finds; the rest, and when it was checked, stay
             found = [i for i in before.get("items") or [] if i.get("tvdbId") not in only] + found
+        # a series checked on its own keeps its own date, shown on its card; a full check starts them afresh
+        alone = {**(before.get("series_checked") or {}), **{str(t): now.isoformat() for t in only}} if only else {}
         write_atomic(upgrades_file(name), json.dumps({"checked": before.get("checked") or datetime.now(timezone.utc).isoformat(),
-                                                "items": found, "stopped": upgrade_scan["stop"] or bool(before.get("stopped"))}))
+                                                "items": found, "stopped": upgrade_scan["stop"] or bool(before.get("stopped")),
+                                                "series_checked": alone}))
     except requests.RequestException as err:
         upgrade_scan["errors"] += 1
         print(f"Upgrades: Sonarr is unreachable: {no_credentials(err)}", flush=True)
@@ -3466,7 +3486,8 @@ async def upgrades(request):
     busy = {(c.get("tvdbId"), c.get("sxxeyy")) for c in mine if c.get("outcome") == "running"}
     items = [{**i, "running": (i["tvdbId"], i["sxxeyy"]) in busy} for i in last.get("items") or [] if (i["tvdbId"], i["sxxeyy"]) not in done]
     return web.json_response({"scan": {k: v for k, v in upgrade_scan.items() if k != "stop"},
-                              "checked": last.get("checked"), "items": items, "stopped": bool(last.get("stopped"))})
+                              "checked": last.get("checked"), "items": items, "stopped": bool(last.get("stopped")),
+                              "seriesChecked": last.get("series_checked") or {}})
 
 
 async def upgrades_action(request):
