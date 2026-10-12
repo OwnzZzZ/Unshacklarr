@@ -2775,9 +2775,10 @@ def tmdb_episodes(tmdb_id: int) -> list[dict]:
 
 
 def plain_title(text: str) -> str:
-    """A title to compare: no accents, case, punctuation or "(1/2)"."""
+    """A title to compare: no accents, case, punctuation or "(1/2)"; TVDB's part "(2)" as the services write it, "part 2"."""
     text = unicodedata.normalize("NFKD", text or "").encode("ascii", "ignore").decode().lower()
-    return re.sub(r"[^a-z0-9]+", " ", re.sub(r"\(\s*\d+\s*/\s*\d+\s*\)", "", text)).strip()
+    text = re.sub(r"\(\s*(\d+)\s*\)\s*$", r" part \1", re.sub(r"\(\s*\d+\s*/\s*\d+\s*\)", "", text).rstrip())
+    return re.sub(r"[^a-z0-9]+", " ", text).strip()
 
 
 GENERIC_TITLE = re.compile(r"(tba|tbd|episode|episodio|folge|aflevering)( \d+)?")
@@ -2835,10 +2836,16 @@ def tvdb_titles(tvdb_id: int) -> dict[str, str]:
     return titles
 
 
+TITLE_PART = re.compile(r"\bpart (\d+)$")
+
+
 def same_title(a: str, b: str) -> bool:
     """Two plain titles naming the same episode: a longer one when close (accents, a typo) or one holds the
     other; a short one (a country, under 8 letters) when the same, or spelt alike from the same start (Serbie,
     Serbia) but never merely close (Mali, Malibu; Chili, Chine)."""
+    parts = [m[1] if (m := TITLE_PART.search(t)) else None for t in (a, b)]
+    if parts[0] and parts[1] and parts[0] != parts[1]:
+        return False  # "the ambush part 1" is never "the ambush part 2", however close the rest
     ratio = difflib.SequenceMatcher(None, a, b).ratio()
     if min(len(a), len(b)) < 8:
         return a == b or (a[:4] == b[:4] and ratio >= 0.82)

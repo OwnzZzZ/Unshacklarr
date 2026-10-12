@@ -1808,3 +1808,18 @@ def test_tvdb_titles_keep_only_true_translations(tmp_path, monkeypatch):
         def raise_for_status(self): pass
     monkeypatch.setattr(web.requests, "get", lambda url, params=None, **k: Page(pages.get((params or {}).get("lang"), "")))
     assert web.tvdb_titles(383203) == {"S01E01": "Le pilote"}  # Home is English on both: not a French title
+
+
+def test_sonarr_specials_are_found_in_the_services_seasons_by_title_and_part():
+    from unshacklarr.web import match_by_title, same_title
+    # 24 Hours in Police Custody: TVDB keeps the new episodes as specials, "(1)" and "(2)"; Channel 4 numbers them
+    # in seasons of its own, "- Part 1" and "- Part 2"
+    service = [{"season": 4, "number": 21, "name": "The Ambush - Part 1"}, {"season": 4, "number": 22, "name": "The Ambush - Part 2"},
+               {"season": 5, "number": 9, "name": "Burying Horror"}, {"season": 4, "number": 16, "name": "The Secret Network"}]
+    sonarr = [{"id": 45, "seasonNumber": 0, "episodeNumber": 45, "title": "The Ambush (1)", "airDate": "2026-08-30"},
+              {"id": 46, "seasonNumber": 0, "episodeNumber": 46, "title": "The Ambush (2)", "airDate": "2026-09-06"},
+              {"id": 42, "seasonNumber": 0, "episodeNumber": 42, "title": "Burying Horror", "airDate": "2026-01-27"},
+              {"id": 40, "seasonNumber": 0, "episodeNumber": 40, "title": "The Secret Network", "airDate": "2026-01-13"}]
+    found = match_by_title(service, sonarr, [])
+    assert {k: m["episodeId"] for k, m in found.items()} == {"S04E21": 45, "S04E22": 46, "S05E09": 42, "S04E16": 40}
+    assert not same_title("a family vendetta part 2", "a family vendetta part 1")  # close, but another part

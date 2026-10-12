@@ -1280,9 +1280,14 @@ def wrong_number(show: dict, ep: dict, asked: str, run) -> dict | None:
     nowhere. None when nothing says so: a title that merely differs (a translation TMDB lacks on release day)
     never stops a download."""
     found = service_listing(show, ep, run)
-    if not found or asked not in found.get("listed", ()):
-        return None  # not listed (not out yet, a stale list): asked as before
+    if not found:
+        return None
     hit = (found.get("available") or {}).get(ep["id"])
+    if asked not in found.get("listed", ()):
+        # Not listed under its number: its title may list it under another (a Sonarr special the service numbers
+        # in a season of its own, 24 Hours in Police Custody's S00E45 as C4's S04E21); else not out yet or a stale
+        # list, and asked as before
+        return {"service": hit["service"], "match": hit["match"], "unlisted": True} if hit and hit.get("match") in ("title", "absolute") and hit["service"] != asked else None
     if hit and hit.get("match") in ("title", "absolute") and hit["service"] != asked:
         return {"service": hit["service"], "match": hit["match"]}  # its own title puts it elsewhere
     if not hit and asked.split(".")[0] in found.get("titled", ()):
@@ -2503,7 +2508,8 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                             run.finish("failed", why, "Check this series' Numbering (its episode table), then try again")
                             continue
                         how = "its absolute number" if wrong.get("match") == "absolute" else "its title"
-                        run.say(f"{label}: {service_sxxeyy} on {show['service']} is a different episode; found by {how} as {wrong['service']} instead")
+                        what = f"not listed on {show['service']} as {service_sxxeyy}" if wrong.get("unlisted") else f"{service_sxxeyy} on {show['service']} is a different episode"
+                        run.say(f"{label}: {what}; found by {how} as {wrong['service']} instead")
                         own = {k: show[k] for k in NUMBERING if k in show}  # a retry asks the same again
                         run.card.update(serviceEpisode=wrong["service"],
                                         numbering={**own, "episode_map": {**(own.get("episode_map") or {}), sxxeyy: wrong["service"]}})

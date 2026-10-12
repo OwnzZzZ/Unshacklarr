@@ -1266,7 +1266,7 @@ def test_an_episode_its_number_misses_is_found_by_its_title(tmp_path, monkeypatc
     monkeypatch.setattr(sync, "import_episode", lambda ep, out, replace=False: imported.append(ep["id"]))
     monkeypatch.setattr(sync, "notify", lambda *a, **k: None)
     sync.sync(sync.read_file(), {}, [episode(111, 2, 1), episode(111, 2, 2)], manual=True, kind="manual")
-    assert asked == ["S02E01", "S01E07", "S02E02"]
+    assert asked == ["S01E07", "S02E02"]  # S02E01 isn't listed and its title is: asked there at once
     assert listed == [201]  # the series listed once: S02E02 is looked up in that same list
     assert imported == [201]
     cards = {c["sxxeyy"]: c for c in (json.loads(f.read_text()) for f in sync.RUNS_DIR.glob("*.json"))}
@@ -2302,3 +2302,25 @@ def test_the_sign_in_hint_waits_for_two_quiet_minutes(tmp_path, monkeypatch):
         pass
     hints = [n for n, s in said if "sign in" in s]
     assert len(hints) == 1 and hints[0] >= 9  # only once quiet for 2 minutes (30 s a poll here), not while serve talks
+
+
+def test_a_number_the_service_doesnt_list_is_asked_where_its_title_is(tmp_path, monkeypatch):
+    # 24 Hours in Police Custody: Sonarr's special S00E45 is Channel 4's S04E21, which lists no S00E45
+    sync = load(tmp_path, monkeypatch)
+    listing = {"available": {205: {"service": "S04E21", "match": "title"}}, "listed": {"S04E21", "S04E22"}, "titled": {"S04E21"}}
+    monkeypatch.setattr(sync, "find_by_title", lambda show, ep: listing)
+    monkeypatch.setattr(sync, "no_cdm", lambda tag, config=None: "")
+    asked = []
+    monkeypatch.setattr(sync, "run_job_retrying", lambda payload, run=None: asked.append(payload["wanted"][0]))
+    monkeypatch.setattr(sync, "notify", lambda *a, **k: None)
+    sync.sync(sync.read_file(), {}, [episode(111, 2, 5)], manual=True, kind="manual")
+    assert asked == ["S04E21"]  # never the S02E05 it doesn't list
+    card = next(json.loads(p.read_text()) for p in (tmp_path / "runs").glob("*.json"))
+    assert card["numbering"]["episode_map"] == {"S02E05": "S04E21"}  # a retry asks the same again
+    log = next((tmp_path / "runs").glob("*.log")).read_text()
+    assert "not listed on RTLP as S02E05; found by its title as S04E21 instead" in log
+
+    sync.title_matches.clear()
+    listing["available"] = {}  # not listed, and its title finds nothing: not out yet, asked by its number
+    sync.sync(sync.read_file(), {}, [episode(111, 2, 5)], manual=True, kind="manual")
+    assert asked == ["S04E21", "S02E05"]
