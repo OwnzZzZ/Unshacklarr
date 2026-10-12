@@ -2259,3 +2259,46 @@ def test_a_paused_job_marks_its_waiting_episodes_whether_or_not_one_downloads(tm
         assert sync.waiting[7]["paused"] is True and "paused" not in sync.waiting[8]
         sync.pause_job("J", False)
         assert sync.waiting[7]["paused"] is False
+
+
+def test_a_job_takes_in_only_episodes_with_its_own_replace_choice(tmp_path, monkeypatch):
+    # A job picked with Replace anyway takes in an episode queued again only if it replaces too, and the other way
+    # round: one that doesn't match starts on its own, with its own choice
+    sync = load(tmp_path, monkeypatch)
+    ep = {"id": 9, "seasonNumber": 2, "episodeNumber": 2, "series": {"title": "Cat's Eyes", "tvdbId": 433161}}
+    show = {"service": "DSNP"}
+    monkeypatch.setitem(sync.running_jobs, "J", {"episodes": [], "stubs": {}, "closed": False, "replace": True})
+    assert sync.add_to_job("J", ep, show, replace=False) is False
+    assert sync.add_to_job("J", ep, show, replace=True) is True
+    assert sync.waiting[9]["replace"] is True  # cancelled from here, it is queued again replacing
+    sync.waiting.pop(9, None)
+
+
+def test_the_sign_in_hint_waits_for_two_quiet_minutes(tmp_path, monkeypatch):
+    # A download serve keeps talking about is not waiting for a sign-in, even with no track yet
+    sync = load(tmp_path, monkeypatch)
+    clock = {"t": 0.0}
+    monkeypatch.setattr(sync.time, "monotonic", lambda: clock["t"])
+    monkeypatch.setattr(sync.time, "sleep", lambda s: clock.__setitem__("t", clock["t"] + 30))
+    said = []
+    run = sync.EpisodeRun({"id": 5, "seriesId": 1, "series": {"title": "Show", "tvdbId": 111}, "seasonNumber": 1,
+                           "episodeNumber": 5}, {"service": "DSNP"}, "manual")
+    asked = [0]
+    monkeypatch.setattr(run, "say", lambda text: said.append((asked[0], text)))
+
+    polls = iter([{"status": "downloading", "log_count": n} for n in (1, 2, 3, 4, 5)] +  # serve talks: no hint
+                 [{"status": "downloading", "log_count": 5}] * 6 + [{"status": "failed", "error": "x"}])
+
+    class Serve:
+        name = ""
+        def download(self, payload): return "j"
+        def job(self, job_id):
+            asked[0] += 1
+            return next(polls)
+        def cancel(self, job_id): pass
+    try:
+        sync.follow_job(Serve(), {}, run, 0)
+    except sync.JobFailed:
+        pass
+    hints = [n for n, s in said if "sign in" in s]
+    assert len(hints) == 1 and hints[0] >= 9  # only once quiet for 2 minutes (30 s a poll here), not while serve talks

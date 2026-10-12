@@ -1732,3 +1732,36 @@ def test_a_sign_in_code_is_read_from_our_own_serve_log(tmp_path):
     assert local.sign_in() is None  # MAX stops waiting after 10 minutes
     local.process = None
     assert local.sign_in() is None  # no serve of our own
+
+
+def test_replace_anyway_holds_for_a_retry_and_an_episode_queued_again(monkeypatch, tmp_path):
+    # Picked with Replace anyway, stopped, then retried or queued again: it still replaces the library's file,
+    # instead of being kept again for the same quality
+    import asyncio, json
+    from unshacklarr import web
+    cards = [{"episodeId": 5, "batch": "20261012-070357-6b5682", "replace": True}, {"episodeId": 6, "batch": "20261012-070357-6b5682"}]
+    monkeypatch.setattr(web, "cards_on_disk", lambda: cards)
+    monkeypatch.setattr(web.sonarr_sync.RUNS_DIR.__class__, "exists", lambda self: True)
+    assert web.retried_replace([5], "20261012-070357-6b5682") is True
+    assert web.retried_replace([6], "20261012-070357-6b5682") is False
+    assert web.retried_replace([5], "20261012-080000-aaaaaa") is False  # another job's attempt
+
+    # a cancelled episode queued again keeps it
+    monkeypatch.setattr(web.sonarr_sync, "RUNS_DIR", tmp_path)
+    run_id = "20261012-070430-000001-433161-S02E02"
+    (tmp_path / f"{run_id}.json").write_text(json.dumps({"outcome": "cancelled", "episodeId": 6, "batch": "20261012-070357-6b5682", "replace": True}))
+    joined, started = [], []
+
+    async def join(batch, episode_id, replace=False):
+        joined.append(replace)
+        return False
+    monkeypatch.setattr(web, "join_job", join)
+    monkeypatch.setattr(web, "run_sync", lambda ids, **kw: started.append(kw))
+
+    class Request:
+        match_info = {"episode_id": "6"}
+        async def json(self): return {"batch": "20261012-070357-6b5682", "run": run_id}
+        can_read_body = True
+    monkeypatch.setattr(web, "json_object", lambda request: request.json())
+    asyncio.run(web.requeue(Request()))
+    assert joined == [True] and started[0].get("replace") is True

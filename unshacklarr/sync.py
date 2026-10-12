@@ -575,27 +575,28 @@ def job_episodes(episodes: list, batch: str | None):
         yield ep
 
 
-def queued_card(ep: dict, show: dict, kind: str, batch: str | None) -> dict:
+def queued_card(ep: dict, show: dict, kind: str, batch: str | None, replace: bool = False) -> dict:
     """An episode waiting its turn, as Activity shows it until its download starts."""
     return {"id": f"waiting-{ep['id']}", "series": ep["series"]["title"], "tvdbId": ep["series"]["tvdbId"],
             "sxxeyy": f"S{ep['seasonNumber']:02}E{ep['episodeNumber']:02}", "service": show["service"], "kind": kind,
             "started": datetime.now(timezone.utc).isoformat(), "ended": None, "outcome": "running", "episodeId": ep["id"],
-            "step": "queued", "live": {}, "tracks": [], "waiting": True, **({"batch": batch} if batch else {})}
+            "step": "queued", "live": {}, "tracks": [], "waiting": True, **({"batch": batch} if batch else {}),
+            **({"replace": True} if replace else {})}  # cancelled then queued again, it keeps Replace anyway
 
 
-def add_to_job(batch: str, ep: dict, show: dict) -> bool:
+def add_to_job(batch: str, ep: dict, show: dict, replace: bool = False) -> bool:
     """An episode into a running job's queue (queued again, retried): in its place if it was cancelled
-    before its turn, else at the end, one download at a time. False when the job took its last episode:
-    then it starts on its own."""
+    before its turn, else at the end, one download at a time. False when the job took its last episode, or
+    replaces files and this one doesn't (or the other way round): then it starts on its own."""
     with jobs_lock:
         job = running_jobs.get(batch)
-        if not job or job["closed"]:
+        if not job or job["closed"] or bool(job.get("replace")) != replace:
             return False
         if ep["id"] in unqueued:
             unqueued.discard(ep["id"])  # its turn has not come: it keeps its place
         else:
             job["episodes"].append(ep)
-        waiting[ep["id"]] = job["stubs"][ep["id"]] = {**queued_card(ep, show, "manual", batch), "paused": batch in paused_jobs}
+        waiting[ep["id"]] = job["stubs"][ep["id"]] = {**queued_card(ep, show, "manual", batch, replace), "paused": batch in paused_jobs}
         return True
 
 
@@ -899,7 +900,7 @@ def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float) -> l
     timed: dict[str, list] = {}  # each track's [first seen, done]: how long it took
     labels: dict[str, str] = {}  # a track's key (its part and its place, or its label from an older serve): its label
     titles: list[str] = []
-    misses, since, hinted = 0, time.monotonic(), False
+    misses, since, hinted, quiet_count = 0, time.monotonic(), False, 0
     while True:
         try:
             job = backend.job(job_id)
@@ -921,8 +922,10 @@ def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float) -> l
             time.sleep(max(poll, 5))
             continue
         status = job.get("status")
-        if run and not hinted and status not in ("queued", *TERMINAL) and not job.get("track_progress") \
-                and time.monotonic() - since > SIGN_IN_HINT:  # nothing moves: the service may wait for a sign-in
+        if job.get("track_progress") or int(job.get("log_count") or 0) != quiet_count:  # serve says something: it moves
+            since, quiet_count = time.monotonic(), int(job.get("log_count") or 0)
+        if run and not hinted and status not in ("queued", *TERMINAL) and time.monotonic() - since > SIGN_IN_HINT:
+            # nothing new from serve, no track, for 2 minutes: the service may wait for a sign-in
             hinted = True
             run.say(f"\r\n\x1b[33mNothing downloads yet: {run.card.get('service') or 'the service'} may be waiting for you "
                     f"to sign in. Look at Unshackle's log.\x1b[0m")
@@ -992,7 +995,7 @@ TRANSIENT = re.compile(r"timed? ?out|timeout|connection (reset|refused|aborted|e
 RETRY_AFTER = (30, 120)  # seconds before each retry
 SERVE_RETRY_AFTER = (60, 180, 600)  # serve itself too slow to answer (its disks saturated): longer, once more (#10)
 UNREACHABLE = "unshackle serve is unreachable"  # Unshackle.call's words when it can't reach serve, not an answer
-SIGN_IN_HINT = 30  # seconds without a track before a download says the service may be waiting for a sign-in
+SIGN_IN_HINT = 120  # seconds with no new line from serve and no track before a download says the service may wait for a sign-in
 POLL_MISSES = 12  # job statuses missed in a row (5 s apart at least) before the job counts as lost
 # The service turned Unshackle away: cookies or credentials out of date, most of the time.
 LOGIN = re.compile(r"\b40[13]\b|unauthori[sz]ed|forbidden|not logged|log ?in|sign ?in|cookie|expired|session|"
@@ -2266,13 +2269,13 @@ def sync(config: dict, settings: dict, episodes, manual: bool = False, replace: 
     # Episodes picked together are one job in Activity: their cards, and one output for them all
     # (a job's episode queued again once the job was over goes on in that same job)
     batch = batch or (f"{datetime.now(timezone.utc):%Y%m%d-%H%M%S}-{uuid.uuid4().hex[:6]}" if kind != "auto" and len(episodes) > 1 else None)
-    job = {"episodes": episodes, "stubs": {}, "closed": False}
+    job = {"episodes": episodes, "stubs": {}, "closed": False, "replace": replace}
     if kind != "auto":  # picked by hand: the ones after the first show as queued in Activity
         for ep in episodes:
             show = series.get(ep["series"]["tvdbId"]) or {}
             if show.get("service") and ep["id"] not in waiting:
                 with jobs_lock:
-                    waiting[ep["id"]] = job["stubs"][ep["id"]] = queued_card(ep, show, kind, batch)
+                    waiting[ep["id"]] = job["stubs"][ep["id"]] = queued_card(ep, show, kind, batch, replace)
     if batch:
         number_job(batch)  # its place for a download slot: the order it was picked in (#10)
         with jobs_lock:
@@ -2441,6 +2444,9 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                 run = EpisodeRun(ep, show, kind, service_sxxeyy, batch)
                 if numbering is not None:  # this download's own numbering: a retry asks the service the same again
                     run.card["numbering"] = numbering
+                if replace:  # Replace anyway: a retry, or the episode queued again, replaces too
+                    run.card["replace"] = True
+                if numbering is not None or replace:
                     run.save()
                 on_service = f" as {service_sxxeyy}" if service_sxxeyy != sxxeyy else ""
                 run.say(f"{label}: downloading from {show['service']}{on_service}")

@@ -38,7 +38,7 @@ Every change worth knowing, newest first. The format follows
 - **Remote backup.** Your backups, encrypted, on WebDAV or S3. In Settings › Account.
 - **A diagnostic to attach to an issue**, without passwords, keys or tokens. In Activity.
 - **A health check.** `/health` for Docker and Uptime Kuma.
-- **Sign-in codes.** A service slow to answer may be waiting for you to sign in: you are told. With Unshackle run
+- **Sign-in codes.** A service that goes quiet may be waiting for you to sign in: you are told. With Unshackle run
   by Unshacklarr, a popup gives the link and the code.
 
 The new options are off until you turn them on.
@@ -58,6 +58,7 @@ The new options are off until you turn them on.
 - **No second download** of an episode Unshackle may still be fetching. (#10, by mj23au)
 - **Retry works for another Sonarr's copy.** (#10, by mj23au)
 - **An empty episode folder** no longer stops the episode from downloading again. (#10, by mj23au)
+- **Replace anyway holds** when the episode is retried, or queued again after a stop.
 - **Hybrid Dolby Vision files** are no longer listed as upgrades. (#10, by mj23au)
 - **A series' link found by its title** when the service only links an episode (HBO Max). (#12, by mj23au)
 - **No more "may be an episode" warning** for a series that is simply new. (#12, reported by mj23au)

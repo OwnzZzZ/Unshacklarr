@@ -2277,7 +2277,7 @@ async def pause_job(request):
     return web.json_response({"paused": batch in sonarr_sync.paused_jobs})
 
 
-async def join_job(batch: str, episode_id: int) -> bool:
+async def join_job(batch: str, episode_id: int, replace: bool = False) -> bool:
     """The episode at the end of its running job's queue (or in its place, if cancelled before its turn)."""
     if batch not in sonarr_sync.running_jobs:
         return False
@@ -2286,7 +2286,7 @@ async def join_job(batch: str, episode_id: int) -> bool:
     except (requests.RequestException, IndexError):
         return False
     show = read_config()["series"].get(ep["series"]["tvdbId"]) or {}
-    return bool(show.get("service")) and sonarr_sync.add_to_job(batch, ep, show)
+    return bool(show.get("service")) and sonarr_sync.add_to_job(batch, ep, show, replace)
 
 
 async def requeue(request):
@@ -2305,8 +2305,9 @@ async def requeue(request):
     if cancelled.get("outcome") != "cancelled" or cancelled.get("episodeId") != episode_id or cancelled.get("batch") != batch:
         raise web.HTTPConflict(text="This episode is not cancelled any more")
     card.unlink(missing_ok=True)  # queued again: its "cancelled" card goes
-    if not await join_job(batch, episode_id):  # its job took its last episode: it starts on its own, in that job
-        run_sync([episode_id], kind="manual", batch=batch)
+    replace = cancelled.get("replace") is True  # picked with Replace anyway: it still replaces
+    if not await join_job(batch, episode_id, replace):  # its job took its last episode: it starts on its own, in that job
+        run_sync([episode_id], kind="manual", batch=batch, **({"replace": True} if replace else {}))
     return web.json_response({"queued": episode_id})
 
 
@@ -3164,6 +3165,22 @@ def retried_numbering(ids: list[int], batch: str) -> dict | None:
     return None
 
 
+def retried_replace(ids: list[int], batch: str) -> bool:
+    """Whether the attempts a retry repeats were picked with Replace anyway: the retry replaces too (an attempt
+    the library kept the same file for is otherwise kept again)."""
+    if not sonarr_sync.RUNS_DIR.exists():
+        return False
+    seen = set()
+    for card in cards_on_disk():  # newest first: each episode's last attempt decides
+        episode = card.get("episodeId")
+        if episode not in ids or episode in seen or (batch and card.get("batch") != batch):
+            continue
+        seen.add(episode)
+        if card.get("replace") is True:
+            return True
+    return False
+
+
 def cdm_refusal(ids: list[int]) -> str:
     """Why these episodes can't be downloaded: a service among theirs has no CDM at all. Sonarr is asked
     which series they belong to only when a series' service lacks one."""
@@ -3196,11 +3213,13 @@ async def download(request):
     inst = sonarr_named(str(body.get("sonarr") or ""))  # episodes picked in another Sonarr: its ids, its ladder
     if why := await asyncio.to_thread(on_sonarr, inst, cdm_refusal, ids):
         raise web.HTTPBadRequest(text=why)
-    if numbering is None and body.get("retry") is True:  # the same numbering as the attempt it retries
-        numbering = await asyncio.to_thread(retried_numbering, ids, batch)
+    if body.get("retry") is True:  # the same numbering, and Replace anyway, as the attempt it retries
+        if numbering is None:
+            numbering = await asyncio.to_thread(retried_numbering, ids, batch)
+        replace = replace or await asyncio.to_thread(retried_replace, ids, batch)
     if why := await asyncio.to_thread(still_on_serve, ids, inst["name"] if inst else ""):
         raise web.HTTPConflict(text=why)
-    if batch and len(ids) == 1 and not inst and await join_job(batch, ids[0]):  # join_job reads the main Sonarr's ids
+    if batch and len(ids) == 1 and not inst and await join_job(batch, ids[0], replace):  # join_job reads the main Sonarr's ids
         return web.json_response({"running": True})  # the job still runs: at the end of its queue, one download at a time
     room_for_one_more()
     run_sync(ids, replace=replace, kind="retry" if body.get("retry") is True else "manual", numbering=numbering, batch=batch or None,
