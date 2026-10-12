@@ -1788,3 +1788,23 @@ def test_a_series_with_its_own_schedule_shows_that_one_only(monkeypatch):
         query = {"start": "2026-10-12", "days": "1"}
     shown = json.loads(asyncio.run(web.calendar(Request())).body)
     assert sorted(e["id"] for e in shown) == [3, 5]
+
+
+def test_tvdb_titles_keep_only_true_translations(tmp_path, monkeypatch):
+    # TVDB's page in French shows the English title of an episode not translated yet (Ted Lasso's new season): kept,
+    # it would contradict a French service's own title and the episode would be taken for another one
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    web.sonarr_sync.SETTINGS["country"] = "FR"
+    row = '<span class="episode-label">{}</span> <a href="/x">{}</a>'
+    pages = {"fra": row.format("S01E01", "Le pilote") + row.format("S04E01", "Home"),
+             "eng": row.format("S01E01", "Pilot") + row.format("S04E01", "Home")}
+
+    class Page:
+        def __init__(self, text, url="https://thetvdb.com/series/ted-lasso"): self.text, self.url = text, url
+        def raise_for_status(self): pass
+    monkeypatch.setattr(web.requests, "get", lambda url, params=None, **k: Page(pages.get((params or {}).get("lang"), "")))
+    assert web.tvdb_titles(383203) == {"S01E01": "Le pilote"}  # Home is English on both: not a French title

@@ -2812,16 +2812,24 @@ def tvdb_titles(tvdb_id: int) -> dict[str, str]:
     if not language:
         return {}
     cache = read_json(TVDB_TITLES, {})
-    key, hit = f"{tvdb_id}:{language}", None
+    key, hit = f"{tvdb_id}:{language}:translated", None  # since only true translations are kept
     hit = cache.get(key)
     if hit and datetime.now(timezone.utc) - datetime.fromisoformat(hit["checked"]) < timedelta(days=TVDB_TITLES_DAYS):
         return hit["titles"]
     get = lambda url, **params: requests.get(url, params=params, timeout=20, headers={"User-Agent": "Mozilla/5.0 Unshacklarr"})
     series = get(f"https://thetvdb.com/dereferrer/series/{int(tvdb_id)}")  # to its page, /series/<slug>
     series.raise_for_status()
-    page = get(series.url.rstrip("/") + "/allseasons/official", lang=language)
-    page.raise_for_status()
-    titles = {code: html.unescape(re.sub(r"\s+", " ", name)).strip() for code, name in EPISODE_ROW.findall(page.text)}
+
+    def read(lang: str) -> dict[str, str]:
+        page = get(series.url.rstrip("/") + "/allseasons/official", lang=lang)
+        page.raise_for_status()
+        return {code: html.unescape(re.sub(r"\s+", " ", name)).strip() for code, name in EPISODE_ROW.findall(page.text)}
+    titles = read(language)
+    # An episode not translated yet shows its English title in any language: kept, it would read as a French title and
+    # contradict the service's own (Ted Lasso's new season on a French Apple TV+); only true translations stay
+    if language != "eng":
+        english = read("eng")
+        titles = {code: name for code, name in titles.items() if name.casefold() != english.get(code, "").casefold()}
     cache[key] = {"checked": datetime.now(timezone.utc).isoformat(), "titles": titles}
     write_atomic(TVDB_TITLES, json.dumps(cache))
     return titles
