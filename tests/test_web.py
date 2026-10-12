@@ -1765,3 +1765,25 @@ def test_replace_anyway_holds_for_a_retry_and_an_episode_queued_again(monkeypatc
     monkeypatch.setattr(web, "json_object", lambda request: request.json())
     asyncio.run(web.requeue(Request()))
     assert joined == [True] and started[0].get("replace") is True
+
+
+def test_a_series_with_its_own_schedule_shows_that_one_only(monkeypatch):
+    # Cat's Eyes, own schedule from S02E05: Sonarr's dates for S02E01 and S02E02 (aired on TV today) are left out of
+    # the Schedule; another series keeps Sonarr's
+    import asyncio, json
+    from unshacklarr import web
+    sonarr = [{"id": 1, "airDateUtc": "2026-10-12T19:15:00Z", "series": {"tvdbId": 433161}},
+              {"id": 2, "airDateUtc": "2026-10-12T20:09:00Z", "series": {"tvdbId": 433161}},
+              {"id": 3, "airDateUtc": "2026-10-12T20:00:00Z", "series": {"tvdbId": 999}}]
+    own = [{"id": 5, "airDateUtc": "2026-10-12T07:00:00Z", "series": {"tvdbId": 433161}}]
+    monkeypatch.setattr(web, "read_config", lambda: {"series": {}})
+    monkeypatch.setattr(web.sonarr_sync, "broadcast_plans", lambda config: [({"tvdbId": 433161}, [], {5: None})])
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_get", lambda path, **p: sonarr)
+    monkeypatch.setattr(web.sonarr_sync, "broadcast_episodes", lambda config, start, end, plans: own)
+    monkeypatch.setattr(web, "latest_runs", lambda: {})
+    monkeypatch.setattr(web, "describe_episode", lambda ep, *a, **k: {"id": ep["id"]})
+
+    class Request:
+        query = {"start": "2026-10-12", "days": "1"}
+    shown = json.loads(asyncio.run(web.calendar(Request())).body)
+    assert sorted(e["id"] for e in shown) == [3, 5]

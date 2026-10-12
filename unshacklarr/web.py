@@ -2445,11 +2445,13 @@ async def calendar(request):
     now = datetime.now(timezone.utc)
     try:
         plans = await asyncio.to_thread(sonarr_sync.broadcast_plans, config)
-        dated = sonarr_sync.broadcast_dated(plans)  # dated by its own schedule: Sonarr's date set aside
+        # a series with its own schedule shows that one only: its episodes before it are not in the Schedule (the
+        # sync still gets them by Sonarr's dates, a release time included)
+        own = {serie["tvdbId"] for serie, _, _ in plans}
         episodes = [ep for ep in await asyncio.to_thread(
             sonarr_sync.sonarr_get, "calendar",
             start=start.isoformat(), end=(start + timedelta(days=days)).isoformat(), includeSeries="true",
-        ) if ep["id"] not in dated]
+        ) if (ep.get("series") or {}).get("tvdbId") not in own]
         episodes += sonarr_sync.broadcast_episodes(config, start, start + timedelta(days=days), plans)
     except requests.RequestException as e:
         raise web.HTTPBadGateway(text=f"Sonarr is unreachable: {no_credentials(e)}")

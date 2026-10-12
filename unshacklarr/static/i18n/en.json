@@ -2042,6 +2042,7 @@
  "The S3 bucket does not exist": [],
  "The S3 service refused the access key or secret key, or the bucket is not theirs": [],
  "The Schedule shows its streaming services.": [],
+ "The Schedule shows this schedule only: episodes before the first one are left out of it. They are still downloaded when they air on Sonarr's dates.": [],
  "The Series": [],
  "The Sonarr named {0} is no longer in Settings, Sonarr": [
   "sonarr"

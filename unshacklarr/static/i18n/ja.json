@@ -2123,5 +2123,6 @@
  "Import needed": "インポートが必要",
  "Import needed: {0}": "インポートが必要：{0}",
  "No Sonarr named {0}": "{0} という名前の Sonarr はありません",
- "Sonarr refused the import ({0}): asked again ({1} of {2})": "Sonarr がインポートを拒否しました（{0}）：再要求（{2} 回中 {1} 回目）"
+ "Sonarr refused the import ({0}): asked again ({1} of {2})": "Sonarr がインポートを拒否しました（{0}）：再要求（{2} 回中 {1} 回目）",
+ "The Schedule shows this schedule only: episodes before the first one are left out of it. They are still downloaded when they air on Sonarr's dates.": "スケジュールにはこの放送予定だけが表示されます。最初より前のエピソードは表示されませんが、Sonarr の日付どおり放送時にダウンロードされます。"
 }

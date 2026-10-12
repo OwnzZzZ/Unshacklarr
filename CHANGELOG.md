@@ -48,6 +48,7 @@ The new options are off until you turn them on.
 - **One import at a time per Sonarr:** big files no longer reach Sonarr together. (#10, by mj23au)
 - **A slow Unshackle server is waited for** 1, 3 then 10 minutes before a download fails. (#10, by mj23au)
 - **Clearer selection in Series:** a check on each poster, the others dimmed.
+- **One schedule per series:** a series with its own broadcast schedule shows only that one in the Schedule.
 - **An import Sonarr didn't do is not a failed download:** it shows *Import needed*, with Import instead of Retry. (#10, by mj23au)
 - **The API downloads for another Sonarr**, and as a retry: `sonarr` and `retry` in `/api/v1/downloads`. (#10, by mj23au)
 

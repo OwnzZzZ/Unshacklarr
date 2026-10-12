@@ -2120,5 +2120,6 @@
  "Import needed": "Нужен импорт",
  "Import needed: {0}": "Нужен импорт: {0}",
  "No Sonarr named {0}": "Нет Sonarr с именем {0}",
- "Sonarr refused the import ({0}): asked again ({1} of {2})": "Sonarr отклонил импорт ({0}): запрошен снова ({1} из {2})"
+ "Sonarr refused the import ({0}): asked again ({1} of {2})": "Sonarr отклонил импорт ({0}): запрошен снова ({1} из {2})",
+ "The Schedule shows this schedule only: episodes before the first one are left out of it. They are still downloaded when they air on Sonarr's dates.": "Расписание показывает только этот график: эпизоды до первого в нём не отображаются. Они всё равно загружаются при выходе, по датам Sonarr."
 }

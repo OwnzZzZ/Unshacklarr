@@ -2111,5 +2111,6 @@
  "Import needed": "Import nötig",
  "Import needed: {0}": "Import nötig: {0}",
  "No Sonarr named {0}": "Kein Sonarr namens {0}",
- "Sonarr refused the import ({0}): asked again ({1} of {2})": "Sonarr hat den Import abgelehnt ({0}): erneut angefragt ({1} von {2})"
+ "Sonarr refused the import ({0}): asked again ({1} of {2})": "Sonarr hat den Import abgelehnt ({0}): erneut angefragt ({1} von {2})",
+ "The Schedule shows this schedule only: episodes before the first one are left out of it. They are still downloaded when they air on Sonarr's dates.": "Der Zeitplan zeigt nur diesen Plan: Folgen vor der ersten werden darin weggelassen. Sie werden trotzdem geladen, wenn sie zu den Daten von Sonarr erscheinen."
 }

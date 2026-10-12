@@ -2128,5 +2128,6 @@
  "Import needed": "需要导入",
  "Import needed: {0}": "需要导入：{0}",
  "No Sonarr named {0}": "没有名为 {0} 的 Sonarr",
- "Sonarr refused the import ({0}): asked again ({1} of {2})": "Sonarr 拒绝了导入（{0}）：已再次请求（第 {1} 次，共 {2} 次）"
+ "Sonarr refused the import ({0}): asked again ({1} of {2})": "Sonarr 拒绝了导入（{0}）：已再次请求（第 {1} 次，共 {2} 次）",
+ "The Schedule shows this schedule only: episodes before the first one are left out of it. They are still downloaded when they air on Sonarr's dates.": "日程表只显示此播出计划：第一集之前的剧集不在其中显示。它们仍会按 Sonarr 的日期在播出时下载。"
 }
