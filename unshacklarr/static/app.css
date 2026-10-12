@@ -126,12 +126,12 @@ nav .short { display: none; }
 .seg button span { opacity: .75; margin-left: 4px; font-variant-numeric: tabular-nums; }
 nav { overflow-x: auto; max-width: 100%; scrollbar-width: none; }
 nav button { white-space: nowrap; }
-input[type=text], input[type=url], input[type=search], input[type=number], input[type=password], select {
+input[type=text], input[type=url], input[type=search], input[type=number], input[type=password], select, textarea {
   background: var(--field-bg); border: 1px solid var(--field-line); border-radius: 6px; padding: 7px 10px; width: 100%; color: var(--text);
   transition: border-color .15s, box-shadow .15s;
 }
-:is(input[type=text], input[type=url], input[type=search], input[type=number], input[type=password], select):hover:not(:focus):not(.bad) { border-color: var(--field-line-hover); }
-:is(input[type=text], input[type=url], input[type=search], input[type=number], input[type=password], select):focus:not(.bad) {
+:is(input[type=text], input[type=url], input[type=search], input[type=number], input[type=password], select, textarea):hover:not(:focus):not(.bad) { border-color: var(--field-line-hover); }
+:is(input[type=text], input[type=url], input[type=search], input[type=number], input[type=password], select, textarea):focus:not(.bad) {
   border-color: var(--accent); box-shadow: 0 0 0 3px rgb(79 179 191 / .16); outline: none; }
 label.check { display: inline-flex; gap: 8px; align-items: center; cursor: pointer; }
 .muted { color: var(--muted); }
@@ -1567,6 +1567,7 @@ input.bad, select.bad { border-color: var(--err) !important; box-shadow: 0 0 0 3
 .ql-langs { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); } .ql-langs .field small.bad { color: var(--err); }
 .miss-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; } .miss-bar .ax-seg { margin: 0; }
 #oneoff-slot .ds-programmes, #oneoff-slot #d-progmap-field { display: none; }  /* a download's own numbering: not the series' setting */
+#d-progmap { font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; resize: vertical; min-height: 64px; border-radius: 9px; padding: 9px 12px; }  /* one "S2026E14 URL" per line */
 .ds-programmes { margin-bottom: var(--gap-field); }
 .up-card > summary { list-style: none; } .up-card > summary::-webkit-details-marker { display: none; } .up-card > summary::after { content: "▸"; color: var(--muted); }
 .up-card[open] > summary::after { content: "▾"; } .up-card > summary.up-row { grid-template-columns: 18px 30px minmax(0, 1fr) auto auto; align-items: center; }
