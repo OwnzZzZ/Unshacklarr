@@ -2302,3 +2302,39 @@ def test_the_sign_in_hint_waits_for_two_quiet_minutes(tmp_path, monkeypatch):
         pass
     hints = [n for n, s in said if "sign in" in s]
     assert len(hints) == 1 and hints[0] >= 9  # only once quiet for 2 minutes (30 s a poll here), not while serve talks
+
+
+def test_a_separate_programme_is_found_by_its_title_and_looked_for_once_a_day(tmp_path, monkeypatch):
+    # By mj23au (#17): BBC Documentaries S2026E56 is a programme of its own on iP, found by its Sonarr title; one
+    # found nowhere is looked for again by the automatic sync a day later, at once when picked by hand
+    sync = load(tmp_path, monkeypatch)
+    asked = []
+
+    class Serve:
+        def call(self, method, path, json=None):
+            asked.append(path)
+            if path == "/api/search":
+                return {"results": results}
+            return {"titles": [{"type": "movie", "name": "Britain's Forgotten Girls", "year": 2026}]}
+    monkeypatch.setattr(sync, "backend_for", lambda tag, config=None: Serve())
+    monkeypatch.setattr(sync, "serve_params", lambda show, config: {})
+    show, config = {"service": "iP", "programmes": True}, {}
+    ep = {"id": 56, "seasonNumber": 2026, "episodeNumber": 56, "title": "Britain’s Forgotten Girls", "airDateUtc": "2026-10-01T20:00:00Z"}
+    assert sync.title_key("The Britain's Forgotten Girls") == sync.title_key("britain’s forgotten girls")
+
+    results = [{"id": "m01", "title": "Britain's Forgotten Girls"}, {"id": "m02", "title": "Forgotten"}]
+    match = sync.programme_for(show, ep, config)
+    assert (match["title"], match["code"], match["how"]) == ("m01", "S2026E56", "title")  # a film: Sonarr's code
+    asked.clear()
+    assert sync.programme_for(show, ep, config)["title"] == "m01" and asked == []  # kept: not searched again
+
+    other = {**ep, "id": 57, "title": "Lost Film"}
+    results = [{"id": "a", "title": "Lost Film"}, {"id": "b", "title": "Lost Film"}]  # two alike: not guessed
+    for manual, searched in ((False, True), (False, False), (True, True)):
+        asked.clear()
+        try:
+            sync.programme_for(show, other, config, manual)
+            raise AssertionError("two programmes titled alike were guessed")
+        except sync.Unmatched as e:
+            assert "2 programmes on iP" in str(e)
+        assert bool(asked) is searched  # the automatic sync waits a day; a pick by hand looks at once

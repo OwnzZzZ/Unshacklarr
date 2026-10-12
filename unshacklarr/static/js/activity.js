@@ -419,7 +419,7 @@ $("#con-missing").onclick = showMissing;
 
 /* Upgrades: the files of the series with a quality ladder that are not on its first step, checked against the
    service's tracks (a series' episodes 10 at a time, in the background; answers kept); those it has on an earlier step are replaced. */
-let upgradeTimer = null, upgradeSkip = new Set(), upgradeSonarr = "";
+let upgradeTimer = null, upgradePick = new Set(), upgradeOpen = new Set(), upgradeSonarr = "";
 async function showUpgrades() {
   picked_run = "upgrades";
   clearTimeout(upgradeTimer);
@@ -432,40 +432,70 @@ async function showUpgrades() {
   if (upgradeSonarr && !(S.config.settings.sonarrs || []).some((i) => i.name === upgradeSonarr)) upgradeSonarr = "";
   try { r = await api(`/api/upgrades${upgradeSonarr ? `?sonarr=${encodeURIComponent(upgradeSonarr)}` : ""}`); } catch (e) { return $("#cd-main").replaceChildren(failed(e.message, showUpgrades)); }
   if (picked_run !== "upgrades") return;
-  const scan = r.scan, picked = r.items.filter((i) => !upgradeSkip.has(i.episodeId) && !i.running);
-  const check = el("button", { className: "btn" + (scan.running ? " danger" : ""), textContent: scan.running ? "Stop the check" : r.checked ? "Check again" : "Check now",
-    onclick: async (e) => {
-      e.target.disabled = true;
-      try { await api(scan.running ? "/api/upgrades/stop" : "/api/upgrades/check", { method: "POST", body: JSON.stringify({ sonarr: upgradeSonarr }) }); } catch (err) { toast(err.message, true); }
-      showUpgrades();
-    } });
+  const scan = r.scan, free = r.items.filter((i) => !i.running), picked = free.filter((i) => upgradePick.has(i.episodeId));
+  // every series, or one from its card (asked afresh); the ticks only choose what is replaced (by mj23au, #18)
+  const checkUp = async (button, only = []) => {
+    button.disabled = true;
+    try { await api(scan.running ? "/api/upgrades/stop" : "/api/upgrades/check", { method: "POST", body: JSON.stringify({ sonarr: upgradeSonarr, series: only }) }); } catch (err) { toast(err.message, true); }
+    showUpgrades();
+  };
+  const check = el("button", { className: "btn" + (scan.running ? " danger" : ""),
+    textContent: scan.running ? "Stop the check" : r.checked ? "Check again" : "Check now", onclick: (e) => checkUp(e.target) });
   const go = el("button", { className: "btn primary", hidden: !picked.length || scan.running,
-    textContent: picked.length === 1 ? "Replace it" : `Replace the ${picked.length}`, onclick: async (e) => {
+    textContent: picked.length === 1 ? "Replace it" : `Replace the ${picked.length} selected`, onclick: async (e) => {
       e.target.disabled = true;
       try {
         await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: picked.map((i) => i.episodeId), replace: true, ...(upgradeSonarr ? { sonarr: upgradeSonarr } : {}) }) });
         toast(picked.length === 1 ? "1 episode queued, replacing its file" : `${picked.length} episodes queued, replacing their files`);
+        picked.forEach((i) => upgradePick.delete(i.episodeId));
         showUpgrades();
       } catch (err) { e.target.disabled = false; toast(err.message, true); }
     } });
   const state = scan.running ? `Checking ${scan.done} of ${scan.total}${scan.sonarr ? ` in ${scan.sonarr}` : ""}${scan.series ? ` · ${scan.series}` : ""}…`
     : r.checked ? `Checked ${ago(r.checked)}${r.stopped ? ", stopped before the end" : ""}${scan.errors ? ` · ${scan.errors} could not be asked` : ""}` : "Not checked yet.";
-  const rows = r.items.map((it) => {
-    const poster = S.series.find((x) => x.tvdbId === it.tvdbId)?.poster || "";
-    const box = el("input", { type: "checkbox", checked: !upgradeSkip.has(it.episodeId), disabled: it.running, ariaLabel: `Replace ${it.series} ${it.sxxeyy}`,
-      onchange: (e) => { if (e.target.checked) upgradeSkip.delete(it.episodeId); else upgradeSkip.add(it.episodeId); showUpgrades(); } });
-    return el("label", { className: "left-row up-row" }, box, el("img", { alt: "", loading: "lazy", src: poster }),
-      el("div", {}, el("b", { textContent: `${it.series} ${it.sxxeyy}` }),
-        el("small", { textContent: `${it.file} here${it.fileStep ? ` (step ${it.fileStep})` : " (outside the ladder)"} → ${it.better} on the service (step ${it.betterStep} of ${it.ladder})` }),
-        ...(it.running ? [el("small", { className: "left-hand", textContent: "Being replaced now" })] : [])));
+  const selAll = el("button", { className: "btn", hidden: !free.length || scan.running,
+    textContent: picked.length === free.length ? "Select none" : "Select all",
+    onclick: () => { if (picked.length === free.length) upgradePick.clear(); else free.forEach((i) => upgradePick.add(i.episodeId)); showUpgrades(); } });
+  const bySeries = new Map();
+  for (const it of r.items) { const k = `${it.tvdbId}|${it.series}`; if (!bySeries.has(k)) bySeries.set(k, []); bySeries.get(k).push(it); }
+  const FIN = { joining: "Joining parts", finishing: "Finishing", renaming: "Renaming", importing: "Importing" };
+  const liveOf = (it) => runCards.find((c) => isLive(c) && c.tvdbId === it.tvdbId && c.sxxeyy === it.sxxeyy && (c.instance || "") === upgradeSonarr);
+  const stateOf = (c) => !c ? "" : c.waiting || isQueued(c) ? "Queued" : FIN[c.step] || `Downloading ${Math.round(Number(c.live?.progress) || 0)}%`;
+  const rows = [...bySeries].map(([k, eps]) => {
+    const poster = S.series.find((x) => x.tvdbId === eps[0].tvdbId)?.poster || "";
+    const ids = eps.filter((i) => !i.running).map((i) => i.episodeId), n = ids.filter((id) => upgradePick.has(id)).length;
+    const all = el("input", { type: "checkbox", checked: ids.length > 0 && n === ids.length, indeterminate: n > 0 && n < ids.length, disabled: !ids.length,
+      ariaLabel: `Select every ${eps[0].series} episode`,
+      onclick: (e) => e.stopPropagation(),
+      onchange: (e) => { ids.forEach((id) => (e.target.checked ? upgradePick.add(id) : upgradePick.delete(id))); showUpgrades(); } });
+    const busy = eps.filter((i) => i.running), queued = busy.filter((i) => { const c = liveOf(i); return !c || c.waiting || isQueued(c); }).length;
+    const busyText = [busy.length - queued && `${busy.length - queued} downloading`, queued && `${queued} queued`].filter(Boolean).join(", ");
+    const list = eps.map((it) => {
+      const box = el("input", { type: "checkbox", checked: upgradePick.has(it.episodeId), disabled: it.running, ariaLabel: `Replace ${it.series} ${it.sxxeyy}`,
+        onchange: (e) => { if (e.target.checked) upgradePick.add(it.episodeId); else upgradePick.delete(it.episodeId); showUpgrades(); } });
+      return el("label", { className: "left-row up-row up-ep" }, box,
+        el("div", {}, el("b", { textContent: it.sxxeyy }),
+          el("small", { textContent: `${it.file} here${it.fileStep ? ` (step ${it.fileStep})` : " (outside the ladder)"} → ${it.better} on the service (step ${it.betterStep} of ${it.ladder})` }),
+          ...(it.running ? [el("small", { className: "left-hand up-live", textContent: `↓ ${stateOf(liveOf(it)) || "Being replaced now"}` })] : [])));
+    });
+    const card = el("details", { className: "up-card", open: upgradeOpen.has(k), ontoggle: (e) => { if (e.target.open) upgradeOpen.add(k); else upgradeOpen.delete(k); } },
+      el("summary", { className: "left-row up-row" }, all, el("img", { alt: "", loading: "lazy", src: poster }),
+        el("div", {}, el("b", { textContent: eps[0].series }),
+          el("small", { textContent: [eps.length === 1 ? "1 episode" : `${eps.length} episodes`, n && `${n} selected`, busyText].filter(Boolean).join(" · ") }),
+          ...(busy.length ? [el("small", { className: "left-hand up-live", textContent: "↓ Replacing" })] : [])),
+        el("button", { type: "button", className: "btn small", textContent: "Check", hidden: scan.running,
+          title: `Ask the service again about ${eps[0].series}`,
+          onclick: (e) => { e.preventDefault(); e.stopPropagation(); checkUp(e.target, [eps[0].tvdbId]); } })),
+      ...list);
+    return card;
   });
   $("#cd-main").replaceChildren(el("div", { style: "display:grid;gap:14px" },
     el("div", { className: "cd-head" }, el("div", {}, el("h3", { textContent: "Upgrades" }),
       el("small", { className: "line1", textContent: "Files your quality ladder says could be better. Check now asks each service what it has, up to 10 episodes of a series at a time, and keeps each answer for the days set in Settings, Upgrades. Replace downloads the better ones over your files, even when Sonarr ranks both the same (H.264 and H.265 in 1080p)." }))),
-    ...[sonarrPicker(upgradeSonarr, (n) => { upgradeSonarr = n; upgradeSkip.clear(); showUpgrades(); }), unsetNote(upgradeSonarr)].filter(Boolean),
-    el("div", { className: "miss-bar" }, el("span", { className: "muted", textContent: state }), el("span", { className: "up-acts" }, check, go)),
+    ...[sonarrPicker(upgradeSonarr, (n) => { upgradeSonarr = n; upgradePick.clear(); upgradeOpen.clear(); showUpgrades(); }), unsetNote(upgradeSonarr)].filter(Boolean),
+    el("div", { className: "miss-bar" }, el("span", { className: "muted", textContent: state }), el("span", { className: "up-acts" }, selAll, check, go)),
     ...(rows.length ? [el("div", {}, ...rows)] : [el("p", { className: "muted", textContent: scan.running ? "Nothing better found yet." : r.checked ? "Nothing better on the services: every file is already on the best step they have." : "Check now asks each service what it has, one episode at a time." })])));
-  if (scan.running) upgradeTimer = setTimeout(() => picked_run === "upgrades" && showUpgrades(), 3000);
+  if (scan.running || r.items.some((i) => i.running)) upgradeTimer = setTimeout(() => picked_run === "upgrades" && showUpgrades(), 3000);
 }
 $("#con-upgrades").onclick = showUpgrades;
 

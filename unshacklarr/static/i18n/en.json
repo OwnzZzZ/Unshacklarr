@@ -63,6 +63,7 @@
  "0: always ask.": [],
  "0: never delete them. Episodes of a series set to Download only are never deleted automatically.": [],
  "1 change": [],
+ "1 episode": [],
  "1 episode has another number on {0}: Download takes care of it": [
   "svc"
  ],
@@ -278,6 +279,9 @@
  "As shown on Discord, and on a phone (this device, ntfy, Telegram, Pushover…).": [],
  "As the main one": [],
  "Ask again after": [],
+ "Ask the service again about {0}": [
+  "eps[0].series"
+ ],
  "Ask {0} which episodes of this series it has, and mark them in the list": [
   "svc"
  ],
@@ -391,6 +395,7 @@
  "Change…": [],
  "Chapters": [],
  "Chat ID": [],
+ "Check": [],
  "Check again": [],
  "Check its Numbering, then try again.": [],
  "Check now": [],
@@ -628,6 +633,9 @@
  "Downloaded from {0}": [
   "svcName(conf.service)"
  ],
+ "Downloaded from {0}, each episode its own programme": [
+  "svcName(conf.service)"
+ ],
  "Downloaded, 30 days": [],
  "Downloaded, but Sonarr didn't import it: {0}": [
   "e"
@@ -807,6 +815,7 @@
   "listed(g.series)"
  ],
  "For Gmail, Outlook or iCloud: use an app password, created in your account's security settings (not your usual password).": [],
+ "For a series like BBC Documentaries, where each episode is its own programme on the service: each one is found by its title, so the series needs no URL.": [],
  "For a series with a release time, its new episode is tried at that time, then again and again for a while.": [],
  "For at most": [],
  "For every series": [],
@@ -944,6 +953,7 @@
  "It is first tried at {0}: fix it before then.": [
   "when"
  ],
+ "It is looked for again once a day.": [],
  "It names this library on series and starts the folders of its downloads: sonarr-2.": [],
  "It only opens the /api/v1 routes: never the password, the cookies or the settings.": [],
  "Italiano": [],
@@ -1077,6 +1087,10 @@
  ],
  "Look it up on TMDB again": [],
  "Looking for backups…": [],
+ "Looking for its programme on {0}: {1}": [
+  "show['service']",
+  "e"
+ ],
  "Looking on TMDB…": [],
  "Looking up where to watch it…": [],
  "Looking up your release group…": [],
@@ -1212,6 +1226,13 @@
  "No limit: downloads run at any time.": [],
  "No option matches.": [],
  "No place to send backups to": [],
+ "No programme found yet: {0}": [
+  "label"
+ ],
+ "No programme on {0} is titled {1} yet": [
+  "show['service']",
+  "ep['title']"
+ ],
  "No quality ladder": [],
  "No release group is set. Set a Group Tag in Settings, Download options: your downloads then carry it, and this switch can tell them apart.": [],
  "No remote CDM called {0}": [
@@ -1318,6 +1339,7 @@
  "Not checked yet.": [],
  "Not delivered": [],
  "Not downloaded by Unshackle": [],
+ "Not found on the service": [],
  "Not imported: {0}": [
   "job[4]"
  ],
@@ -1445,6 +1467,7 @@
  "On: the logs are much longer. Turn it off once the problem is found.": [],
  "Once a day": [],
  "Once it has a service and you save, new episodes are downloaded automatically. For older ones, tick them in Episodes.": [],
+ "One episode per line, for those its title doesn't find: the episode as Sonarr numbers it, then the programme's URL or ID.": [],
  "One language, for example fr. An episode downloaded without it is downloaded again when the service has it.": [],
  "One language. An episode downloaded in another accepted language (for example English with French subtitles) is downloaded again when the service has this one. Empty: never.": [],
  "One of them has no service: pick one above, or its changes are not kept.": [],
@@ -1541,6 +1564,7 @@
  "Profile": [],
  "Profile to use for Credentials and Cookies (if available).": [],
  "Profiles to fall back on": [],
+ "Programme URLs": [],
  "Progress": [],
  "Proxy": [],
  "Proxy URI to use. If a 2-letter country is provided, it will try to get a proxy from the config.": [],
@@ -1618,7 +1642,7 @@
  "Replace it": [],
  "Replace only if better": [],
  "Replace the key": [],
- "Replace the {0}": [
+ "Replace the {0} selected": [
   "picked.length"
  ],
  "Replace them before they expire, in Settings, Cookies.": [],
@@ -1657,6 +1681,7 @@
  "Run sync now": [],
  "Running": [],
  "Runs on": [],
+ "S2026E14 https://www.bbc.co.uk/iplayer/episode/m0031c4c": [],
  "S3 endpoint": [],
  "S3-compatible": [],
  "SDR": [],
@@ -1714,9 +1739,14 @@
  "See on GitHub ↗": [],
  "See the history in Activity for why.": [],
  "Select": [],
+ "Select all": [],
  "Select all {0}": [
   "free.length"
  ],
+ "Select every {0} episode": [
+  "eps[0].series"
+ ],
+ "Select none": [],
  "Select the lowest bitrate track within the specified quality. Requires -q/--quality.": [],
  "Select {0} upgrade{1}": [
   "upgrades.length",
@@ -1734,6 +1764,7 @@
  "Sending…": [],
  "Sends": [],
  "Sent: the download goes on": [],
+ "Separate programmes": [],
  "Series": [],
  "Series URL on that service": [],
  "Series URL on the service": [],
@@ -2161,6 +2192,14 @@
  "The password that opens Unshacklarr, on every device.": [],
  "The path Sonarr uses for your library.": [],
  "The paths where Unshacklarr itself finds the downloads, the cookies and unshackle.yaml.": [],
+ "The programme URLs of {0}: give {1} one URL or ID": [
+  "key",
+  "code"
+ ],
+ "The programme URLs of {0}: {1} is not an episode like S2026E14": [
+  "key",
+  "code"
+ ],
  "The proxy's addresses": [],
  "The pywidevine serve address": [],
  "The quality and languages an episode needs, and what happens after the download. Default follows the service, then Settings. An empty language field uses Settings, Download options.": [],
@@ -2812,6 +2851,12 @@
  "remote server {0}": [
   "request['server']"
  ],
+ "renamed {0} to {1}.{2}.{3}": [
+  "f.name",
+  "dots(name)",
+  "sxxeyy",
+  "f.name"
+ ],
  "renamed {0} to {1}.{2}{3}": [
   "f.name",
   "dots(name)",
@@ -2880,10 +2925,11 @@
  "this device is no longer subscribed": [],
  "this download": [],
  "timeZone": [],
+ "title and subtitle": [],
  "title={0} {1} {2}": [
   "name",
   "sxxeyy",
-  "episode"
+  "title"
  ],
  "tmdb must be comma-separated numbers": [],
  "to": [],
@@ -3122,7 +3168,7 @@
   "hsCards.length === 1 ? \"\" : \"s\""
  ],
  "{0} episodes": [
-  "j.cards.length"
+  "eps.length"
  ],
  "{0} episodes came out on {1} at {2}, {3}. New episodes are now downloaded at that time. You can change it on the series page.": [
   "found['episodes']",
@@ -3187,6 +3233,10 @@
  ],
  "{0} has a rule by profile, quality or DRM: change it in unshackle.yaml": [
   "service"
+ ],
+ "{0} has no title in Sonarr to look for on {1}": [
+  "sxxeyy",
+  "show['service']"
  ],
  "{0} has none of your {1} missing episode{2}": [
   "svc",
@@ -3385,9 +3435,22 @@
   "c.serviceEpisode",
   "c.service"
  ],
+ "{0} on {1} has {2} titles: which is {3}? Paste its URL on the series": [
+  "found.get('title')",
+  "show['service']",
+  "len(titles)",
+  "sxxeyy"
+ ],
  "{0} on {1} is another episode, by its title": [
   "service_sxxeyy",
   "show['service']"
+ ],
+ "{0} on {1} is from {2}, {3} aired in {4}": [
+  "found.get('title')",
+  "show['service']",
+  "title['year']",
+  "sxxeyy",
+  "year"
  ],
  "{0} option{1}": [
   "count",
@@ -3413,6 +3476,11 @@
   "alerts.length",
   "alerts.length === 1 ? \"\" : \"s\""
  ],
+ "{0} programmes on {1} are titled {2}: paste its URL on the series": [
+  "several",
+  "show['service']",
+  "ep['title']"
+ ],
  "{0} queued": [
   "b.queued"
  ],
@@ -3427,7 +3495,7 @@
   "data.remote.length"
  ],
  "{0} selected": [
-  "picked.size"
+  "n"
  ],
  "{0} series": [
   "series"
@@ -3634,6 +3702,17 @@
   "label",
   "profile"
  ],
+ "{0}: looking for its programme on {1}: {2}": [
+  "label",
+  "show['service']",
+  "e"
+ ],
+ "{0}: matched to {1} on {2} (by {3})": [
+  "label",
+  "match['name']",
+  "show['service']",
+  "match['how']"
+ ],
  "{0}: no Sonarr named {1} in Settings, Sonarr": [
   "where",
   "name"
@@ -3777,6 +3856,7 @@
  "…and {0} more": [
   "len(held) - 30"
  ],
+ "↓ Replacing": [],
  "⏸ Paused: the next episode waits": [],
  "● Connected{0}": [
   "st.version ? ` · Sonarr ${st.version}` : \"\""

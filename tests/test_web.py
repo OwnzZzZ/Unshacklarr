@@ -1788,3 +1788,32 @@ def test_a_series_with_its_own_schedule_shows_that_one_only(monkeypatch):
         query = {"start": "2026-10-12", "days": "1"}
     shown = json.loads(asyncio.run(web.calendar(Request())).body)
     assert sorted(e["id"] for e in shown) == [3, 5]
+def test_a_check_of_chosen_series_leaves_the_others_finds(tmp_path, monkeypatch):
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    sync = web.sonarr_sync
+    ladder = {"name": "HEVC first", "steps": [{"codec": "HEVC", "range": "SDR", "min": 1080, "max": 1080},
+                                              {"codec": "AVC", "range": "SDR", "min": 1080, "max": 1080}]}
+    (tmp_path / "config.yaml").write_text("series:\n  1: {service: X, title: a, ladder: HEVC first}\n  2: {service: X, title: b, ladder: HEVC first}\n")
+    config = sync.read_file()
+    config["quality_ladders"] = [ladder]
+    monkeypatch.setattr(sync, "read_file", lambda: config)
+    series = {1: {"id": 7, "tvdbId": 1, "title": "One"}, 2: {"id": 8, "tvdbId": 2, "title": "Two"}}
+    avc = {"resolution": "1920x1080", "videoCodec": "h264"}
+    monkeypatch.setattr(sync, "sonarr_series", lambda wanted: series)
+    monkeypatch.setattr(sync, "sonarr_get", lambda path, **p: [{"id": 70 + p["seriesId"], "mediaInfo": avc}] if path == "episodefile"
+                        else [{"id": p["seriesId"], "seasonNumber": 1, "episodeNumber": 1, "hasFile": True, "episodeFileId": 70 + p["seriesId"]}])
+    monkeypatch.setattr(sync, "download_request", lambda show, config, wanted, out: {"service": "X", "title_id": "t", "wanted": [wanted]})
+    asked = []
+    monkeypatch.setattr(sync, "list_tracks", lambda show, config, request, ladder: asked.append(show["title"]) or
+                        [{"title": {"season": 1, "number": 1}, "video": [{"height": 1080, "codec": "HEVC", "range": "SDR"}]}])
+    monkeypatch.setattr(web, "UPGRADE_PAUSE", 0)
+    web.scan_upgrades()
+    first = web.read_json(web.UPGRADES_FILE, {})
+    assert asked == ["a", "b"] and {i["tvdbId"] for i in first["items"]} == {1, 2}
+    web.scan_upgrades("", {2})  # asked afresh although the answer is kept; series 1 is not asked and stays listed
+    after = web.read_json(web.UPGRADES_FILE, {})
+    assert asked == ["a", "b", "b"] and {i["tvdbId"] for i in after["items"]} == {1, 2} and after["checked"] == first["checked"]

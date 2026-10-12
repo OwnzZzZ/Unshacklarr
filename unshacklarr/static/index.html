@@ -794,6 +794,15 @@
 
     <details class="card sx-card adv" id="d-adv" data-nav="numbering">
       <summary class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></svg></span><div><h3>Numbering and file names</h3><p>When the service numbers or names episodes differently from Sonarr.</p></div></summary>
+      <div class="field ds-programmes" id="d-programmes-field">
+        <label class="check"><input type="checkbox" id="d-programmes"> Separate programmes</label>
+        <small>For a series like BBC Documentaries, where each episode is its own programme on the service: each one is found by its title, so the series needs no URL.</small>
+      </div>
+      <div class="field" id="d-progmap-field" hidden>
+        <label for="d-progmap">Programme URLs</label>
+        <textarea id="d-progmap" rows="3" spellcheck="false" placeholder="S2026E14 https://www.bbc.co.uk/iplayer/episode/m0031c4c"></textarea>
+        <small>One episode per line, for those its title doesn't find: the episode as Sonarr numbers it, then the programme's URL or ID.</small>
+      </div>
       <div class="sx-grid">
         <div class="field">
           <label for="d-filename">Show name in file names</label>

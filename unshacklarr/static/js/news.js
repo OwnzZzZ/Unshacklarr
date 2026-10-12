@@ -11,6 +11,7 @@ const NEWS = [
   { id: "series-notify", version: "1.5.0", title: "Notifications per series", series: true, target: "#d-notify-l" },
   { id: "no-spoilers", version: "1.5.0", title: "No spoilers", sec: "interface", target: "#rg-spoiler-card" },
   { id: "more-sonarr", version: "1.5.0", title: "Other Sonarr instances", sec: "sonarr", target: "#sn-card" },
+  { id: "separate-programmes", version: "1.5.0", title: "Separate programmes", series: true, target: "#d-programmes-field" },
   { id: "sonarr-name", version: "1.5.0", title: "Sonarr name", sec: "sonarr", target: "#sx-name-field" },
   { id: "upgrade-series", version: "1.5.0", title: "Upgrades you choose", sec: "upgrades", target: "#ug-series-card" },
   { id: "other-groups", version: "1.5.0", title: "Other release groups", sec: "upgrades", target: "#ug-other-card" },
@@ -99,7 +100,7 @@ function showOption(n) {
   if (n.series) {
     const s = S.series.find((x) => S.config.series[x.tvdbId]?.service) || S.series[0];
     if (s) openDrawer(s, "settings");
-    setTimeout(() => { const box = document.querySelector(n.target); if (box?.tagName === "DETAILS") box.open = true; box?.scrollIntoView({ behavior: "smooth", block: "center" }); }, 400);
+    setTimeout(() => { const box = document.querySelector(n.target), fold = box?.closest("details"); if (fold) fold.open = true; box?.scrollIntoView({ behavior: "smooth", block: "center" }); }, 400);  // in a folded section: opened
   } else {
     showTab("settings");
     showSettingsSec(n.sec);

@@ -1566,6 +1566,13 @@ input.bad, select.bad { border-color: var(--err) !important; box-shadow: 0 0 0 3
 .probe-warn { margin: 8px 0; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--warn) 45%, var(--line)); border-radius: 10px; background: color-mix(in srgb, var(--warn) 8%, transparent); font-size: 13px; } .probe-warn b { color: var(--warn); }
 .ql-langs { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); } .ql-langs .field small.bad { color: var(--err); }
 .miss-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; } .miss-bar .ax-seg { margin: 0; }
+#oneoff-slot .ds-programmes, #oneoff-slot #d-progmap-field { display: none; }  /* a download's own numbering: not the series' setting */
+.ds-programmes { margin-bottom: var(--gap-field); }
+.up-card > summary { list-style: none; } .up-card > summary::-webkit-details-marker { display: none; } .up-card > summary::after { content: "▸"; color: var(--muted); }
+.up-card[open] > summary::after { content: "▾"; } .up-card > summary.up-row { grid-template-columns: 18px 30px minmax(0, 1fr) auto auto; align-items: center; }
+@keyframes up-bob { 50% { transform: translateY(2px); opacity: .55; } }
+.left-row small.up-live { color: var(--accent); font-weight: 600; animation: up-bob 1.1s ease-in-out infinite; }
+.up-card .up-ep { padding-left: 30px; grid-template-columns: 18px minmax(0, 1fr); }
 .up-row { cursor: pointer; grid-template-columns: 18px 30px minmax(0, 1fr); } .up-row input { flex: none; width: 18px; height: 18px; accent-color: var(--accent); } .up-acts { display: flex; gap: 8px; flex-wrap: wrap; }
 /* Account, the automatic backups: the saved ones under the buttons */
 .bk-pass-row { margin-top: var(--gap-field); }

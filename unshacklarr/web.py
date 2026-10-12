@@ -729,6 +729,10 @@ async def save_config(request):
             series[int(key)]["sonarrs"] = per
         if show.get("main_off") is True:  # not downloaded for the main Sonarr, only for the others
             series[int(key)]["main_off"] = True
+        if show.get("programmes") is True:  # each episode its own programme on the service: see sonarr_sync.programme_for
+            series[int(key)]["programmes"] = True
+        if pasted := check_programme_map(show.get("programme_map"), str(key)):
+            series[int(key)]["programme_map"] = pasted
     notifications = body.get("notifications") or {}
     targets = check_targets(notifications, [t["url"] for t in sonarr_sync.notification_targets(previous["notifications"])])
     countries = [c for c in body.get("tmdb_countries") or [] if re.fullmatch(r"[A-Z]{2}", c)]
@@ -769,6 +773,19 @@ async def save_config(request):
     }
     write_config(config)
     return web.json_response(public_config(read_config()))
+
+
+def check_programme_map(given, key: str) -> dict:
+    """Programme URLs pasted for episodes: {"S2026E14": "https://..."}, the code as Sonarr numbers the episode."""
+    out = {}
+    for code, url in (given or {}).items() if isinstance(given, dict) else ():
+        m, url = re.fullmatch(r"S(\d{1,4})E(\d{1,4})", str(code).strip(), re.IGNORECASE), str(url or "").strip()
+        if not m:
+            raise web.HTTPBadRequest(text=f"The programme URLs of {key}: {code!r} is not an episode like S2026E14")
+        if not url or url.startswith("-") or any(c.isspace() for c in url):
+            raise web.HTTPBadRequest(text=f"The programme URLs of {key}: give {code} one URL or ID")
+        out[f"S{int(m[1]):02}E{int(m[2]):02}"] = url
+    return out
 
 
 def check_fallback(alt: dict, known: dict | None, dl_specs: list[dict], key: str) -> dict:
@@ -2389,7 +2406,7 @@ def describe_episode(ep: dict, config: dict, now: datetime, all_series: bool = F
         "airDateUtc": ep.get("airDateUtc"),
         "hasFile": ep.get("hasFile"),
     }
-    if not show or not show.get("service") or not show.get("title"):
+    if not show or not show.get("service") or not (show.get("title") or show.get("programmes")):
         # Sonarr's calendar: shown too, so the series can be added to Unshackle from there.
         return {**base, "managed": False} if all_series else None
     service_sxxeyy = sonarr_sync.service_episode(show, ep["seasonNumber"], ep["episodeNumber"])
@@ -3294,12 +3311,13 @@ def upgrade_candidates(config: dict) -> list[tuple]:
     return work
 
 
-def scan_upgrades(name: str = "") -> None:
+def scan_upgrades(name: str = "", only: set | None = None) -> None:
     """Ask each candidate's service which step it has; keep those it has on an earlier step than the file. For
-    another Sonarr (name), its files, placed on its own ladder."""
+    another Sonarr (name), its files, placed on its own ladder. only: just those series (tvdb ids), asked afresh,
+    the other series' finds left as they were."""
     inst = sonarr_sync.SONARRS.get(name) if name else None
     with sonarr_sync.on_instance(inst):
-        scan_upgrades_in(inst, name)
+        scan_upgrades_in(inst, name, only)
 
 
 UPGRADE_BATCH = 10  # episodes of one series asked in one list-tracks: one login for them
@@ -3327,7 +3345,7 @@ def upgrade_item(serie: dict, ladder: dict, e: dict, track: dict, step: int, bes
             "better": sonarr_sync.track_label(have), "betterStep": number}
 
 
-def scan_upgrades_in(inst: dict | None, name: str) -> None:
+def scan_upgrades_in(inst: dict | None, name: str, only: set | None = None) -> None:
     """an answer younger than upgrade_recheck_days is reused for the same file; the rest is asked
     per series, UPGRADE_BATCH episodes in one list-tracks (each answer names its season and number)."""
     config, found = sonarr_sync.read_file(), []
@@ -3338,6 +3356,9 @@ def scan_upgrades_in(inst: dict | None, name: str) -> None:
     seen = read_json(upgrades_seen_file(name), {})
     try:
         work = upgrade_candidates(config)
+        if only:
+            work = [w for w in work if w[0]["tvdbId"] in only]
+            seen = {k: v for k, v in seen.items() if k not in {str(w[3]["id"]) for w in work}}  # asked afresh
         upgrade_scan["total"] = len(work)
         ask: dict[int, list] = {}
         for w in work:
@@ -3395,8 +3416,11 @@ def scan_upgrades_in(inst: dict | None, name: str) -> None:
                     if item:
                         found.append(item)
         write_atomic(upgrades_seen_file(name), json.dumps(seen))
-        write_atomic(upgrades_file(name), json.dumps({"checked": datetime.now(timezone.utc).isoformat(), "items": found,
-                                                "stopped": upgrade_scan["stop"]}))
+        before = read_json(upgrades_file(name), {}) if only else {}
+        if only:  # the checked series replace their own finds; the rest, and when it was checked, stay
+            found = [i for i in before.get("items") or [] if i.get("tvdbId") not in only] + found
+        write_atomic(upgrades_file(name), json.dumps({"checked": before.get("checked") or datetime.now(timezone.utc).isoformat(),
+                                                "items": found, "stopped": upgrade_scan["stop"] or bool(before.get("stopped"))}))
     except requests.RequestException as err:
         upgrade_scan["errors"] += 1
         print(f"Upgrades: Sonarr is unreachable: {no_credentials(err)}", flush=True)
@@ -3442,11 +3466,13 @@ async def upgrades_action(request):
     if request.match_info["action"] == "stop":
         upgrade_scan["stop"] = True
     elif not upgrade_scan["running"]:
-        inst = sonarr_named(str((await json_object(request)).get("sonarr") or "")) if request.can_read_body else None
+        body = await json_object(request) if request.can_read_body else {}
+        inst = sonarr_named(str(body.get("sonarr") or "")) if request.can_read_body else None
+        only = {int(x) for x in body.get("series") or [] if str(x).isdigit()}
         if sonarr_sync.unset_ladder(inst):
             raise web.HTTPBadRequest(text=f"Choose a quality ladder for Sonarr {inst['name']} in Settings, Sonarr first")
         upgrade_scan["running"] = True  # at once: a second click before the thread starts is not a second check
-        threading.Thread(target=scan_upgrades, args=((inst or {}).get("name", ""),), daemon=True).start()
+        threading.Thread(target=scan_upgrades, args=((inst or {}).get("name", ""), only), daemon=True).start()
     return web.json_response({"running": upgrade_scan["running"]})
 
 

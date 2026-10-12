@@ -833,7 +833,7 @@ $("#oneoff-dialog").addEventListener("close", () => { if (!$("#oneoff-dialog").o
 $("#ep-go").onclick = () => startDownload();
 async function startDownload(numbering = null) {
   const conf = S.config.series[current.tvdbId];
-  if (!conf.service || !conf.title) return toast("Pick a service and the series URL first, then save.", true);
+  if (!conf.service || !(conf.title || conf.programmes)) return toast("Pick a service and the series URL first, then save.", true);
   if (!$("#savebar").hidden) return toast("Save your changes first: the download reads the saved settings.", true);
   let replace = false;
   const onDisk = Object.values(epSeasons).flat().filter((e) => picked.has(e.id) && e.hasFile).length;

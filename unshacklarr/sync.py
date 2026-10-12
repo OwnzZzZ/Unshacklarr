@@ -72,6 +72,7 @@ import shutil
 import subprocess
 import sys
 import threading
+import unicodedata
 import uuid
 import time
 from datetime import datetime, timedelta, timezone
@@ -1375,6 +1376,103 @@ def release_group_of(show: dict, config: dict) -> tuple[str, str]:
     return "", ""
 
 
+# ---- A series of separate programmes (documentaries, specials): each Sonarr episode is its own title on the service ----
+PROGRAMMES_FILE = DATA / "programmes.json"  # "<sonarr>:<episode id>" -> the programme matched to it, kept
+TITLE_PART = re.compile(r"\bpart\s+(\d+)\b", re.IGNORECASE)
+GENERIC_NAME = re.compile(r"(episode|ep\.?|part)\s*\d+", re.IGNORECASE)
+
+
+class Unmatched(Exception):
+    """No programme on the service could be told to be this episode: not downloaded, tried again at each sync."""
+
+
+def title_key(text: str) -> str:
+    """A title as titles are compared: accents, quotes, case, punctuation and a leading "The" set aside."""
+    t = re.sub(r"['\u2018\u2019\u02bc`]", "", str(text or ""))  # Britain's and Britain’s alike
+    t = unicodedata.normalize("NFKD", t).encode("ascii", "ignore").decode().lower()
+    t = re.sub(r"[^a-z0-9]+", " ", t).strip()
+    return re.sub(r"^the ", "", t)
+
+
+def serve_params(show: dict, config: dict) -> dict:
+    """A search's or listing's options: the series' profile, proxy and service options, as a download has them."""
+    dl, own = stacked(show, config)
+    params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy")}
+    params.update(options.to_params(own, options.service_specs(service_entry(show["service"], config))))
+    return params
+
+
+PROGRAMME_RETRY = 86400  # seconds before the automatic sync looks again for an episode no programme matched
+
+
+def programme_for(show: dict, ep: dict, config: dict, manual: bool = False) -> dict:
+    """The programme on the series' service that is this episode: {"title": its id or URL, "code": what to ask for,
+    "name", "how"}. Its URL pasted on the series (programme_map) first; else a search by the episode's title,
+    taken only when one result has that very title, or one has it before a subtitle ("My Mom Jayne: A Film by...")
+    and the year agrees. A match is kept; Unmatched when none is sure."""
+    sxxeyy = f"S{ep['seasonNumber']:02}E{ep['episodeNumber']:02}"
+    key = f"{(instance() or {}).get('name', '')}:{ep['id']}"
+    pasted = (show.get("programme_map") or {}).get(sxxeyy)
+    known = read_json(PROGRAMMES_FILE, {})
+    if not pasted and (kept := known.get(key)):
+        return kept
+    missed = known.get(f"miss:{key}") or {}
+    if not pasted and not manual and time.time() - float(missed.get("at") or 0) < PROGRAMME_RETRY:
+        raise Unmatched(missed.get("why") or "Not found on the service")  # searched less than a day ago: not again yet
+    try:
+        return find_programme(show, ep, config, key, sxxeyy, pasted, backend_for(show["service"], config), serve_params(show, config))
+    except Unmatched as e:
+        if not pasted:
+            with jobs_lock:
+                known = read_json(PROGRAMMES_FILE, {})
+                known[f"miss:{key}"] = {"at": time.time(), "why": str(e)}
+                write_atomic(PROGRAMMES_FILE, json.dumps(known))
+        raise
+
+
+def find_programme(show: dict, ep: dict, config: dict, key: str, sxxeyy: str, pasted: str | None, backend, params: dict) -> dict:
+    """programme_for's search: the pasted URL, else the service's search by the episode's title."""
+    want, year = title_key(ep.get("title")), (ep.get("airDateUtc") or "")[:4]
+    if pasted:
+        found, how = {"id": pasted, "title": ep.get("title")}, "pasted"
+    else:
+        if not want:
+            raise Unmatched(f"{sxxeyy} has no title in Sonarr to look for on {show['service']}")
+        results = backend.call("POST", "/api/search", json={**params, "service": show["service"], "query": ep["title"]}).get("results") or []
+        exact = [r for r in results if title_key(r.get("title")) == want]
+        longer = [r for r in results if title_key(r.get("title")).startswith(want + " ") and ":" in str(r.get("title"))]
+        if len(exact) == 1:
+            found, how = exact[0], "title"
+        elif not exact and len(longer) == 1:
+            found, how = longer[0], "title and subtitle"
+        else:
+            several = len(exact) or len(longer)
+            raise Unmatched(f"{several} programmes on {show['service']} are titled {ep['title']!r}: paste its URL on the series" if several > 1
+                            else f"No programme on {show['service']} is titled {ep['title']!r} yet")
+    titles = backend.call("POST", "/api/list-titles", json={**params, "service": show["service"], "title_id": str(found.get("id") or found.get("url"))})["titles"]
+    part = TITLE_PART.search(str(ep.get("title") or ""))
+    if len(titles) == 1:
+        title = titles[0]
+    elif part and len(titles) >= int(part.group(1)) >= 1:
+        title = titles[int(part.group(1)) - 1]  # a two-part documentary: Part 2 is its second
+    else:
+        raise Unmatched(f"{found.get('title')} on {show['service']} has {len(titles)} titles: which is {sxxeyy}? Paste its URL on the series")
+    if how == "title and subtitle" and year and title.get("year") and str(title["year"]) != year:
+        raise Unmatched(f"{found.get('title')} on {show['service']} is from {title['year']}, {sxxeyy} aired in {year}")
+    code = f"S{int(title.get('season') or 0):02}E{int(title.get('number') or 0):02}" if title.get("type") == "episode" else sxxeyy
+    name = str(title.get("name") or "")
+    if not name or GENERIC_NAME.fullmatch(name):  # "Episode 01": the listing's placeholder, the programme's own title says more
+        name = str(found.get("title") or name)
+    match = {"title": str(found.get("id") or found.get("url")), "code": code, "name": name, "how": how}
+    if not pasted:
+        with jobs_lock:
+            kept = read_json(PROGRAMMES_FILE, {})
+            kept[key] = match
+            kept.pop(f"miss:{key}", None)
+            write_atomic(PROGRAMMES_FILE, json.dumps(kept))
+    return match
+
+
 def download_request(show: dict, config: dict, service_sxxeyy: str, out: Path) -> dict:
     """The same download, as unshackle serve's /api/download takes it."""
     if why := no_cdm(show["service"], config):
@@ -1435,13 +1533,14 @@ def parts_in(out: Path) -> int:
 
 
 def finalize(out: Path, sxxeyy: str, name: str, join_parts: bool = True, episode_name: str = "joined",
-             on_step=lambda step, parts: None) -> int:
+             on_step=lambda step, parts: None, programme: bool = False) -> int:
     """Join split parts into one file, then name it and title it after Sonarr's series.
 
     `name` replaces whatever the service calls the show ("Koh-Lanta : All stars") and
     `sxxeyy` its numbering, both in the file name and in the MKV's title. `episode_name`
     says when to drop the episode's name: "keep", "always", or once parts were "joined"
-    (each part has its own name then, and none names the whole episode).
+    (each part has its own name then, and none names the whole episode). A `programme` (a series of separate
+    programmes) may come named as a film, with no episode in its name: the series and `sxxeyy` go in front of it.
     """
     # The downloads folder is shared (Sonarr, a NAS): a link planted there must not make mkvmerge or a
     # rename write through it, outside the folder
@@ -1479,10 +1578,15 @@ def finalize(out: Path, sxxeyy: str, name: str, join_parts: bool = True, episode
 
     for f in out.rglob("*.mkv"):
         match = SXXEYY.search(f.name)
-        if not match:
+        if not match and not programme:
             continue
         info = subprocess.run(["mkvmerge", "-J", str(f)], stdout=subprocess.PIPE, text=True)
         title = json.loads(info.stdout or "{}").get("container", {}).get("properties", {}).get("title", "")
+        if not match:  # Britains.Forgotten.Girls.2026.1080p...mkv: BBC.Documentaries.S2026E14.Britains.Forgotten...
+            trace(f"renamed {f.name} to {dots(name)}.{sxxeyy}.{f.name}")
+            f = f.rename(f.with_name(f"{dots(name)}.{sxxeyy}.{f.name}"))
+            subprocess.run(["mkvpropedit", "-q", str(f), "--edit", "info", "--set", f"title={name} {sxxeyy} {title}".strip()], check=True)
+            continue
         episode = title[m.end():].strip() if (m := TITLE_SXXEYY.search(title)) else ""
         rest = f.name[match.end():]
         if episode_name == "always" or (episode_name == "joined" and len(parts) > 1):
@@ -2318,6 +2422,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                 show.get("join_parts", True),
                 show.get("episode_name") or "joined",
                 on_step,
+                bool(show.get("programmes")),
             )
             check_audio(out, accepted_audio(show, config))
             check_subs(out, accepted_subs(show, config))
@@ -2404,13 +2509,13 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
             if taken_out:
                 continue  # taken out of the queue
             show = series.get(ep["series"]["tvdbId"])
-            if not show or not show.get("service") or not show.get("title"):
-                continue
+            if not show or not show.get("service") or not (show.get("title") or show.get("programmes")):
+                continue  # separate programmes need no series URL: each episode finds its own
             if not manual and not wanted_automatically(show, ep, datetime.now(timezone.utc)):
                 continue
 
             sxxeyy = f"S{ep['seasonNumber']:02}E{ep['episodeNumber']:02}"
-            service_sxxeyy = service_episode(show, ep["seasonNumber"], ep["episodeNumber"])
+            service_sxxeyy = sxxeyy if show.get("programmes") else service_episode(show, ep["seasonNumber"], ep["episodeNumber"])
             label = f"{ep['series']['title']} {sxxeyy}" + (f" ({instance()['name']})" if instance() else "")
             if not service_sxxeyy:
                 continue  # the episode offset puts it before the service's first episode
@@ -2448,6 +2553,24 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                     run.card["replace"] = True
                 if numbering is not None or replace:
                     run.save()
+                if show.get("programmes"):  # each episode its own programme: found by its title, or its pasted URL (#17)
+                    try:
+                        match = programme_for(show, ep, config, manual)
+                    except Unmatched as e:
+                        run.say(f"{label}: {e}, not downloaded")
+                        run.finish("unavailable", str(e))
+                        if first_warning(f"{out.name}:programme"):
+                            notify_series(show, settings, "warning", f"No programme found yet: {label}",
+                                          f"{e}.\nIt is looked for again once a day.", batch=batch)
+                        continue
+                    except (UnshackleError, requests.RequestException) as e:
+                        run.say(f"{label}: looking for its programme on {show['service']}: {e}")
+                        run.finish("failed", f"Looking for its programme on {show['service']}: {e}")
+                        continue
+                    show = {**show, "title": match["title"]}  # this episode's own programme, for this download only
+                    service_sxxeyy = match["code"]
+                    run.card["serviceEpisode"] = service_sxxeyy
+                    run.say(f"{label}: matched to {match['name']} on {show['service']} (by {match['how']})")
                 on_service = f" as {service_sxxeyy}" if service_sxxeyy != sxxeyy else ""
                 run.say(f"{label}: downloading from {show['service']}{on_service}")
                 wanted_langs = {"audio": accepted_audio(show, config) if show.get("audio_accept") or (config.get("settings") or {}).get("audio_accept") else [],
@@ -2491,7 +2614,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                   try:
                     # Its number on the service may hold another episode (a same-named series elsewhere, seasons
                     # numbered apart): its title says so before anything is downloaded
-                    if numbering is None and int(show.get("parts") or 0) <= 1 and sxxeyy not in (show.get("episode_map") or {}) \
+                    if numbering is None and not show.get("programmes") and int(show.get("parts") or 0) <= 1 and sxxeyy not in (show.get("episode_map") or {}) \
                             and (wrong := wrong_number(show, ep, service_sxxeyy, run)) is not None:
                         if not wrong:
                             why = f"{service_sxxeyy} on {show['service']} is another episode, by its title"

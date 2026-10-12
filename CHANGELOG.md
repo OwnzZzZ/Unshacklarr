@@ -26,6 +26,8 @@ Every change worth knowing, newest first. The format follows
 **Downloads**
 - **Add audio track.** Get only the new audio, not the whole episode again. In Settings › Download options.
 - **Fallback service.** A second service for a series, used when the main one doesn't have the episode.
+- **Separate programmes.** For documentary strands like BBC Documentaries: each episode is found on the service by its
+  title, so the series needs no URL. In a series' Numbering. (#17, by mj23au)
 - **Download window.** Automatic downloads run only between two times. In Settings › Automation.
 - **Auto release times.** A series gets the time its episodes usually come out. In Settings › Automation.
 - **Downloads at once.** How many episodes each Unshackle server downloads together, 1 for a small NAS. Picks run
@@ -52,6 +54,8 @@ The new options are off until you turn them on.
 - **One import at a time per Sonarr:** big files no longer reach Sonarr together. (#10, by mj23au)
 - **A slow Unshackle server is waited for** 1, 3 then 10 minutes before a download fails. (#10, by mj23au)
 - **Clearer selection in Series:** a check on each poster, the others dimmed.
+- **Upgrades, one card per series:** nothing ticked at first, one series checked on its own, and what is being replaced
+  shown live. (#18, by mj23au)
 - **One schedule per series:** a series with its own broadcast schedule shows only that one in the Schedule.
 - **An import Sonarr didn't do is not a failed download:** it shows *Import needed*, with Import instead of Retry. (#10, by mj23au)
 - **The API downloads for another Sonarr**, and as a retry: `sonarr` and `retry` in `/api/v1/downloads`. (#10, by mj23au)
