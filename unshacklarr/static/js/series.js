@@ -265,7 +265,7 @@ async function loadEpisodes(s, keep = false) {  // keep: a reload after a downlo
     sonarrSwitch(s),
     el("div", { className: "seasons", role: "group", ariaLabel: "Seasons" }, ...numbers.map((n) => {
       const list = epSeasons[n], disk = list.filter((e) => e.hasFile).length, miss = list.filter((e) => state(e) === "miss").length;
-      const b = el("button", { onclick: () => { epSeason = n; renderSeason(); } },
+      const b = el("button", { onclick: () => { epSeason = n; renderSeason(); }, title: s.seasonTitles?.[n] || "" },
         el("b", { textContent: n === 0 ? "Specials" : `S${String(n).padStart(2, "0")}` }),
         el("small", { className: miss ? "gap" : "", textContent: miss ? `${miss} missing` : `${disk}/${list.length}` }));
       b.dataset.season = n;
@@ -672,7 +672,8 @@ function renderSeason() {
     $("#ep-avail").textContent = `Missing, on ${svcName(S.config.series[current.tvdbId]?.service)} (${onService})`;
     $("#ep-avail").disabled = !onService;
   }
-  $("#ep-title").replaceChildren(el("span", { textContent: epSeason === 0 ? "Specials" : `Season ${epSeason}` }),
+  const named = current.seasonTitles?.[epSeason];  // its name in Sonarr, when it has one
+  $("#ep-title").replaceChildren(el("span", { textContent: epSeason === 0 ? "Specials" : named ? `Season ${epSeason}: ${named}` : `Season ${epSeason}` }),
     el("small", { textContent: `${list.filter((e) => e.hasFile).length} of ${list.length} on disk` }),
     ...(flagged ? [el("small", { className: "odd-legend", textContent: "Orange: different from most of this season (hover for details)" })] : []));
   $("#ep-list").replaceChildren(...(rows.length ? [head, ...rows] : [el("li", { className: "none", textContent: "Every episode of this season is on disk." })]));

@@ -1360,7 +1360,8 @@ def test_upgrades_find_the_files_a_service_has_on_an_earlier_step(tmp_path, monk
     files = [{"id": 70, "mediaInfo": avc}, {"id": 71, "mediaInfo": {**avc, "videoCodec": "hevc"}}, {"id": 72, "mediaInfo": avc}]
     eps = [{"id": n, "seasonNumber": 1, "episodeNumber": n, "hasFile": True, "episodeFileId": 69 + n} for n in (1, 2, 3)]
     monkeypatch.setattr(sync, "sonarr_series", lambda wanted: series)
-    monkeypatch.setattr(sync, "sonarr_get", lambda path, **p: (files if path == "episodefile" else eps) if p.get("seriesId") == 7 else [])
+    with_files = lambda: [{**e, **({"episodeFile": f} if (f := next((f for f in files if f["id"] == e.get("episodeFileId")), None)) else {})} for e in eps]
+    monkeypatch.setattr(sync, "sonarr_get", lambda path, **p: with_files() if p.get("seriesId") == 7 else [])  # episodes with their files
     monkeypatch.setattr(sync, "download_request", lambda show, config, wanted, out: {"service": "X", "title_id": "t", "wanted": [wanted]})
     asked = []
     on_service = {"S01E01": [{"height": 1080, "codec": "HEVC", "range": "SDR"}], "S01E03": [{"height": 1080, "codec": "AVC", "range": "SDR"}]}
@@ -1791,20 +1792,62 @@ def test_a_series_with_its_own_schedule_shows_that_one_only(monkeypatch):
 
 
 def test_tvdb_titles_keep_only_true_translations(tmp_path, monkeypatch):
-    # TVDB's page in French shows the English title of an episode not translated yet (Ted Lasso's new season): kept,
-    # it would contradict a French service's own title and the episode would be taken for another one
+    # TheTVDB's titles in French, as Sonarr 5 reads them (SkyHook): an episode not translated yet comes in English
+    # (Ted Lasso's new season): kept, it would contradict a French service's own title and the episode would be taken
+    # for another one
     monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
     import unshacklarr.sync
     import unshacklarr.web
     importlib.reload(unshacklarr.sync)
     web = importlib.reload(unshacklarr.web)
     web.sonarr_sync.SETTINGS["country"] = "FR"
-    row = '<span class="episode-label">{}</span> <a href="/x">{}</a>'
-    pages = {"fra": row.format("S01E01", "Le pilote") + row.format("S04E01", "Home"),
-             "eng": row.format("S01E01", "Pilot") + row.format("S04E01", "Home")}
+    episode = lambda s, n, title: {"seasonNumber": s, "episodeNumber": n, "title": title}
+    shows = {"fra": [episode(1, 1, "Le pilote"), episode(4, 1, "Home"), episode(4, 2, None)],
+             "eng": [episode(1, 1, "Pilot"), episode(4, 1, "Home"), episode(4, 2, "Away")]}
+    asked = []
 
-    class Page:
-        def __init__(self, text, url="https://thetvdb.com/series/ted-lasso"): self.text, self.url = text, url
+    class Answer:
+        def __init__(self, lang): self.lang = lang
         def raise_for_status(self): pass
-    monkeypatch.setattr(web.requests, "get", lambda url, params=None, **k: Page(pages.get((params or {}).get("lang"), "")))
+        def json(self): return {"episodes": shows[self.lang]}
+    monkeypatch.setattr(web.requests, "get", lambda url, **k: asked.append(url) or Answer(url.split("/")[-3]))
     assert web.tvdb_titles(383203) == {"S01E01": "Le pilote"}  # Home is English on both: not a French title
+    assert asked[0] == "https://skyhook.sonarr.tv/v2/tvdb/shows/fra/383203/official"
+    assert web.tvdb_titles(383203) == {"S01E01": "Le pilote"} and len(asked) == 2  # kept a week
+    monkeypatch.setattr(web.time, "sleep", lambda s: None)
+    shows["fra"] = [episode(1, 1, None)]  # SkyHook answering without its titles: asked once more, nothing kept
+    assert web.tvdb_titles(447183) == {} and asked[-2:] == [asked[-1]] * 2 and "447183:fra:skyhook" not in web.read_json(web.TVDB_TITLES, {})
+
+
+def test_season_titles_and_finales_reach_the_page():
+    from datetime import datetime, timezone
+    from unshacklarr import web
+    s = {"id": 1, "tvdbId": 2, "title": "Docs", "seasons": [{"seasonNumber": 2026, "title": "Storyville"}, {"seasonNumber": 2025}]}
+    assert web.series_entry(s)["seasonTitles"] == {"2026": "Storyville"}
+    assert "seasonTitles" not in web.series_entry({**s, "seasons": [{"seasonNumber": 1}]})  # none named: nothing sent
+    ep = {"id": 5, "series": {"tvdbId": 2, "title": "Docs"}, "seasonNumber": 1, "episodeNumber": 8, "finaleType": "season"}
+    shown = web.describe_episode(ep, {"series": {}}, datetime.now(timezone.utc), all_series=True)
+    assert shown["finale"] == "season"
+
+
+def test_words_alike_in_two_languages_do_not_make_a_service_speak_ours(tmp_path, monkeypatch):
+    # Shifting Gears on a French Disney+, English titles in Sonarr: Jimmy, Danger, Surprise meet on both sides, yet
+    # under the same numbers most titles differ; each episode is then there by its number, not "another episode"
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    fr = ["Restauration", "Aménagements", "Travail", "Deuil", "Jimmy", "La Saint-Valentin", "Pique-nique", "Carrière", "Oursons", "Baiser"]
+    en = ["Restoration", "Accommodations", "Job", "Grief", "Jimmy", "Valentine's", "Picnic", "Career", "Gummies", "Kiss"]
+    fr2 = ["Secret", "Rivalité", "Passion", "Danger", "Retraite", "Voisins", "Fierté", "Dette", "Courses", "Mariage", "Héritage", "Oncle Sam", "Surprise"]
+    en2 = ["Secret", "Rivalry", "Passion", "Danger", "Retirement", "Neighbors", "Pride", "Debt", "Errands", "Wedding", "Legacy", "Uncle Sam", "Surprise"]
+    service = [{"type": "episode", "season": s, "number": i + 1, "name": n} for s, names in ((1, fr), (2, fr2)) for i, n in enumerate(names)]
+    sonarr = [{"id": s * 100 + i + 1, "seasonNumber": s, "episodeNumber": i + 1, "title": n} for s, names in ((1, en), (2, en2)) for i, n in enumerate(names)]
+    monkeypatch.setattr(web.UNSHACKLE, "call", lambda method, path, **k: {"titles": service, "services": [{"tag": "DSNP", "cli_params": []}]})
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_get", lambda path, **q: sonarr if path == "episode" else {})
+    monkeypatch.setattr(web, "tmdb_key", lambda: "")
+    monkeypatch.setattr(web, "tvdb_titles", lambda tvdb: {})
+    found = web.probe_series({"service": "DSNP", "title": "x"}, 1)["available"]
+    assert found[102] == {"service": "S01E02", "name": "Aménagements"}  # by its number: no longer "not on Disney+"
+    assert len(found) == 23

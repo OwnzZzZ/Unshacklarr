@@ -272,7 +272,9 @@ function schedRow(d, when) {
   const series = S.series.find((x) => x.tvdbId === d.tvdbId);
   const thumb = el("img", { className: "thumb", alt: "", loading: "lazy", src: series?.poster || "" });
   const hideCtl = d.fromLate ? "" : hideButton(d);
-  const what = el("span", { className: "what" }, el("b", { textContent: `${d.series} ${d.sxxeyy}` }),
+  const FINALE = { season: "Season finale", series: "Series finale", midseason: "Mid-season finale" };
+  const what = el("span", { className: "what" }, el("b", { textContent: `${d.series} ${d.sxxeyy}` },
+    ...(FINALE[d.finale] ? [el("span", { className: "finale-tag", textContent: FINALE[d.finale] })] : [])),
     el("small", {}, episodeTitle(d.tvdbId, d.sxxeyy, d.title && d.title !== "TBA" ? d.title : "")), d.managed ? statusPill(d, "m-only") : "");
   if (!d.managed) {  // not downloaded by Unshackle: one tap to its settings, to add it
     return el("div", { className: "sched-row other" }, el("div", { className: "row-main" },

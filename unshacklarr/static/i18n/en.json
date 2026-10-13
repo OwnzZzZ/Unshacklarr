@@ -124,6 +124,7 @@
  "A full path, from / (or a drive letter), without ..": [],
  "A kind of message turned off here goes to no address and not to this device. The bell in the page still shows them all.": [],
  "A letter, then letters, digits or dashes": [],
+ "A library folder is almost full": [],
  "A license from a test server": [],
  "A new remote CDM": [],
  "A new {0} URL needs its API key too": [
@@ -636,8 +637,9 @@
  "Downloaded, not imported: {0}": [
   "label"
  ],
- "Downloaded: {0}": [
-  "label"
+ "Downloaded: {0}{1}": [
+  "label",
+  "f' · {finale}' if finale else ''"
  ],
  "Downloaded; Sonarr didn't import it. Import it from Waiting in downloads: {0}": [
   "where"
@@ -1048,6 +1050,10 @@
  "Leave unshackle.yaml without saving your changes?": [],
  "Left": [],
  "Less free space than Settings keeps: nothing is downloaded until there is enough": [],
+ "Less than {0} GB free in {1}: nothing is downloaded for its series. Make room, or lower the room kept free in Settings, Unshackle, Folders.": [
+  "keep",
+  "', '.join(full_roots)"
+ ],
  "Letters, digits, spaces, dots and dashes": [],
  "Libraries": [],
  "Library": [],
@@ -1086,6 +1092,7 @@
  "MPEG-2": [],
  "Maintenance": [],
  "Make room in the downloads folder, or lower the room kept free in Settings": [],
+ "Make room in the library, or lower the room kept free in Settings": [],
  "Maker": [],
  "Maker and model": [],
  "Managed by Unshackle": [],
@@ -1099,6 +1106,7 @@
  ],
  "Messages are held, then sent as one summary when they end.": [],
  "Messages to Discord, Telegram, ntfy, Pushover, e-mail and 100 more, through": [],
+ "Mid-season finale": [],
  "Missing": [],
  "Missing X-Unshackle header": [],
  "Missing episodes": [],
@@ -1362,7 +1370,7 @@
  "Nothing in the history yet": [],
  "Nothing in use": [],
  "Nothing is downloaded for it until you choose one in Settings, Sonarr: a ladder, Off, or Same as each series.": [],
- "Nothing is downloaded while the downloads folder has less free space than this, and you get a notification. 0: not checked.": [],
+ "Nothing is downloaded while the downloads folder, or the library folder Sonarr moves a series into, has less free space than this, and you get a notification. 0: not checked.": [],
  "Nothing is downloading or waiting.": [],
  "Nothing is downloading right now.": [],
  "Nothing kept yet": [],
@@ -1457,6 +1465,11 @@
  "Only the fields you fill in change. Everything else stays as it is for each series. Save afterwards, as for one series.": [],
  "Only the new audio track is downloaded and added to the existing file. Unshacklarr needs access to your library: set its folder below. If the file can't be found, the whole episode is downloaded instead.": [],
  "Only use CDM, or only use Key Vaults for retrieval of Decryption Keys.": [],
+ "Only {0} GB free in Sonarr's library folder {1}, less than the {2} GB to keep free: nothing is downloaded for its series until there is room": [
+  "free",
+  "str(root['path']).rstrip('/')",
+  "keep"
+ ],
  "Only {0} GB free in the downloads folder, less than the {1} GB to keep free: nothing is downloaded until there is room": [
   "free",
   "keep"
@@ -1694,6 +1707,7 @@
  "Searching {0}…": [
   "svcName(conf.service)"
  ],
+ "Season finale": [],
  "Season map set: save, then test again": [],
  "Season numbers of {0} must be whole numbers": [
   "key"
@@ -1701,6 +1715,10 @@
  "Season offset": [],
  "Season {0}": [
   "epSeason"
+ ],
+ "Season {0}: {1}": [
+  "epSeason",
+  "named"
  ],
  "Seasons": [],
  "Seasons on the service": [],
@@ -1738,6 +1756,7 @@
  "Series URL on that service": [],
  "Series URL on the service": [],
  "Series checked": [],
+ "Series finale": [],
  "Series hidden from the Schedule": [],
  "Series links from": [],
  "Series settings": [],
@@ -2703,6 +2722,7 @@
  "max-age=31536000, immutable": [],
  "max-age=86400": [],
  "message (“Still unavailable”) per episode.": [],
+ "mid-season finale": [],
  "min": [],
  "mkvmerge could not add the audio: {0}": [
   "done.stdout.strip()[-300:]"
@@ -2822,7 +2842,9 @@
  "resume": [],
  "retried by hand": [],
  "revoked": [],
+ "season finale": [],
  "see Activity in Sonarr": [],
+ "series finale": [],
  "serviceWorker": [],
  "settings": [],
  "shortOffset": [],

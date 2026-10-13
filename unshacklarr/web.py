@@ -11,7 +11,6 @@ import copy
 import difflib
 import hashlib
 import hmac
-import html
 import ipaddress
 import json
 import ntpath
@@ -441,6 +440,9 @@ def series_entry(s: dict) -> dict:
             "network": s.get("network"),  # its channel: its catch-up service when TMDB links to none
             "missing": max(0, stats.get("episodeCount", 0) - stats.get("episodeFileCount", 0)),
             "poster": poster,
+            # a season's own name, where Sonarr has one (Sonarr 5: a documentary strand's, an anime's arcs)
+            **({"seasonTitles": titles} if (titles := {str(x["seasonNumber"]): str(x["title"]) for x in s.get("seasons") or []
+                                                       if x.get("title")}) else {}),
         }
 
 
@@ -1687,6 +1689,13 @@ def check_alerts(now: datetime | None = None) -> None:
     unknown = []  # what could not be checked now: what was told of it stands, never told twice
     if events.get("disk", True) and (full := sonarr_sync.free_space_problem()):
         problems["disk"] = ("error", "The downloads folder is almost full", f"{full}. Make room, or lower the room kept free in Settings, Unshackle, Folders.")
+    if events.get("disk", True) and sonarr_sync.SONARR:  # Sonarr's library folders too: where the files end up
+        keep = float(sonarr_sync.SETTINGS.get("min_free_gb") or 0)
+        full_roots = [str(r["path"]).rstrip("/") for r in sonarr_sync.root_folders() if keep and r.get("freeSpace") is not None and r["freeSpace"] / 1e9 < keep]
+        if full_roots:
+            problems["library"] = ("error", "A library folder is almost full",
+                                   f"Less than {keep:g} GB free in {', '.join(full_roots)}: nothing is downloaded for its series. Make room, "
+                                   "or lower the room kept free in Settings, Unshackle, Folders.")
     if events.get("cookies", True):
         try:
             state = cookie_state()
@@ -2388,6 +2397,7 @@ def describe_episode(ep: dict, config: dict, now: datetime, all_series: bool = F
         "title": ep.get("title"),
         "airDateUtc": ep.get("airDateUtc"),
         "hasFile": ep.get("hasFile"),
+        **({"finale": ep["finaleType"]} if ep.get("finaleType") else {}),  # season, series or midseason, as TVDB has it
     }
     if not show or not show.get("service") or not show.get("title"):
         # Sonarr's calendar: shown too, so the series can be added to Unshackle from there.
@@ -2567,6 +2577,7 @@ async def start_sync(_):
 
 
 CODECS = {"h264": "H.264", "x264": "H.264", "avc": "H.264", "h265": "H.265", "x265": "H.265", "hevc": "H.265",
+          "vvc": "H.266", "h266": "H.266", "x266": "H.266",  # Sonarr 5 reads VVC; no service sends it: named, never a step
           "av1": "AV1", "vp9": "VP9", "mpeg2": "MPEG-2", "eac3": "E-AC-3", "ac3": "AC-3", "dts": "DTS", "truehd": "TrueHD"}
 def seconds(run_time: str) -> int:
     """Sonarr's run time, "2:03:22" or "43:10", in seconds."""
@@ -2696,17 +2707,13 @@ def on_sonarr(inst: dict | None, fn, *args, **kwargs):
 async def episodes(request):
     series_id = request.match_info["series_id"]  # that Sonarr's own series id (?sonarr=)
     inst = sonarr_named(request.query.get("sonarr", ""))
-    try:
-        eps, files = await asyncio.gather(
-            asyncio.to_thread(on_sonarr, inst, sonarr_sync.sonarr_get, "episode", seriesId=series_id),
-            asyncio.to_thread(on_sonarr, inst, sonarr_sync.sonarr_get, "episodefile", seriesId=series_id),
-        )
+    try:  # each episode with its file in one answer (Sonarr 4 and 5), not the files asked apart
+        eps = await asyncio.to_thread(on_sonarr, inst, sonarr_sync.sonarr_get, "episode", seriesId=series_id, includeEpisodeFile="true")
     except requests.RequestException as e:
         raise web.HTTPBadGateway(text=f"Sonarr is unreachable: {no_credentials(e)}")
-    by_id = {f["id"]: file_summary(f) for f in files}
     return web.json_response([
         {**{k: e.get(k) for k in ("id", "seasonNumber", "episodeNumber", "title", "airDateUtc", "hasFile", "monitored")},
-         "file": by_id.get(e.get("episodeFileId")) if e.get("hasFile") else None}
+         "file": file_summary(e["episodeFile"]) if e.get("hasFile") and e.get("episodeFile") else None}
         for e in sorted(eps, key=lambda e: (e["seasonNumber"], e["episodeNumber"]))
     ])
 
@@ -2801,31 +2808,34 @@ TVDB_TITLES = sonarr_sync.DATA / "tvdb_titles.json"
 TVDB_TITLES_DAYS = 7
 TVDB_LANGUAGES = {"fr": "fra", "de": "deu", "es": "spa", "it": "ita", "nl": "nld", "pt": "por", "pl": "pol", "sv": "swe",
                   "da": "dan", "no": "nor", "fi": "fin", "ja": "jpn", "ko": "kor"}
-EPISODE_ROW = re.compile(r'episode-label">\s*(S\d+E\d+)\s*</span>\s*<a href="[^"]+">\s*(.*?)\s*</a>', re.S)
+SKYHOOK = "https://skyhook.sonarr.tv/v2/tvdb/shows"  # Sonarr's own metadata service: TheTVDB's titles in each language
 
 
 def tvdb_titles(tvdb_id: int) -> dict[str, str]:
-    """The episode titles TheTVDB's website gives in the language where you watch ("S04E04": "Orelsan"), kept a
-    week; no API key. Sonarr's come in English only, "TBA" for a series TVDB names in French alone. A page
-    TVDB changes finds nothing: never worse than without."""
+    """The episode titles TheTVDB has in the language where you watch ("S04E04": "Orelsan"), kept a week, as Sonarr 5
+    reads them for a series set to that language (SkyHook, Sonarr's metadata service; no key). TheTVDB's website now
+    shows its English titles whatever language is asked. Sonarr's own come in the series' language: English, unless set
+    otherwise in Sonarr 5. Nothing found, or SkyHook unreachable: nothing, never worse than without."""
     language = TVDB_LANGUAGES.get(COUNTRY_LANGUAGE.get(sonarr_sync.SETTINGS.get("country", ""), ""))
     if not language:
         return {}
     cache = read_json(TVDB_TITLES, {})
-    key, hit = f"{tvdb_id}:{language}:translated", None  # since only true translations are kept
+    key = f"{tvdb_id}:{language}:skyhook"  # since the website stopped giving translations
     hit = cache.get(key)
     if hit and datetime.now(timezone.utc) - datetime.fromisoformat(hit["checked"]) < timedelta(days=TVDB_TITLES_DAYS):
         return hit["titles"]
-    get = lambda url, **params: requests.get(url, params=params, timeout=20, headers={"User-Agent": "Mozilla/5.0 Unshacklarr"})
-    series = get(f"https://thetvdb.com/dereferrer/series/{int(tvdb_id)}")  # to its page, /series/<slug>
-    series.raise_for_status()
 
     def read(lang: str) -> dict[str, str]:
-        page = get(series.url.rstrip("/") + "/allseasons/official", lang=lang)
-        page.raise_for_status()
-        return {code: html.unescape(re.sub(r"\s+", " ", name)).strip() for code, name in EPISODE_ROW.findall(page.text)}
+        r = requests.get(f"{SKYHOOK}/{lang}/{int(tvdb_id)}/official", timeout=20, headers={"User-Agent": f"Unshacklarr/{__version__}"})
+        r.raise_for_status()
+        return {f"S{e['seasonNumber']:02}E{e['episodeNumber']:02}": re.sub(r"\s+", " ", str(e["title"])).strip()
+                for e in r.json().get("episodes") or [] if e.get("title") and e.get("seasonNumber") is not None}
     titles = read(language)
-    # An episode not translated yet shows its English title in any language: kept, it would read as a French title and
+    if not titles:  # SkyHook sometimes answers a series without its titles (fetching them): asked once more, never kept
+        time.sleep(2)
+        if not (titles := read(language)):
+            return {}
+    # An episode not translated yet may come with its English title: kept, it would read as a French title and
     # contradict the service's own (Ted Lasso's new season on a French Apple TV+); only true translations stay
     if language != "eng":
         english = read("eng")
@@ -2946,7 +2956,7 @@ def probe_series(show: dict, series_id: int, title: str = "") -> dict:
         try:
             names = tvdb_titles(info["tvdbId"])
             local = {e["id"]: names[k] for e in every if (k := f"S{e['seasonNumber']:02}E{e['episodeNumber']:02}") in names}
-        except requests.RequestException as e:
+        except (requests.RequestException, ValueError) as e:  # SkyHook down or answering otherwise: without them
             print(f"TVDB: no titles for {title}: {type(e).__name__}", flush=True)
     tmdb_eps = tmdb_eps + [{"episodeId": i, "names": [n]} for i, n in local.items()]
     by_title = match_by_title(service_eps, every, tmdb_eps)  # the service's episodes found by their title, whatever their number
@@ -2955,11 +2965,17 @@ def probe_series(show: dict, series_id: int, title: str = "") -> dict:
     # titles then says another episode, whatever its number (RMC+'s S01E03 "France" is not TVDB's "Mali").
     names = [n for t in service_eps if (n := usable_title(t.get("name")))]
     enough = lambda hits: hits >= 3 and hits >= len(names) / 4
-    comparable = enough(len(by_title))
+    # ...and they say so where both number an episode alike: most of those pairs then bear the same title. Words
+    # alike in two languages (Jimmy, Danger, Surprise) meet often enough on a French Disney+ against English titles
+    # (Shifting Gears), yet its "Aménagements" is Sonarr's "Accommodations" under the very same number
+    pairs = [(a, b) for e in every if (a := usable_title((by_key.get(sonarr_sync.service_episode(show, e["seasonNumber"], e["episodeNumber"]) or "") or {}).get("name")))
+             and (b := usable_title(e.get("title")))]
+    agreeing = not pairs or 2 * sum(same_title(a, b) for a, b in pairs) >= len(pairs)
+    comparable = enough(len(by_title)) and agreeing
     # Sonarr's own titles weigh only in the service's language (French, J'irai dormir), not in English against
     # a French Disney+ (Futurama): there, an episode with no French title from TMDB has nothing to contradict.
     ours = {usable_title(e.get("title")) for e in every} - {""}
-    known = titles_of(every, tmdb_eps, own=enough(sum(any(same_title(n, o) for o in ours) for n in names)))
+    known = titles_of(every, tmdb_eps, own=agreeing and enough(sum(any(same_title(n, o) for o in ours) for n in names)))
     mapped = show.get("episode_map") or {}
     available = {}  # every Sonarr episode the service has, for the Episodes tab: by number and title, by title, by number
     for e in every:
@@ -3283,8 +3299,9 @@ def upgrade_candidates(config: dict) -> list[tuple]:
         if not ladder:
             continue
         ours = sonarr_sync.release_group_of(show, config)[0] if other_groups else ""
-        files = {f["id"]: f for f in sonarr_sync.sonarr_get("episodefile", seriesId=serie["id"])}
-        for e in sonarr_sync.sonarr_get("episode", seriesId=serie["id"]):
+        every = sonarr_sync.sonarr_get("episode", seriesId=serie["id"], includeEpisodeFile="true")  # one call, not two
+        files = {e["episodeFile"]["id"]: e["episodeFile"] for e in every if e.get("episodeFile")}
+        for e in every:
             if not e.get("hasFile") or e.get("seasonNumber", 0) < 1 or e.get("episodeFileId") not in files:
                 continue
             years = float(sonarr_sync.SETTINGS.get("upgrade_max_age_years") or 0)

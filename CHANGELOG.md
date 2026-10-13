@@ -31,6 +31,12 @@ Every change worth knowing, newest first. The format follows
 - **Upgrades you choose.** Which series are checked, how long an answer is kept, how far back. (#10, by mj23au)
 - **Other release groups.** A file from another group is replaced by the same quality too. (#10, by mj23au)
 
+**Sonarr**
+- **Season and series finales** in the Schedule and in the download's notification.
+- **Season names** in Episodes, where Sonarr has them (documentary strands, anime arcs).
+- **The library folder's room too:** nothing is downloaded for a series while the folder Sonarr moves it into has
+  less free space than the room kept free; you are told once.
+
 **Everywhere**
 - **What's new.** Click the version in the header to see what changed.
 - **No spoilers.** Episode titles stay blurred until you click them. In Settings › Interface.
@@ -46,6 +52,7 @@ The new options are off until you turn them on.
 ### Changed
 
 - **One import at a time per Sonarr:** big files no longer reach Sonarr together. (#10, by mj23au)
+- **One call per series** for its episodes and their files (Episodes, Upgrades); H.266 (VVC) files named as such.
 - **Updating Unshacklarr alone:** the README and the example compose now use `--no-deps`, so Unshackle and its
   downloads keep running.
 - **A slow Unshackle server is waited for** 1, 3 then 10 minutes before a download fails. (#10, by mj23au)
@@ -67,6 +74,10 @@ The new options are off until you turn them on.
 - **A series' link found by its title** when the service only links an episode (HBO Max). (#12, by mj23au)
 - **No more "may be an episode" warning** for a series that is simply new. (#12, reported by mj23au)
 - **A new season not translated on TVDB yet** is no longer taken for other episodes on a service in another language.
+- **Episode titles in your language again:** TheTVDB's website stopped giving translations; they now come as
+  Sonarr reads them.
+- **A service in another language** is no longer taken for one in Sonarr's because a few titles are words alike in
+  both (Jimmy, Danger): episodes under the same number are no longer said not to be on it (Shifting Gears).
 
 ## [1.4.0] - 2026-10-07
 
