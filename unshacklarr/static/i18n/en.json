@@ -861,10 +861,6 @@
  "Found by its title, under another number: Download asks the service for {0}": [
   "found.service"
  ],
- "Found in another folder: {0} for Sonarr is {1} here.": [
-  "r.guess.sonarr_root",
-  "r.guess.local_root"
- ],
  "Found in the environment for the URL above. Leave empty to use it": [],
  "Found in the environment for the address above. Leave empty to use it": [],
  "Found on TMDB": [],
@@ -2527,15 +2523,12 @@
  "Use exact language matching (no variants). With this flag, -l es-419 matches ONLY es-419, not es-ES or other variants.": [],
  "Use it": [],
  "Use its own schedule": [],
+ "Use these folders": [],
  "Use this AniList ID for tagging instead of an automatic search, or a MyAnimeList ID as mal:12345. Add --enrich to also take its title, year and original language. Combines with one of --tmdb, --imdb or --tvdb, which AniList does not know.": [],
  "Use this IMDB ID (e.g. tt1375666) for tagging instead of an automatic search. Add --enrich to also take its title, year and original language.": [],
  "Use this TMDB ID for tagging instead of an automatic search. Add --enrich to also take its title, year and original language.": [],
  "Use this TVDB ID for --tvdb-order and tagging instead of looking the series up automatically. Add --enrich to also take its title, year and original language.": [],
  "Use this folder": [],
- "Use {0} and {1}": [
-  "r.guess.sonarr_root",
-  "r.guess.local_root"
- ],
  "Use {0}: {1}": [
   "l.service",
   "l.url"
@@ -2661,6 +2654,10 @@
  "Your answer": [],
  "Your country picks the streaming services the Schedule shows; the time zone, when episodes are tried.": [],
  "Your library": [],
+ "Your library was found in another folder: {0} in Sonarr is {1} in Unshacklarr.": [
+  "r.guess.sonarr_root",
+  "r.guess.local_root"
+ ],
  "Your password": [],
  "Your password is still asked before the most sensitive changes.": [],
  "Your region": [],
@@ -3084,15 +3081,15 @@
  "yesterday": [],
  "you@gmail.com": [],
  "zh-CN": [],
+ "{0} (contains your {1} root folders)": [
+  "r",
+  "libRoots.length"
+ ],
  "{0} (default)": [
   "label"
  ],
  "{0} (for Unshacklarr)": [
   "name"
- ],
- "{0} (holds your {1} root folders)": [
-  "r",
-  "libRoots.length"
  ],
  "{0} GB": [
   "(it.size / 2 ** 30).toFixed(1)"

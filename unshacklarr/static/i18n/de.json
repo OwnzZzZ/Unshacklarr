@@ -2176,7 +2176,7 @@
  "{0}: adding the audio": "{0}: Audio wird hinzugefügt",
  "{0}: downloading the whole episode": "{0}: ganze Folge wird geladen",
  "✓ Unshacklarr reads {0}'s library: {1}": "✓ Unshacklarr liest die Bibliothek von {0}: {1}",
- "Found in another folder: {0} for Sonarr is {1} here.": "In einem anderen Ordner gefunden: {0} für Sonarr ist hier {1}.",
- "Use {0} and {1}": "{0} und {1} verwenden",
- "{0} (holds your {1} root folders)": "{0} (enthält deine {1} Stammordner)"
+ "{0} (contains your {1} root folders)": "{0} (enthält deine {1} Stammordner)",
+ "Your library was found in another folder: {0} in Sonarr is {1} in Unshacklarr.": "Deine Bibliothek wurde in einem anderen Ordner gefunden: {0} in Sonarr ist {1} in Unshacklarr.",
+ "Use these folders": "Diese Ordner verwenden"
 }

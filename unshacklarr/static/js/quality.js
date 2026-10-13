@@ -518,7 +518,7 @@ function renderLibraryPicks() {
   const roots = libRoots.length > 1 && libCommon ? [libCommon] : libRoots.filter((r) => r !== lib.library_sonarr_root);
   $("#dx-lib-sonarr-pick").replaceChildren(...(roots.length && roots[0] !== lib.library_sonarr_root ? [el("span", { textContent: "In Sonarr:" }),
     ...roots.map((r) => el("button", { type: "button", className: "chip-btn", onclick: () => setLibrary("sonarr", r),
-      textContent: r === libCommon ? `${r} (holds your ${libRoots.length} root folders)` : r }))] : []), browse("sonarr"));
+      textContent: r === libCommon ? `${r} (contains your ${libRoots.length} root folders)` : r }))] : []), browse("sonarr"));
   $("#dx-lib-local-pick").replaceChildren(browse("local"));
 }
 function setLibrary(side, path) {
@@ -542,8 +542,8 @@ function checkLibrary() {
     if (r.ok === true) { say.className = "lib-check ok"; say.textContent = `✓ Unshacklarr reads ${who}'s library: ${r.local_path}`; }
     else if (r.ok === false && r.guess) {  // found elsewhere in the container: both folders, one click
       say.className = "lib-check";
-      say.replaceChildren(el("span", { textContent: `Found in another folder: ${r.guess.sonarr_root} for Sonarr is ${r.guess.local_root} here.` }), " ",
-        el("button", { type: "button", className: "chip-btn", textContent: `Use ${r.guess.sonarr_root} and ${r.guess.local_root}`,
+      say.replaceChildren(el("span", { textContent: `Your library was found in another folder: ${r.guess.sonarr_root} in Sonarr is ${r.guess.local_root} in Unshacklarr.` }), " ",
+        el("button", { type: "button", className: "chip-btn", textContent: "Use these folders",
           onclick: () => { setLibrary("sonarr", r.guess.sonarr_root); setLibrary("local", r.guess.local_root); } }));
     }
     else if (r.ok === false) { say.className = "lib-check err"; say.textContent = `Not found here: ${r.local_path}. Is the library mounted in Unshacklarr's container, in this folder?`; }
