@@ -86,6 +86,11 @@ The new options are off until you turn them on.
   Sonarr reads them.
 - **A service in another language** is no longer taken for one in Sonarr's because a few titles are words alike in
   both (Jimmy, Danger): episodes under the same number are no longer said not to be on it (Shifting Gears).
+- **A season map is no longer offered** when Sonarr announces a season the service doesn't have yet (Silo, The Lowdown):
+  the latest seasons were paired in order, every one shifted by one.
+- **A season the numbering gives another one** is no longer asked by number for Sonarr's season of the same number
+  (Koh-Lanta's 2023 episodes against MyTF1's All Stars).
+- **Save shows** as soon as a pasted link picks the series' service.
 
 ## [1.4.0] - 2026-10-07
 

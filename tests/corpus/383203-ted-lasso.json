@@ -1,0 +1,1841 @@
+{
+ "title": "Ted Lasso",
+ "tvdb": 383203,
+ "show": {
+  "service": "ATV",
+  "title": "umc.cmc.vtoh0mn0xn7t3c643xqonfzy",
+  "release_time": "03:00"
+ },
+ "tmdb_key": true,
+ "country": "FR",
+ "inputs": {
+  "service": [
+   {
+    "type": "episode",
+    "name": "Le pilote",
+    "id": "umc.cmc.zb0yksqtym68hasbq8mj4jwp",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Les biscuits",
+    "id": "umc.cmc.45cu44369hb2qfuwr3fihnr8e",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 1,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Trent Crimm: The Independent",
+    "id": "umc.cmc.e2jl6wwe6j3g6kxim23lx0u6",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 1,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "C'est pour les enfants",
+    "id": "umc.cmc.1yrp6wxccxrfldde8sni6pold",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 1,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Marques de bronzage",
+    "id": "umc.cmc.21roantvdf68j0twf412rnfmx",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 1,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Deux as",
+    "id": "umc.cmc.670xfbs4addfycxkk3vvojea7",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 1,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Une virée mouvementée",
+    "id": "umc.cmc.1zzkhptbom1da61ga7ars15my",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 1,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "Solidarité masculine",
+    "id": "umc.cmc.eaaizh8wdtnjuohaebw843ft",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 1,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "Le Grand Pardon",
+    "id": "umc.cmc.61c45xlv6z4jxdem2rifm5ame",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 1,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "L'espoir, c'est mortel",
+    "id": "umc.cmc.58hq6ewsq55y7i28rz2l9mqwv",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 1,
+    "number": 10
+   },
+   {
+    "type": "episode",
+    "name": "Adieu, Earl",
+    "id": "umc.cmc.1gqcupca2zx0ouyqougers5qi",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 2,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Lavande",
+    "id": "umc.cmc.70ekl5mxt5cdf3wi6i3swkawi",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 2,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Faire ce qui est juste",
+    "id": "umc.cmc.1j779d3ecflj7qwsq7zvaar7g",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 2,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Le chœur à l'ouvrage",
+    "id": "umc.cmc.5ykhzyymeswtteise1wq5gzmx",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 2,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Arc-en-ciel",
+    "id": "umc.cmc.2wrxmrfpkz6yqc38lokscruw4",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 2,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Le signal",
+    "id": "umc.cmc.3x0zaq4r31lvrgi7eqv0uf5uq",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 2,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "État d'esprit",
+    "id": "umc.cmc.170ys0kklxulxhtc281z9mte6",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 2,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "Manchester City",
+    "id": "umc.cmc.5p9mpya33bwuw2n8lsi5baphw",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 2,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "La folle nuit de Beard",
+    "id": "umc.cmc.6g4rq6bas4pnogac0ybkq3cw5",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 2,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "Zéro mariage et un enterrement",
+    "id": "umc.cmc.1kf9bosjgr4mdducvd9k76ou3",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 2,
+    "number": 10
+   },
+   {
+    "type": "episode",
+    "name": "Train de nuit pour Royston",
+    "id": "umc.cmc.1i174y67wt4vy3nydwg5i6mtk",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 2,
+    "number": 11
+   },
+   {
+    "type": "episode",
+    "name": "Inverser la pyramide du succès",
+    "id": "umc.cmc.5500bhb3m7hpo8q50gkfzgq88",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 2,
+    "number": 12
+   },
+   {
+    "type": "episode",
+    "name": "C'est pas la joie",
+    "id": "umc.cmc.181psnr7jo5pal41i3ejyjcx6",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 3,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "(Je refuse d'aller à) Chelsea",
+    "id": "umc.cmc.1cynnv9975xzh8baidtjxgexl",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 3,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "4-5-1",
+    "id": "umc.cmc.6cd557flwxo5j2sxwv7u42kra",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 3,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Grosse semaine",
+    "id": "umc.cmc.6llavc2jd7yevjwb283i6obni",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 3,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Signes",
+    "id": "umc.cmc.34iw7fd7qm1lndvyr2gzbomdm",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 3,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Tournesols",
+    "id": "umc.cmc.57xpohci7whqbdun23droo7bs",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 3,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Les Liens qui nous unissent",
+    "id": "umc.cmc.75h6p6ksbmjbk3x3oyd3fevz5",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 3,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "Paris risqués",
+    "id": "umc.cmc.5z7k8pxtsdda3xprjzyvh8jpv",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 3,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "Le vestiaire aux folles",
+    "id": "umc.cmc.53sf8wanc8evqg17ymnc7azvk",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 3,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "Compétition internationale",
+    "id": "umc.cmc.46ad02tyw2ijf5an0n6uc5mw9",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 3,
+    "number": 10
+   },
+   {
+    "type": "episode",
+    "name": "École maternelle",
+    "id": "umc.cmc.3u1a8tgmz5h71dfr3200j06p6",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 3,
+    "number": 11
+   },
+   {
+    "type": "episode",
+    "name": "Au revoir, adieu",
+    "id": "umc.cmc.e8dna900qn4eti6wgl6teiqd",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 3,
+    "number": 12
+   },
+   {
+    "type": "episode",
+    "name": "Chez soi",
+    "id": "umc.cmc.7hog8d1yo3kydywk16dqr3ce9",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 4,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "De très curieux en très curieux !",
+    "id": "umc.cmc.5iel62yra1w1nh1p2ad1i76ww",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 4,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Richmond a du talent",
+    "id": "umc.cmc.3j4jpb0sm764dxjxz9few7jjm",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 4,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Les Lévrières vont au pub",
+    "id": "umc.cmc.3keiv1il81pu4x1mssdtre4t8",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 4,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "L'embarras du choix",
+    "id": "umc.cmc.2hq0g2z4i6yizk7ktz7timlh4",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 4,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Pas de danse",
+    "id": "umc.cmc.1nuh0se0e0qytyflq17x035gd",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 4,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Oui et… bébé",
+    "id": "umc.cmc.1q04a80yilsyqr8kba5a9lh41",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 4,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "La colère pour boussole",
+    "id": "umc.cmc.3iymhsq9awub507hhhkkh4e5n",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 4,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "Mae voyage avec les joueuses",
+    "id": "umc.cmc.2pe27sig98nb5bjh33cr91sgu",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 4,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "Être en vie",
+    "id": "umc.cmc.3bnak1y0hzh5r3beo5wgmb7rt",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Ted Lasso",
+    "season": 4,
+    "number": 10
+   }
+  ],
+  "episodes": [
+   {
+    "id": 56363,
+    "seasonNumber": 0,
+    "episodeNumber": 1,
+    "title": "An American Coach in London",
+    "airDate": "2013-08-03",
+    "airDateUtc": "2013-08-03T04:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56364,
+    "seasonNumber": 0,
+    "episodeNumber": 2,
+    "title": "Behind-the-Scenes with Coach Ted Lasso",
+    "airDate": "2013-08-05",
+    "airDateUtc": "2013-08-05T04:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56365,
+    "seasonNumber": 0,
+    "episodeNumber": 3,
+    "title": "The Return of Coach Lasso",
+    "airDate": "2014-08-08",
+    "airDateUtc": "2014-08-08T04:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56366,
+    "seasonNumber": 0,
+    "episodeNumber": 4,
+    "title": "A Conversation with José Mourinho",
+    "airDate": "2020-08-23",
+    "airDateUtc": "2020-08-23T04:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56367,
+    "seasonNumber": 0,
+    "episodeNumber": 5,
+    "title": "SAG Awards: Ted Lasso Team on the Greatest Ensembles of All Time",
+    "airDate": "2021-04-04",
+    "airDateUtc": "2021-04-04T04:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56368,
+    "seasonNumber": 0,
+    "episodeNumber": 6,
+    "title": "The Lasso Way",
+    "airDate": "2021-07-07",
+    "airDateUtc": "2021-07-07T04:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56369,
+    "seasonNumber": 0,
+    "episodeNumber": 7,
+    "title": "The Missing Christmas Mustache",
+    "airDate": "2021-12-15",
+    "airDateUtc": "2021-12-15T05:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56370,
+    "seasonNumber": 0,
+    "episodeNumber": 9,
+    "title": "Richmond Till We Die",
+    "airDate": "2023-05-31",
+    "airDateUtc": "2023-05-31T04:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56371,
+    "seasonNumber": 0,
+    "episodeNumber": 10,
+    "title": "An Inside Look: Season 3 - Rebuilding Richmond",
+    "airDate": "2023-03-23",
+    "airDateUtc": "2023-03-23T04:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56372,
+    "seasonNumber": 1,
+    "episodeNumber": 1,
+    "title": "Pilot",
+    "airDate": "2020-08-14",
+    "airDateUtc": "2020-08-14T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 1
+   },
+   {
+    "id": 56373,
+    "seasonNumber": 1,
+    "episodeNumber": 2,
+    "title": "Biscuits",
+    "airDate": "2020-08-14",
+    "airDateUtc": "2020-08-14T04:43:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 2
+   },
+   {
+    "id": 56374,
+    "seasonNumber": 1,
+    "episodeNumber": 3,
+    "title": "Trent Crimm: The Independent",
+    "airDate": "2020-08-14",
+    "airDateUtc": "2020-08-14T05:26:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 3
+   },
+   {
+    "id": 56375,
+    "seasonNumber": 1,
+    "episodeNumber": 4,
+    "title": "For the Children",
+    "airDate": "2020-08-21",
+    "airDateUtc": "2020-08-21T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 4
+   },
+   {
+    "id": 56376,
+    "seasonNumber": 1,
+    "episodeNumber": 5,
+    "title": "Tan Lines",
+    "airDate": "2020-08-28",
+    "airDateUtc": "2020-08-28T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 5
+   },
+   {
+    "id": 56377,
+    "seasonNumber": 1,
+    "episodeNumber": 6,
+    "title": "Two Aces",
+    "airDate": "2020-09-04",
+    "airDateUtc": "2020-09-04T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 6
+   },
+   {
+    "id": 56378,
+    "seasonNumber": 1,
+    "episodeNumber": 7,
+    "title": "Make Rebecca Great Again",
+    "airDate": "2020-09-11",
+    "airDateUtc": "2020-09-11T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 7
+   },
+   {
+    "id": 56379,
+    "seasonNumber": 1,
+    "episodeNumber": 8,
+    "title": "The Diamond Dogs",
+    "airDate": "2020-09-18",
+    "airDateUtc": "2020-09-18T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 8
+   },
+   {
+    "id": 56380,
+    "seasonNumber": 1,
+    "episodeNumber": 9,
+    "title": "All Apologies",
+    "airDate": "2020-09-25",
+    "airDateUtc": "2020-09-25T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 9
+   },
+   {
+    "id": 56381,
+    "seasonNumber": 1,
+    "episodeNumber": 10,
+    "title": "The Hope That Kills You",
+    "airDate": "2020-10-02",
+    "airDateUtc": "2020-10-02T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 10
+   },
+   {
+    "id": 56382,
+    "seasonNumber": 2,
+    "episodeNumber": 1,
+    "title": "Goodbye Earl",
+    "airDate": "2021-07-23",
+    "airDateUtc": "2021-07-23T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 11
+   },
+   {
+    "id": 56383,
+    "seasonNumber": 2,
+    "episodeNumber": 2,
+    "title": "Lavender",
+    "airDate": "2021-07-30",
+    "airDateUtc": "2021-07-30T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 12
+   },
+   {
+    "id": 56384,
+    "seasonNumber": 2,
+    "episodeNumber": 3,
+    "title": "Do the Right-est Thing",
+    "airDate": "2021-08-06",
+    "airDateUtc": "2021-08-06T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 13
+   },
+   {
+    "id": 56385,
+    "seasonNumber": 2,
+    "episodeNumber": 4,
+    "title": "Carol of the Bells",
+    "airDate": "2021-08-13",
+    "airDateUtc": "2021-08-13T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 14
+   },
+   {
+    "id": 56386,
+    "seasonNumber": 2,
+    "episodeNumber": 5,
+    "title": "Rainbow",
+    "airDate": "2021-08-20",
+    "airDateUtc": "2021-08-20T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 15
+   },
+   {
+    "id": 56387,
+    "seasonNumber": 2,
+    "episodeNumber": 6,
+    "title": "The Signal",
+    "airDate": "2021-08-27",
+    "airDateUtc": "2021-08-27T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 16
+   },
+   {
+    "id": 56388,
+    "seasonNumber": 2,
+    "episodeNumber": 7,
+    "title": "Headspace",
+    "airDate": "2021-09-03",
+    "airDateUtc": "2021-09-03T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 17
+   },
+   {
+    "id": 56389,
+    "seasonNumber": 2,
+    "episodeNumber": 8,
+    "title": "Man City",
+    "airDate": "2021-09-10",
+    "airDateUtc": "2021-09-10T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 18
+   },
+   {
+    "id": 56390,
+    "seasonNumber": 2,
+    "episodeNumber": 9,
+    "title": "Beard After Hours",
+    "airDate": "2021-09-17",
+    "airDateUtc": "2021-09-17T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 19
+   },
+   {
+    "id": 56391,
+    "seasonNumber": 2,
+    "episodeNumber": 10,
+    "title": "No Weddings and a Funeral",
+    "airDate": "2021-09-24",
+    "airDateUtc": "2021-09-24T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 20
+   },
+   {
+    "id": 56392,
+    "seasonNumber": 2,
+    "episodeNumber": 11,
+    "title": "Midnight Train to Royston",
+    "airDate": "2021-10-01",
+    "airDateUtc": "2021-10-01T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 21
+   },
+   {
+    "id": 56393,
+    "seasonNumber": 2,
+    "episodeNumber": 12,
+    "title": "Inverting the Pyramid of Success",
+    "airDate": "2021-10-08",
+    "airDateUtc": "2021-10-08T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 22
+   },
+   {
+    "id": 56394,
+    "seasonNumber": 3,
+    "episodeNumber": 1,
+    "title": "Smells Like Mean Spirit",
+    "airDate": "2023-03-15",
+    "airDateUtc": "2023-03-15T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56395,
+    "seasonNumber": 3,
+    "episodeNumber": 2,
+    "title": "(I Don’t Want to Go to) Chelsea",
+    "airDate": "2023-03-22",
+    "airDateUtc": "2023-03-22T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56396,
+    "seasonNumber": 3,
+    "episodeNumber": 3,
+    "title": "4-5-1",
+    "airDate": "2023-03-29",
+    "airDateUtc": "2023-03-29T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56397,
+    "seasonNumber": 3,
+    "episodeNumber": 4,
+    "title": "Big Week",
+    "airDate": "2023-04-05",
+    "airDateUtc": "2023-04-05T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56398,
+    "seasonNumber": 3,
+    "episodeNumber": 5,
+    "title": "Signs",
+    "airDate": "2023-04-12",
+    "airDateUtc": "2023-04-12T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56399,
+    "seasonNumber": 3,
+    "episodeNumber": 6,
+    "title": "Sunflowers",
+    "airDate": "2023-04-19",
+    "airDateUtc": "2023-04-19T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56400,
+    "seasonNumber": 3,
+    "episodeNumber": 7,
+    "title": "The Strings That Bind Us",
+    "airDate": "2023-04-26",
+    "airDateUtc": "2023-04-26T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56401,
+    "seasonNumber": 3,
+    "episodeNumber": 8,
+    "title": "We’ll Never Have Paris",
+    "airDate": "2023-05-03",
+    "airDateUtc": "2023-05-03T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56402,
+    "seasonNumber": 3,
+    "episodeNumber": 9,
+    "title": "La Locker Room Aux Folles",
+    "airDate": "2023-05-10",
+    "airDateUtc": "2023-05-10T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56403,
+    "seasonNumber": 3,
+    "episodeNumber": 10,
+    "title": "International Break",
+    "airDate": "2023-05-17",
+    "airDateUtc": "2023-05-17T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56404,
+    "seasonNumber": 3,
+    "episodeNumber": 11,
+    "title": "Mom City",
+    "airDate": "2023-05-24",
+    "airDateUtc": "2023-05-24T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56405,
+    "seasonNumber": 3,
+    "episodeNumber": 12,
+    "title": "So Long, Farewell",
+    "airDate": "2023-05-31",
+    "airDateUtc": "2023-05-31T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 83008,
+    "seasonNumber": 4,
+    "episodeNumber": 1,
+    "title": "Home",
+    "airDate": "2026-08-05",
+    "airDateUtc": "2026-08-05T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 83064,
+    "seasonNumber": 4,
+    "episodeNumber": 2,
+    "title": "Curiouser and Curiouser!",
+    "airDate": "2026-08-12",
+    "airDateUtc": "2026-08-12T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 83065,
+    "seasonNumber": 4,
+    "episodeNumber": 3,
+    "title": "Richmond’s Got Talent",
+    "airDate": "2026-08-19",
+    "airDateUtc": "2026-08-19T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 83066,
+    "seasonNumber": 4,
+    "episodeNumber": 4,
+    "title": "Greyhounds’ Day Off",
+    "airDate": "2026-08-26",
+    "airDateUtc": "2026-08-26T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 83067,
+    "seasonNumber": 4,
+    "episodeNumber": 5,
+    "title": "Riches of Embarrassment",
+    "airDate": "2026-09-02",
+    "airDateUtc": "2026-09-02T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 83068,
+    "seasonNumber": 4,
+    "episodeNumber": 6,
+    "title": "Don’t Jump Around Much Anymore",
+    "airDate": "2026-09-09",
+    "airDateUtc": "2026-09-09T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 83069,
+    "seasonNumber": 4,
+    "episodeNumber": 7,
+    "title": "Yes & Baby",
+    "airDate": "2026-09-16",
+    "airDateUtc": "2026-09-16T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 83070,
+    "seasonNumber": 4,
+    "episodeNumber": 8,
+    "title": "Follow the Anger",
+    "airDate": "2026-09-23",
+    "airDateUtc": "2026-09-23T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 83071,
+    "seasonNumber": 4,
+    "episodeNumber": 9,
+    "title": "Mae Rides the Bus",
+    "airDate": "2026-09-30",
+    "airDateUtc": "2026-09-30T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 83072,
+    "seasonNumber": 4,
+    "episodeNumber": 10,
+    "title": "Being Alive",
+    "airDate": "2026-10-07",
+    "airDateUtc": "2026-10-07T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   }
+  ],
+  "series": {
+   "tvdbId": 383203,
+   "tmdbId": 97546,
+   "title": "Ted Lasso"
+  },
+  "tmdb": [
+   {
+    "names": [
+     "The Missing Christmas Mustache",
+     "Épisode 1"
+    ],
+    "air_date": "2021-12-15",
+    "season": 0,
+    "number": 1
+   },
+   {
+    "names": [
+     "Pilot",
+     "Le pilote"
+    ],
+    "air_date": "2020-08-14",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "names": [
+     "Biscuits",
+     "Les biscuits"
+    ],
+    "air_date": "2020-08-14",
+    "season": 1,
+    "number": 2
+   },
+   {
+    "names": [
+     "Trent Crimm: The Independent"
+    ],
+    "air_date": "2020-08-14",
+    "season": 1,
+    "number": 3
+   },
+   {
+    "names": [
+     "For the Children",
+     "C'est pour les enfants"
+    ],
+    "air_date": "2020-08-21",
+    "season": 1,
+    "number": 4
+   },
+   {
+    "names": [
+     "Tan Lines",
+     "Marques de bronzage"
+    ],
+    "air_date": "2020-08-28",
+    "season": 1,
+    "number": 5
+   },
+   {
+    "names": [
+     "Two Aces",
+     "Deux as"
+    ],
+    "air_date": "2020-09-04",
+    "season": 1,
+    "number": 6
+   },
+   {
+    "names": [
+     "Make Rebecca Great Again",
+     "Une virée mouvementée"
+    ],
+    "air_date": "2020-09-11",
+    "season": 1,
+    "number": 7
+   },
+   {
+    "names": [
+     "The Diamond Dogs",
+     "Solidarité masculine"
+    ],
+    "air_date": "2020-09-18",
+    "season": 1,
+    "number": 8
+   },
+   {
+    "names": [
+     "All Apologies",
+     "Le Grand Pardon"
+    ],
+    "air_date": "2020-09-25",
+    "season": 1,
+    "number": 9
+   },
+   {
+    "names": [
+     "The Hope That Kills You",
+     "L'espoir, c'est mortel"
+    ],
+    "air_date": "2020-10-02",
+    "season": 1,
+    "number": 10
+   },
+   {
+    "names": [
+     "Goodbye Earl",
+     "Adieu, Earl"
+    ],
+    "air_date": "2021-07-23",
+    "season": 2,
+    "number": 1
+   },
+   {
+    "names": [
+     "Lavender",
+     "Lavande"
+    ],
+    "air_date": "2021-07-30",
+    "season": 2,
+    "number": 2
+   },
+   {
+    "names": [
+     "Do the Right-est Thing",
+     "Faire ce qui est juste"
+    ],
+    "air_date": "2021-08-06",
+    "season": 2,
+    "number": 3
+   },
+   {
+    "names": [
+     "Carol of the Bells",
+     "Le chœur à l'ouvrage"
+    ],
+    "air_date": "2021-08-13",
+    "season": 2,
+    "number": 4
+   },
+   {
+    "names": [
+     "Rainbow",
+     "Arc-en-ciel"
+    ],
+    "air_date": "2021-08-20",
+    "season": 2,
+    "number": 5
+   },
+   {
+    "names": [
+     "The Signal",
+     "Le signal"
+    ],
+    "air_date": "2021-08-27",
+    "season": 2,
+    "number": 6
+   },
+   {
+    "names": [
+     "Headspace",
+     "État d'esprit"
+    ],
+    "air_date": "2021-09-03",
+    "season": 2,
+    "number": 7
+   },
+   {
+    "names": [
+     "Man City",
+     "Manchester City"
+    ],
+    "air_date": "2021-09-10",
+    "season": 2,
+    "number": 8
+   },
+   {
+    "names": [
+     "Beard After Hours",
+     "La folle nuit de Beard"
+    ],
+    "air_date": "2021-09-17",
+    "season": 2,
+    "number": 9
+   },
+   {
+    "names": [
+     "No Weddings and a Funeral",
+     "Zéro mariage et un enterrement"
+    ],
+    "air_date": "2021-09-24",
+    "season": 2,
+    "number": 10
+   },
+   {
+    "names": [
+     "Midnight Train to Royston",
+     "Train de nuit pour Royston"
+    ],
+    "air_date": "2021-10-01",
+    "season": 2,
+    "number": 11
+   },
+   {
+    "names": [
+     "Inverting the Pyramid of Success",
+     "Inverser la pyramide du succès"
+    ],
+    "air_date": "2021-10-08",
+    "season": 2,
+    "number": 12
+   },
+   {
+    "names": [
+     "Smells Like Mean Spirit",
+     "C'est pas la joie"
+    ],
+    "air_date": "2023-03-14",
+    "season": 3,
+    "number": 1
+   },
+   {
+    "names": [
+     "(I Don't Want to Go to) Chelsea",
+     "(Je refuse d'aller à) Chelsea"
+    ],
+    "air_date": "2023-03-21",
+    "season": 3,
+    "number": 2
+   },
+   {
+    "names": [
+     "4-5-1"
+    ],
+    "air_date": "2023-03-28",
+    "season": 3,
+    "number": 3
+   },
+   {
+    "names": [
+     "Big Week",
+     "Grosse semaine"
+    ],
+    "air_date": "2023-04-04",
+    "season": 3,
+    "number": 4
+   },
+   {
+    "names": [
+     "Signs",
+     "Signes"
+    ],
+    "air_date": "2023-04-11",
+    "season": 3,
+    "number": 5
+   },
+   {
+    "names": [
+     "Sunflowers",
+     "Tournesols"
+    ],
+    "air_date": "2023-04-18",
+    "season": 3,
+    "number": 6
+   },
+   {
+    "names": [
+     "The Strings That Bind Us",
+     "Les Liens qui nous unissent"
+    ],
+    "air_date": "2023-04-25",
+    "season": 3,
+    "number": 7
+   },
+   {
+    "names": [
+     "We'll Never Have Paris",
+     "Paris risqués"
+    ],
+    "air_date": "2023-05-02",
+    "season": 3,
+    "number": 8
+   },
+   {
+    "names": [
+     "La Locker Room Aux Folles",
+     "Le vestiaire aux folles"
+    ],
+    "air_date": "2023-05-09",
+    "season": 3,
+    "number": 9
+   },
+   {
+    "names": [
+     "International Break",
+     "Compétition internationale"
+    ],
+    "air_date": "2023-05-16",
+    "season": 3,
+    "number": 10
+   },
+   {
+    "names": [
+     "Mom City",
+     "École maternelle"
+    ],
+    "air_date": "2023-05-23",
+    "season": 3,
+    "number": 11
+   },
+   {
+    "names": [
+     "So Long, Farewell",
+     "Au revoir, adieu"
+    ],
+    "air_date": "2023-05-30",
+    "season": 3,
+    "number": 12
+   },
+   {
+    "names": [
+     "Home",
+     "Chez soi"
+    ],
+    "air_date": "2026-08-04",
+    "season": 4,
+    "number": 1
+   },
+   {
+    "names": [
+     "Curiouser and Curiouser!",
+     "De très curieux en très curieux !"
+    ],
+    "air_date": "2026-08-11",
+    "season": 4,
+    "number": 2
+   },
+   {
+    "names": [
+     "Richmond's Got Talent",
+     "Richmond a du talent"
+    ],
+    "air_date": "2026-08-18",
+    "season": 4,
+    "number": 3
+   },
+   {
+    "names": [
+     "Greyhounds' Day Off",
+     "Les Lévrières vont au pub"
+    ],
+    "air_date": "2026-08-25",
+    "season": 4,
+    "number": 4
+   },
+   {
+    "names": [
+     "Riches of Embarrassment",
+     "L'embarras du choix"
+    ],
+    "air_date": "2026-09-01",
+    "season": 4,
+    "number": 5
+   },
+   {
+    "names": [
+     "Don't Jump Around Much Anymore",
+     "Pas de danse"
+    ],
+    "air_date": "2026-09-08",
+    "season": 4,
+    "number": 6
+   },
+   {
+    "names": [
+     "Yes & Baby",
+     "Oui et... bébé"
+    ],
+    "air_date": "2026-09-15",
+    "season": 4,
+    "number": 7
+   },
+   {
+    "names": [
+     "Follow the Anger",
+     "La colère pour boussole"
+    ],
+    "air_date": "2026-09-22",
+    "season": 4,
+    "number": 8
+   },
+   {
+    "names": [
+     "Mae Rides the Bus",
+     "Mae voyage avec les joueuses"
+    ],
+    "air_date": "2026-09-29",
+    "season": 4,
+    "number": 9
+   },
+   {
+    "names": [
+     "Being Alive",
+     "Être en vie"
+    ],
+    "air_date": "2026-10-06",
+    "season": 4,
+    "number": 10
+   }
+  ],
+  "tvdb": {
+   "S01E01": "Le pilote",
+   "S01E02": "Les biscuits",
+   "S01E04": "C'est pour les enfants",
+   "S01E05": "Marques de bronzage",
+   "S01E06": "Deux as",
+   "S01E07": "Une virée mouvementée",
+   "S01E08": "Solidarité masculine",
+   "S01E09": "Le Grand Pardon",
+   "S01E10": "L'espoir, c'est mortel",
+   "S02E01": "Adieu, Earl",
+   "S02E02": "Lavande",
+   "S02E03": "Faire ce qui est juste",
+   "S02E04": "Le chœur à l'ouvrage",
+   "S02E05": "Arc-en-ciel",
+   "S02E06": "Le signal",
+   "S02E07": "État d'esprit",
+   "S02E08": "Manchester City",
+   "S02E09": "La folle nuit de Beard",
+   "S02E10": "Zéro mariage et un enterrement",
+   "S02E11": "Train de nuit pour Royston",
+   "S02E12": "Inverser la pyramide du succès",
+   "S03E01": "C'est pas la joie",
+   "S03E02": "(Je refuse d'aller à) Chelsea",
+   "S03E04": "Grosse semaine",
+   "S03E05": "Signes",
+   "S03E06": "Tournesols",
+   "S03E07": "Les liens qui nous unissent",
+   "S03E08": "Paris risqués",
+   "S03E09": "Le vestiaire aux folles",
+   "S03E10": "Compétition internationale",
+   "S03E11": "École maternelle",
+   "S03E12": "Au revoir, adieu",
+   "S04E01": "Chez soi",
+   "S04E02": "De très curieux en très curieux !",
+   "S04E03": "Richmond a du talent",
+   "S04E04": "Les Lévrières vont au pub",
+   "S04E05": "L'embarras du choix",
+   "S04E06": "Pas de danse",
+   "S04E07": "Oui et… bébé",
+   "S04E08": "Suivre la colère",
+   "S04E09": "Mae voyage avec les joueuses",
+   "S04E10": "Être en vie"
+  }
+ },
+ "expect": {
+  "available": {
+   "56372": {
+    "service": "S01E01",
+    "name": "Le pilote",
+    "match": "title",
+    "same": true
+   },
+   "56373": {
+    "service": "S01E02",
+    "name": "Les biscuits",
+    "match": "title",
+    "same": true
+   },
+   "56374": {
+    "service": "S01E03",
+    "name": "Trent Crimm: The Independent",
+    "match": "title",
+    "same": true
+   },
+   "56375": {
+    "service": "S01E04",
+    "name": "C'est pour les enfants",
+    "match": "title",
+    "same": true
+   },
+   "56376": {
+    "service": "S01E05",
+    "name": "Marques de bronzage",
+    "match": "title",
+    "same": true
+   },
+   "56377": {
+    "service": "S01E06",
+    "name": "Deux as",
+    "match": "title",
+    "same": true
+   },
+   "56378": {
+    "service": "S01E07",
+    "name": "Une virée mouvementée",
+    "match": "title",
+    "same": true
+   },
+   "56379": {
+    "service": "S01E08",
+    "name": "Solidarité masculine",
+    "match": "title",
+    "same": true
+   },
+   "56380": {
+    "service": "S01E09",
+    "name": "Le Grand Pardon",
+    "match": "title",
+    "same": true
+   },
+   "56381": {
+    "service": "S01E10",
+    "name": "L'espoir, c'est mortel",
+    "match": "title",
+    "same": true
+   },
+   "56382": {
+    "service": "S02E01",
+    "name": "Adieu, Earl",
+    "match": "title",
+    "same": true
+   },
+   "56383": {
+    "service": "S02E02",
+    "name": "Lavande",
+    "match": "title",
+    "same": true
+   },
+   "56384": {
+    "service": "S02E03",
+    "name": "Faire ce qui est juste",
+    "match": "title",
+    "same": true
+   },
+   "56385": {
+    "service": "S02E04",
+    "name": "Le chœur à l'ouvrage",
+    "match": "title",
+    "same": true
+   },
+   "56386": {
+    "service": "S02E05",
+    "name": "Arc-en-ciel",
+    "match": "title",
+    "same": true
+   },
+   "56387": {
+    "service": "S02E06",
+    "name": "Le signal",
+    "match": "title",
+    "same": true
+   },
+   "56388": {
+    "service": "S02E07",
+    "name": "État d'esprit",
+    "match": "title",
+    "same": true
+   },
+   "56389": {
+    "service": "S02E08",
+    "name": "Manchester City",
+    "match": "title",
+    "same": true
+   },
+   "56390": {
+    "service": "S02E09",
+    "name": "La folle nuit de Beard",
+    "match": "title",
+    "same": true
+   },
+   "56391": {
+    "service": "S02E10",
+    "name": "Zéro mariage et un enterrement",
+    "match": "title",
+    "same": true
+   },
+   "56392": {
+    "service": "S02E11",
+    "name": "Train de nuit pour Royston",
+    "match": "title",
+    "same": true
+   },
+   "56393": {
+    "service": "S02E12",
+    "name": "Inverser la pyramide du succès",
+    "match": "title",
+    "same": true
+   },
+   "56394": {
+    "service": "S03E01",
+    "name": "C'est pas la joie",
+    "match": "title",
+    "same": true
+   },
+   "56395": {
+    "service": "S03E02",
+    "name": "(Je refuse d'aller à) Chelsea",
+    "match": "title",
+    "same": true
+   },
+   "56396": {
+    "service": "S03E03",
+    "name": "4-5-1",
+    "match": "title",
+    "same": true
+   },
+   "56397": {
+    "service": "S03E04",
+    "name": "Grosse semaine",
+    "match": "title",
+    "same": true
+   },
+   "56398": {
+    "service": "S03E05",
+    "name": "Signes",
+    "match": "title",
+    "same": true
+   },
+   "56399": {
+    "service": "S03E06",
+    "name": "Tournesols",
+    "match": "title",
+    "same": true
+   },
+   "56400": {
+    "service": "S03E07",
+    "name": "Les Liens qui nous unissent",
+    "match": "title",
+    "same": true
+   },
+   "56401": {
+    "service": "S03E08",
+    "name": "Paris risqués",
+    "match": "title",
+    "same": true
+   },
+   "56402": {
+    "service": "S03E09",
+    "name": "Le vestiaire aux folles",
+    "match": "title",
+    "same": true
+   },
+   "56403": {
+    "service": "S03E10",
+    "name": "Compétition internationale",
+    "match": "title",
+    "same": true
+   },
+   "56404": {
+    "service": "S03E11",
+    "name": "École maternelle",
+    "match": "title",
+    "same": true
+   },
+   "56405": {
+    "service": "S03E12",
+    "name": "Au revoir, adieu",
+    "match": "title",
+    "same": true
+   },
+   "83008": {
+    "service": "S04E01",
+    "name": "Chez soi",
+    "match": "title",
+    "same": true
+   },
+   "83064": {
+    "service": "S04E02",
+    "name": "De très curieux en très curieux !",
+    "match": "title",
+    "same": true
+   },
+   "83065": {
+    "service": "S04E03",
+    "name": "Richmond a du talent",
+    "match": "title",
+    "same": true
+   },
+   "83066": {
+    "service": "S04E04",
+    "name": "Les Lévrières vont au pub",
+    "match": "title",
+    "same": true
+   },
+   "83067": {
+    "service": "S04E05",
+    "name": "L'embarras du choix",
+    "match": "title",
+    "same": true
+   },
+   "83068": {
+    "service": "S04E06",
+    "name": "Pas de danse",
+    "match": "title",
+    "same": true
+   },
+   "83069": {
+    "service": "S04E07",
+    "name": "Oui et… bébé",
+    "match": "title",
+    "same": true
+   },
+   "83070": {
+    "service": "S04E08",
+    "name": "La colère pour boussole"
+   },
+   "83071": {
+    "service": "S04E09",
+    "name": "Mae voyage avec les joueuses",
+    "match": "title",
+    "same": true
+   },
+   "83072": {
+    "service": "S04E10",
+    "name": "Être en vie",
+    "match": "title",
+    "same": true
+   }
+  },
+  "titlesAgree": false,
+  "season_map": {}
+ }
+}

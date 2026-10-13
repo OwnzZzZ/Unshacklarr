@@ -1,0 +1,266 @@
+{
+ "title": "Last Seen",
+ "tvdb": 451782,
+ "show": {
+  "service": "ATV",
+  "title": "umc.cmc.4pbw9c936a4pigdvsg23u2bsa",
+  "release_time": "03:00"
+ },
+ "tmdb_key": true,
+ "country": "FR",
+ "inputs": {
+  "service": [
+   {
+    "type": "episode",
+    "name": "L'opérateur",
+    "id": "umc.cmc.242kocg2wik5ha8iwzgqyfjpt",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2026,
+    "series_title": "Portée disparue",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "L'appel",
+    "id": "umc.cmc.3fcw1dv98h63rx0j0k5yorek",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2026,
+    "series_title": "Portée disparue",
+    "season": 1,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Le mensonge",
+    "id": "umc.cmc.61kz87b8mjubm9f29kh7rf3xb",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2026,
+    "series_title": "Portée disparue",
+    "season": 1,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "La vérité",
+    "id": "umc.cmc.zrb84b2687bfxmzda2jlhrhi",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2026,
+    "series_title": "Portée disparue",
+    "season": 1,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Le prophète",
+    "id": "umc.cmc.2vzke7q8datpverps23olfg3n",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2026,
+    "series_title": "Portée disparue",
+    "season": 1,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Le choix",
+    "id": "umc.cmc.6oogs2hxzerj1i0w27styzn7x",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2026,
+    "series_title": "Portée disparue",
+    "season": 1,
+    "number": 6
+   }
+  ],
+  "episodes": [
+   {
+    "id": 84938,
+    "seasonNumber": 1,
+    "episodeNumber": 1,
+    "title": "The Dispatcher",
+    "airDate": "2026-09-09",
+    "airDateUtc": "2026-09-09T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 84939,
+    "seasonNumber": 1,
+    "episodeNumber": 2,
+    "title": "The Call",
+    "airDate": "2026-09-09",
+    "airDateUtc": "2026-09-09T04:49:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 84940,
+    "seasonNumber": 1,
+    "episodeNumber": 3,
+    "title": "The Lie",
+    "airDate": "2026-09-16",
+    "airDateUtc": "2026-09-16T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 84941,
+    "seasonNumber": 1,
+    "episodeNumber": 4,
+    "title": "The Truth",
+    "airDate": "2026-09-23",
+    "airDateUtc": "2026-09-23T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 84942,
+    "seasonNumber": 1,
+    "episodeNumber": 5,
+    "title": "The Prophet",
+    "airDate": "2026-09-30",
+    "airDateUtc": "2026-09-30T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 84943,
+    "seasonNumber": 1,
+    "episodeNumber": 6,
+    "title": "The Choice",
+    "airDate": "2026-10-07",
+    "airDateUtc": "2026-10-07T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   }
+  ],
+  "series": {
+   "tvdbId": 451782,
+   "tmdbId": 258230,
+   "title": "Last Seen"
+  },
+  "tmdb": [
+   {
+    "names": [
+     "The Dispatcher",
+     "L'opérateur"
+    ],
+    "air_date": "2026-09-09",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "names": [
+     "The Call",
+     "L'appel"
+    ],
+    "air_date": "2026-09-09",
+    "season": 1,
+    "number": 2
+   },
+   {
+    "names": [
+     "The Lie",
+     "Le mensonge"
+    ],
+    "air_date": "2026-09-16",
+    "season": 1,
+    "number": 3
+   },
+   {
+    "names": [
+     "The Truth",
+     "La vérité"
+    ],
+    "air_date": "2026-09-23",
+    "season": 1,
+    "number": 4
+   },
+   {
+    "names": [
+     "The Prophet",
+     "Le prophète"
+    ],
+    "air_date": "2026-09-30",
+    "season": 1,
+    "number": 5
+   },
+   {
+    "names": [
+     "The Choice",
+     "Le choix"
+    ],
+    "air_date": "2026-10-07",
+    "season": 1,
+    "number": 6
+   }
+  ],
+  "tvdb": {
+   "S01E01": "L'opérateur",
+   "S01E02": "L'appel",
+   "S01E03": "Le mensonge",
+   "S01E04": "La vérité",
+   "S01E05": "Le prophète",
+   "S01E06": "Le choix"
+  }
+ },
+ "expect": {
+  "available": {
+   "84938": {
+    "service": "S01E01",
+    "name": "L'opérateur",
+    "match": "title",
+    "same": true
+   },
+   "84939": {
+    "service": "S01E02",
+    "name": "L'appel",
+    "match": "title",
+    "same": true
+   },
+   "84940": {
+    "service": "S01E03",
+    "name": "Le mensonge",
+    "match": "title",
+    "same": true
+   },
+   "84941": {
+    "service": "S01E04",
+    "name": "La vérité",
+    "match": "title",
+    "same": true
+   },
+   "84942": {
+    "service": "S01E05",
+    "name": "Le prophète",
+    "match": "title",
+    "same": true
+   },
+   "84943": {
+    "service": "S01E06",
+    "name": "Le choix",
+    "match": "title",
+    "same": true
+   }
+  },
+  "titlesAgree": false,
+  "season_map": {}
+ }
+}
