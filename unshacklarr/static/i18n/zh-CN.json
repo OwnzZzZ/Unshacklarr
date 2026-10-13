@@ -1789,7 +1789,6 @@
  "{0} episodes queued, one after the other": "{0} 集已加入队列，依次下载",
  "{0} is not a language code like fr or en-AU": "{0} 不是 fr 或 en-AU 这样的语言代码",
  "{0} on {1} is another episode, by its title": "按标题看，{1} 上的 {0} 是另一集",
- "{0}: {1} on {2} is a different episode; found by {3} as {4} instead": "{0}：{2} 上的 {1} 是另一集；改为通过{3}找到，为 {4}",
  "● Connected{0}": "● 已连接{0}",
  "(outside the ladder)": "（阶梯之外）",
  "(step {0})": "（第 {0} 级）",
@@ -2155,5 +2154,12 @@
  "{0} programmes on {1} are titled {2}: paste its URL on the series": "{1} 上有 {0} 个名为 {2} 的节目：请在剧集中粘贴其 URL",
  "↓ Replacing": "↓ 替换中",
  "Stopping after this batch…": "将在本批次后停止…",
- "{0}: nothing to download": "{0}：没有可下载的内容"
+ "{0}: nothing to download": "{0}：没有可下载的内容",
+ "another computer": "另一台电脑",
+ "not listed on {0} as {1}": "{0} 未以 {1} 列出",
+ "{0} holds a link or a file named like the library's: not joined": "{0} 含有链接或与媒体库文件同名的文件：未合并",
+ "{0} on disk {1} has in better quality (Activity, Upgrades)": "磁盘上有 {0} 集 {1} 有更好画质（Activity、Upgrades）",
+ "{0} on {1} is a different episode": "{1} 上的 {0} 是另一集",
+ "{0} on {1} is from {2}, {3} aired in {4}: another programme of that title? Paste its URL on the series": "{1} 上的 {0} 来自 {2} 年，{3} 播出于 {4} 年：同名的另一节目？请在剧集中粘贴其 URL",
+ "{0}: {1}; found by {2} as {3} instead": "{0}：{1}；改为通过{2}找到 {3}"
 }

@@ -1776,7 +1776,6 @@
  "{0} episodes queued, one after the other": "{0} episodi in coda, uno dopo l'altro",
  "{0} is not a language code like fr or en-AU": "{0} non è un codice di lingua come fr o en-AU",
  "{0} on {1} is another episode, by its title": "{0} su {1} è un altro episodio, secondo il suo titolo",
- "{0}: {1} on {2} is a different episode; found by {3} as {4} instead": "{0}: {1} su {2} è un altro episodio; trovato invece tramite {3} come {4}",
  "● Connected{0}": "● Connesso{0}",
  "(outside the ladder)": "(fuori dalla scala)",
  "(step {0})": "(gradino {0})",
@@ -2144,5 +2143,12 @@
  "{0} programmes on {1} are titled {2}: paste its URL on the series": "{0} programmi su {1} si intitolano {2}: incolla il suo URL nella serie",
  "↓ Replacing": "↓ Sostituzione",
  "Stopping after this batch…": "Arresto dopo questo gruppo…",
- "{0}: nothing to download": "{0}: niente da scaricare"
+ "{0}: nothing to download": "{0}: niente da scaricare",
+ "another computer": "un altro computer",
+ "not listed on {0} as {1}": "non elencato su {0} come {1}",
+ "{0} holds a link or a file named like the library's: not joined": "{0} contiene un link o un file con il nome di quello della libreria: non unito",
+ "{0} on disk {1} has in better quality (Activity, Upgrades)": "{0} su disco che {1} ha in qualità migliore (Activity, Upgrades)",
+ "{0} on {1} is a different episode": "{0} su {1} è un altro episodio",
+ "{0} on {1} is from {2}, {3} aired in {4}: another programme of that title? Paste its URL on the series": "{0} su {1} è del {2}, {3} è andato in onda nel {4}: un altro programma con quel titolo? Incolla il suo URL nella serie",
+ "{0}: {1}; found by {2} as {3} instead": "{0}: {1}; trovato per {2} come {3}"
 }

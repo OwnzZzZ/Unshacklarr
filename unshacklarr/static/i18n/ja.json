@@ -1785,7 +1785,6 @@
  "{0} episodes queued, one after the other": "{0} 件のエピソードをキューに追加しました（順番に実行）",
  "{0} is not a language code like fr or en-AU": "{0} は fr や en-AU のような言語コードではありません",
  "{0} on {1} is another episode, by its title": "{1} の {0} はタイトルから見て別のエピソードです",
- "{0}: {1} on {2} is a different episode; found by {3} as {4} instead": "{0}：{2} の {1} は別のエピソードです。{3}で {4} として見つかりました",
  "● Connected{0}": "● 接続済み{0}",
  "(outside the ladder)": "（ラダー外）",
  "(step {0})": "（ステップ {0}）",
@@ -2150,5 +2149,12 @@
  "{0} programmes on {1} are titled {2}: paste its URL on the series": "{1} に {2} という番組が {0} 件あります。シリーズにその URL を貼り付けてください",
  "↓ Replacing": "↓ 置き換え中",
  "Stopping after this batch…": "このバッチの後で停止します…",
- "{0}: nothing to download": "{0}：ダウンロードするものはありません"
+ "{0}: nothing to download": "{0}：ダウンロードするものはありません",
+ "another computer": "別のコンピューター",
+ "not listed on {0} as {1}": "{0} に {1} として載っていません",
+ "{0} holds a link or a file named like the library's: not joined": "{0} にリンクまたはライブラリと同名のファイルがあります：結合しません",
+ "{0} on disk {1} has in better quality (Activity, Upgrades)": "ディスク上の {0} 件は {1} により良い画質があります（Activity、Upgrades）",
+ "{0} on {1} is a different episode": "{1} の {0} は別のエピソードです",
+ "{0} on {1} is from {2}, {3} aired in {4}: another programme of that title? Paste its URL on the series": "{1} の {0} は {2} 年のもので、{3} は {4} 年に放送されました：同じタイトルの別番組？シリーズにその URL を貼ってください",
+ "{0}: {1}; found by {2} as {3} instead": "{0}：{1}。代わりに {2} で {3} として見つかりました"
 }

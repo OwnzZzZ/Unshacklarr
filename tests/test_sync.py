@@ -1256,7 +1256,7 @@ def test_an_episode_its_number_misses_is_found_by_its_title(tmp_path, monkeypatc
 
     def find(show, ep):
         listed.append(ep["id"])
-        return {"available": {201: {"service": "S01E07", "match": "title"}}, "listed": {"S01E07"}}  # S02E01 by its title; S02E02 not out yet
+        return {"available": {201: {"service": "S01E07", "match": "title", "same": True}}, "listed": {"S01E07"}}  # S02E01 by its title; S02E02 not out yet
 
     monkeypatch.setattr(sync, "run_job_retrying", download)
     monkeypatch.setattr(sync, "download_request", lambda show, config, sx, out: {"service": "RTLP", "title_id": "t", "wanted": [sx], "output_dir": str(out)})
@@ -1266,7 +1266,7 @@ def test_an_episode_its_number_misses_is_found_by_its_title(tmp_path, monkeypatc
     monkeypatch.setattr(sync, "import_episode", lambda ep, out, replace=False: imported.append(ep["id"]))
     monkeypatch.setattr(sync, "notify", lambda *a, **k: None)
     sync.sync(sync.read_file(), {}, [episode(111, 2, 1), episode(111, 2, 2)], manual=True, kind="manual")
-    assert asked == ["S02E01", "S01E07", "S02E02"]
+    assert asked == ["S01E07", "S02E02"]  # S02E01 isn't listed and its title is: asked there at once
     assert listed == [201]  # the series listed once: S02E02 is looked up in that same list
     assert imported == [201]
     cards = {c["sxxeyy"]: c for c in (json.loads(f.read_text()) for f in sync.RUNS_DIR.glob("*.json"))}
@@ -2340,6 +2340,31 @@ def test_a_separate_programme_is_found_by_its_title_and_looked_for_once_a_day(tm
         assert bool(asked) is searched  # the automatic sync waits a day; a pick by hand looks at once
 
 
+def test_the_very_title_from_years_apart_is_another_programme(tmp_path, monkeypatch):
+    # By mj23au (#17): an exact title is still checked by its year when the service gives one; a year apart is the
+    # same programme (made one year, aired the next), more is a remake or an older film; no year, nothing to go by
+    sync = load(tmp_path, monkeypatch)
+    titles = []
+
+    class Serve:
+        def call(self, method, path, json=None):
+            return {"results": [{"id": "p", "title": "The Siege"}]} if path == "/api/search" else {"titles": titles}
+    monkeypatch.setattr(sync, "backend_for", lambda tag, config=None: Serve())
+    monkeypatch.setattr(sync, "serve_params", lambda show, config: {})
+    show = {"service": "iP", "programmes": True}
+    ep = lambda id_, aired: {"id": id_, "seasonNumber": 2026, "episodeNumber": id_, "title": "The Siege", "airDateUtc": aired}
+    titles[:] = [{"type": "movie", "name": "The Siege", "year": 2019}]
+    try:
+        sync.programme_for(show, ep(31, "2026-03-02T21:00:00Z"), {}, True)
+        raise AssertionError("a programme seven years older was taken")
+    except sync.Unmatched as e:
+        assert "from 2019" in str(e)
+    titles[:] = [{"type": "movie", "name": "The Siege", "year": 2025}]
+    assert sync.programme_for(show, ep(32, "2026-01-10T21:00:00Z"), {}, True)["title"] == "p"
+    titles[:] = [{"type": "episode", "season": 1, "number": 1, "name": "The Siege"}]
+    assert sync.programme_for(show, ep(33, "2026-01-10T21:00:00Z"), {}, True)["code"] == "S01E01"
+
+
 def test_a_job_paused_while_waiting_for_a_slot_blocks_no_one(tmp_path, monkeypatch):
     # A job paused while it waits loses its number (release_job): the next one asking still gets in line and in
     sync = load(tmp_path, monkeypatch)
@@ -2356,3 +2381,46 @@ def test_a_job_paused_while_waiting_for_a_slot_blocks_no_one(tmp_path, monkeypat
     sync.slot_line.clear()
     sync.slot_jobs.clear()
 
+
+def test_a_number_the_service_doesnt_list_is_asked_where_its_title_is(tmp_path, monkeypatch):
+    # 24 Hours in Police Custody: Sonarr's special S00E45 is Channel 4's S04E21, which lists no S00E45
+    sync = load(tmp_path, monkeypatch)
+    listing = {"available": {205: {"service": "S04E21", "match": "title", "same": True}}, "listed": {"S04E21", "S04E22"}, "titled": {"S04E21"}}
+    monkeypatch.setattr(sync, "find_by_title", lambda show, ep: listing)
+    monkeypatch.setattr(sync, "no_cdm", lambda tag, config=None: "")
+    asked = []
+    monkeypatch.setattr(sync, "run_job_retrying", lambda payload, run=None: asked.append(payload["wanted"][0]))
+    monkeypatch.setattr(sync, "notify", lambda *a, **k: None)
+    sync.sync(sync.read_file(), {}, [episode(111, 2, 5)], manual=True, kind="manual")
+    assert asked == ["S04E21"]  # never the S02E05 it doesn't list
+    card = next(json.loads(p.read_text()) for p in (tmp_path / "runs").glob("*.json"))
+    assert card["numbering"]["episode_map"] == {"S02E05": "S04E21"}  # a retry asks the same again
+    log = next((tmp_path / "runs").glob("*.log")).read_text()
+    assert "not listed on RTLP as S02E05; found by its title as S04E21 instead" in log
+
+    sync.title_matches.clear()
+    listing["available"] = {205: {"service": "S04E21", "match": "title"}}  # a close title, not its very title (#12):
+    sync.sync(sync.read_file(), {}, [episode(111, 2, 5)], manual=True, kind="manual")  # its number first, not an older one
+    assert asked[1] == "S02E05"
+    del asked[1:]
+
+    sync.title_matches.clear()
+    listing["available"] = {}  # not listed, and its title finds nothing: not out yet, asked by its number
+    sync.sync(sync.read_file(), {}, [episode(111, 2, 5)], manual=True, kind="manual")
+    assert asked == ["S04E21", "S02E05"]
+
+def test_a_finished_run_is_never_read_as_interrupted(tmp_path, monkeypatch):
+    # By mj23au (#17): the run leaves the active ones only once its ended card is on disk, so the history read when
+    # the page hears it ended (run_cards: no end and not active is "interrupted") always finds its outcome
+    sync = load(tmp_path, monkeypatch)
+    run = sync.EpisodeRun({"id": 5, "seriesId": 1, "series": {"title": "Show", "tvdbId": 111}, "seasonNumber": 1,
+                           "episodeNumber": 5}, {"service": "X"}, "manual")
+    seen, save = [], sync.EpisodeRun.save
+
+    def watched(self):
+        save(self)
+        seen.append((self.card.get("outcome"), self.id in sync.EpisodeRun.active))
+    monkeypatch.setattr(sync.EpisodeRun, "save", watched)
+    run.finish("unavailable", "Not on HMAX yet")
+    assert seen[-1] == ("unavailable", True)  # written while still active: never "no end, not running"
+    assert run.id not in sync.EpisodeRun.active

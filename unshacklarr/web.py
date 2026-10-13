@@ -2794,9 +2794,11 @@ def tmdb_episodes(tmdb_id: int) -> list[dict]:
 
 
 def plain_title(text: str) -> str:
-    """A title to compare: no accents, case, punctuation or "(1/2)"."""
+    """A title to compare: no accents, case, punctuation or "(1/2)"; TVDB's part "(2)" as the services write it, "part 2"
+    (one or two digits: "Special (2023)" is a year, left as it is)."""
     text = unicodedata.normalize("NFKD", text or "").encode("ascii", "ignore").decode().lower()
-    return re.sub(r"[^a-z0-9]+", " ", re.sub(r"\(\s*\d+\s*/\s*\d+\s*\)", "", text)).strip()
+    text = re.sub(r"\(\s*(\d{1,2})\s*\)\s*$", r" part \1", re.sub(r"\(\s*\d+\s*/\s*\d+\s*\)", "", text).rstrip())
+    return re.sub(r"[^a-z0-9]+", " ", text).strip()
 
 
 GENERIC_TITLE = re.compile(r"(tba|tbd|episode|episodio|folge|aflevering)( \d+)?")
@@ -2854,14 +2856,24 @@ def tvdb_titles(tvdb_id: int) -> dict[str, str]:
     return titles
 
 
+TITLE_PART = re.compile(r"\bpart (\d+)$")
+
+
 def same_title(a: str, b: str) -> bool:
     """Two plain titles naming the same episode: a longer one when close (accents, a typo) or one holds the
     other; a short one (a country, under 8 letters) when the same, or spelt alike from the same start (Serbie,
     Serbia) but never merely close (Mali, Malibu; Chili, Chine)."""
-    ratio = difflib.SequenceMatcher(None, a, b).ratio()
+    parts = [m[1] if (m := TITLE_PART.search(t)) else None for t in (a, b)]
+    if parts[0] and parts[1] and parts[0] != parts[1]:
+        return False  # "the ambush part 1" is never "the ambush part 2", however close the rest
+    if a == b:
+        return True
+    # compared for every pair of the service's and Sonarr's episodes: the cheap upper bounds of ratio() first
+    m = difflib.SequenceMatcher(None, a, b)
+    close = lambda at: m.real_quick_ratio() >= at and m.quick_ratio() >= at and m.ratio() >= at
     if min(len(a), len(b)) < 8:
-        return a == b or (a[:4] == b[:4] and ratio >= 0.82)
-    return a in b or b in a or ratio >= 0.85
+        return a[:4] == b[:4] and close(0.82)
+    return a in b or b in a or close(0.85)
 
 
 def titles_of(sonarr_eps: list[dict], tmdb_eps: list[dict], own: bool = True) -> dict[int, set]:
@@ -2979,6 +2991,7 @@ def probe_series(show: dict, series_id: int, title: str = "") -> dict:
     # a French Disney+ (Futurama): there, an episode with no French title from TMDB has nothing to contradict.
     ours = {usable_title(e.get("title")) for e in every} - {""}
     known = titles_of(every, tmdb_eps, own=enough(sum(any(same_title(n, o) for o in ours) for n in names)))
+    own_titles = titles_of(every, tmdb_eps)  # for "same": a title match that is the episode's very title, once plain
     mapped = show.get("episode_map") or {}
     available = {}  # every Sonarr episode the service has, for the Episodes tab: by number and title, by title, by number
     for e in every:
@@ -2987,7 +3000,8 @@ def probe_series(show: dict, series_id: int, title: str = "") -> dict:
         hit = by_key.get(theirs or "")
         if e["id"] in titled:
             key = titled[e["id"]]
-            available[e["id"]] = {"service": key, "name": by_title[key]["name"], "match": "title"}
+            same = usable_title(by_title[key]["name"]) in own_titles.get(e["id"], set())  # not merely close (by mj23au, #12)
+            available[e["id"]] = {"service": key, "name": by_title[key]["name"], "match": "title", **({"same": True} if same else {})}
         elif hit and (theirs or "").split(".")[0] not in by_title:  # a number the title gives to another episode is not this one
             theirs_name = usable_title(hit.get("name"))
             clash = comparable and theirs_name and known[e["id"]] and not any(same_title(theirs_name, t) for t in known[e["id"]])
@@ -3366,7 +3380,8 @@ def upgrade_number(lists: dict, serie: dict, show: dict, e: dict) -> str | None:
     if not hit or hit.get("service") != show.get("service") or hit.get("title") != str(show.get("title")):
         return own  # no listing, or one of another service or URL: nothing to go by
     available = hit.get("available") or {}
-    if found := available.get(str(e["id"])):
+    found = available.get(str(e["id"]))
+    if found and (found.get("match") != "title" or found.get("same")):  # a title only when the very title (#12)
         return found["service"]
     if own and any(m.get("match") == "title" and m["service"].split(".")[0] == own.split(".")[0] for m in available.values()):
         return None
@@ -3451,9 +3466,11 @@ def scan_upgrades_in(inst: dict | None, name: str, only: set | None = None) -> N
             found = [i for i in before.get("items") or [] if i.get("tvdbId") not in only] + found
         # a series checked on its own keeps its own date, shown on its card; a full check starts them afresh
         alone = {**(before.get("series_checked") or {}), **{str(t): now.isoformat() for t in only}} if only else {}
+        # the series checked (those with a file the ladder could better): Episodes then goes by what was found for them
+        scanned = sorted({w[0]["tvdbId"] for w in work} | (set(before.get("scanned") or []) if only else set()))
         write_atomic(upgrades_file(name), json.dumps({"checked": before.get("checked") or datetime.now(timezone.utc).isoformat(),
                                                 "items": found, "stopped": upgrade_scan["stop"] or bool(before.get("stopped")),
-                                                "series_checked": alone}))
+                                                "series_checked": alone, "scanned": scanned}))
     except requests.RequestException as err:
         upgrade_scan["errors"] += 1
         print(f"Upgrades: Sonarr is unreachable: {no_credentials(err)}", flush=True)
@@ -3490,6 +3507,10 @@ async def upgrades(request):
     done = {(c.get("tvdbId"), c.get("sxxeyy")) for c in mine if c.get("outcome") == "downloaded" and (c.get("ended") or "") > (last.get("checked") or "")}
     busy = {(c.get("tvdbId"), c.get("sxxeyy")) for c in mine if c.get("outcome") == "running"}
     items = [{**i, "running": (i["tvdbId"], i["sxxeyy"]) in busy} for i in last.get("items") or [] if (i["tvdbId"], i["sxxeyy"]) not in done]
+    if (tvdb := request.query.get("tvdb", "")).isascii() and tvdb.isdigit():  # a series' Episodes: its finds only, and
+        tvdb = int(tvdb)                                                       # whether the check covered it at all
+        return web.json_response({"items": [i for i in items if i["tvdbId"] == tvdb],
+                                  "scanned": tvdb in (last.get("scanned") or []) or str(tvdb) in (last.get("series_checked") or {})})
     return web.json_response({"scan": {**{k: v for k, v in upgrade_scan.items() if k != "stop"}, "stopping": upgrade_scan["running"] and upgrade_scan["stop"]},
                               "checked": last.get("checked"), "items": items, "stopped": bool(last.get("stopped")),
                               "seriesChecked": last.get("series_checked") or {}})

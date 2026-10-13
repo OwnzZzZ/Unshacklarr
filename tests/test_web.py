@@ -414,7 +414,7 @@ def test_a_country_title_finds_its_episode_and_a_number_saying_another_finds_not
     monkeypatch.setattr(web.sonarr_sync, "sonarr_get", lambda path, **q: sonarr if path == "episode" else {})
     monkeypatch.setattr(web, "tmdb_key", lambda: "")
     found = web.probe_series({"service": "RMCP", "title": "x"}, 1)["available"]
-    assert found[13] == {"service": "S17E02", "name": "Mali", "match": "title"}  # same title, whatever the number
+    assert found[13] == {"service": "S17E02", "name": "Mali", "match": "title", "same": True}  # same title, whatever the number
     assert found[11]["service"] == "S01E01"  # "Japon" both sides
     assert found[32]["service"] == "S03E02"  # no title to say otherwise: its number
     assert not ({99, 98} & set(found))  # "France" names two of Sonarr's: none is picked
@@ -460,7 +460,7 @@ def test_a_service_naming_episodes_in_another_language_is_matched_through_tmdb(t
     monkeypatch.setattr(web, "tmdb_key", lambda: "key")
     monkeypatch.setattr(web, "tmdb_episodes", lambda tmdb_id: tmdb)
     found = web.probe_series(show, 1)["available"]
-    assert found[202] == {"service": "S02E02", "name": "L'Université martienne", "match": "title"}  # its French name on TMDB
+    assert found[202] == {"service": "S02E02", "name": "L'Université martienne", "match": "title", "same": True}  # its French name on TMDB
     swapped = [{**t, "number": 5 - t["number"]} if t["season"] == 2 else t for t in service]  # the service's order reversed
     monkeypatch.setattr(web.UNSHACKLE, "call", lambda method, path, **k: {"titles": swapped, "services": [{"tag": "DSNP", "cli_params": []}]})
     found = web.probe_series(show, 1)["available"]
@@ -1818,6 +1818,7 @@ def test_a_check_of_chosen_series_leaves_the_others_finds(tmp_path, monkeypatch)
     after = web.read_json(web.UPGRADES_FILE, {})
     assert asked == ["a", "b", "b"] and {i["tvdbId"] for i in after["items"]} == {1, 2} and after["checked"] == first["checked"]
     assert list(after["series_checked"]) == ["2"]  # its card says when it was checked on its own
+    assert first["scanned"] == [1, 2] and after["scanned"] == [1, 2]  # Episodes goes by Upgrades for these only
     web.scan_upgrades()
     assert web.read_json(web.UPGRADES_FILE, {})["series_checked"] == {}  # a full check: the header's date holds for all
 
@@ -1848,11 +1849,13 @@ def test_upgrades_ask_the_service_for_the_episode_its_title_found():
     show = {"service": "ALL4", "title": "https://c4/24-hours"}
     serie = {"tvdbId": 286362}
     lists = {"286362": {"service": "ALL4", "title": "https://c4/24-hours", "available": {
-        "501": {"service": "S02E10", "name": "A Moment of Madness", "match": "title"},     # Sonarr's S05E01
-        "13": {"service": "S04E01", "name": "The Murder of Rikki Neave - Part 1", "match": "title"},  # Sonarr's S00E13
-        "601": {"service": "S06E01", "name": "Sex and Corruption", "match": "title"}}}}
+        "501": {"service": "S02E10", "name": "A Moment of Madness", "match": "title", "same": True},     # Sonarr's S05E01
+        "13": {"service": "S04E01", "name": "The Murder of Rikki Neave - Part 1", "match": "title", "same": True},  # Sonarr's S00E13
+        "601": {"service": "S06E01", "name": "Sex and Corruption", "match": "title", "same": True},
+        "801": {"service": "S03E02", "name": "The Secret Network: Part One", "match": "title"}}}}  # close, not the very title
     ep = lambda id_, s, n: {"id": id_, "seasonNumber": s, "episodeNumber": n}
     assert web.upgrade_number(lists, serie, show, ep(501, 5, 1)) == "S02E10"  # found by its title, under another number
+    assert web.upgrade_number(lists, serie, show, ep(801, 8, 1)) == "S08E01"  # a close title only: by its number (#12)
     assert web.upgrade_number(lists, serie, show, ep(401, 4, 1)) is None  # its number is another episode's: not asked
     assert web.upgrade_number(lists, serie, show, ep(601, 6, 1)) == "S06E01"
     assert web.upgrade_number(lists, serie, show, ep(701, 7, 2)) == "S07E02"  # nothing says otherwise: its number
@@ -1894,3 +1897,25 @@ def test_an_unreachable_serve_is_said_at_once_for_a_minute(tmp_path):
     assert asked == ["/api/services"]
     serve.configure({})  # settings saved: asked again at once
     assert _raises(serve.services, UnshackleError) and len(asked) == 2
+
+
+def test_sonarr_specials_are_found_in_the_services_seasons_by_title_and_part():
+    from unshacklarr.web import match_by_title, same_title
+    # 24 Hours in Police Custody: TVDB keeps the new episodes as specials, "(1)" and "(2)"; Channel 4 numbers them
+    # in seasons of its own, "- Part 1" and "- Part 2"
+    service = [{"season": 4, "number": 21, "name": "The Ambush - Part 1"}, {"season": 4, "number": 22, "name": "The Ambush - Part 2"},
+               {"season": 5, "number": 9, "name": "Burying Horror"}, {"season": 4, "number": 16, "name": "The Secret Network"}]
+    sonarr = [{"id": 45, "seasonNumber": 0, "episodeNumber": 45, "title": "The Ambush (1)", "airDate": "2026-08-30"},
+              {"id": 46, "seasonNumber": 0, "episodeNumber": 46, "title": "The Ambush (2)", "airDate": "2026-09-06"},
+              {"id": 42, "seasonNumber": 0, "episodeNumber": 42, "title": "Burying Horror", "airDate": "2026-01-27"},
+              {"id": 40, "seasonNumber": 0, "episodeNumber": 40, "title": "The Secret Network", "airDate": "2026-01-13"}]
+    found = match_by_title(service, sonarr, [])
+    assert {k: m["episodeId"] for k, m in found.items()} == {"S04E21": 45, "S04E22": 46, "S05E09": 42, "S04E16": 40}
+    assert not same_title("a family vendetta part 2", "a family vendetta part 1")  # close, but another part
+
+
+def test_a_year_in_brackets_is_not_a_part():
+    from unshacklarr.web import plain_title, same_title
+    assert plain_title("The Ambush (2)") == "the ambush part 2"
+    assert plain_title("Christmas Special (2023)") == "christmas special 2023"  # a year, not part 2023
+    assert same_title(plain_title("Christmas Special (2023)"), plain_title("Christmas Special 2023"))

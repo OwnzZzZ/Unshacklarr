@@ -1780,7 +1780,6 @@
  "{0} episodes queued, one after the other": "{0} эпизодов в очереди, один за другим",
  "{0} is not a language code like fr or en-AU": "{0} — не код языка вроде fr или en-AU",
  "{0} on {1} is another episode, by its title": "{0} на {1} — другой эпизод, судя по названию",
- "{0}: {1} on {2} is a different episode; found by {3} as {4} instead": "{0}: {1} на {2} — другой эпизод; вместо него найден по {3} как {4}",
  "● Connected{0}": "● Подключено{0}",
  "(outside the ladder)": "(вне лестницы)",
  "(step {0})": "(ступень {0})",
@@ -2147,5 +2146,12 @@
  "{0} programmes on {1} are titled {2}: paste its URL on the series": "На {1} {0} программ с названием {2}: вставьте её URL в сериал",
  "↓ Replacing": "↓ Замена",
  "Stopping after this batch…": "Остановка после этого пакета…",
- "{0}: nothing to download": "{0}: нечего скачивать"
+ "{0}: nothing to download": "{0}: нечего скачивать",
+ "another computer": "другой компьютер",
+ "not listed on {0} as {1}": "нет в списке {0} как {1}",
+ "{0} holds a link or a file named like the library's: not joined": "{0} содержит ссылку или файл с именем файла библиотеки: не объединено",
+ "{0} on disk {1} has in better quality (Activity, Upgrades)": "{0} на диске {1} имеет в лучшем качестве (Activity, Upgrades)",
+ "{0} on {1} is a different episode": "{0} на {1} — другая серия",
+ "{0} on {1} is from {2}, {3} aired in {4}: another programme of that title? Paste its URL on the series": "{0} на {1} — {2} года, {3} вышла в {4}: другая передача с тем же названием? Вставьте её URL в сериал",
+ "{0}: {1}; found by {2} as {3} instead": "{0}: {1}; найдено по {2} как {3}"
 }
