@@ -1706,3 +1706,6 @@ input[type=time]:focus:not(.bad) { border-color: var(--accent); box-shadow: 0 0 
 /* A series' numbering, Sonarr's episode order: said; a changed one asks to check the numbering */
 .order-note { display: grid; gap: 8px; justify-items: start; margin: 0 0 var(--gap-field); font-size: 13px; color: var(--muted); }
 .order-note p { margin: 0; } .order-note.warn { padding: 12px 14px; border: 1px solid var(--warn); border-radius: 10px; background: rgb(230 185 74 / .08); color: var(--text); }
+/* Schedule: the end of a season or of the series, beside its episode */
+.finale-tag { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600;
+  vertical-align: 1px; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); }

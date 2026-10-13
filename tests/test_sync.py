@@ -1735,7 +1735,7 @@ def test_episodes_catch_up_and_download_name_another_sonarr(tmp_path, monkeypatc
 
     eps, bad, caught, down = asyncio.run(go())
     assert eps == 200 and bad == 400
-    assert ("episode", "sonarr-4k") in asked and ("episodefile", "sonarr-4k") in asked and ("cdm", "sonarr-4k") in asked
+    assert ("episode", "sonarr-4k") in asked and ("cdm", "sonarr-4k") in asked  # episodes with their files, from that Sonarr
     assert caught["items"] == [{"from": "sonarr-4k"}]
     assert down == 200 and started == ["sonarr-4k"]
 
@@ -2314,3 +2314,15 @@ def test_a_numbering_set_for_another_episode_order_is_said(tmp_path, monkeypatch
     assert sync.order_changed({"service": "NF", "sonarr_order": "official"}, serie) == ""  # no numbering of its own
     assert sync.order_changed(show, {"title": "Show"}) == ""  # Sonarr 4: no order, the aired one
 
+def test_a_full_library_folder_stops_its_series_downloads(tmp_path, monkeypatch):
+    # The room kept free holds for the library folder Sonarr moves a series into, as Sonarr reports it
+    sync = load(tmp_path, monkeypatch)
+    monkeypatch.setitem(sync.SETTINGS, "min_free_gb", 50)
+    sync._root_folders.clear()
+    monkeypatch.setattr(sync, "sonarr_get", lambda path, **p: [{"path": "/tv/", "freeSpace": 20e9}, {"path": "/tv/4K/", "freeSpace": 900e9}])
+    assert "Only 20.0 GB free in Sonarr's library folder /tv" in sync.library_space_problem({"path": "/tv/Show"})
+    assert sync.library_space_problem({"path": "/tv/4K/Show"}) == ""  # its own folder, the deepest one, has room
+    assert sync.library_space_problem({"path": "/movies/Film"}) == ""  # no root folder of Sonarr's holds it
+    monkeypatch.setitem(sync.SETTINGS, "min_free_gb", 0)
+    assert sync.library_space_problem({"path": "/tv/Show"}) == ""  # not checked
+    sync._root_folders.clear()

@@ -616,6 +616,7 @@ def trace(text: str, debug: bool = False) -> None:
         run.raw(f"\r\x1b[2K\x1b[90m{'debug · ' if debug else '· '}{text}\x1b[0m\r\n".replace("\n", "\r\n").replace("\r\r", "\r").encode())
 
 
+FINALES = {"season": "season finale", "series": "series finale", "midseason": "mid-season finale"}  # Sonarr's finaleType
 AUTOMATIC = ("auto", "burst")  # tries nobody asked for by hand
 
 
@@ -1528,6 +1529,40 @@ def free_space_problem() -> str:
     return f"Only {free:.1f} GB free in the downloads folder, less than the {keep:g} GB to keep free: nothing is downloaded until there is room"
 
 
+_root_folders: dict[str, tuple[float, list]] = {}  # by Sonarr ("" the main one): (fetched, its root folders)
+
+
+def root_folders() -> list[dict]:
+    """Sonarr's root folders with their free space, kept 10 minutes; none when Sonarr can't be asked."""
+    key = (instance() or {}).get("name", "")
+    fetched, roots = _root_folders.get(key, (0.0, []))
+    if not fetched or time.monotonic() - fetched > 600:
+        try:
+            found = sonarr_get("rootfolder")
+        except (requests.RequestException, ValueError):
+            return roots
+        roots = [r for r in found if isinstance(r, dict) and r.get("path")] if isinstance(found, list) else []
+        _root_folders[key] = (time.monotonic(), roots)
+    return roots
+
+
+def library_space_problem(serie: dict) -> str:
+    """Why nothing may be downloaded for this series now: the library folder Sonarr moves it into has less room than
+    the settings keep free (Sonarr's own free space for it). Empty when there is room, or it is not checked."""
+    keep = float(SETTINGS.get("min_free_gb") or 0)
+    path = str(serie.get("path") or "").replace("\\", "/")
+    under = [r for r in root_folders() if r.get("freeSpace") is not None
+             and path.startswith(str(r["path"]).replace("\\", "/").rstrip("/") + "/")]
+    if not keep or not under:
+        return ""
+    root = max(under, key=lambda r: len(r["path"]))
+    free = root["freeSpace"] / 1e9
+    if free >= keep:
+        return ""
+    return (f"Only {free:.1f} GB free in Sonarr's library folder {str(root['path']).rstrip('/')}, less than the {keep:g} GB to "
+            "keep free: nothing is downloaded for its series until there is room")
+
+
 def fallback_profiles(show: dict, config: dict) -> list[str]:
     """The profiles to log in with when the series' own is refused (its fallback_profiles, in order), never its own."""
     dl, _ = stacked(show, config)
@@ -2380,7 +2415,9 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
         run.step("done")
         imported_at[(instance() or {}).get("name", ""), ep["id"]] = time.monotonic()
         run.finish("downloaded", "", "Imported by Sonarr")
-        notify_series(show, settings, "success", f"Downloaded: {label}", "Imported by Sonarr.", batch=batch, details=episode_details(ep, show, run))
+        finale = FINALES.get(str(ep.get("finaleType") or ""), "")  # the end of a season or of the series: said
+        notify_series(show, settings, "success", f"Downloaded: {label}{f' · {finale}' if finale else ''}", "Imported by Sonarr.",
+                      batch=batch, details=episode_details(ep, show, run))
 
     for_instance = instance()  # the finishing thread imports into the same Sonarr
 
@@ -2459,6 +2496,12 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                     if manual:
                         run = EpisodeRun(ep, show, kind, service_sxxeyy, batch)
                         run.finish("failed", full, "Make room in the downloads folder, or lower the room kept free in Settings")
+                    continue
+                if full := library_space_problem(ep["series"]):  # where Sonarr moves it: the same room kept free
+                    print(f"{label}: {full}", flush=True)
+                    if manual:
+                        run = EpisodeRun(ep, show, kind, service_sxxeyy, batch)
+                        run.finish("failed", full, "Make room in the library, or lower the room kept free in Settings")
                     continue
                 run = EpisodeRun(ep, show, kind, service_sxxeyy, batch)
                 if numbering is not None:  # this download's own numbering: a retry asks the service the same again
