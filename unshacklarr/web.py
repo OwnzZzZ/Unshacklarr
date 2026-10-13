@@ -2775,9 +2775,10 @@ def tmdb_episodes(tmdb_id: int) -> list[dict]:
 
 
 def plain_title(text: str) -> str:
-    """A title to compare: no accents, case, punctuation or "(1/2)"; TVDB's part "(2)" as the services write it, "part 2"."""
+    """A title to compare: no accents, case, punctuation or "(1/2)"; TVDB's part "(2)" as the services write it, "part 2"
+    (one or two digits: "Special (2023)" is a year, left as it is)."""
     text = unicodedata.normalize("NFKD", text or "").encode("ascii", "ignore").decode().lower()
-    text = re.sub(r"\(\s*(\d+)\s*\)\s*$", r" part \1", re.sub(r"\(\s*\d+\s*/\s*\d+\s*\)", "", text).rstrip())
+    text = re.sub(r"\(\s*(\d{1,2})\s*\)\s*$", r" part \1", re.sub(r"\(\s*\d+\s*/\s*\d+\s*\)", "", text).rstrip())
     return re.sub(r"[^a-z0-9]+", " ", text).strip()
 
 
@@ -2846,10 +2847,14 @@ def same_title(a: str, b: str) -> bool:
     parts = [m[1] if (m := TITLE_PART.search(t)) else None for t in (a, b)]
     if parts[0] and parts[1] and parts[0] != parts[1]:
         return False  # "the ambush part 1" is never "the ambush part 2", however close the rest
-    ratio = difflib.SequenceMatcher(None, a, b).ratio()
+    if a == b:
+        return True
+    # compared for every pair of the service's and Sonarr's episodes: the cheap upper bounds of ratio() first
+    m = difflib.SequenceMatcher(None, a, b)
+    close = lambda at: m.real_quick_ratio() >= at and m.quick_ratio() >= at and m.ratio() >= at
     if min(len(a), len(b)) < 8:
-        return a == b or (a[:4] == b[:4] and ratio >= 0.82)
-    return a in b or b in a or ratio >= 0.85
+        return a[:4] == b[:4] and close(0.82)
+    return a in b or b in a or close(0.85)
 
 
 def titles_of(sonarr_eps: list[dict], tmdb_eps: list[dict], own: bool = True) -> dict[int, set]:

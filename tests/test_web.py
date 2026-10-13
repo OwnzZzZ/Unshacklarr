@@ -1823,3 +1823,10 @@ def test_sonarr_specials_are_found_in_the_services_seasons_by_title_and_part():
     found = match_by_title(service, sonarr, [])
     assert {k: m["episodeId"] for k, m in found.items()} == {"S04E21": 45, "S04E22": 46, "S05E09": 42, "S04E16": 40}
     assert not same_title("a family vendetta part 2", "a family vendetta part 1")  # close, but another part
+
+
+def test_a_year_in_brackets_is_not_a_part():
+    from unshacklarr.web import plain_title, same_title
+    assert plain_title("The Ambush (2)") == "the ambush part 2"
+    assert plain_title("Christmas Special (2023)") == "christmas special 2023"  # a year, not part 2023
+    assert same_title(plain_title("Christmas Special (2023)"), plain_title("Christmas Special 2023"))
