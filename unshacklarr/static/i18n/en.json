@@ -861,6 +861,10 @@
  "Found by its title, under another number: Download asks the service for {0}": [
   "found.service"
  ],
+ "Found in another folder: {0} for Sonarr is {1} here.": [
+  "r.guess.sonarr_root",
+  "r.guess.local_root"
+ ],
  "Found in the environment for the URL above. Leave empty to use it": [],
  "Found in the environment for the address above. Leave empty to use it": [],
  "Found on TMDB": [],
@@ -2528,6 +2532,10 @@
  "Use this TMDB ID for tagging instead of an automatic search. Add --enrich to also take its title, year and original language.": [],
  "Use this TVDB ID for --tvdb-order and tagging instead of looking the series up automatically. Add --enrich to also take its title, year and original language.": [],
  "Use this folder": [],
+ "Use {0} and {1}": [
+  "r.guess.sonarr_root",
+  "r.guess.local_root"
+ ],
  "Use {0}: {1}": [
   "l.service",
   "l.url"
@@ -3081,6 +3089,10 @@
  ],
  "{0} (for Unshacklarr)": [
   "name"
+ ],
+ "{0} (holds your {1} root folders)": [
+  "r",
+  "libRoots.length"
  ],
  "{0} GB": [
   "(it.size / 2 ** 30).toFixed(1)"

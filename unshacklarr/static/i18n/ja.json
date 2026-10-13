@@ -2187,5 +2187,8 @@
  "{0} must be a full path, from /, without ..": "{0} は / から始まる完全なパスで、.. を含まないものにしてください",
  "{0}: adding the audio": "{0}：音声を追加中",
  "{0}: downloading the whole episode": "{0}：エピソード全体をダウンロード中",
- "✓ Unshacklarr reads {0}'s library: {1}": "✓ Unshacklarr は {0} のライブラリを読み取れます：{1}"
+ "✓ Unshacklarr reads {0}'s library: {1}": "✓ Unshacklarr は {0} のライブラリを読み取れます：{1}",
+ "Found in another folder: {0} for Sonarr is {1} here.": "別のフォルダーで見つかりました：Sonarr の {0} はここでは {1} です。",
+ "Use {0} and {1}": "{0} と {1} を使う",
+ "{0} (holds your {1} root folders)": "{0}（{1} 個のルートフォルダーを含む）"
 }

@@ -496,7 +496,7 @@ function renderUpgradeMode() {
 }
 /* Add audio track: each Sonarr's library, as it sees it and as Unshacklarr does; its root folders offered, both sides
    browsable, and a real episode file of that Sonarr's looked for with the two folders, so a wrong pair shows at once. */
-let libWho = "", libRoots = [], libTimer = null;  // "": the main Sonarr; else another one's name
+let libWho = "", libRoots = [], libCommon = "", libTimer = null;  // "": the main Sonarr; else another one's name
 const libOf = () => (libWho && (S.config.settings.sonarrs || []).find((i) => i.name === libWho)) || S.config.settings;
 const FOLDER_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
 function renderLibrary() {
@@ -514,9 +514,11 @@ function renderLibrary() {
 function renderLibraryPicks() {
   const lib = libOf(), browse = (side) => el("button", { type: "button", className: "chip-btn", textContent: "Browse…",
     onclick: () => openFolders(side, (side === "sonarr" ? $("#dx-lib-sonarr") : $("#dx-lib-local")).value.trim(), (path) => setLibrary(side, path)) });
-  const roots = libRoots.filter((r) => r !== lib.library_sonarr_root);
-  $("#dx-lib-sonarr-pick").replaceChildren(...(roots.length ? [el("span", { textContent: "In Sonarr:" }),
-    ...roots.map((r) => el("button", { type: "button", className: "chip-btn", textContent: r, onclick: () => setLibrary("sonarr", r) }))] : []), browse("sonarr"));
+  // several root folders: the one setting converts a single folder, so their common one comes first (it holds them all)
+  const roots = libRoots.length > 1 && libCommon ? [libCommon] : libRoots.filter((r) => r !== lib.library_sonarr_root);
+  $("#dx-lib-sonarr-pick").replaceChildren(...(roots.length && roots[0] !== lib.library_sonarr_root ? [el("span", { textContent: "In Sonarr:" }),
+    ...roots.map((r) => el("button", { type: "button", className: "chip-btn", onclick: () => setLibrary("sonarr", r),
+      textContent: r === libCommon ? `${r} (holds your ${libRoots.length} root folders)` : r }))] : []), browse("sonarr"));
   $("#dx-lib-local-pick").replaceChildren(browse("local"));
 }
 function setLibrary(side, path) {
@@ -536,8 +538,14 @@ function checkLibrary() {
     let r;
     try { r = await api(`/api/library/check?${q}`); } catch (e) { say.textContent = e.message; return; }
     if ((libWho || "") !== (q.get("sonarr") || "")) return;  // another Sonarr picked meanwhile
-    libRoots = r.roots || []; renderLibraryPicks();
+    libRoots = r.roots || []; libCommon = r.common || ""; renderLibraryPicks();
     if (r.ok === true) { say.className = "lib-check ok"; say.textContent = `✓ Unshacklarr reads ${who}'s library: ${r.local_path}`; }
+    else if (r.ok === false && r.guess) {  // found elsewhere in the container: both folders, one click
+      say.className = "lib-check";
+      say.replaceChildren(el("span", { textContent: `Found in another folder: ${r.guess.sonarr_root} for Sonarr is ${r.guess.local_root} here.` }), " ",
+        el("button", { type: "button", className: "chip-btn", textContent: `Use ${r.guess.sonarr_root} and ${r.guess.local_root}`,
+          onclick: () => { setLibrary("sonarr", r.guess.sonarr_root); setLibrary("local", r.guess.local_root); } }));
+    }
     else if (r.ok === false) { say.className = "lib-check err"; say.textContent = `Not found here: ${r.local_path}. Is the library mounted in Unshacklarr's container, in this folder?`; }
     else say.textContent = r.why || "";
   }, 400);
@@ -564,7 +572,7 @@ function openFolders(side, start, use) {
   dlg.addEventListener("close", () => { if (dlg.returnValue === "use" && here) use(here); }, { once: true });
   dlg.returnValue = "";
   dlg.showModal();
-  load(start);
+  load(start || (side === "local" ? "/library" : ""));  // the usual mount for the library; absent, from the top
 }
 
 $("#dx-lib-other").querySelectorAll("button").forEach((b) => b.onclick = () => {

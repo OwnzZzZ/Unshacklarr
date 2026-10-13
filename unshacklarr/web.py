@@ -25,7 +25,7 @@ import threading
 import time
 import unicodedata
 from datetime import date, datetime, timedelta, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from urllib.parse import urlencode, parse_qs, urlparse
 
 import apprise
@@ -3571,11 +3571,34 @@ async def library_browse(request):
         raise web.HTTPBadGateway(text=f"Sonarr did not list {path or 'its folders'}: {no_credentials(e)}") from None
 
 
+LIBRARY_GUESSES = ["/library", "/media", "/tv", "/mnt"]  # where a library is usually mounted, besides the container's mounts
+
+
+def library_guess(sonarr_path: str) -> dict | None:
+    """Both folders, found: the mounted folder holding the end of a real file's path as Sonarr names it (/Syno/Dessins
+    Animés/… is /library/Dessins Animés/…: /Syno as Sonarr sees it, /library as Unshacklarr does). None when none does."""
+    tops = list(LIBRARY_GUESSES)
+    try:  # the container's own mounts: a library bound in at any name
+        tops += [line.split()[1].replace("\\040", " ") for line in Path("/proc/self/mounts").read_text().splitlines()]
+    except OSError:
+        pass
+    skip = ("/proc", "/sys", "/dev", "/run", "/etc", "/data", "/tmp", "/unshackle-config")
+    parts = PurePosixPath(sonarr_path.replace("\\", "/")).parts
+    for top in dict.fromkeys(t for t in tops if t != "/" and not t.startswith(skip)):
+        for k in range(2, len(parts) - 1):  # the shortest Sonarr folder first: it holds the most series
+            if Path(top, *parts[k:]).is_file():
+                return {"sonarr_root": "/" + "/".join(parts[1:k]), "local_root": top}
+    return None
+
+
 def library_check(root: str, local: str) -> dict:
     """Sonarr's root folders, and whether Unshacklarr finds a real episode file of Sonarr's with these two folders."""
     out = {"roots": [], "ok": None, "sonarr_path": "", "local_path": "", "why": ""}
     try:
         out["roots"] = [str(r["path"]).rstrip("/\\") or r["path"] for r in sonarr_sync.sonarr_get("rootfolder") if r.get("path")]
+        # several root folders: the one setting converts a single folder, their common one holds them all
+        common = posixpath.commonpath(out["roots"]) if len(out["roots"]) > 1 and all(r.startswith("/") for r in out["roots"]) else ""
+        out["common"] = common if common not in ("", "/") else ""
         root = root.rstrip("/\\")
         under = lambda p: not root or p == root or p.startswith(root + "/") or p.startswith(root + "\\")
         serie = next((s for s in sonarr_sync.sonarr_series(set()).values()
@@ -3593,6 +3616,8 @@ def library_check(root: str, local: str) -> dict:
     out["sonarr_path"] = str(files[0].get("path") or "")
     found = sonarr_sync.library_file(out["sonarr_path"], (root, local))
     out["local_path"], out["ok"] = str(found), found.is_file()
+    if not out["ok"]:
+        out["guess"] = library_guess(out["sonarr_path"])
     return out
 
 

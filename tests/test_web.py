@@ -1943,7 +1943,13 @@ def test_the_library_folders_are_browsed_and_checked(tmp_path, monkeypatch):
                         else [{"path": "/data/tv/Show/S01E01.mkv"}])
     ok = web.library_check("/data/tv", str(tmp_path / "tv"))
     assert ok["roots"] == ["/data/tv"] and ok["ok"] is True and ok["local_path"] == str(tmp_path / "tv" / "Show" / "S01E01.mkv")
-    assert web.library_check("/data/tv", "/nowhere")["ok"] is False
+    missed = web.library_check("/data/tv", "/nowhere")
+    assert missed["ok"] is False and missed["guess"] is None  # nowhere mounted holds it
+    monkeypatch.setattr(web, "LIBRARY_GUESSES", [str(tmp_path / "tv")])  # the library mounted there: both folders found
+    assert web.library_check("/data/tv", "/nowhere")["guess"] == {"sonarr_root": "/data/tv", "local_root": str(tmp_path / "tv")}
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_get", lambda path, **p: [{"path": "/Syno/Séries/"}, {"path": "/Syno/Dessins Animés/"}]
+                        if path == "rootfolder" else [{"path": "/data/tv/Show/S01E01.mkv"}])
+    assert web.library_check("", "")["common"] == "/Syno"  # several root folders: the one holding them all
     assert "No series" in web.library_check("/other", "/x")["why"]
 
 

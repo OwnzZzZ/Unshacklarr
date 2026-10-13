@@ -20,7 +20,8 @@ const NEWS = [
 const NEWS_KINDS = { new: "New", improved: "Improved", fix: "Fix", security: "Security", note: "Note" };
 const versionKey = (v) => String(v || "0").split(".").map((n) => parseInt(n, 10) || 0).reduce((a, n) => a * 1000 + n, 0);
 function newsUnseen() {
-  const news = S.news || {}, seen = new Set(news.seen || []);
+  if (!S.news) return [];  // the state not in yet (a route applied first): nothing is new, nothing seen by mistake
+  const news = S.news, seen = new Set(news.seen || []);
   return NEWS.filter((n) => !seen.has(n.id) && !(news.installed && versionKey(n.version) <= versionKey(news.installed)));
 }
 async function markNews(ids, list = false) {
