@@ -3582,11 +3582,15 @@ def library_guess(sonarr_path: str) -> dict | None:
         tops += [line.split()[1].replace("\\040", " ") for line in Path("/proc/self/mounts").read_text().splitlines()]
     except OSError:
         pass
-    skip = ("/proc", "/sys", "/dev", "/run", "/etc", "/data", "/tmp", "/unshackle-config")
+    skip = ("/proc", "/sys", "/dev", "/run", "/etc", "/boot", "/data", "/tmp", "/unshackle-config")
     parts = PurePosixPath(sonarr_path.replace("\\", "/")).parts
     for top in dict.fromkeys(t for t in tops if t != "/" and not t.startswith(skip)):
         for k in range(2, len(parts) - 1):  # the shortest Sonarr folder first: it holds the most series
-            if Path(top, *parts[k:]).is_file():
+            try:
+                found = Path(top, *parts[k:]).is_file()
+            except OSError:  # a mount it may not read (/boot/efi): not there
+                found = False
+            if found:
                 return {"sonarr_root": "/" + "/".join(parts[1:k]), "local_root": top}
     return None
 

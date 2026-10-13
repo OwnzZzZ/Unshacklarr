@@ -1945,6 +1945,12 @@ def test_the_library_folders_are_browsed_and_checked(tmp_path, monkeypatch):
     assert ok["roots"] == ["/data/tv"] and ok["ok"] is True and ok["local_path"] == str(tmp_path / "tv" / "Show" / "S01E01.mkv")
     missed = web.library_check("/data/tv", "/nowhere")
     assert missed["ok"] is False and missed["guess"] is None  # nowhere mounted holds it
+    locked = tmp_path / "locked"
+    locked.mkdir()
+    locked.chmod(0)  # a mount it may not read (/boot/efi on a CI runner): passed over, not an error
+    monkeypatch.setattr(web, "LIBRARY_GUESSES", [str(locked)])
+    assert web.library_check("/data/tv", "/nowhere")["guess"] is None
+    locked.chmod(0o700)
     monkeypatch.setattr(web, "LIBRARY_GUESSES", [str(tmp_path / "tv")])  # the library mounted there: both folders found
     assert web.library_check("/data/tv", "/nowhere")["guess"] == {"sonarr_root": "/data/tv", "local_root": str(tmp_path / "tv")}
     monkeypatch.setattr(web.sonarr_sync, "sonarr_get", lambda path, **p: [{"path": "/Syno/Séries/"}, {"path": "/Syno/Dessins Animés/"}]
