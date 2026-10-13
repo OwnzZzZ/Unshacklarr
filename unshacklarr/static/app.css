@@ -1703,3 +1703,6 @@ input[type=time]:focus:not(.bad) { border-color: var(--accent); box-shadow: 0 0 
   font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; line-height: 1; }
 .ax-seg button[aria-checked=true] .chip-default { background: var(--accent); color: var(--accent-ink); }
 .ax-seg .chip-default { display: inline-block; margin: 0; }  /* not the help line of a field (.field small) */
+/* A series' numbering, Sonarr's episode order: said; a changed one asks to check the numbering */
+.order-note { display: grid; gap: 8px; justify-items: start; margin: 0 0 var(--gap-field); font-size: 13px; color: var(--muted); }
+.order-note p { margin: 0; } .order-note.warn { padding: 12px 14px; border: 1px solid var(--warn); border-radius: 10px; background: rgb(230 185 74 / .08); color: var(--text); }

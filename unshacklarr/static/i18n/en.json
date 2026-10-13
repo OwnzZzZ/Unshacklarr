@@ -314,6 +314,9 @@
  "Audio languages that must exist. The title fails even with --best-available.": [],
  "Audio upgrade": [],
  "Audio, in this order": [],
+ "Audio: {0}": [
+  "it.audio.join(\", \")"
+ ],
  "Auto release times": [],
  "Automatic and release-time downloads only run from {0} to {1}.": [
   "from",
@@ -395,6 +398,7 @@
  "Check its Numbering, then try again.": [],
  "Check now": [],
  "Check now asks each service what it has, one episode at a time.": [],
+ "Check now reads each series' files from Sonarr.": [],
  "Check this series' Numbering (its episode table), then try again": [],
  "Checked a moment ago": [],
  "Checked {0} of {1}": [
@@ -415,6 +419,11 @@
   "scan.done",
   "scan.total",
   "scan.sonarr ? ` in ${scan.sonarr}` : \"\"",
+  "scan.series ? ` · ${scan.series}` : \"\""
+ ],
+ "Checking {0} of {1}{2}…": [
+  "scan.done",
+  "scan.total",
   "scan.series ? ` · ${scan.series}` : \"\""
  ],
  "Checking {0}…": [
@@ -559,6 +568,7 @@
  "DETAILS": [],
  "DV": [],
  "Daily": [],
+ "Danish": [],
  "Days kept": [],
  "Days of the week": [],
  "Debug": [],
@@ -607,6 +617,7 @@
  "Download a backup": [],
  "Download audio description tracks.": [],
  "Download it": [],
+ "Download it again": [],
  "Download now": [],
  "Download only": [],
  "Download only: kept until you import or delete it": [],
@@ -621,6 +632,9 @@
  ],
  "Download the {0}": [
   "r.items.length"
+ ],
+ "Download the {0} again": [
+  "n"
  ],
  "Download window": [],
  "Download window times look like 01:00": [],
@@ -672,6 +686,7 @@
   "len(held)",
   "'s' if len(held) > 1 else ''"
  ],
+ "Dutch": [],
  "E-AC-3": [],
  "E-mail": [],
  "EXAMPLE": [],
@@ -717,6 +732,9 @@
  "Episode columns": [],
  "Episode name in file names": [],
  "Episode offset": [],
+ "Episode order changed: {0}": [
+  "ep['series']['title']"
+ ],
  "Episode table of {0}: write S34E06=S29E05 or S34E06=S29E05.2": [
   "key"
  ],
@@ -745,6 +763,7 @@
  "Every airing series you follow already has a service.": [],
  "Every download starts as": [],
  "Every episode of this season is on disk.": [],
+ "Every file has your audio languages.": [],
  "Every hour": [],
  "Every missing episode of this season": [],
  "Every other device is logged out and stops getting push notifications. This one stays logged in.": [],
@@ -784,6 +803,7 @@
  "File": [],
  "Files Sonarr did not take": [],
  "Files a service has in better quality": [],
+ "Files without your audio languages": [],
  "Files your quality ladder says could be better. Check now asks each service what it has, up to 10 episodes of a series at a time, and keeps each answer for the days set in Settings, Upgrades. Replace downloads the better ones over your files, even when Sonarr ranks both the same (H.264 and H.265 in 1080p).": [],
  "Filter by Sonarr library": [],
  "Filter by service": [],
@@ -797,6 +817,7 @@
  ],
  "Finish the setup": [],
  "Finishing": [],
+ "Finnish": [],
  "First day": [],
  "Fix": [],
  "Fix what does not answer in Settings: the restore is done.": [],
@@ -836,6 +857,7 @@
  "Found in the environment for the address above. Leave empty to use it": [],
  "Found on TMDB": [],
  "Français": [],
+ "French": [],
  "Fri": [],
  "From": [],
  "From the history kept since {0}": [
@@ -845,6 +867,7 @@
  "Full now: each new download pushes the oldest out.": [],
  "GB": [],
  "General": [],
+ "German": [],
  "Get cookies.txt LOCALLY for Chrome ↗": [],
  "Getting them": [],
  "Give \"episodeIds\", or \"tvdbId\" and \"episodes\" such as [\"S01E02\"]": [],
@@ -946,6 +969,7 @@
  ],
  "It names this library on series and starts the folders of its downloads: sonarr-2.": [],
  "It only opens the /api/v1 routes: never the password, the cookies or the settings.": [],
+ "Italian": [],
  "Italiano": [],
  "Its address, API key, and TMDB": [],
  "Its address: http(s)://…": [],
@@ -973,6 +997,7 @@
  "Its {0} section is not in the format Unshacklarr writes": [
   "key"
  ],
+ "Japanese": [],
  "Job done": [],
  "Job over": [],
  "Job over · {0}": [
@@ -1005,6 +1030,7 @@
   "w['label']"
  ],
  "Kind": [],
+ "Korean": [],
  "L1, L2, ChromeCDM (Widevine) or SL2, SL3 (PlayReady)": [],
  "Ladder name": [],
  "Ladder {0}": [
@@ -1021,6 +1047,9 @@
   "LANGS[LANG]"
  ],
  "Languages": [],
+ "Languages reads each file's tracks from Sonarr 5; this Sonarr is version {0}": [
+  "major or 'unknown'"
+ ],
  "Languages wanted for forced subtitles, implies -fs. Keeps forced subs only in these languages. Prefix a value with '-' to exclude it, e.g. 'all,-es'.": [],
  "Last success": [],
  "Last sync {0}": [
@@ -1282,9 +1311,11 @@
   "show['service']",
   "', '.join(have) or 'no video'"
  ],
+ "None of the series' accepted audio languages: download the episode again from its service.": [],
  "None.": [],
  "None: every series downloads for the Sonarr above only.": [],
  "None: every service downloads with the Unshackle above.": [],
+ "Norwegian": [],
  "Not a notification URL Apprise knows: {0}…": [
   "url.partition('://')[0] + '://'"
  ],
@@ -1358,6 +1389,7 @@
  "Nothing found on {0} under that name.": [
   "svcName(conf.service)"
  ],
+ "Nothing found yet.": [],
  "Nothing goes out": [],
  "Nothing in the history yet": [],
  "Nothing in use": [],
@@ -1533,6 +1565,8 @@
  "Pick what the episode list shows, and in which order.": [],
  "PlayReady": [],
  "PlayReady, remote": [],
+ "Polish": [],
+ "Portuguese": [],
  "Português (Brasil)": [],
  "Previous month": [],
  "Problems": [],
@@ -1714,9 +1748,11 @@
  "See on GitHub ↗": [],
  "See the history in Activity for why.": [],
  "Select": [],
+ "Select all": [],
  "Select all {0}": [
   "free.length"
  ],
+ "Select none": [],
  "Select the lowest bitrate track within the specified quality. Requires -q/--quality.": [],
  "Select {0} upgrade{1}": [
   "upgrades.length",
@@ -1765,6 +1801,7 @@
  "Set the address of unshackle serve in Settings, Unshackle": [],
  "Set the library folder both as Sonarr sees it and as Unshacklarr sees it, or neither": [],
  "Set up Unshacklarr in a few steps.": [],
+ "Set your country in Settings, Region first: the language comes from it": [],
  "Settings": [],
  "Settings restored": [],
  "Settings restored: {0} series": [
@@ -1827,10 +1864,18 @@
   "IMPORT_ASKS",
   "no_credentials(str(e))"
  ],
+ "Sonarr did not change it: {0}": [
+  "no_credentials(e)"
+ ],
  "Sonarr finished the import but the episode has no new file: {0}": [
   "command.get('message') or 'see Activity in Sonarr'"
  ],
  "Sonarr gave no command to follow: the import is unconfirmed": [],
+ "Sonarr gives this series' episode titles in {0}; services where you watch name them in {1}. In {2}, they match its episodes better.": [
+  "current.language",
+  "want",
+  "want"
+ ],
  "Sonarr has no S{0}E{1} for this series": [
   "season",
   "number"
@@ -1838,6 +1883,9 @@
  "Sonarr has no TMDB ID for this series.": [],
  "Sonarr has no series with TVDB id {0}": [
   "tvdb"
+ ],
+ "Sonarr has no {0}": [
+  "'language ' + name if serie else 'such series'"
  ],
  "Sonarr has no {0} for this series": [
   "', '.join(missing)"
@@ -1854,8 +1902,24 @@
  "Sonarr kept its own file": [],
  "Sonarr lists no episode for this series.": [],
  "Sonarr name": [],
+ "Sonarr now numbers this series in {0}, not in {1} as when its numbering below was set. Its new episodes wait: check the numbering, then confirm it.": [
+  "name(now)",
+  "name(conf.sonarr_order)"
+ ],
+ "Sonarr now numbers {0} in {1}, its numbering here was set for {2}": [
+  "serie.get('title')",
+  "name(now)",
+  "name(was)"
+ ],
  "Sonarr numbers it {0}: this series' Numbering settings map it there": [
   "sxxeyy"
+ ],
+ "Sonarr numbers this series in {0}: set the numbering below for that order.": [
+  "name(now)"
+ ],
+ "Sonarr refreshes {0} in {1}: ask the service again in a minute": [
+  "current.title",
+  "want"
  ],
  "Sonarr refused the API key": [],
  "Sonarr refused the import ({0}): asked again ({1} of {2})": [
@@ -1882,6 +1946,12 @@
  "Sonarr up: {0} · Unshackle up: {1}": [
   "health['sonarr'].get('ok')",
   "health['unshackle'].get('ok')"
+ ],
+ "Sonarr v5 GET {0} {1} → {2}, {3} bytes": [
+  "path",
+  "params or ''",
+  "r.status_code",
+  "len(r.content)"
  ],
  "Sonarr {0}": [
   "i.name"
@@ -1924,6 +1994,7 @@
  "Sort by title": [],
  "Sort by year, newest first": [],
  "Source": [],
+ "Spanish": [],
  "Specials": [],
  "Speed": [],
  "Split a track's segment downloads across this many processes; only engages for large segment batches (default 1).": [],
@@ -1970,6 +2041,7 @@
  "Sure? Remove it from unshackle.yaml": [],
  "Sure? They log in again": [],
  "Sure? Your own ladders will be deleted": [],
+ "Swedish": [],
  "Switched off": [],
  "Sync running…": [],
  "Syncs, release times, retries": [],
@@ -2144,6 +2216,7 @@
   "seen_by('sonarr_downloads', out)"
  ],
  "The next episode starts": [],
+ "The numbering is right": [],
  "The offsets of {0} must be whole numbers": [
   "key"
  ],
@@ -2439,6 +2512,9 @@
  "Use this IMDB ID (e.g. tt1375666) for tagging instead of an automatic search. Add --enrich to also take its title, year and original language.": [],
  "Use this TMDB ID for tagging instead of an automatic search. Add --enrich to also take its title, year and original language.": [],
  "Use this TVDB ID for --tvdb-order and tagging instead of looking the series up automatically. Add --enrich to also take its title, year and original language.": [],
+ "Use {0} titles in Sonarr": [
+  "want"
+ ],
  "Use {0}: {1}": [
   "l.service",
   "l.url"
@@ -2486,6 +2562,14 @@
  ],
  "Warn after": [],
  "Warnings": [],
+ "Watch for it": [],
+ "Watch for it: once the series' service has that language, it is added to the file or the episode is downloaded again, as set in Settings, Download options.": [],
+ "Watch for the {0}": [
+  "n"
+ ],
+ "Watched for the {0} audio": [
+  "it.want"
+ ],
  "Weak": [],
  "WebDAV": [],
  "WebDAV folder": [],
@@ -2551,6 +2635,8 @@
  "Widevine": [],
  "Widevine and PlayReady devices": [],
  "Widevine, pywidevine serve": [],
+ "Without an accepted audio": [],
+ "Without the preferred audio": [],
  "Works": [],
  "Wrong passphrase, or the file is damaged": [],
  "Wrong password": [],
@@ -2562,6 +2648,7 @@
  "Your airing series that Unshackle does not download yet, with the services TMDB finds for them. Pick a service for the ones you want: their new episodes then download on their own.": [],
  "Your answer": [],
  "Your country picks the streaming services the Schedule shows; the time zone, when episodes are tried.": [],
+ "Your files without your audio languages, read from Sonarr 5's own tracks: no file is opened, and nothing is downloaded until you choose. Only the series set up here are checked, against their accepted and preferred audio languages.": [],
  "Your library": [],
  "Your password": [],
  "Your password is still asked before the most sensitive changes.": [],
@@ -2669,6 +2756,9 @@
  "for one,": [],
  "for {0}": [
   "epSonarr"
+ ],
+ "forced subtitles: {0}": [
+  "it.forced.join(\", \")"
  ],
  "found by its title · {0}": [
   "l.url"
@@ -2849,12 +2939,14 @@
   "', '.join(sorted(langs)) or 'none'",
   "', '.join(accepted)"
  ],
+ "such series": [],
  "sx-state {0}": [
   "cls"
  ],
  "tested {0}": [
   "ago(t.at)"
  ],
+ "the aired order": [],
  "the day after": [],
  "the day before": [],
  "the day it airs": [],
@@ -2875,6 +2967,9 @@
  "the service": [],
  "the service defaults": [],
  "the settings": [],
+ "the {0} order": [
+  "t"
+ ],
  "these": [],
  "this computer": [],
  "this device is no longer subscribed": [],
@@ -2899,6 +2994,7 @@
  ],
  "tvdbId must be a number": [],
  "two weeks before": [],
+ "unknown": [],
  "unshacklarr.episodeColumns": [],
  "unshacklarr@example.com": [],
  "unshackle": [],
@@ -3156,10 +3252,18 @@
   "upgrades.length > 1 ? \"s\" : \"\"",
   "svc"
  ],
+ "{0} episode{1} queued again": [
+  "ids.length",
+  "ids.length > 1 ? \"s\" : \"\""
+ ],
  "{0} episode{1} that day{2}: click to change": [
   "n",
   "n === 1 ? \"\" : \"s\"",
   "changed ? \" (changed)\" : \"\""
+ ],
+ "{0} episode{1} watched for their audio": [
+  "ids.length",
+  "ids.length > 1 ? \"s\" : \"\""
  ],
  "{0} episode{1}{2}": [
   "list.length",
@@ -3579,6 +3683,9 @@
  ],
  "{0}'s unshackle.yaml (dl:)": [
   "backend.name or 'Unshackle'"
+ ],
+ "{0}. Its new episodes wait until you check its numbering in Unshacklarr.": [
+  "why"
  ],
  "{0}. Make room, or lower the room kept free in Settings, Unshackle, Folders.": [
   "full"

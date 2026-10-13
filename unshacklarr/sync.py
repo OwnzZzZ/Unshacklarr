@@ -1880,6 +1880,20 @@ def sonarr_get(path: str, **params):
     return r.json()
 
 
+def sonarr_v5_get(path: str, **params):
+    """Sonarr 5's own API (/api/v5): what v3 does not give, such as each file's audio and subtitle tracks."""
+    r = requests.get(f"{sonarr_url()}/api/v5/{path}", headers=sonarr_headers(), params=params, timeout=120)
+    trace(f"Sonarr v5 GET {path} {params or ''} → {r.status_code}, {len(r.content)} bytes", debug=True)
+    r.raise_for_status()
+    return r.json()
+
+
+def sonarr_major() -> int:
+    """Sonarr's major version (5 for 5.0.0.2569); 0 when it does not say."""
+    version = str(sonarr_get("system/status").get("version") or "")
+    return int(version.split(".")[0]) if version.split(".")[0].isdigit() else 0
+
+
 def quality_ranks(profile: dict) -> dict[int, int]:
     """Quality id -> rank in the series' profile, lowest first; a group shares one rank."""
     ranks = {}
@@ -2408,6 +2422,11 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                 continue
             if not manual and not wanted_automatically(show, ep, datetime.now(timezone.utc)):
                 continue
+            if not manual and (why := order_changed(show, ep["series"])):  # its numbering may now name other episodes
+                if first_warning(f"order:{ep['series']['tvdbId']}:{ep['series'].get('seasonType')}"):
+                    notify_series(show, settings, "warning", f"Episode order changed: {ep['series']['title']}",
+                                  f"{why}. Its new episodes wait until you check its numbering in Unshacklarr.")
+                continue
 
             sxxeyy = f"S{ep['seasonNumber']:02}E{ep['episodeNumber']:02}"
             service_sxxeyy = service_episode(show, ep["seasonNumber"], ep["episodeNumber"])
@@ -2645,6 +2664,20 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
 
 imported_at: dict[tuple, float] = {}  # (Sonarr's name, episode id) -> when this process had Sonarr import it
 warned_lock = threading.Lock()
+
+
+def order_changed(show: dict, serie: dict) -> str:
+    """Why a series' numbering may be wrong now: set for one episode order in Sonarr 5 (aired, DVD, Netflix…), Sonarr
+    now numbers it in another. Empty when it has no numbering of its own, or the order is the one it was set for."""
+    was = show.get("sonarr_order")
+    if not was or not any(show.get(k) for k in FALLBACK_NUMBERING):
+        return ""
+    now = str(serie.get("seasonType") or "official")
+    if now == was:
+        return ""
+    name = lambda t: next((x.get("name") for x in serie.get("seasonTypes") or [] if x.get("type") == t), None) or \
+        ("the aired order" if t == "official" else f"the {t} order")
+    return f"Sonarr now numbers {serie.get('title')} in {name(now)}, its numbering here was set for {name(was)}"
 
 
 def first_warning(key: str) -> bool:

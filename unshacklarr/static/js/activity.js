@@ -469,6 +469,75 @@ async function showUpgrades() {
 }
 $("#con-upgrades").onclick = showUpgrades;
 
+/* Languages (Sonarr 5): the library's files without the preferred audio language, or without any accepted one, read
+   from Sonarr's own tracks (nothing opened). Nothing ticked at first: the first are watched for their language (added,
+   or the episode got again, once their service has it), the others downloaded again. */
+let langTimer = null, langPick = new Set(), langLast = null;
+async function showLanguages(fresh = true) {
+  picked_run = "languages";
+  clearTimeout(langTimer);
+  $("#con").classList.add("open");
+  document.querySelectorAll(".crow").forEach((r) => r.classList.toggle("sel", r.id === "con-languages"));
+  $("#cd-top-title").textContent = "Languages";
+  $("#cd-raw").hidden = true;
+  $("#cd-foot").replaceChildren();
+  let r;
+  if (fresh !== false || !langLast) {
+    try { r = langLast = await api("/api/languages"); } catch (e) { return $("#cd-main").replaceChildren(failed(e.message, showLanguages)); }
+  } else r = langLast;
+  if (picked_run !== "languages") return;
+  const scan = r.scan;
+  const check = el("button", { className: "btn" + (scan.running ? " danger" : ""), textContent: scan.running ? "Stop the check" : r.checked ? "Check again" : "Check now",
+    onclick: async (e) => {
+      e.target.disabled = true;
+      try { await api(scan.running ? "/api/languages/stop" : "/api/languages/check", { method: "POST", body: "{}" }); } catch (err) { toast(err.message, true); }
+      showLanguages();
+    } });
+  const state = scan.running ? `Checking ${scan.done} of ${scan.total}${scan.series ? ` · ${scan.series}` : ""}…`
+    : r.checked ? `Checked ${ago(r.checked)}${r.stopped ? ", stopped before the end" : ""}${scan.errors ? ` · ${scan.errors} could not be asked` : ""}` : "Not checked yet.";
+  const group = (lacks) => r.items.filter((i) => i.lacks === lacks);
+  const section = (lacks, title, help, act) => {
+    const items = group(lacks), free = items.filter((i) => !i.waiting), picked = free.filter((i) => langPick.has(i.episodeId));
+    if (!items.length) return [];
+    const go = el("button", { className: "btn primary small", hidden: !picked.length, textContent: act(picked.length), onclick: async (e) => {
+      e.target.disabled = true;
+      const ids = picked.map((i) => i.episodeId);
+      try {
+        if (lacks === "preferred") await api("/api/languages/wait", { method: "POST", body: JSON.stringify({ episodeIds: ids }) });
+        else await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: ids, replace: true }) });
+        toast(lacks === "preferred" ? `${ids.length} episode${ids.length > 1 ? "s" : ""} watched for their audio` : `${ids.length} episode${ids.length > 1 ? "s" : ""} queued again`);
+        ids.forEach((id) => langPick.delete(id));
+        showLanguages();
+      } catch (err) { e.target.disabled = false; toast(err.message, true); }
+    } });
+    const all = el("button", { className: "btn small", hidden: !free.length, textContent: picked.length === free.length ? "Select none" : "Select all",
+      onclick: () => { if (picked.length === free.length) free.forEach((i) => langPick.delete(i.episodeId)); else free.forEach((i) => langPick.add(i.episodeId)); showLanguages(false); } });
+    const rows = items.map((it) => el("label", { className: "left-row up-row" },
+      el("input", { type: "checkbox", checked: langPick.has(it.episodeId), disabled: it.waiting, ariaLabel: `${it.series} ${it.sxxeyy}`,
+        onchange: (e) => { if (e.target.checked) langPick.add(it.episodeId); else langPick.delete(it.episodeId); showLanguages(false); } }),
+      thumb(`lang:${it.episodeId}`, S.series.find((x) => x.tvdbId === it.tvdbId)?.poster || ""),  // one image per row
+      el("div", {}, el("b", { textContent: `${it.series} ${it.sxxeyy}` }),
+        el("small", { textContent: [`Audio: ${it.audio.join(", ")}`, it.forced.length && `forced subtitles: ${it.forced.join(", ")}`, it.file].filter(Boolean).join(" · ") }),
+        ...(it.waiting ? [el("small", { className: "left-hand", textContent: `Watched for the ${it.want} audio` })] : []))));
+    return [el("div", { className: "miss-bar" }, el("span", {}, el("b", { textContent: `${title} (${items.length})` }), el("br"), el("small", { className: "muted", textContent: help })),
+      el("span", { className: "up-acts" }, all, go)), el("div", {}, ...rows)];
+  };
+  const parts = [
+    ...section("preferred", "Without the preferred audio", "Watch for it: once the series' service has that language, it is added to the file or the episode is downloaded again, as set in Settings, Download options.",
+      (n) => (n === 1 ? "Watch for it" : `Watch for the ${n}`)),
+    ...section("accepted", "Without an accepted audio", "None of the series' accepted audio languages: download the episode again from its service.",
+      (n) => (n === 1 ? "Download it again" : `Download the ${n} again`)),
+  ];
+  $("#cd-main").replaceChildren(el("div", { style: "display:grid;gap:14px" },
+    el("div", { className: "cd-head" }, el("div", {}, el("h3", { textContent: "Languages" }),
+      el("small", { className: "line1", textContent: "Your files without your audio languages, read from Sonarr 5's own tracks: no file is opened, and nothing is downloaded until you choose. Only the series set up here are checked, against their accepted and preferred audio languages." }))),
+    el("div", { className: "miss-bar" }, el("span", { className: "muted", textContent: state }), el("span", { className: "up-acts" }, check)),
+    ...(parts.length ? parts : [el("p", { className: "muted", textContent: scan.running ? "Nothing found yet." : r.checked ? "Every file has your audio languages." : "Check now reads each series' files from Sonarr." })])));
+  const tick = () => { if (picked_run !== "languages") return; if (document.hidden || $("#tab-log").hidden) langTimer = setTimeout(tick, 3000); else showLanguages(); };
+  if (scan.running) langTimer = setTimeout(tick, 3000);
+}
+$("#con-languages").onclick = showLanguages;
+
 /* Stats: what the history adds up to, in the detail pane. */
 async function showStats() {
   picked_run = "stats";

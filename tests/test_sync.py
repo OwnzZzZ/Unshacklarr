@@ -2302,3 +2302,15 @@ def test_the_sign_in_hint_waits_for_two_quiet_minutes(tmp_path, monkeypatch):
         pass
     hints = [n for n, s in said if "sign in" in s]
     assert len(hints) == 1 and hints[0] >= 9  # only once quiet for 2 minutes (30 s a poll here), not while serve talks
+
+
+def test_a_numbering_set_for_another_episode_order_is_said(tmp_path, monkeypatch):
+    # Sonarr 5: a series numbered in its Netflix order since its numbering here was set for the aired one
+    sync = load(tmp_path, monkeypatch)
+    serie = {"title": "Show", "seasonType": "netflix", "seasonTypes": [{"type": "official", "name": "Aired Order"}, {"type": "netflix", "name": "Netflix Order"}]}
+    show = {"service": "NF", "season_map": {"2": 3}, "sonarr_order": "official"}
+    assert sync.order_changed(show, serie) == "Sonarr now numbers Show in Netflix Order, its numbering here was set for Aired Order"
+    assert sync.order_changed({**show, "sonarr_order": "netflix"}, serie) == ""  # set for that order
+    assert sync.order_changed({"service": "NF", "sonarr_order": "official"}, serie) == ""  # no numbering of its own
+    assert sync.order_changed(show, {"title": "Show"}) == ""  # Sonarr 4: no order, the aired one
+

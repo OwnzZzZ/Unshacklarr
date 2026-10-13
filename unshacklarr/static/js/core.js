@@ -389,6 +389,8 @@ async function openDrawer(s, tab, fromRoute = false) {
     ...S.services.map((t) => el("option", { value: t, textContent: t })));
   $("#d-service").value = conf.service || "";
   $("#d-url").value = conf.title || "";
+  renderOrder();
+  renderSeriesLanguage();
   $("#d-fallback").value = conf.fallback_profiles || "";
   renderFind(conf.service);
   $("#d-subs").value = conf.subs_accept || "";
@@ -708,3 +710,44 @@ function renderMeta(s) {
     ...inOtherSonarrs(s, ext),
     s.year ? ` · ${s.year}` : "");
 }
+/* Sonarr 5 numbers a series in an episode order (aired, DVD, Netflix…): a numbering set here is for one order; Sonarr
+   numbering it in another since, its new episodes wait (sync.order_changed) until the numbering is checked. */
+const NUMBERED = ["season_map", "season_offset", "season_offset_from", "episode_offset", "episode_map"];
+function renderOrder() {
+  const conf = S.config.series[current.tvdbId] || {}, box = $("#d-order"), now = current.order || "official";
+  const name = (t) => current.orders?.[t] || (t === "official" ? "the aired order" : `the ${t} order`);
+  const changed = conf.sonarr_order && conf.sonarr_order !== now && NUMBERED.some((k) => conf[k]);
+  box.className = `order-note${changed ? " warn" : ""}`;
+  box.hidden = !changed && now === "official";
+  if (box.hidden) return box.replaceChildren();
+  if (changed) $("#d-adv").open = true;
+  box.replaceChildren(el("p", { textContent: changed
+    ? `Sonarr now numbers this series in ${name(now)}, not in ${name(conf.sonarr_order)} as when its numbering below was set. Its new episodes wait: check the numbering, then confirm it.`
+    : `Sonarr numbers this series in ${name(now)}: set the numbering below for that order.` }),
+    ...(changed ? [el("button", { type: "button", className: "btn small", textContent: "The numbering is right",
+      onclick: () => { conf.sonarr_order = now; dirty(); renderOrder(); } })] : []));
+}
+$("#d-adv").addEventListener("input", (e) => {  // numbering set now: for the order Sonarr has now
+  if (!$("#oneoff-dialog").open && ["d-seasons", "d-offset", "d-soffset", "d-sfrom", "d-epmap"].includes(e.target.id)) {
+    S.config.series[current.tvdbId].sonarr_order = current.order || "official";
+    renderOrder();
+  }
+});
+/* Sonarr 5 gives a series' titles in its metadata language: English by default, against a service naming episodes in
+   your language, they meet less; one click asks Sonarr for them in yours (it refreshes the series at once). */
+function renderSeriesLanguage() {
+  const box = $("#d-lang"), conf = S.config.series[current.tvdbId] || {}, want = S.metadataLanguage;
+  box.hidden = !conf.service || !want || !current.language || current.language === want;
+  if (box.hidden) return box.replaceChildren();
+  box.replaceChildren(el("p", { textContent: `Sonarr gives this series' episode titles in ${current.language}; services where you watch name them in ${want}. In ${want}, they match its episodes better.` }),
+    el("button", { type: "button", className: "btn small", textContent: `Use ${want} titles in Sonarr`, onclick: async (e) => {
+      e.target.disabled = true;
+      try {
+        await api(`/api/series/${current.tvdbId}/language`, { method: "POST", body: "{}" });
+        current.language = want;
+        toast(`Sonarr refreshes ${current.title} in ${want}: ask the service again in a minute`);
+        renderSeriesLanguage();
+      } catch (err) { e.target.disabled = false; toast(err.message, true); }
+    } }));
+}
+

@@ -31,6 +31,14 @@ Every change worth knowing, newest first. The format follows
 - **Upgrades you choose.** Which series are checked, how long an answer is kept, how far back. (#10, by mj23au)
 - **Other release groups.** A file from another group is replaced by the same quality too. (#10, by mj23au)
 
+**Sonarr 5**
+- **Languages.** Your files without your audio languages, read from Sonarr 5's own tracks: watch them for the
+  preferred audio, or download them again. In Activity.
+- **Titles in your language.** A series whose titles Sonarr gives in English offers, on its page, to have them in
+  yours (French in France): its episodes then match the service's better.
+- **Episode order.** A series Sonarr numbers in another order (DVD, Netflix…) says so in its Numbering; once its order
+  changes after its numbering was set, its new episodes wait until you confirm the numbering.
+
 **Everywhere**
 - **What's new.** Click the version in the header to see what changed.
 - **No spoilers.** Episode titles stay blurred until you click them. In Settings › Interface.

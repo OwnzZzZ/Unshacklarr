@@ -1808,3 +1808,51 @@ def test_tvdb_titles_keep_only_true_translations(tmp_path, monkeypatch):
         def raise_for_status(self): pass
     monkeypatch.setattr(web.requests, "get", lambda url, params=None, **k: Page(pages.get((params or {}).get("lang"), "")))
     assert web.tvdb_titles(383203) == {"S01E01": "Le pilote"}  # Home is English on both: not a French title
+
+
+def test_languages_lists_files_without_an_accepted_or_the_preferred_audio(tmp_path, monkeypatch):
+    # Sonarr 5 reads each file's tracks: the library is checked without opening a file
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    sync = web.sonarr_sync
+    (tmp_path / "config.yaml").write_text("settings: {audio_accept: 'fr,en', audio_prefer: fr}\nseries:\n  1: {service: X, title: a}\n")
+    monkeypatch.setattr(sync, "sonarr_series", lambda wanted: {1: {"id": 7, "tvdbId": 1, "title": "Show"}})
+    eps = [{"id": 11, "seasonNumber": 1, "episodeNumber": 1, "hasFile": True, "episodeFileId": 101},
+           {"id": 12, "seasonNumber": 1, "episodeNumber": 2, "hasFile": True, "episodeFileId": 102},
+           {"id": 13, "seasonNumber": 1, "episodeNumber": 3, "hasFile": True, "episodeFileId": 103},
+           {"id": 14, "seasonNumber": 1, "episodeNumber": 4, "hasFile": True, "episodeFileId": 104}]
+    track = lambda *langs: {"audioStreams": [{"language": l} for l in langs], "subtitleStreams": [{"language": "fre", "forced": True}]}
+    files = [{"id": 101, "relativePath": "S1/a.mkv", "mediaInfo": track("fre", "eng")},  # fine
+             {"id": 102, "relativePath": "S1/b.mkv", "mediaInfo": track("eng")},  # English only: not the preferred French
+             {"id": 103, "relativePath": "S1/c.mkv", "mediaInfo": track("ger")},  # none accepted
+             {"id": 104, "relativePath": "S1/d.mkv", "mediaInfo": track("und")}]  # untagged: says nothing
+    monkeypatch.setattr(sync, "sonarr_get", lambda path, **p: eps)
+    monkeypatch.setattr(sync, "sonarr_v5_get", lambda path, **p: files)
+    web.scan_languages()
+    found = {i["episodeId"]: i for i in web.read_json(web.LANGUAGES_FILE, {})["items"]}
+    assert set(found) == {12, 13}
+    assert found[12]["lacks"] == "preferred" and found[12]["want"] == "fr" and found[12]["audio"] == ["en"] and found[12]["forced"] == ["fr"]
+    assert found[13]["lacks"] == "accepted" and found[13]["audio"] == ["de"]
+
+
+def test_a_series_titles_are_asked_of_sonarr_in_your_language(monkeypatch):
+    # Sonarr 5: the series' metadata language set to the one where you watch (French for France); Sonarr refreshes it
+    from unshacklarr import web
+    sync = web.sonarr_sync
+    monkeypatch.setitem(sync.SETTINGS, "country", "FR")
+    assert web.metadata_language() == "French"
+    serie = {"id": 974, "tvdbId": 447183, "title": "Shifting Gears", "language": {"id": 1, "name": "English"}}
+    assert web.series_entry({**serie, "images": []})["language"] == "English"
+    monkeypatch.setattr(sync, "sonarr_series", lambda wanted: {447183: serie})
+    monkeypatch.setattr(sync, "sonarr_get", lambda path, **p: [{"id": 1, "name": "English"}, {"id": 2, "name": "French"}] if path == "language" else dict(serie))
+    put = []
+
+    class Answer:
+        def raise_for_status(self): pass
+    monkeypatch.setattr(web.requests, "put", lambda url, json=None, **k: put.append((url, json)) or Answer())
+    web.set_series_language(447183, "French")
+    assert put[0][0].endswith("/api/v3/series/974") and put[0][1]["language"] == {"id": 2, "name": "French"}
+    assert serie["language"]["name"] == "French"  # the library kept here says so too

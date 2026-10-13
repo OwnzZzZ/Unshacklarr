@@ -425,6 +425,11 @@ def sonarr_series() -> list[dict]:
     return sorted((series_entry(s) for s in r.json()), key=lambda s: s["title"].lower())
 
 
+def known_order(tvdb: int) -> str:
+    """The episode order the main Sonarr numbers a series in, from the library already read (never asked here)."""
+    return str((sonarr_sync._series_by_tvdb.get("", (0.0, {}))[1].get(tvdb) or {}).get("seasonType") or "official")
+
+
 def series_entry(s: dict) -> dict:
     """A Sonarr series as the page lists it."""
     stats = s.get("statistics") or {}
@@ -441,6 +446,10 @@ def series_entry(s: dict) -> dict:
             "network": s.get("network"),  # its channel: its catch-up service when TMDB links to none
             "missing": max(0, stats.get("episodeCount", 0) - stats.get("episodeFileCount", 0)),
             "poster": poster,
+            # Sonarr 5: the episode order it numbers the series in (aired, DVD, Netflix…), and the ones it has
+            "order": str(s.get("seasonType") or "official"),
+            "orders": {str(t.get("type")): str(t.get("name") or t.get("type")) for t in s.get("seasonTypes") or [] if t.get("type")},
+            **({"language": str(s["language"].get("name") or "")} if isinstance(s.get("language"), dict) else {}),  # its titles' (Sonarr 5)
         }
 
 
@@ -535,6 +544,7 @@ async def state(_):
         "service_domains": domains,
         "builtin_ladders": sonarr_sync.BUILTIN_LADDERS,
         "news": read_json(NEWS_FILE, {}),
+        "metadata_language": metadata_language(),
         "backups": backups_info(),
         "network_services": {str(s["tvdbId"]): tag for s in series if (tag := service_for_network(s.get("network"), set(services)))},
         "instances": {str(k): v for k, v in (await asyncio.to_thread(instances_of_series)).items()},
@@ -686,6 +696,9 @@ async def save_config(request):
             "service_options": check_options(show.get("service_options") or {}, service_specs, str(key)),
         }
         series[int(key)].update(check_numbering(show, str(key)))
+        if any(series[int(key)].get(k) for k in sonarr_sync.FALLBACK_NUMBERING):  # the order its numbering was set for
+            given = str(show.get("sonarr_order") or "")
+            series[int(key)]["sonarr_order"] = given if re.fullmatch(r"[a-z]{1,24}", given) else known_order(int(key))
         # The automatic sync only takes episodes aired from here on: see sonarr_sync.wanted_automatically.
         series[int(key)]["since"] = str(show.get("since") or datetime.now(timezone.utc).isoformat(timespec="seconds"))
         try:  # the day the service publishes, from the day it airs: 1 after, -N days before (up to two weeks)
@@ -2744,6 +2757,40 @@ def suggest_season_map(sonarr_eps: list[dict], service_eps: list[dict]) -> dict[
 
 
 # ponytail: the main language where you watch; a country missing here reads its services' titles in English
+SONARR_LANGUAGES = {"fr": "French", "de": "German", "es": "Spanish", "it": "Italian", "nl": "Dutch", "pt": "Portuguese",
+                    "pl": "Polish", "sv": "Swedish", "da": "Danish", "no": "Norwegian", "fi": "Finnish", "ja": "Japanese", "ko": "Korean"}
+
+
+def metadata_language() -> str:
+    """The language Sonarr's titles are best in, where you watch: the name Sonarr gives it (French); empty: none known."""
+    return SONARR_LANGUAGES.get(COUNTRY_LANGUAGE.get(sonarr_sync.SETTINGS.get("country", ""), ""), "")
+
+
+def set_series_language(tvdb: int, name: str) -> None:
+    """The series' metadata language in the main Sonarr (Sonarr 5): its titles come in it, Sonarr refreshing it at once."""
+    serie = sonarr_sync.sonarr_series({tvdb}).get(tvdb)
+    lang = next((l for l in sonarr_sync.sonarr_get("language") if l.get("name") == name), None)
+    if not serie or not lang:
+        raise web.HTTPNotFound(text=f"Sonarr has no {'language ' + name if serie else 'such series'}")
+    full = sonarr_sync.sonarr_get(f"series/{serie['id']}")
+    full["language"] = {"id": lang["id"], "name": lang["name"]}
+    requests.put(f"{sonarr_sync.sonarr_url()}/api/v3/series/{serie['id']}", json=full, headers=sonarr_sync.sonarr_headers(),
+                 timeout=60).raise_for_status()
+    serie["language"] = full["language"]  # the library kept here says so too
+
+
+async def series_language(request):
+    """A series' page, Sonarr 5: its titles in the language where you watch, as its service names its episodes."""
+    tvdb, name = int(request.match_info["tvdb"]), metadata_language()
+    if not name:
+        raise web.HTTPBadRequest(text="Set your country in Settings, Region first: the language comes from it")
+    try:
+        await asyncio.to_thread(set_series_language, tvdb, name)
+    except requests.RequestException as e:
+        raise web.HTTPBadGateway(text=f"Sonarr did not change it: {no_credentials(e)}") from None
+    return web.json_response({"language": name})
+
+
 COUNTRY_LANGUAGE = {"FR": "fr", "BE": "fr", "CH": "fr", "LU": "fr", "CA": "fr", "DE": "de", "AT": "de", "ES": "es",
                     "MX": "es", "AR": "es", "IT": "it", "NL": "nl", "PT": "pt", "BR": "pt", "PL": "pl", "SE": "sv",
                     "DK": "da", "NO": "no", "FI": "fi", "JP": "ja", "KR": "ko"}
@@ -3429,6 +3476,106 @@ async def upgrade_groups(_):
         return [{"group": t, "where": w, "series": ids} for (t, w), ids in sorted(out.items(), key=lambda x: -len(x[1]))], none
     groups, none = await asyncio.to_thread(found)
     return web.json_response({"groups": groups, "none": none})
+
+
+# ---- Languages (Sonarr 5): the library's files without an accepted or the preferred audio, from Sonarr's own tracks ----
+LANGUAGES_FILE = sonarr_sync.DATA / "languages_found.json"  # the last check: {"checked", "items", "stopped"}
+language_scan = {"running": False, "done": 0, "total": 0, "series": "", "errors": 0, "stop": False}
+
+
+def file_languages(f: dict) -> tuple[list[str], list[str]]:
+    """A file's audio languages and its forced subtitles' (fr, en), from Sonarr 5's tracks; "und" (no tag) left out."""
+    info = f.get("mediaInfo") or {}
+    lang = lambda t: sonarr_sync.base_lang(sonarr_sync.LANGS.get(str(t).lower(), str(t)))
+    audio = [lang(a["language"]) for a in info.get("audioStreams") or [] if a.get("language") and a["language"] != "und"]
+    forced = [lang(x["language"]) for x in info.get("subtitleStreams") or [] if x.get("forced") and x.get("language")]
+    return list(dict.fromkeys(audio)), list(dict.fromkeys(forced))
+
+
+def scan_languages() -> None:
+    """Each set-up series' files, as Sonarr 5 reads their tracks: those with none of the accepted audio languages, or
+    without the preferred one. One episode list and one file list per series; nothing downloaded."""
+    config, found = read_config(), []
+    language_scan.update(running=True, done=0, total=0, series="", errors=0, stop=False)
+    try:
+        shows = {int(k): v for k, v in (config.get("series") or {}).items() if v.get("service") and v.get("title")}
+        series = [(tvdb, s) for tvdb, s in sonarr_sync.sonarr_series(set(shows)).items() if tvdb in shows]
+        language_scan["total"] = len(series)
+        for tvdb, serie in series:
+            if language_scan["stop"]:
+                break
+            show, language_scan["series"] = shows[tvdb], serie["title"]
+            accepted, prefer = sonarr_sync.accepted_audio(show, config), sonarr_sync.preferred_audio(show, config)
+            try:
+                if accepted or prefer:
+                    episodes = {e["episodeFileId"]: e for e in sonarr_sync.sonarr_get("episode", seriesId=serie["id"]) if e.get("hasFile")}
+                    for f in sonarr_sync.sonarr_v5_get("episodefile", seriesId=serie["id"]):
+                        e = episodes.get(f.get("id"))
+                        audio, forced = file_languages(f)
+                        if not e or not audio:
+                            continue  # untagged tracks say nothing either way
+                        lacks = "accepted" if accepted and not sonarr_sync.speaks(audio, accepted) else \
+                            "preferred" if prefer and not sonarr_sync.speaks(audio, [prefer]) else ""
+                        if lacks:
+                            found.append({"tvdbId": tvdb, "series": serie["title"], "episodeId": e["id"],
+                                          "season": e["seasonNumber"], "number": e["episodeNumber"],
+                                          "sxxeyy": f"S{e['seasonNumber']:02}E{e['episodeNumber']:02}",
+                                          "file": Path(str(f.get("relativePath") or f.get("path") or "")).name,
+                                          "audio": audio, "forced": forced, "lacks": lacks,
+                                          "want": prefer if lacks == "preferred" else ", ".join(accepted)})
+            except (requests.RequestException, ValueError, KeyError) as err:
+                language_scan["errors"] += 1
+                print(f"Languages: {serie['title']}: {no_credentials(err)}", flush=True)
+            language_scan["done"] += 1
+        write_atomic(LANGUAGES_FILE, json.dumps({"checked": datetime.now(timezone.utc).isoformat(), "items": found,
+                                                 "stopped": language_scan["stop"]}))
+    except requests.RequestException as err:
+        language_scan["errors"] += 1
+        print(f"Languages: Sonarr is unreachable: {no_credentials(err)}", flush=True)
+    finally:
+        language_scan.update(running=False, series="")
+
+
+async def languages(request):
+    """Activity, Languages: the last check's files, each said waiting when its preferred audio is watched for."""
+    last = await asyncio.to_thread(read_json, LANGUAGES_FILE, {})
+    watched = await asyncio.to_thread(read_json, sonarr_sync.UPGRADES_FILE, {})
+    items = [{**i, "waiting": str(i["episodeId"]) in watched} for i in last.get("items") or []]
+    return web.json_response({"scan": {k: v for k, v in language_scan.items() if k != "stop"}, "checked": last.get("checked"),
+                              "items": items, "stopped": bool(last.get("stopped"))})
+
+
+async def languages_action(request):
+    """Start a check (Sonarr 5 only: its tracks), or stop the one going on."""
+    if request.match_info["action"] == "stop":
+        language_scan["stop"] = True
+    elif not language_scan["running"]:
+        try:
+            major = await asyncio.to_thread(sonarr_sync.sonarr_major)
+        except requests.RequestException as e:
+            raise web.HTTPBadGateway(text=f"Sonarr is unreachable: {no_credentials(e)}") from None
+        if major < 5:
+            raise web.HTTPBadRequest(text=f"Languages reads each file's tracks from Sonarr 5; this Sonarr is version {major or 'unknown'}")
+        language_scan["running"] = True  # at once: a second click before the thread starts is not a second check
+        threading.Thread(target=scan_languages, daemon=True).start()
+    return web.json_response({"running": language_scan["running"]})
+
+
+async def languages_wait(request):
+    """The episodes picked in Languages, watched for their preferred audio: the hourly check gets it (added, or the
+    episode again) once their service has it."""
+    body = await json_object(request)
+    ids = {int(x) for x in body.get("episodeIds") or [] if re.fullmatch(r"\d{1,9}", str(x))}
+    config = read_config()
+    picked = [i for i in (await asyncio.to_thread(read_json, LANGUAGES_FILE, {})).get("items") or []
+              if i["episodeId"] in ids and i["lacks"] == "preferred"]
+    for i in picked:
+        show = config["series"].get(i["tvdbId"]) or {}
+        if not show.get("service"):
+            continue
+        ep = {"id": i["episodeId"], "seasonNumber": i["season"], "episodeNumber": i["number"], "series": {"tvdbId": i["tvdbId"], "title": i["series"]}}
+        sonarr_sync.note_upgrade(ep, show, sonarr_sync.service_episode(show, i["season"], i["number"]) or i["sxxeyy"], i["want"])
+    return web.json_response({"watched": len(picked)})
 
 
 async def upgrades(request):
@@ -4371,6 +4518,10 @@ app.add_routes([
     web.post("/api/download", download),
     web.get("/api/missing", missing),
     web.get("/api/upgrades", upgrades),
+    web.get("/api/languages", languages),
+    web.post(r"/api/series/{tvdb:\d{1,9}}/language", series_language),
+    web.post(r"/api/languages/{action:check|stop}", languages_action),
+    web.post("/api/languages/wait", languages_wait),
     web.get("/api/upgrades/groups", upgrade_groups),
     web.post(r"/api/upgrades/{action:check|stop}", upgrades_action),
     web.post("/api/probe", probe),
