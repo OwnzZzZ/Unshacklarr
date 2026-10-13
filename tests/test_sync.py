@@ -1760,7 +1760,7 @@ def test_the_series_page_and_upgrades_know_the_other_sonarr(tmp_path, monkeypatc
     assert web.instances_of_series() == {} and web.sonarrs_of_series() == ({}, [])  # down: the page opens without waiting for it
     assert web.upgrades_file("") == web.UPGRADES_FILE and web.upgrades_file("sonarr-4k").name == "upgrades_found-sonarr-4k.json"
     seen = []
-    monkeypatch.setattr(web, "upgrade_candidates", lambda config: seen.append(((web.sonarr_sync.instance() or {}).get("name"),
+    monkeypatch.setattr(web, "upgrade_candidates", lambda config, only=None: seen.append(((web.sonarr_sync.instance() or {}).get("name"),
                                                                               config["series"][1].get("ladder"))) or [])
     web.scan_upgrades("sonarr-4k")
     assert seen == [("sonarr-4k", "4K only")]  # its files, on its own ladder
@@ -2338,3 +2338,21 @@ def test_a_separate_programme_is_found_by_its_title_and_looked_for_once_a_day(tm
         except sync.Unmatched as e:
             assert "2 programmes on iP" in str(e)
         assert bool(asked) is searched  # the automatic sync waits a day; a pick by hand looks at once
+
+
+def test_a_job_paused_while_waiting_for_a_slot_blocks_no_one(tmp_path, monkeypatch):
+    # A job paused while it waits loses its number (release_job): the next one asking still gets in line and in
+    sync = load(tmp_path, monkeypatch)
+    monkeypatch.setitem(sync.SETTINGS, "downloads_at_once", 1)
+    sync.slot_line[""] = ["B"]  # B waits, then is paused: its number is gone
+    sync.slot_jobs[""] = []
+    sync.release_job("B")
+    sync.slot_line[""].remove("B")  # B's thread leaves the line (its finally)
+    with sync.download_slot(""):
+        assert sync.slot_jobs[""]  # C got the slot at once
+    sync.slot_line[""] = ["B"]
+    with sync.download_slot(""):  # B still in line, numberless: sorted last, the sort raises nothing
+        pass
+    sync.slot_line.clear()
+    sync.slot_jobs.clear()
+

@@ -2145,5 +2145,7 @@
  "{0} on {1} has {2} titles: which is {3}? Paste its URL on the series": "У {0} на {1} {2} названий: какое из них {3}? Вставьте его URL в сериал",
  "{0} on {1} is from {2}, {3} aired in {4}": "{0} на {1} — {2} года, {3} вышел в {4}",
  "{0} programmes on {1} are titled {2}: paste its URL on the series": "На {1} {0} программ с названием {2}: вставьте её URL в сериал",
- "↓ Replacing": "↓ Замена"
+ "↓ Replacing": "↓ Замена",
+ "Stopping after this batch…": "Остановка после этого пакета…",
+ "{0}: nothing to download": "{0}: нечего скачивать"
 }

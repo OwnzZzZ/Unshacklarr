@@ -69,6 +69,10 @@ The new options are off until you turn them on.
 - **A series' link found by its title** when the service only links an episode (HBO Max). (#12, by mj23au)
 - **No more "may be an episode" warning** for a series that is simply new. (#12, reported by mj23au)
 - **Upgrades ask for the right episode** when the service numbers it apart, found by its title. (#12, by mj23au)
+- **Pausing a job waiting for its download slot** no longer blocks every download after it until a restart.
+- **The diagnostic** leaves out your other Sonarrs' and servers' addresses, your folders and your backup account.
+- **Lighter on the server and the phone:** a single series checked alone, a server that is down, and the pages
+  left open in the background no longer cost repeated waits and requests.
 - **A new season not translated on TVDB yet** is no longer taken for other episodes on a service in another language.
 
 ## [1.4.0] - 2026-10-07

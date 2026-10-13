@@ -1347,7 +1347,7 @@
  "Not managed": [],
  "Not on the service": [],
  "Not on {0}": [
-  "svc"
+  "svcName(c.notOn)"
  ],
  "Not on {0} yet{1}": [
   "show['service']",
@@ -1980,6 +1980,7 @@
  "Stop the job": [],
  "Stopped": [],
  "Stopped before it started": [],
+ "Stopping after this batch…": [],
  "Stopping {0} {1}": [
   "c.series",
   "c.sxxeyy"
@@ -2666,7 +2667,7 @@
  "changes": [],
  "characterData": [],
  "checked {0}": [
-  "ago(epChecked)"
+  "ago(r.seriesChecked[eps[0].tvdbId])"
  ],
  "childList": [],
  "command for this series, and the profiles to log in with.": [],
@@ -3751,6 +3752,9 @@
   "show['service']",
   "alt['service']",
   "alt_sxxeyy"
+ ],
+ "{0}: nothing to download": [
+  "outcomeOf(c)"
  ],
  "{0}: recognised from the link": [
   "svcName(tag)"

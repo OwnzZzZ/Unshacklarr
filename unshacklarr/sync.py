@@ -843,10 +843,11 @@ def download_slot(server: str, run: EpisodeRun | None = None):
         if job not in holders:  # its job doesn't hold a slot yet: in line, first asked, first served
             line = slot_line.setdefault(server, [])
             job_order.setdefault(job, next(job_numbers))  # an episode on its own: numbered as it comes
-            line.append(job)
-            line.sort(key=job_order.__getitem__)  # in the order picked, whenever each got here
             told = False
             try:
+                line.append(job)
+                # in the order picked, whenever each got here; a job paused while it waited lost its number: last
+                line.sort(key=lambda j: job_order.get(j, float("inf")))
                 while (limit := int(SETTINGS.get("downloads_at_once") or 0)) and (len(holders) >= limit or line[0] != job):
                     if run and run.id in stop_waiting:
                         stop_waiting.discard(run.id)
@@ -896,7 +897,7 @@ def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float) -> l
     if run:  # what Activity's Stop button cancels
         run.card["job_id"] = job_id
         run.save()
-    last_status, line, logged = None, "", 0
+    last_status, line, logged, saved = None, "", 0, ""
     seen: dict[str, float] = {}  # serve lists only the tracks downloading now: keep the others
     timed: dict[str, list] = {}  # each track's [first seen, done]: how long it took
     labels: dict[str, str] = {}  # a track's key (its part and its place, or its label from an older serve): its label
@@ -957,7 +958,9 @@ def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float) -> l
                 run.card["step"] = "downloading"
             ask_for_action(run, job.get("action_needed") if status not in TERMINAL else None)
             ask_for_input(run, job.get("input_prompt") if status not in TERMINAL else None)
-            run.save()
+            if (snapshot := json.dumps(run.card)) != saved:  # unchanged: not written again every half second, which
+                run.save()                                   # would make every reader parse the whole history again
+                saved = snapshot
         if run and (count := int(job.get("log_count") or 0)) > logged:  # Unshackle's own log, as it goes
             lines = (job.get("log") or [])[-(count - logged):]
             if count - logged > len(lines):
@@ -1056,7 +1059,7 @@ def run_job_retrying(payload: dict, run: EpisodeRun | None = None, sleep=time.sl
             cause = getattr(e, "cause", str(e))
             waits = SERVE_RETRY_AFTER if UNREACHABLE in cause else RETRY_AFTER
             wait = waits[tries] if tries < len(waits) else None
-            if not subs_tried and (m := SUBS_MISSING.search(f"{cause}\n{e}")):  # its one line, else all it said
+            if not subs_tried and (m := SUBS_MISSING.search(f"{cause}\n{e}"[-4000:])):  # its one line, else all it said
                 missing = {base_lang(x) for x in re.split(r"[,\s]+", m.group(1)) if x.strip(" '[]")} if m.group(1) else None
                 if fixed := subs_dropped(payload, missing):
                     subs_tried, payload = True, fixed
@@ -1425,6 +1428,8 @@ def programme_for(show: dict, ep: dict, config: dict, manual: bool = False) -> d
         if not pasted:
             with jobs_lock:
                 known = read_json(PROGRAMMES_FILE, {})
+                # a miss still wanted is looked for again daily, which renews it: one a week old is no longer wanted
+                known = {k: v for k, v in known.items() if not k.startswith("miss:") or time.time() - v.get("at", 0) < 7 * 86400}
                 known[f"miss:{key}"] = {"at": time.time(), "why": str(e)}
                 write_atomic(PROGRAMMES_FILE, json.dumps(known))
         raise
@@ -1709,6 +1714,9 @@ def add_track(episode_id: int, want: str) -> bool:
             if all(lengths) and abs(lengths[0] - lengths[1]) > 2:
                 raise RuntimeError(f"The {want} audio lasts {lengths[1]:.0f} s, the file {lengths[0]:.0f} s: not joined")
             joined = out / have.name
+            # the downloads folder is shared: a link planted there must not make mkvmerge write through it (as finalize)
+            if out.is_symlink() or joined.exists() or joined.is_symlink() or any(f.is_symlink() for f in out.rglob("*")):
+                raise RuntimeError(f"{out.name} holds a link or a file named like the library's: not joined")
             run.step("joining")
             cmd = ["mkvmerge", "-q", "-o", str(joined), str(have), "--no-video", "--no-subtitles", "--no-chapters", "--no-attachments", str(got[0])]
             done = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace")
@@ -2558,6 +2566,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                         match = programme_for(show, ep, config, manual)
                     except Unmatched as e:
                         run.say(f"{label}: {e}, not downloaded")
+                        run.card["notOn"] = show["service"]  # aired, just not found there: not "not out yet"
                         run.finish("unavailable", str(e))
                         if first_warning(f"{out.name}:programme"):
                             notify_series(show, settings, "warning", f"No programme found yet: {label}",

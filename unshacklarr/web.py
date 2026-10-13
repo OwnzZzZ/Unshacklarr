@@ -2660,7 +2660,9 @@ def instances_of_series() -> dict[int, list[dict]]:
         if health.get("sonarrs", {}).get(inst["name"], {}).get("ok") is False:
             continue
         try:
-            found = on_sonarr(inst, sonarr_sync.sonarr_series, managed)
+            # its library kept an hour, as sonarrs_of_series has it: an instance lacking some series set up here
+            # (a 4K one) would otherwise be asked for its whole library again at each page load
+            found = on_sonarr(inst, sonarr_sync.sonarr_series, set())
         except requests.RequestException:
             continue
         for tvdb in managed & set(found):
@@ -3287,14 +3289,16 @@ UPGRADE_PAUSE = 2.0  # seconds between two episodes asked of a service
 upgrade_scan = {"running": False, "done": 0, "total": 0, "series": "", "errors": 0, "stop": False, "sonarr": ""}
 
 
-def upgrade_candidates(config: dict) -> list[tuple]:
+def upgrade_candidates(config: dict, only: set | None = None) -> list[tuple]:
     """Every file of a series with a ladder that is not on its first step, or, with upgrade_other_groups, from another
     release group than the series' downloads carry: (series, show, ladder, episode, track, step). track["ours"] is that
-    group, track["group"] the file's other one."""
+    group, track["group"] the file's other one. only: just those series (tvdb ids); the others' files aren't asked of Sonarr."""
     other_groups = bool(sonarr_sync.SETTINGS.get("upgrade_other_groups"))
     shows = {int(k): v for k, v in (config.get("series") or {}).items() if v.get("service") and v.get("title")}
     work = []
     for tvdb, serie in sonarr_sync.sonarr_series(set(shows)).items():
+        if only and tvdb not in only:
+            continue
         show = shows.get(tvdb)
         ladder = show and not show.get("skip_upgrades") and sonarr_sync.ladder_of(show, config)
         if not ladder:
@@ -3380,9 +3384,8 @@ def scan_upgrades_in(inst: dict | None, name: str, only: set | None = None) -> N
     seen = read_json(upgrades_seen_file(name), {})
     lists = {} if inst else read_json(SERVICE_LISTS, {})  # kept with the main Sonarr's episode ids only
     try:
-        work = upgrade_candidates(config)
+        work = upgrade_candidates(config, only)
         if only:
-            work = [w for w in work if w[0]["tvdbId"] in only]
             seen = {k: v for k, v in seen.items() if k not in {str(w[3]["id"]) for w in work}}  # asked afresh
         upgrade_scan["total"] = len(work)
         ask: dict[int, list] = {}
@@ -3405,7 +3408,7 @@ def scan_upgrades_in(inst: dict | None, name: str, only: set | None = None) -> N
                 chunk = chunks[start:start + size]
                 serie, show, ladder = chunk[0][:3]
                 upgrade_scan["series"] = serie["title"]
-                wanted = {}
+                wanted, asked = {}, False
                 for w in chunk:
                     if key := upgrade_number(lists, serie, show, w[3]):
                         wanted[key] = w
@@ -3417,6 +3420,7 @@ def scan_upgrades_in(inst: dict | None, name: str, only: set | None = None) -> N
                     if request.get("remote"):
                         continue  # a --remote download lists no tracks
                     request["wanted"] = list(wanted)
+                    asked = True
                     listed = sonarr_sync.list_tracks(show, config, request, ladder) or []
                 except (UnshackleError, ValueError) as err:
                     upgrade_scan["errors"] += 1
@@ -3424,7 +3428,8 @@ def scan_upgrades_in(inst: dict | None, name: str, only: set | None = None) -> N
                     continue
                 finally:
                     upgrade_scan["done"] += len(chunk)
-                    time.sleep(UPGRADE_PAUSE)
+                    if asked:  # a pause between two asks of a service, none when nothing was asked
+                        time.sleep(UPGRADE_PAUSE)
                 by_key: dict[str, list] = {}
                 for ep in listed:
                     t = ep.get("title") or {}
@@ -3485,7 +3490,7 @@ async def upgrades(request):
     done = {(c.get("tvdbId"), c.get("sxxeyy")) for c in mine if c.get("outcome") == "downloaded" and (c.get("ended") or "") > (last.get("checked") or "")}
     busy = {(c.get("tvdbId"), c.get("sxxeyy")) for c in mine if c.get("outcome") == "running"}
     items = [{**i, "running": (i["tvdbId"], i["sxxeyy"]) in busy} for i in last.get("items") or [] if (i["tvdbId"], i["sxxeyy"]) not in done]
-    return web.json_response({"scan": {k: v for k, v in upgrade_scan.items() if k != "stop"},
+    return web.json_response({"scan": {**{k: v for k, v in upgrade_scan.items() if k != "stop"}, "stopping": upgrade_scan["running"] and upgrade_scan["stop"]},
                               "checked": last.get("checked"), "items": items, "stopped": bool(last.get("stopped")),
                               "seriesChecked": last.get("series_checked") or {}})
 
@@ -3497,7 +3502,8 @@ async def upgrades_action(request):
     elif not upgrade_scan["running"]:
         body = await json_object(request) if request.can_read_body else {}
         inst = sonarr_named(str(body.get("sonarr") or "")) if request.can_read_body else None
-        only = {int(x) for x in body.get("series") or [] if str(x).isdigit()}
+        listed = body.get("series") if isinstance(body.get("series"), list) else []
+        only = {int(x) for x in listed if re.fullmatch(r"\d{1,9}", str(x))}  # "²" is a digit int() refuses
         if sonarr_sync.unset_ladder(inst):
             raise web.HTTPBadRequest(text=f"Choose a quality ladder for Sonarr {inst['name']} in Settings, Sonarr first")
         upgrade_scan["running"] = True  # at once: a second click before the thread starts is not a second check
@@ -3539,7 +3545,16 @@ def diagnostic(run_id: str) -> str:
     tail = log.read_text(encoding="utf8", errors="replace").splitlines()[-300:] if log.exists() else []
     config = public_config(read_config())
     show = config["series"].get(card.get("tvdbId")) or config["series"].get(str(card.get("tvdbId"))) or {}
-    settings = {k: v for k, v in config["settings"].items() if not k.endswith("_url") and k not in ("proxy_auth_from",)}
+    # pasted in a public issue: no address, folder, bucket or account of the user's, the other Sonarrs' and servers' names only
+    private = re.compile(r".*_url$|.*downloads.*|backup_remote_.*|library_.*_root|proxy_auth_from|cookies_dir|unshackle_config_dir")
+    settings = {k: v for k, v in config["settings"].items() if not private.fullmatch(k)}
+    for key in ("sonarrs", "backends"):
+        if isinstance(settings.get(key), list):
+            settings[key] = [{k: v for k, v in i.items() if k not in ("url", "public_url", "downloads", "api_key")}
+                             for i in settings[key] if isinstance(i, dict)]
+    via = str((card.get("setup") or {}).get("via") or "")
+    if via and via != "this computer" and not via.startswith("remote server"):  # another serve's host: its name only
+        card = {**card, "setup": {**card["setup"], "via": via.split(" (")[0] if " (" in via else "another computer"}}
     parts = [
         f"# Unshacklarr diagnostic: {card.get('series')} {card.get('sxxeyy')}",
         f"Unshacklarr {__version__}{f' ({BUILD})' if BUILD else ''} · Unshackle {health['unshackle'].get('version') or '?'} · Python {sys.version.split()[0]}",

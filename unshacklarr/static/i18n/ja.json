@@ -2148,5 +2148,7 @@
  "{0} on {1} has {2} titles: which is {3}? Paste its URL on the series": "{1} の {0} にはタイトルが {2} 件あります。{3} はどれですか？シリーズにその URL を貼り付けてください",
  "{0} on {1} is from {2}, {3} aired in {4}": "{1} の {0} は {2} 年のもの、{3} は {4} 年放送",
  "{0} programmes on {1} are titled {2}: paste its URL on the series": "{1} に {2} という番組が {0} 件あります。シリーズにその URL を貼り付けてください",
- "↓ Replacing": "↓ 置き換え中"
+ "↓ Replacing": "↓ 置き換え中",
+ "Stopping after this batch…": "このバッチの後で停止します…",
+ "{0}: nothing to download": "{0}：ダウンロードするものはありません"
 }

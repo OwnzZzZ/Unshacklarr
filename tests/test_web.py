@@ -1859,3 +1859,38 @@ def test_upgrades_ask_the_service_for_the_episode_its_title_found():
     assert web.upgrade_number({}, serie, show, ep(401, 4, 1)) == "S04E01"  # no listing: as before
     other = {"286362": {**lists["286362"], "title": "https://c4/another"}}
     assert web.upgrade_number(other, serie, show, ep(401, 4, 1)) == "S04E01"  # a listing of another URL: as before
+
+
+def test_a_diagnostic_shows_no_address_folder_or_account(tmp_path, monkeypatch):
+    # Pasted in a public issue: the other Sonarrs' and servers' addresses, the S3 account and folders stay out
+    import json
+    from unshacklarr import web
+    monkeypatch.setattr(web.sonarr_sync, "RUNS_DIR", tmp_path)
+    (tmp_path / "r1.json").write_text(json.dumps({"tvdbId": 1, "series": "Show", "sxxeyy": "S01E01",
+                                                   "setup": {"via": "nas (10.0.0.5)"}}))
+    config = {"series": {}, "settings": {"sonarrs": [{"name": "sonarr-4k", "url": "https://sonarr4k.example.org"}],
+                                         "backends": [{"name": "nas", "url": "http://10.0.0.5:8786"}],
+                                         "backup_remote_user": "AKIAIOSFODNN7EXAMPLE", "backup_remote_bucket": "my-bucket",
+                                         "downloads": "/data/downloads", "library_4k_root": "/media/4k", "country": "GB"}}
+    monkeypatch.setattr(web, "read_config", lambda: config)
+    monkeypatch.setattr(web, "public_config", lambda c: c)
+    text = web.diagnostic("r1")
+    for private in ("sonarr4k.example.org", "10.0.0.5", "AKIA", "my-bucket", "/data/downloads", "/media/4k"):
+        assert private not in text, private
+    assert "sonarr-4k" in text and '"nas"' in text and "GB" in text
+
+
+
+def test_an_unreachable_serve_is_said_at_once_for_a_minute(tmp_path):
+    from unshacklarr.backend import Unshackle, UnshackleError
+    serve, asked = Unshackle(tmp_path), []
+
+    def call(method, path, **kw):
+        asked.append(path)
+        raise UnshackleError("unshackle serve is unreachable at http://nas:8786: timed out")
+    serve.call = call
+    for _ in range(3):  # the page's state asks three times: the connection is waited for once
+        assert _raises(serve.services, UnshackleError)
+    assert asked == ["/api/services"]
+    serve.configure({})  # settings saved: asked again at once
+    assert _raises(serve.services, UnshackleError) and len(asked) == 2

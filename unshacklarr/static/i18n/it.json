@@ -2142,5 +2142,7 @@
  "{0} on {1} has {2} titles: which is {3}? Paste its URL on the series": "{0} su {1} ha {2} titoli: qual è {3}? Incolla il suo URL nella serie",
  "{0} on {1} is from {2}, {3} aired in {4}": "{0} su {1} è del {2}, {3} è andato in onda nel {4}",
  "{0} programmes on {1} are titled {2}: paste its URL on the series": "{0} programmi su {1} si intitolano {2}: incolla il suo URL nella serie",
- "↓ Replacing": "↓ Sostituzione"
+ "↓ Replacing": "↓ Sostituzione",
+ "Stopping after this batch…": "Arresto dopo questo gruppo…",
+ "{0}: nothing to download": "{0}: niente da scaricare"
 }

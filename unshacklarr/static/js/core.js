@@ -65,8 +65,8 @@ function trFind(key, depth) {
     const parts = key.split(" · "), done = parts.map((x) => tr(x, depth + 1));
     if (done.some((x, i) => x !== parts[i])) out = done.join(" · ");
   }
-  if (out === undefined && depth < 3) {
-    for (const p of TP) {
+  if (out === undefined && depth < 3 && key.length <= 300) {  // a long text (a log line) is no template: their lazy groups
+    for (const p of TP) {                                       // backtrack for seconds on it
       if (!key.includes(p.anchor)) continue;
       const m = p.re.exec(key);
       // a template with little text of its own ("{0} ago", "{0} of {1}") takes short fillers only, not a whole sentence
@@ -84,6 +84,7 @@ function trText(node) {
   const t = tr(v);
   if (t === v) return;
   const out = node.parentElement?.closest(".field > small") ? breakSentences(t) : t;
+  if (translated.size > 5000) translated.clear();  // live texts ("43%", "3 min ago") would fill it over days
   translated.add(out);
   node.nodeValue = out;
 }

@@ -324,6 +324,7 @@ const svcName = (tag) => S.serviceNames?.[tag] || tag;  // "RMC+" for RMCP
 let epBusy = new Map(), epBusyTimer = null;
 async function refreshEpBusy(s) {
   let cards;
+  if (document.hidden) { clearTimeout(epBusyTimer); epBusyTimer = setTimeout(() => refreshEpBusy(s), 20000); return; }  // out of sight
   try { cards = await api("/api/runs?live=1"); } catch { cards = null; }
   if (current !== s) return;
   if (cards) {
