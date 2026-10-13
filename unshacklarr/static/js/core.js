@@ -435,6 +435,7 @@ async function openDrawer(s, tab, fromRoute = false) {
 function renderSeriesState() {
   const conf = current && S.config.series[current.tvdbId], box = $("#ds-state");
   if (!conf) return;
+  renderSeriesLanguage();  // its service picked or changed since the page opened: said then too
   const sick = conf.service && S.health[current.tvdbId];
   const [cls, text] = !conf.service ? ["", "Not downloaded by Unshackle"]
     : sick ? ["down", `Its downloads from ${svcName(conf.service)} fail`]
@@ -737,7 +738,8 @@ $("#d-adv").addEventListener("input", (e) => {  // numbering set now: for the or
    your language, they meet less; one click asks Sonarr for them in yours (it refreshes the series at once). */
 function renderSeriesLanguage() {
   const box = $("#d-lang"), conf = S.config.series[current.tvdbId] || {}, want = S.metadataLanguage;
-  box.hidden = !conf.service || !want || !current.language || current.language === want;
+  // a series set up here, or one made in your language (Surveillant !), whatever the service picked yet
+  box.hidden = !want || !current.language || current.language === want || !(conf.service || current.originalLanguage === want);
   if (box.hidden) return box.replaceChildren();
   box.replaceChildren(el("p", { textContent: `Sonarr gives this series' episode titles in ${current.language}; services where you watch name them in ${want}. In ${want}, they match its episodes better.` }),
     el("button", { type: "button", className: "btn small", textContent: `Use ${want} titles in Sonarr`, onclick: async (e) => {

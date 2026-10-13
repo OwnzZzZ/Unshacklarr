@@ -449,6 +449,7 @@ def series_entry(s: dict) -> dict:
             "order": str(s.get("seasonType") or "official"),
             "orders": {str(t.get("type")): str(t.get("name") or t.get("type")) for t in s.get("seasonTypes") or [] if t.get("type")},
             **({"language": str(s["language"].get("name") or "")} if isinstance(s.get("language"), dict) else {}),  # its titles' (Sonarr 5)
+            **({"originalLanguage": str(s["originalLanguage"].get("name") or "")} if isinstance(s.get("originalLanguage"), dict) else {}),
             # a season's own name, where Sonarr has one (Sonarr 5: a documentary strand's, an anime's arcs)
             **({"seasonTitles": titles} if (titles := {str(x["seasonNumber"]): str(x["title"]) for x in s.get("seasons") or []
                                                        if x.get("title")}) else {}),

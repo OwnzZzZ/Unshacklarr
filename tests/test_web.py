@@ -1888,6 +1888,7 @@ def test_a_series_titles_are_asked_of_sonarr_in_your_language(monkeypatch):
     monkeypatch.setitem(sync.SETTINGS, "country", "FR")
     assert web.metadata_language() == "French"
     serie = {"id": 974, "tvdbId": 447183, "title": "Shifting Gears", "language": {"id": 1, "name": "English"}}
+    assert web.series_entry({**serie, "images": [], "originalLanguage": {"id": 2, "name": "French"}})["originalLanguage"] == "French"
     assert web.series_entry({**serie, "images": []})["language"] == "English"
     monkeypatch.setattr(sync, "sonarr_series", lambda wanted: {447183: serie})
     monkeypatch.setattr(sync, "sonarr_get", lambda path, **p: [{"id": 1, "name": "English"}, {"id": 2, "name": "French"}] if path == "language" else dict(serie))
