@@ -57,6 +57,7 @@ The new options are off until you turn them on.
 
 - **Missing subtitles no longer stop a download:** it comes with the languages it has. (#16, by mj23au)
 - **An import Sonarr confirms late, or refuses while busy** ("database is locked"), is asked again. (#10, by mj23au)
+- **An import Sonarr says it did but moved nothing** (its database locked midway) is asked once more. (#10, by mj23au)
 - **No second download** of an episode Unshackle may still be fetching. (#10, by mj23au)
 - **Retry works for another Sonarr's copy.** (#10, by mj23au)
 - **An empty episode folder** no longer stops the episode from downloading again. (#10, by mj23au)

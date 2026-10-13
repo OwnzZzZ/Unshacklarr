@@ -2302,3 +2302,57 @@ def test_the_sign_in_hint_waits_for_two_quiet_minutes(tmp_path, monkeypatch):
         pass
     hints = [n for n, s in said if "sign in" in s]
     assert len(hints) == 1 and hints[0] >= 9  # only once quiet for 2 minutes (30 s a poll here), not while serve talks
+
+
+def test_an_import_sonarr_said_it_did_but_moved_nothing_is_asked_once_more(tmp_path, monkeypatch):
+    # By mj23au (#10): Sonarr's database locked mid-import: its command ends "completed", the file is still in the
+    # folder, the episode keeps its old file. Asked once more; not when the file has gone; never a third time
+    sync = load(tmp_path, monkeypatch)
+    monkeypatch.setattr(sync, "IMPORT_RETRY_WAIT", 0)
+    out = tmp_path / "unshackle-111-S00E45"
+    out.mkdir()
+    (out / "Show.S00E45.mkv").write_bytes(b"x")
+    folder = sync.seen_by("sonarr_downloads", out)
+    candidate = {"path": f"{folder}/Show.S00E45.mkv", "quality": {"quality": {"name": "WEBDL-1080p"}}, "languages": []}
+    monkeypatch.setattr(sync, "sonarr_get", lambda path, **p: [candidate] if path == "manualimport" else {"hasFile": True, "episodeFileId": 3})
+    posts, outcomes = [], []
+
+    class Answer:
+        status_code = 200
+        def raise_for_status(self): pass
+        def json(self): return {"id": 7}
+
+    def post(url, **kw):
+        posts.append(1)
+        return Answer()
+
+    def wait(ep, command, old):
+        if outcomes.pop(0):
+            raise sync.NoNewFile("Sonarr finished the import but the episode has no new file: Manually imported 1 files")
+
+    monkeypatch.setattr(sync.requests, "post", post)
+    monkeypatch.setattr(sync, "wait_for_import", wait)
+    ep = {"id": 5, "seriesId": 1}
+
+    outcomes[:] = [True, False]  # moved nothing, then imported
+    sync.import_episode(dict(ep), out, replace=True)
+    assert len(posts) == 2
+
+    posts.clear()
+    outcomes[:] = [True, True]  # nothing either time: no third ask
+    try:
+        sync.import_episode(dict(ep), out, replace=True)
+        raise AssertionError("an import that never moved the file passed")
+    except sync.NoNewFile:
+        pass
+    assert len(posts) == 2
+
+    posts.clear()
+    outcomes[:] = [True]
+    (out / "Show.S00E45.mkv").unlink()  # gone from the folder: something did move it, not asked again
+    try:
+        sync.import_episode(dict(ep), out, replace=True)
+        raise AssertionError("asked again with nothing left to import")
+    except sync.NoNewFile:
+        pass
+    assert len(posts) == 1
