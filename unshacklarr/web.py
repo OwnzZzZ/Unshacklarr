@@ -3577,14 +3577,13 @@ LIBRARY_GUESSES = ["/library", "/media", "/tv", "/mnt"]  # where a library is us
 def library_guess(sonarr_path: str) -> dict | None:
     """Both folders, found: the mounted folder holding the end of a real file's path as Sonarr names it (/Syno/Dessins
     Animés/… is /library/Dessins Animés/…: /Syno as Sonarr sees it, /library as Unshacklarr does). None when none does."""
-    tops = list(LIBRARY_GUESSES)
+    skip = ("/proc", "/sys", "/dev", "/run", "/etc", "/boot", "/data", "/tmp", "/unshackle-config")  # the system's, ours
     try:  # the container's own mounts: a library bound in at any name
-        tops += [line.split()[1].replace("\\040", " ") for line in Path("/proc/self/mounts").read_text().splitlines()]
+        mounts = [line.split()[1].replace("\\040", " ") for line in Path("/proc/self/mounts").read_text().splitlines()]
     except OSError:
-        pass
-    skip = ("/proc", "/sys", "/dev", "/run", "/etc", "/boot", "/data", "/tmp", "/unshackle-config")
+        mounts = []
     parts = PurePosixPath(sonarr_path.replace("\\", "/")).parts
-    for top in dict.fromkeys(t for t in tops if t != "/" and not t.startswith(skip)):
+    for top in dict.fromkeys([*LIBRARY_GUESSES, *(m for m in mounts if m != "/" and not m.startswith(skip))]):
         for k in range(2, len(parts) - 1):  # the shortest Sonarr folder first: it holds the most series
             try:
                 found = Path(top, *parts[k:]).is_file()
