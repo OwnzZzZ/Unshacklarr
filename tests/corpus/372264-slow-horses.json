@@ -1,0 +1,1419 @@
+{
+ "title": "Slow Horses",
+ "tvdb": 372264,
+ "show": {
+  "service": "ATV",
+  "title": "umc.cmc.2szz3fdt71tl1ulnbp8utgq5o",
+  "release_time": "03:00"
+ },
+ "tmdb_key": true,
+ "country": "FR",
+ "inputs": {
+  "service": [
+   {
+    "type": "episode",
+    "name": "L'échec est contagieux",
+    "id": "umc.cmc.72legmwolm5ytctyq637r6x0",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Pot de bureau",
+    "id": "umc.cmc.203niwm1n7h0fftkcw8r3iylz",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 1,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Faute grave",
+    "id": "umc.cmc.60rdw75dp3hbwj33ro1s38k34",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 1,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Heures de visite",
+    "id": "umc.cmc.3m94dlpwwzy1ttuzxb9smndkn",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 1,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Fiasco",
+    "id": "umc.cmc.2gaojf6y4nvua7a5x43njfzet",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 1,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Folies",
+    "id": "umc.cmc.4bjo748dolp8g7tiuhe93jw54",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 1,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Terminus",
+    "id": "umc.cmc.3tsv69ijl9farxjp0o68e2hm4",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 2,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Bons baisers d'Upshott",
+    "id": "umc.cmc.6vnvh0nal4yv7f3zjya8m7s01",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 2,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Jeux à boire",
+    "id": "umc.cmc.5ncs4q0gagkkbqn1pzuc5vukt",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 2,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Cigales",
+    "id": "umc.cmc.6gszxz8lz5ytmtanpeuxqeeb2",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 2,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Tactiques politiciennes",
+    "id": "umc.cmc.dl24v1gqy0833pnq0g9ptvh5",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 2,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Vieux comptes",
+    "id": "umc.cmc.7gvyyj3uls7bloec7z321cnd7",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 2,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Jeux étranges",
+    "id": "umc.cmc.65kxtyfe36ctvu1s8g3shqmp5",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 3,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Leçons douloureuses",
+    "id": "umc.cmc.f334fl9zt24ofwgbt54p53ke",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 3,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Négocier avec des tigres",
+    "id": "umc.cmc.24uwurt8i7vdm7ny8p6czykqy",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 3,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Invités intrusifs",
+    "id": "umc.cmc.41pfc015g9499tu0356qnuthi",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 3,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Nettoyage",
+    "id": "umc.cmc.2efntlqenou87rzko76vqom9h",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 3,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Footprint",
+    "id": "umc.cmc.rvso0fg0te5mkeius8890cyw",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 3,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Vol d'identité",
+    "id": "umc.cmc.6hbdhd5kn6ux3sb8as80xh30c",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 4,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Un étranger dans la ville",
+    "id": "umc.cmc.57fe1p0q6kr27uhu4lz8jmjr8",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 4,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "À quoi pensez-vous ?",
+    "id": "umc.cmc.2l0t4h7vhkpxagdmuni4qrbxc",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 4,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Retours",
+    "id": "umc.cmc.lzfv76mh0vpvij19btfkk9rf",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 4,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Grave Danger",
+    "id": "umc.cmc.2b5cbgh7ebc7sy9vskcosny18",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 4,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Bonjour, au revoir",
+    "id": "umc.cmc.5bbc4mjlw2ww9x3qdya2lv4n7",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 4,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Rendez-vous lamentables",
+    "id": "umc.cmc.7ga7spk55wu6backxu2ti3hel",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 5,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Sans contact avec l'extérieur",
+    "id": "umc.cmc.9zrk1bmglghrk6yzjrbgjx5o",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 5,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Histoires à dormir debout",
+    "id": "umc.cmc.6d4yqxoe3bbii61zk7njjgdmk",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 5,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Missiles",
+    "id": "umc.cmc.1wm4xz8la3dwlatn60h4xwixb",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 5,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Cirque",
+    "id": "umc.cmc.1wkdjr14qeyep1l8ynyal1wv9",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 5,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Cicatrices",
+    "id": "umc.cmc.ew4elnx31v1orlgm7s9kh0ot",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 5,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Le cycle de la vie",
+    "id": "umc.cmc.51w9brugnyj6nv6alsz3vmyoy",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 6,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Père toxique",
+    "id": "umc.cmc.2v8zvhltr30ls635ahiy75yr",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 6,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Résurrection",
+    "id": "umc.cmc.396rd7na1rqn1bvxkghirl1sm",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 6,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Le chat et la souris",
+    "id": "umc.cmc.1j45wjeydyyykslo52sjoh0ma",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Slow Horses",
+    "season": 6,
+    "number": 4
+   }
+  ],
+  "episodes": [
+   {
+    "id": 35644,
+    "seasonNumber": 1,
+    "episodeNumber": 1,
+    "title": "Failure's Contagious",
+    "airDate": "2022-04-01",
+    "airDateUtc": "2022-04-01T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 35645,
+    "seasonNumber": 1,
+    "episodeNumber": 2,
+    "title": "Work Drinks",
+    "airDate": "2022-04-01",
+    "airDateUtc": "2022-04-01T04:46:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 35646,
+    "seasonNumber": 1,
+    "episodeNumber": 3,
+    "title": "Bad Tradecraft",
+    "airDate": "2022-04-08",
+    "airDateUtc": "2022-04-08T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 35647,
+    "seasonNumber": 1,
+    "episodeNumber": 4,
+    "title": "Visiting Hours",
+    "airDate": "2022-04-15",
+    "airDateUtc": "2022-04-15T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 35648,
+    "seasonNumber": 1,
+    "episodeNumber": 5,
+    "title": "Fiasco",
+    "airDate": "2022-04-22",
+    "airDateUtc": "2022-04-22T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 35649,
+    "seasonNumber": 1,
+    "episodeNumber": 6,
+    "title": "Follies",
+    "airDate": "2022-04-29",
+    "airDateUtc": "2022-04-29T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 42698,
+    "seasonNumber": 2,
+    "episodeNumber": 1,
+    "title": "Last Stop",
+    "airDate": "2022-12-02",
+    "airDateUtc": "2022-12-02T05:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 44042,
+    "seasonNumber": 2,
+    "episodeNumber": 2,
+    "title": "From Upshott with Love",
+    "airDate": "2022-12-02",
+    "airDateUtc": "2022-12-02T05:46:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 44043,
+    "seasonNumber": 2,
+    "episodeNumber": 3,
+    "title": "Drinking Games",
+    "airDate": "2022-12-09",
+    "airDateUtc": "2022-12-09T05:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 44044,
+    "seasonNumber": 2,
+    "episodeNumber": 4,
+    "title": "Cicada",
+    "airDate": "2022-12-16",
+    "airDateUtc": "2022-12-16T05:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 44045,
+    "seasonNumber": 2,
+    "episodeNumber": 5,
+    "title": "Boardroom Politics",
+    "airDate": "2022-12-23",
+    "airDateUtc": "2022-12-23T05:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 44046,
+    "seasonNumber": 2,
+    "episodeNumber": 6,
+    "title": "Old Scores",
+    "airDate": "2022-12-30",
+    "airDateUtc": "2022-12-30T05:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 52496,
+    "seasonNumber": 0,
+    "episodeNumber": 1,
+    "title": "Legendary Forces",
+    "airDate": "2022-03-24",
+    "airDateUtc": "2022-03-24T04:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 52497,
+    "seasonNumber": 0,
+    "episodeNumber": 2,
+    "title": "An Inside Look",
+    "airDate": "2022-03-25",
+    "airDateUtc": "2022-03-25T04:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 52498,
+    "seasonNumber": 0,
+    "episodeNumber": 3,
+    "title": "What Is a Slow Horse?",
+    "airDate": "2022-03-26",
+    "airDateUtc": "2022-03-26T04:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56505,
+    "seasonNumber": 3,
+    "episodeNumber": 1,
+    "title": "Strange Games",
+    "airDate": "2023-11-29",
+    "airDateUtc": "2023-11-29T05:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56506,
+    "seasonNumber": 3,
+    "episodeNumber": 2,
+    "title": "Hard Lessons",
+    "airDate": "2023-11-29",
+    "airDateUtc": "2023-11-29T05:46:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56507,
+    "seasonNumber": 3,
+    "episodeNumber": 3,
+    "title": "Negotiating with Tigers",
+    "airDate": "2023-12-06",
+    "airDateUtc": "2023-12-06T05:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56508,
+    "seasonNumber": 3,
+    "episodeNumber": 4,
+    "title": "Uninvited Guests",
+    "airDate": "2023-12-13",
+    "airDateUtc": "2023-12-13T05:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56509,
+    "seasonNumber": 3,
+    "episodeNumber": 5,
+    "title": "Cleaning Up",
+    "airDate": "2023-12-20",
+    "airDateUtc": "2023-12-20T05:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56510,
+    "seasonNumber": 3,
+    "episodeNumber": 6,
+    "title": "Footprints",
+    "airDate": "2023-12-27",
+    "airDateUtc": "2023-12-27T05:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 58212,
+    "seasonNumber": 4,
+    "episodeNumber": 1,
+    "title": "Identity Theft",
+    "airDate": "2024-09-04",
+    "airDateUtc": "2024-09-04T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 62679,
+    "seasonNumber": 4,
+    "episodeNumber": 2,
+    "title": "A Stranger Comes to Town",
+    "airDate": "2024-09-11",
+    "airDateUtc": "2024-09-11T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 63005,
+    "seasonNumber": 4,
+    "episodeNumber": 3,
+    "title": "Penny for Your Thoughts",
+    "airDate": "2024-09-18",
+    "airDateUtc": "2024-09-18T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 63006,
+    "seasonNumber": 4,
+    "episodeNumber": 4,
+    "title": "Returns",
+    "airDate": "2024-09-25",
+    "airDateUtc": "2024-09-25T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 63007,
+    "seasonNumber": 4,
+    "episodeNumber": 5,
+    "title": "Grave Danger",
+    "airDate": "2024-10-02",
+    "airDateUtc": "2024-10-02T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 63008,
+    "seasonNumber": 4,
+    "episodeNumber": 6,
+    "title": "Hello Goodbye",
+    "airDate": "2024-10-09",
+    "airDateUtc": "2024-10-09T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 76781,
+    "seasonNumber": 5,
+    "episodeNumber": 1,
+    "title": "Bad Dates",
+    "airDate": "2025-09-24",
+    "airDateUtc": "2025-09-24T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 76782,
+    "seasonNumber": 5,
+    "episodeNumber": 2,
+    "title": "Incommunicado",
+    "airDate": "2025-10-01",
+    "airDateUtc": "2025-10-01T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 76783,
+    "seasonNumber": 5,
+    "episodeNumber": 3,
+    "title": "Tall Tales",
+    "airDate": "2025-10-08",
+    "airDateUtc": "2025-10-08T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 76784,
+    "seasonNumber": 5,
+    "episodeNumber": 4,
+    "title": "Missiles",
+    "airDate": "2025-10-15",
+    "airDateUtc": "2025-10-15T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 76785,
+    "seasonNumber": 5,
+    "episodeNumber": 5,
+    "title": "Circus",
+    "airDate": "2025-10-22",
+    "airDateUtc": "2025-10-22T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 76786,
+    "seasonNumber": 5,
+    "episodeNumber": 6,
+    "title": "Scars",
+    "airDate": "2025-10-29",
+    "airDateUtc": "2025-10-29T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 84122,
+    "seasonNumber": 6,
+    "episodeNumber": 1,
+    "title": "Circle of Life",
+    "airDate": "2026-09-16",
+    "airDateUtc": "2026-09-16T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 84123,
+    "seasonNumber": 6,
+    "episodeNumber": 2,
+    "title": "Daddy Issues",
+    "airDate": "2026-09-23",
+    "airDateUtc": "2026-09-23T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 84124,
+    "seasonNumber": 6,
+    "episodeNumber": 3,
+    "title": "Resurrection",
+    "airDate": "2026-09-30",
+    "airDateUtc": "2026-09-30T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 84125,
+    "seasonNumber": 6,
+    "episodeNumber": 4,
+    "title": "Lost & Found",
+    "airDate": "2026-10-07",
+    "airDateUtc": "2026-10-07T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 84126,
+    "seasonNumber": 6,
+    "episodeNumber": 5,
+    "title": "Sayonara",
+    "airDate": "2026-10-14",
+    "airDateUtc": "2026-10-14T04:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 84127,
+    "seasonNumber": 6,
+    "episodeNumber": 6,
+    "title": "Judgement Day",
+    "airDate": "2026-10-21",
+    "airDateUtc": "2026-10-21T04:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   }
+  ],
+  "series": {
+   "tvdbId": 372264,
+   "tmdbId": 95480,
+   "title": "Slow Horses"
+  },
+  "tmdb": [
+   {
+    "names": [
+     "Failure's Contagious",
+     "L'échec est contagieux"
+    ],
+    "air_date": "2022-04-01",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "names": [
+     "Work Drinks",
+     "Pot de bureau"
+    ],
+    "air_date": "2022-04-01",
+    "season": 1,
+    "number": 2
+   },
+   {
+    "names": [
+     "Bad Tradecraft",
+     "Faute grave"
+    ],
+    "air_date": "2022-04-08",
+    "season": 1,
+    "number": 3
+   },
+   {
+    "names": [
+     "Visiting Hours",
+     "Heures de visite"
+    ],
+    "air_date": "2022-04-15",
+    "season": 1,
+    "number": 4
+   },
+   {
+    "names": [
+     "Fiasco"
+    ],
+    "air_date": "2022-04-22",
+    "season": 1,
+    "number": 5
+   },
+   {
+    "names": [
+     "Follies",
+     "Folies"
+    ],
+    "air_date": "2022-04-29",
+    "season": 1,
+    "number": 6
+   },
+   {
+    "names": [
+     "Last Stop",
+     "Terminus"
+    ],
+    "air_date": "2022-12-02",
+    "season": 2,
+    "number": 1
+   },
+   {
+    "names": [
+     "From Upshott with Love",
+     "Bons baisers d'Upshott"
+    ],
+    "air_date": "2022-12-02",
+    "season": 2,
+    "number": 2
+   },
+   {
+    "names": [
+     "Drinking Games",
+     "Jeux à boire"
+    ],
+    "air_date": "2022-12-09",
+    "season": 2,
+    "number": 3
+   },
+   {
+    "names": [
+     "Cicada",
+     "Cigales"
+    ],
+    "air_date": "2022-12-16",
+    "season": 2,
+    "number": 4
+   },
+   {
+    "names": [
+     "Boardroom Politics",
+     "Tactiques politiciennes"
+    ],
+    "air_date": "2022-12-23",
+    "season": 2,
+    "number": 5
+   },
+   {
+    "names": [
+     "Old Scores",
+     "Vieux comptes"
+    ],
+    "air_date": "2022-12-30",
+    "season": 2,
+    "number": 6
+   },
+   {
+    "names": [
+     "Strange Games",
+     "Jeux étranges"
+    ],
+    "air_date": "2023-11-29",
+    "season": 3,
+    "number": 1
+   },
+   {
+    "names": [
+     "Hard Lessons",
+     "Leçons douloureuses"
+    ],
+    "air_date": "2023-11-29",
+    "season": 3,
+    "number": 2
+   },
+   {
+    "names": [
+     "Negotiating with Tigers",
+     "Négocier avec des tigres"
+    ],
+    "air_date": "2023-12-06",
+    "season": 3,
+    "number": 3
+   },
+   {
+    "names": [
+     "Uninvited Guests",
+     "Invités intrusifs"
+    ],
+    "air_date": "2023-12-13",
+    "season": 3,
+    "number": 4
+   },
+   {
+    "names": [
+     "Cleaning Up",
+     "Nettoyage"
+    ],
+    "air_date": "2023-12-20",
+    "season": 3,
+    "number": 5
+   },
+   {
+    "names": [
+     "Footprints",
+     "Footprint"
+    ],
+    "air_date": "2023-12-27",
+    "season": 3,
+    "number": 6
+   },
+   {
+    "names": [
+     "Identity Theft",
+     "Vol d'identité"
+    ],
+    "air_date": "2024-09-04",
+    "season": 4,
+    "number": 1
+   },
+   {
+    "names": [
+     "A Stranger Comes to Town",
+     "Un étranger dans la ville"
+    ],
+    "air_date": "2024-09-11",
+    "season": 4,
+    "number": 2
+   },
+   {
+    "names": [
+     "Penny for Your Thoughts",
+     "À quoi pensez-vous ?"
+    ],
+    "air_date": "2024-09-18",
+    "season": 4,
+    "number": 3
+   },
+   {
+    "names": [
+     "Returns",
+     "Retours"
+    ],
+    "air_date": "2024-09-25",
+    "season": 4,
+    "number": 4
+   },
+   {
+    "names": [
+     "Grave Danger"
+    ],
+    "air_date": "2024-10-02",
+    "season": 4,
+    "number": 5
+   },
+   {
+    "names": [
+     "Hello Goodbye",
+     "Bonjour, au revoir"
+    ],
+    "air_date": "2024-10-09",
+    "season": 4,
+    "number": 6
+   },
+   {
+    "names": [
+     "Bad Dates",
+     "Rendez-vous lamentables"
+    ],
+    "air_date": "2025-09-24",
+    "season": 5,
+    "number": 1
+   },
+   {
+    "names": [
+     "Incommunicado",
+     "Sans contact avec l'extérieur"
+    ],
+    "air_date": "2025-10-01",
+    "season": 5,
+    "number": 2
+   },
+   {
+    "names": [
+     "Tall Tales",
+     "Histoires à dormir debout"
+    ],
+    "air_date": "2025-10-08",
+    "season": 5,
+    "number": 3
+   },
+   {
+    "names": [
+     "Missiles"
+    ],
+    "air_date": "2025-10-15",
+    "season": 5,
+    "number": 4
+   },
+   {
+    "names": [
+     "Circus",
+     "Cirque"
+    ],
+    "air_date": "2025-10-22",
+    "season": 5,
+    "number": 5
+   },
+   {
+    "names": [
+     "Scars",
+     "Cicatrices"
+    ],
+    "air_date": "2025-10-29",
+    "season": 5,
+    "number": 6
+   },
+   {
+    "names": [
+     "Circle of Life",
+     "Le cycle de la vie"
+    ],
+    "air_date": "2026-09-16",
+    "season": 6,
+    "number": 1
+   },
+   {
+    "names": [
+     "Daddy Issues",
+     "Père toxique"
+    ],
+    "air_date": "2026-09-23",
+    "season": 6,
+    "number": 2
+   },
+   {
+    "names": [
+     "Resurrection",
+     "Résurrection"
+    ],
+    "air_date": "2026-09-30",
+    "season": 6,
+    "number": 3
+   },
+   {
+    "names": [
+     "Lost & Found",
+     "Le chat et la souris"
+    ],
+    "air_date": "2026-10-07",
+    "season": 6,
+    "number": 4
+   },
+   {
+    "names": [
+     "Sayonara"
+    ],
+    "air_date": "2026-10-14",
+    "season": 6,
+    "number": 5
+   },
+   {
+    "names": [
+     "Judgement Day",
+     "Épisode 6"
+    ],
+    "air_date": "2026-10-21",
+    "season": 6,
+    "number": 6
+   }
+  ],
+  "tvdb": {
+   "S01E01": "L'échec est contagieux",
+   "S01E02": "Pot de bureau",
+   "S01E03": "Faute grave",
+   "S01E04": "Heures de visite",
+   "S01E06": "Folies",
+   "S02E01": "Terminus",
+   "S02E02": "Bons baisers d'Upshott",
+   "S02E03": "Jeux à boire",
+   "S02E04": "Cigales",
+   "S02E05": "Tactiques politiciennes",
+   "S02E06": "Vieux comptes",
+   "S03E01": "Jeux étranges",
+   "S03E02": "Leçons douloureuses",
+   "S03E03": "Négocier avec des tigres",
+   "S03E04": "Invités intrusifs",
+   "S03E05": "Nettoyage",
+   "S03E06": "Footprint",
+   "S04E01": "Vol d'identité",
+   "S04E02": "Un étranger dans la ville",
+   "S04E03": "À quoi pensez-vous ?",
+   "S04E04": "Retours",
+   "S04E06": "Bonjour, au revoir",
+   "S05E01": "Rendez-vous lamentables",
+   "S05E02": "Sans contact avec l'extérieur",
+   "S05E03": "Histoires à dormir debout",
+   "S05E05": "Cirque",
+   "S05E06": "Cicatrices",
+   "S06E01": "Le cycle de la vie",
+   "S06E02": "Père toxique",
+   "S06E03": "Résurrection",
+   "S06E04": "Le chat et la souris"
+  }
+ },
+ "expect": {
+  "available": {
+   "35644": {
+    "service": "S01E01",
+    "name": "L'échec est contagieux",
+    "match": "title",
+    "same": true
+   },
+   "35645": {
+    "service": "S01E02",
+    "name": "Pot de bureau",
+    "match": "title",
+    "same": true
+   },
+   "35646": {
+    "service": "S01E03",
+    "name": "Faute grave",
+    "match": "title",
+    "same": true
+   },
+   "35647": {
+    "service": "S01E04",
+    "name": "Heures de visite",
+    "match": "title",
+    "same": true
+   },
+   "35648": {
+    "service": "S01E05",
+    "name": "Fiasco",
+    "match": "title",
+    "same": true
+   },
+   "35649": {
+    "service": "S01E06",
+    "name": "Folies",
+    "match": "title",
+    "same": true
+   },
+   "42698": {
+    "service": "S02E01",
+    "name": "Terminus",
+    "match": "title",
+    "same": true
+   },
+   "44042": {
+    "service": "S02E02",
+    "name": "Bons baisers d'Upshott",
+    "match": "title",
+    "same": true
+   },
+   "44043": {
+    "service": "S02E03",
+    "name": "Jeux à boire",
+    "match": "title",
+    "same": true
+   },
+   "44044": {
+    "service": "S02E04",
+    "name": "Cigales",
+    "match": "title",
+    "same": true
+   },
+   "44045": {
+    "service": "S02E05",
+    "name": "Tactiques politiciennes",
+    "match": "title",
+    "same": true
+   },
+   "44046": {
+    "service": "S02E06",
+    "name": "Vieux comptes",
+    "match": "title",
+    "same": true
+   },
+   "56505": {
+    "service": "S03E01",
+    "name": "Jeux étranges",
+    "match": "title",
+    "same": true
+   },
+   "56506": {
+    "service": "S03E02",
+    "name": "Leçons douloureuses",
+    "match": "title",
+    "same": true
+   },
+   "56507": {
+    "service": "S03E03",
+    "name": "Négocier avec des tigres",
+    "match": "title",
+    "same": true
+   },
+   "56508": {
+    "service": "S03E04",
+    "name": "Invités intrusifs",
+    "match": "title",
+    "same": true
+   },
+   "56509": {
+    "service": "S03E05",
+    "name": "Nettoyage",
+    "match": "title",
+    "same": true
+   },
+   "56510": {
+    "service": "S03E06",
+    "name": "Footprint",
+    "match": "title",
+    "same": true
+   },
+   "58212": {
+    "service": "S04E01",
+    "name": "Vol d'identité",
+    "match": "title",
+    "same": true
+   },
+   "62679": {
+    "service": "S04E02",
+    "name": "Un étranger dans la ville",
+    "match": "title",
+    "same": true
+   },
+   "63005": {
+    "service": "S04E03",
+    "name": "À quoi pensez-vous ?",
+    "match": "title",
+    "same": true
+   },
+   "63006": {
+    "service": "S04E04",
+    "name": "Retours",
+    "match": "title",
+    "same": true
+   },
+   "63007": {
+    "service": "S04E05",
+    "name": "Grave Danger",
+    "match": "title",
+    "same": true
+   },
+   "63008": {
+    "service": "S04E06",
+    "name": "Bonjour, au revoir",
+    "match": "title",
+    "same": true
+   },
+   "76781": {
+    "service": "S05E01",
+    "name": "Rendez-vous lamentables",
+    "match": "title",
+    "same": true
+   },
+   "76782": {
+    "service": "S05E02",
+    "name": "Sans contact avec l'extérieur",
+    "match": "title",
+    "same": true
+   },
+   "76783": {
+    "service": "S05E03",
+    "name": "Histoires à dormir debout",
+    "match": "title",
+    "same": true
+   },
+   "76784": {
+    "service": "S05E04",
+    "name": "Missiles",
+    "match": "title",
+    "same": true
+   },
+   "76785": {
+    "service": "S05E05",
+    "name": "Cirque",
+    "match": "title",
+    "same": true
+   },
+   "76786": {
+    "service": "S05E06",
+    "name": "Cicatrices",
+    "match": "title",
+    "same": true
+   },
+   "84122": {
+    "service": "S06E01",
+    "name": "Le cycle de la vie",
+    "match": "title",
+    "same": true
+   },
+   "84123": {
+    "service": "S06E02",
+    "name": "Père toxique",
+    "match": "title",
+    "same": true
+   },
+   "84124": {
+    "service": "S06E03",
+    "name": "Résurrection",
+    "match": "title",
+    "same": true
+   },
+   "84125": {
+    "service": "S06E04",
+    "name": "Le chat et la souris",
+    "match": "title",
+    "same": true
+   }
+  },
+  "titlesAgree": false,
+  "season_map": {}
+ }
+}

@@ -1,0 +1,1112 @@
+{
+ "title": "Party Down",
+ "tvdb": 83616,
+ "show": {
+  "service": "NF",
+  "title": "https://www.netflix.com/title/70140422"
+ },
+ "tmdb_key": true,
+ "country": "FR",
+ "inputs": {
+  "service": [
+   {
+    "type": "episode",
+    "name": "Reception Annuelle Des Residents De Willow Canyons",
+    "id": "70140422",
+    "language": null,
+    "description": "Alors que l'acteur raté Henry Pollard retourne travailler chez Party Down, il découvre que Ron, son ancien copain de beuverie, est désormais son patron... et sobre.",
+    "date": null,
+    "cover_url": null,
+    "year": 2009,
+    "series_title": "Party Down",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Caucus Du Syndicat Des Conservateurs De California College",
+    "id": "70140422",
+    "language": null,
+    "description": "Une réception de jeunes conservateurs où intervient Arnold Schwarzenegger tourne au vinaigre pour Ron et l'équipe de Party Down.",
+    "date": null,
+    "cover_url": null,
+    "year": 2009,
+    "series_title": "Party Down",
+    "season": 1,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Le Seminaire Des Celibataires De Pepper Mcmasters",
+    "id": "70140422",
+    "language": null,
+    "description": "L'équipe est chargée du service lors d'une soirée de rencontres pour personnes âgées. Constance retrouve une connaissance et Casey demande des conseils amoureux.",
+    "date": null,
+    "cover_url": null,
+    "year": 2009,
+    "series_title": "Party Down",
+    "season": 1,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Repas D’investisseurs",
+    "id": "70140422",
+    "language": null,
+    "description": "Les rêves de grandeur de Ron risquent de compromettre un gros contrat, tandis que Kyle se lie d'amitié avec un homme accompli qu'il prend pour modèle.",
+    "date": null,
+    "cover_url": null,
+    "year": 2009,
+    "series_title": "Party Down",
+    "season": 1,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Remise Des Prix Des Sex Awards",
+    "id": "70140422",
+    "language": null,
+    "description": "Lors d'une cérémonie qui récompense les films pour adultes, Kyle partage son point de vue sur les rendez-vous amoureux et Ron trouve une occasion de joindre l'utile à l'agréable.",
+    "date": null,
+    "cover_url": null,
+    "year": 2009,
+    "series_title": "Party Down",
+    "season": 1,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Les Seize Printemps De Taylor Stiltskin",
+    "id": "70140422",
+    "language": null,
+    "description": "Engagée par un magnat d'Hollywood afin d'organiser une fête somptueuse pour les 16 ans de sa fille, l'équipe de Party Down doit trouver comment faire venir les invités.",
+    "date": null,
+    "cover_url": null,
+    "year": 2009,
+    "series_title": "Party Down",
+    "season": 1,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Seminaire D’entreprise De La Societe Brandix",
+    "id": "70140422",
+    "language": null,
+    "description": "Lors d'un séminaire d'entreprise, Casey courtise l'athlète vedette invité pour l'événement, ce qui ne manque pas d'attiser la jalousie d'Henry et Roman.",
+    "date": null,
+    "cover_url": null,
+    "year": 2009,
+    "series_title": "Party Down",
+    "season": 1,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "Soiree En L’honneur De Ricky Sargulesh",
+    "id": "70140422",
+    "language": null,
+    "description": "L'organisateur d'une soirée demande à l'équipe de Party Down de lire son scénario, mais Roman et Ron rechignent lorsqu'ils découvrent qu'il a des liens avec la mafia.",
+    "date": null,
+    "cover_url": null,
+    "year": 2009,
+    "series_title": "Party Down",
+    "season": 1,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "Reunion Des Anciens Eleves Du Lycee James Rolf",
+    "id": "70140422",
+    "language": null,
+    "description": "Party Down assure le service lors de la réunion d'anciens élèves de Ron, Henry envisage de retourner vivre chez ses parents, et l'équipe accueille un nouveau membre.",
+    "date": null,
+    "cover_url": null,
+    "year": 2009,
+    "series_title": "Party Down",
+    "season": 1,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "Stennheiser Pong : Reception De Mariage",
+    "id": "70140422",
+    "language": null,
+    "description": "L'équipe décroche un contrat juteux pour un mariage gay, mais elle va devoir collaborer avec une société de traiteurs rivale.",
+    "date": null,
+    "cover_url": null,
+    "year": 2009,
+    "series_title": "Party Down",
+    "season": 1,
+    "number": 10
+   },
+   {
+    "type": "episode",
+    "name": "Soiree Privee De Jackal Onassis",
+    "id": "70140422",
+    "language": null,
+    "description": "Nouveau chef d'équipe, Henry doit gérer une rock star incognito, le retour de Ron et la présence de Casey, la fille qui lui a brisé le cœur.",
+    "date": null,
+    "cover_url": null,
+    "year": 2010,
+    "series_title": "Party Down",
+    "season": 2,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Vente Aux Encheres De La Maternelle Precious Lights",
+    "id": "70140422",
+    "language": null,
+    "description": "Ron se dispute avec Henry lors d'une collecte de fonds où les parents sont prêts à tout pour inscrire leurs enfants dans une école primaire très sélective.",
+    "date": null,
+    "cover_url": null,
+    "year": 2010,
+    "series_title": "Party Down",
+    "season": 2,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Partouze Chez Nick Dicintio",
+    "id": "70140422",
+    "language": null,
+    "description": "Assurer le service lors d'une orgie s'avère problématique pour un Ron au cœur brisé. Roman saisit cette occasion pour aider l'hôte à créer l'ambiance idéale pour la soirée.",
+    "date": null,
+    "cover_url": null,
+    "year": 2010,
+    "series_title": "Party Down",
+    "season": 2,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Enterrement De James Ellison",
+    "id": "70140422",
+    "language": null,
+    "description": "Des funérailles tournent au désastre lorsque la maîtresse du défunt débarque. Pendant ce temps, Kyle rêve d'apprendre le blues auprès d'un maître du genre.",
+    "date": null,
+    "cover_url": null,
+    "year": 2010,
+    "series_title": "Party Down",
+    "season": 2,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Anniversaire De Steve Guttenberg",
+    "id": "70140422",
+    "language": null,
+    "description": "Steve Guttenberg transforme sa fête d'anniversaire en atelier d'écriture lorsqu'il surprend Roman et Kent en train de discuter de leur scénario.",
+    "date": null,
+    "cover_url": null,
+    "year": 2010,
+    "series_title": "Party Down",
+    "season": 2,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Premiere De « Pas Sur Ta Femme »",
+    "id": "70140422",
+    "language": null,
+    "description": "Dans un théâtre régional, la farce jouée sur scène devient réalité lorsque Kyle promet de séduire un riche mécène afin d'obtenir les fonds nécessaires à la survie du lieu.",
+    "date": null,
+    "cover_url": null,
+    "year": 2010,
+    "series_title": "Party Down",
+    "season": 2,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Pique Nique De La Societe Party Down",
+    "id": "70140422",
+    "language": null,
+    "description": "La compétition fait rage : Ron brigue un poste au siège, tandis que Roman et Kyle affrontent une équipe de traiteurs rivale.",
+    "date": null,
+    "cover_url": null,
+    "year": 2010,
+    "series_title": "Party Down",
+    "season": 2,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "Joel Munt Fete Son Gros Contrat",
+    "id": "70140422",
+    "language": null,
+    "description": "Roman est furieux d'apprendre que l'hôte de la soirée n'est autre que son ancien coauteur, venu se vanter d'avoir vendu son nouveau scénario.",
+    "date": null,
+    "cover_url": null,
+    "year": 2010,
+    "series_title": "Party Down",
+    "season": 2,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "Fete Pour La Selection Cole Landry",
+    "id": "70140422",
+    "language": null,
+    "description": "Lorsque la soirée de draft du quarterback Cole Landry dérape, des rumeurs se répandent. Casey et Henry découvrent alors les vies secrètes des sportifs universitaires.",
+    "date": null,
+    "cover_url": null,
+    "year": 2010,
+    "series_title": "Party Down",
+    "season": 2,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "Mariage De Constance Carmell",
+    "id": "70140422",
+    "language": null,
+    "description": "Pour s'assurer de leur présence à son mariage, Constance engage ses collègues de Party Down. Ron tente le tout pour le tout en amour.",
+    "date": null,
+    "cover_url": null,
+    "year": 2010,
+    "series_title": "Party Down",
+    "season": 2,
+    "number": 10
+   },
+   {
+    "type": "episode",
+    "name": "Kyle Bradway Le Nitromancien",
+    "id": "70140422",
+    "language": null,
+    "description": "Après avoir décroché un rôle décisif de superhéros, Kyle Bradway engage Party Down pour sa fête, réunissant ainsi l'ancienne équipe.",
+    "date": null,
+    "cover_url": null,
+    "year": 2023,
+    "series_title": "Party Down",
+    "season": 3,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "La Soirée Post-Pandémie De Jack Botty",
+    "id": "70140422",
+    "language": null,
+    "description": "Party Down organise une fête surprise pour la star de cinéma Jack Botty, mais les choses se compliquent lorsque l'équipe est témoin d'une scène qu'elle n'aurait pas dû voir.",
+    "date": null,
+    "cover_url": null,
+    "year": 2023,
+    "series_title": "Party Down",
+    "season": 3,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Premier Symposium Annuel De Pi2a",
+    "id": "70140422",
+    "language": null,
+    "description": "Soucieux de maintenir Party Down à flot, Ron décroche un contrat de traiteur pour un groupe controversé, ce qui crée des problèmes… pour tout le monde.",
+    "date": null,
+    "cover_url": null,
+    "year": 2023,
+    "series_title": "Party Down",
+    "season": 3,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Le Luau Des Lauréats De Ksgy-95",
+    "id": "70140422",
+    "language": null,
+    "description": "Engagée pour une fête hawaïenne à Malibu, l'équipe se laisse emporter par l'ambiance décontractée, avec des conséquences complètement surréalistes.",
+    "date": null,
+    "cover_url": null,
+    "year": 2023,
+    "series_title": "Party Down",
+    "season": 3,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Le Ciné-Bal Promotionnel",
+    "id": "70140422",
+    "language": null,
+    "description": "Lydia organise un ciné-bal pour le nouveau film d'Escapade, tandis que Ron élabore un plan pour impressionner une légende de l'événementiel et ainsi assurer l'avenir de Party Down.",
+    "date": null,
+    "cover_url": null,
+    "year": 2023,
+    "series_title": "Party Down",
+    "season": 3,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "La Soirée D'ouverture De La Pièce Du Lycée",
+    "id": "70140422",
+    "language": null,
+    "description": "Henry et la bande de Party Down tentent de faire durer leur mission de traiteur toute la nuit.",
+    "date": null,
+    "cover_url": null,
+    "year": 2023,
+    "series_title": "Party Down",
+    "season": 3,
+    "number": 6
+   }
+  ],
+  "episodes": [
+   {
+    "id": 85483,
+    "seasonNumber": 0,
+    "episodeNumber": 2,
+    "title": "Behind The Scenes",
+    "airDate": "2009-02-22",
+    "airDateUtc": "2009-02-23T02:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85484,
+    "seasonNumber": 0,
+    "episodeNumber": 5,
+    "title": "The Characters",
+    "airDate": "2010-04-06",
+    "airDateUtc": "2010-04-07T01:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85485,
+    "seasonNumber": 0,
+    "episodeNumber": 6,
+    "title": "The Parties",
+    "airDate": "2010-04-06",
+    "airDateUtc": "2010-04-07T01:28:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85486,
+    "seasonNumber": 0,
+    "episodeNumber": 7,
+    "title": "A Reunion of Party Down",
+    "airDate": "2019-11-25",
+    "airDateUtc": "2019-11-26T02:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85487,
+    "seasonNumber": 1,
+    "episodeNumber": 1,
+    "title": "Willow Canyon Homeowners Annual Party",
+    "airDate": "2009-03-20",
+    "airDateUtc": "2009-03-21T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 1
+   },
+   {
+    "id": 85488,
+    "seasonNumber": 1,
+    "episodeNumber": 2,
+    "title": "California College Conservative Union Caucus",
+    "airDate": "2009-03-27",
+    "airDateUtc": "2009-03-28T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 2
+   },
+   {
+    "id": 85489,
+    "seasonNumber": 1,
+    "episodeNumber": 3,
+    "title": "Pepper McMasters Singles Seminar",
+    "airDate": "2009-04-03",
+    "airDateUtc": "2009-04-04T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 3
+   },
+   {
+    "id": 85490,
+    "seasonNumber": 1,
+    "episodeNumber": 4,
+    "title": "Investors Dinner",
+    "airDate": "2009-04-10",
+    "airDateUtc": "2009-04-11T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 4
+   },
+   {
+    "id": 85491,
+    "seasonNumber": 1,
+    "episodeNumber": 5,
+    "title": "Sin Say Shun Awards Afterparty",
+    "airDate": "2009-04-17",
+    "airDateUtc": "2009-04-18T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 5
+   },
+   {
+    "id": 85492,
+    "seasonNumber": 1,
+    "episodeNumber": 6,
+    "title": "Taylor Stiltskin Sweet Sixteen",
+    "airDate": "2009-04-24",
+    "airDateUtc": "2009-04-25T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 6
+   },
+   {
+    "id": 85493,
+    "seasonNumber": 1,
+    "episodeNumber": 7,
+    "title": "Brandix Corporate Retreat",
+    "airDate": "2009-05-01",
+    "airDateUtc": "2009-05-02T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 7
+   },
+   {
+    "id": 85494,
+    "seasonNumber": 1,
+    "episodeNumber": 8,
+    "title": "Celebrate Ricky Sargulesh",
+    "airDate": "2009-05-08",
+    "airDateUtc": "2009-05-09T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 8
+   },
+   {
+    "id": 85495,
+    "seasonNumber": 1,
+    "episodeNumber": 9,
+    "title": "James Rolf High School Twentieth Reunion",
+    "airDate": "2009-05-15",
+    "airDateUtc": "2009-05-16T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 9
+   },
+   {
+    "id": 85496,
+    "seasonNumber": 1,
+    "episodeNumber": 10,
+    "title": "Stennheiser-Pong Wedding Reception",
+    "airDate": "2009-05-22",
+    "airDateUtc": "2009-05-23T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 10
+   },
+   {
+    "id": 85497,
+    "seasonNumber": 2,
+    "episodeNumber": 1,
+    "title": "Jackal Onassis Backstage Party",
+    "airDate": "2010-04-23",
+    "airDateUtc": "2010-04-24T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 11
+   },
+   {
+    "id": 85498,
+    "seasonNumber": 2,
+    "episodeNumber": 2,
+    "title": "Precious Lights Pre-School Auction",
+    "airDate": "2010-04-30",
+    "airDateUtc": "2010-05-01T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 12
+   },
+   {
+    "id": 85499,
+    "seasonNumber": 2,
+    "episodeNumber": 3,
+    "title": "Nick Dicintio's Orgy Night",
+    "airDate": "2010-05-07",
+    "airDateUtc": "2010-05-08T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 13
+   },
+   {
+    "id": 85500,
+    "seasonNumber": 2,
+    "episodeNumber": 4,
+    "title": "James Ellison Funeral",
+    "airDate": "2010-05-14",
+    "airDateUtc": "2010-05-15T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 14
+   },
+   {
+    "id": 85501,
+    "seasonNumber": 2,
+    "episodeNumber": 5,
+    "title": "Steve Guttenberg's Birthday",
+    "airDate": "2010-05-21",
+    "airDateUtc": "2010-05-22T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 15
+   },
+   {
+    "id": 85502,
+    "seasonNumber": 2,
+    "episodeNumber": 6,
+    "title": "\"Not On Your Wife\" Opening Night",
+    "airDate": "2010-05-28",
+    "airDateUtc": "2010-05-29T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 16
+   },
+   {
+    "id": 85503,
+    "seasonNumber": 2,
+    "episodeNumber": 7,
+    "title": "Party Down Company Picnic",
+    "airDate": "2010-06-04",
+    "airDateUtc": "2010-06-05T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 17
+   },
+   {
+    "id": 85504,
+    "seasonNumber": 2,
+    "episodeNumber": 8,
+    "title": "Joel Munt's Big Deal Party",
+    "airDate": "2010-06-11",
+    "airDateUtc": "2010-06-12T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 18
+   },
+   {
+    "id": 85505,
+    "seasonNumber": 2,
+    "episodeNumber": 9,
+    "title": "Cole Landry's Draft Day Party",
+    "airDate": "2010-06-18",
+    "airDateUtc": "2010-06-19T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 19
+   },
+   {
+    "id": 85506,
+    "seasonNumber": 2,
+    "episodeNumber": 10,
+    "title": "Constance Carmell Wedding",
+    "airDate": "2010-06-25",
+    "airDateUtc": "2010-06-26T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 20
+   },
+   {
+    "id": 85507,
+    "seasonNumber": 3,
+    "episodeNumber": 1,
+    "title": "Kyle Bradway is Nitromancer",
+    "airDate": "2023-02-24",
+    "airDateUtc": "2023-02-25T02:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 21
+   },
+   {
+    "id": 85508,
+    "seasonNumber": 3,
+    "episodeNumber": 2,
+    "title": "Jack Botty's Delayed Post-Pandemic Surprise Party",
+    "airDate": "2023-03-03",
+    "airDateUtc": "2023-03-04T02:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 22
+   },
+   {
+    "id": 85509,
+    "seasonNumber": 3,
+    "episodeNumber": 3,
+    "title": "First Annual PI2A Symposium",
+    "airDate": "2023-03-10",
+    "airDateUtc": "2023-03-11T02:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 23
+   },
+   {
+    "id": 85510,
+    "seasonNumber": 3,
+    "episodeNumber": 4,
+    "title": "KSGY-95 Prizewinner's Luau",
+    "airDate": "2023-03-17",
+    "airDateUtc": "2023-03-18T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 24
+   },
+   {
+    "id": 85511,
+    "seasonNumber": 3,
+    "episodeNumber": 5,
+    "title": "Once Upon A Time \"Proms Away\" Prom-otional Event",
+    "airDate": "2023-03-24",
+    "airDateUtc": "2023-03-25T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 25
+   },
+   {
+    "id": 85512,
+    "seasonNumber": 3,
+    "episodeNumber": 6,
+    "title": "Sepulveda Basin High School Spring Play Opening Night",
+    "airDate": "2023-03-31",
+    "airDateUtc": "2023-04-01T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 26
+   }
+  ],
+  "series": {
+   "tvdbId": 83616,
+   "tmdbId": 17287,
+   "title": "Party Down"
+  },
+  "tmdb": [
+   {
+    "names": [
+     "A Look Behind The Scenes",
+     "Épisode 1"
+    ],
+    "air_date": null,
+    "season": 0,
+    "number": 1
+   },
+   {
+    "names": [
+     "What Is Party Down?",
+     "Épisode 2"
+    ],
+    "air_date": null,
+    "season": 0,
+    "number": 2
+   },
+   {
+    "names": [
+     "Season 1 Outtakes",
+     "Épisode 3"
+    ],
+    "air_date": null,
+    "season": 0,
+    "number": 3
+   },
+   {
+    "names": [
+     "Season 1 Gag Reel",
+     "Épisode 4"
+    ],
+    "air_date": null,
+    "season": 0,
+    "number": 4
+   },
+   {
+    "names": [
+     "Season 2 Gag Reel",
+     "Épisode 5"
+    ],
+    "air_date": null,
+    "season": 0,
+    "number": 5
+   },
+   {
+    "names": [
+     "Season 2 Promo",
+     "Épisode 6"
+    ],
+    "air_date": null,
+    "season": 0,
+    "number": 6
+   },
+   {
+    "names": [
+     "Willow Canyon Homeowners Annual Party",
+     "Épisode 1"
+    ],
+    "air_date": "2009-03-20",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "names": [
+     "California College Conservative Union Caucus",
+     "Épisode 2"
+    ],
+    "air_date": "2009-03-27",
+    "season": 1,
+    "number": 2
+   },
+   {
+    "names": [
+     "Pepper McMasters Singles Seminar",
+     "Épisode 3"
+    ],
+    "air_date": "2009-04-03",
+    "season": 1,
+    "number": 3
+   },
+   {
+    "names": [
+     "Investors Dinner",
+     "Épisode 4"
+    ],
+    "air_date": "2009-04-10",
+    "season": 1,
+    "number": 4
+   },
+   {
+    "names": [
+     "Sin Say Shun Awards After Party",
+     "Épisode 5"
+    ],
+    "air_date": "2009-04-17",
+    "season": 1,
+    "number": 5
+   },
+   {
+    "names": [
+     "Taylor Stiltskin Sweet Sixteen Party",
+     "Épisode 6"
+    ],
+    "air_date": "2009-04-24",
+    "season": 1,
+    "number": 6
+   },
+   {
+    "names": [
+     "Brandix Corporate Retreat",
+     "Épisode 7"
+    ],
+    "air_date": "2009-05-01",
+    "season": 1,
+    "number": 7
+   },
+   {
+    "names": [
+     "Celebrate Ricky Sargulesh",
+     "Épisode 8"
+    ],
+    "air_date": "2009-05-08",
+    "season": 1,
+    "number": 8
+   },
+   {
+    "names": [
+     "James Rolf High School Twentieth Reunion",
+     "Épisode 9"
+    ],
+    "air_date": "2009-05-15",
+    "season": 1,
+    "number": 9
+   },
+   {
+    "names": [
+     "Stennheiser-Pong Wedding Reception",
+     "Épisode 10"
+    ],
+    "air_date": "2009-05-22",
+    "season": 1,
+    "number": 10
+   },
+   {
+    "names": [
+     "Jackal Onassis Backstage Party",
+     "Épisode 1"
+    ],
+    "air_date": "2010-04-23",
+    "season": 2,
+    "number": 1
+   },
+   {
+    "names": [
+     "Precious Lights Pre-School Auction",
+     "Épisode 2"
+    ],
+    "air_date": "2010-04-30",
+    "season": 2,
+    "number": 2
+   },
+   {
+    "names": [
+     "Nick DiCintio's Orgy Night",
+     "Épisode 3"
+    ],
+    "air_date": "2010-05-07",
+    "season": 2,
+    "number": 3
+   },
+   {
+    "names": [
+     "James Ellison Funeral",
+     "Épisode 4"
+    ],
+    "air_date": "2010-05-14",
+    "season": 2,
+    "number": 4
+   },
+   {
+    "names": [
+     "Steve Guttenberg's Birthday",
+     "Épisode 5"
+    ],
+    "air_date": "2010-05-21",
+    "season": 2,
+    "number": 5
+   },
+   {
+    "names": [
+     "Not On Your Wife Opening Night",
+     "Épisode 6"
+    ],
+    "air_date": "2010-05-28",
+    "season": 2,
+    "number": 6
+   },
+   {
+    "names": [
+     "Party Down Company Picnic",
+     "Épisode 7"
+    ],
+    "air_date": "2010-06-04",
+    "season": 2,
+    "number": 7
+   },
+   {
+    "names": [
+     "Joel Munt's Big Deal Party",
+     "Épisode 8"
+    ],
+    "air_date": "2010-06-11",
+    "season": 2,
+    "number": 8
+   },
+   {
+    "names": [
+     "Cole Landry's Draft Day Party",
+     "Épisode 9"
+    ],
+    "air_date": "2010-06-18",
+    "season": 2,
+    "number": 9
+   },
+   {
+    "names": [
+     "Constance Carmell Wedding",
+     "Épisode 10"
+    ],
+    "air_date": "2010-06-25",
+    "season": 2,
+    "number": 10
+   },
+   {
+    "names": [
+     "Kyle Bradway Is Nitromancer",
+     "Épisode 1"
+    ],
+    "air_date": "2023-02-24",
+    "season": 3,
+    "number": 1
+   },
+   {
+    "names": [
+     "Jack Botty's Delayed Post-Pandemic Surprise Party",
+     "Épisode 2"
+    ],
+    "air_date": "2023-03-03",
+    "season": 3,
+    "number": 2
+   },
+   {
+    "names": [
+     "First Annual PI2A Symposium",
+     "Épisode 3"
+    ],
+    "air_date": "2023-03-10",
+    "season": 3,
+    "number": 3
+   },
+   {
+    "names": [
+     "KSGY-95 Prizewinner's Luau",
+     "Épisode 4"
+    ],
+    "air_date": "2023-03-17",
+    "season": 3,
+    "number": 4
+   },
+   {
+    "names": [
+     "Once Upon a Time \"Proms Away\" Prom-otional Event",
+     "Épisode 5"
+    ],
+    "air_date": "2023-03-24",
+    "season": 3,
+    "number": 5
+   },
+   {
+    "names": [
+     "Sepulveda Basin High School Spring Play Opening Night",
+     "Épisode 6"
+    ],
+    "air_date": "2023-03-31",
+    "season": 3,
+    "number": 6
+   }
+  ],
+  "tvdb": {
+   "S01E01": "Réception annuelle des résidents de Willow Canyons",
+   "S01E02": "Caucus du syndicat des conservateurs du California College",
+   "S01E03": "Les Séminaires des célibataires de Pepper",
+   "S01E04": "Repas d'investisseurs",
+   "S01E05": "Remise des prix des 'Sex Awards'",
+   "S01E07": "Séminaire d'entreprise de la société Brandix",
+   "S01E08": "Soirée en l'honneur de Ricky Sargulesh",
+   "S01E09": "Réunion des anciens élèves du lycée James Rolf",
+   "S01E10": "Stennheiser Pong : Réception de mariage",
+   "S02E01": "Soirée Privée de Jackal Onassis",
+   "S02E02": "Vente aux enchères de la maternelle Precious Light",
+   "S02E03": "Partouze chez Nick DiCintio",
+   "S02E04": "Enterrement de James Ellison",
+   "S02E05": "Anniversaire de Steve Guttenberg",
+   "S02E06": "Première de “Pas sur ta femme”",
+   "S02E07": "Pique-nique de la société Party Down",
+   "S02E08": "Joel Munt fête son gros contrat",
+   "S02E09": "Fête pour la sélection de Cole Landry",
+   "S02E10": "Mariage de Constance Carmell"
+  }
+ },
+ "expect": {
+  "available": {
+   "85487": {
+    "service": "S01E01",
+    "name": "Reception Annuelle Des Residents De Willow Canyons",
+    "match": "title",
+    "same": true
+   },
+   "85488": {
+    "service": "S01E02",
+    "name": "Caucus Du Syndicat Des Conservateurs De California College",
+    "match": "title"
+   },
+   "85489": {
+    "service": "S01E03",
+    "name": "Le Seminaire Des Celibataires De Pepper Mcmasters",
+    "match": "title"
+   },
+   "85490": {
+    "service": "S01E04",
+    "name": "Repas D’investisseurs",
+    "match": "title"
+   },
+   "85491": {
+    "service": "S01E05",
+    "name": "Remise Des Prix Des Sex Awards",
+    "match": "title",
+    "same": true
+   },
+   "85492": {
+    "service": "S01E06",
+    "name": "Les Seize Printemps De Taylor Stiltskin"
+   },
+   "85493": {
+    "service": "S01E07",
+    "name": "Seminaire D’entreprise De La Societe Brandix",
+    "match": "title"
+   },
+   "85494": {
+    "service": "S01E08",
+    "name": "Soiree En L’honneur De Ricky Sargulesh",
+    "match": "title"
+   },
+   "85495": {
+    "service": "S01E09",
+    "name": "Reunion Des Anciens Eleves Du Lycee James Rolf",
+    "match": "title",
+    "same": true
+   },
+   "85496": {
+    "service": "S01E10",
+    "name": "Stennheiser Pong : Reception De Mariage",
+    "match": "title",
+    "same": true
+   },
+   "85497": {
+    "service": "S02E01",
+    "name": "Soiree Privee De Jackal Onassis",
+    "match": "title",
+    "same": true
+   },
+   "85498": {
+    "service": "S02E02",
+    "name": "Vente Aux Encheres De La Maternelle Precious Lights",
+    "match": "title"
+   },
+   "85499": {
+    "service": "S02E03",
+    "name": "Partouze Chez Nick Dicintio",
+    "match": "title",
+    "same": true
+   },
+   "85500": {
+    "service": "S02E04",
+    "name": "Enterrement De James Ellison",
+    "match": "title",
+    "same": true
+   },
+   "85501": {
+    "service": "S02E05",
+    "name": "Anniversaire De Steve Guttenberg",
+    "match": "title",
+    "same": true
+   },
+   "85502": {
+    "service": "S02E06",
+    "name": "Premiere De « Pas Sur Ta Femme »",
+    "match": "title",
+    "same": true
+   },
+   "85503": {
+    "service": "S02E07",
+    "name": "Pique Nique De La Societe Party Down",
+    "match": "title",
+    "same": true
+   },
+   "85504": {
+    "service": "S02E08",
+    "name": "Joel Munt Fete Son Gros Contrat",
+    "match": "title",
+    "same": true
+   },
+   "85505": {
+    "service": "S02E09",
+    "name": "Fete Pour La Selection Cole Landry",
+    "match": "title"
+   },
+   "85506": {
+    "service": "S02E10",
+    "name": "Mariage De Constance Carmell",
+    "match": "title",
+    "same": true
+   },
+   "85507": {
+    "service": "S03E01",
+    "name": "Kyle Bradway Le Nitromancien",
+    "match": "title"
+   },
+   "85508": {
+    "service": "S03E02",
+    "name": "La Soirée Post-Pandémie De Jack Botty"
+   },
+   "85509": {
+    "service": "S03E03",
+    "name": "Premier Symposium Annuel De Pi2a"
+   },
+   "85510": {
+    "service": "S03E04",
+    "name": "Le Luau Des Lauréats De Ksgy-95"
+   },
+   "85511": {
+    "service": "S03E05",
+    "name": "Le Ciné-Bal Promotionnel"
+   },
+   "85512": {
+    "service": "S03E06",
+    "name": "La Soirée D'ouverture De La Pièce Du Lycée"
+   }
+  },
+  "titlesAgree": false,
+  "season_map": {}
+ }
+}

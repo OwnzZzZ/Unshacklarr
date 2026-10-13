@@ -1,0 +1,262 @@
+{
+ "title": "Brothers (2026)",
+ "tvdb": 448114,
+ "show": {
+  "service": "ATV",
+  "title": "umc.cmc.17g1y5mzqp92sc0ge1c0hdorg",
+  "release_time": "03:00"
+ },
+ "tmdb_key": true,
+ "country": "FR",
+ "inputs": {
+  "service": [
+   {
+    "type": "episode",
+    "name": "Sur la route",
+    "id": "umc.cmc.5gn2bf4yn2nipy461118uvpbo",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2026,
+    "series_title": "Brothers",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "La Chasse",
+    "id": "umc.cmc.1dfhn5qu6fdka04ygkooegxpx",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2026,
+    "series_title": "Brothers",
+    "season": 1,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Little Woody",
+    "id": "umc.cmc.73781rbkq0o46zzimwsfh3bj",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2026,
+    "series_title": "Brothers",
+    "season": 1,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Le Groupe",
+    "id": "umc.cmc.11kgjmbs72mnchidtticp6dnm",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2026,
+    "series_title": "Brothers",
+    "season": 1,
+    "number": 4
+   }
+  ],
+  "episodes": [
+   {
+    "id": 85379,
+    "seasonNumber": 1,
+    "episodeNumber": 1,
+    "title": "On the Road",
+    "airDate": "2026-09-23",
+    "airDateUtc": "2026-09-23T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85380,
+    "seasonNumber": 1,
+    "episodeNumber": 2,
+    "title": "The Hunt",
+    "airDate": "2026-09-23",
+    "airDateUtc": "2026-09-23T04:27:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85381,
+    "seasonNumber": 1,
+    "episodeNumber": 3,
+    "title": "Little Woody",
+    "airDate": "2026-09-30",
+    "airDateUtc": "2026-09-30T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85382,
+    "seasonNumber": 1,
+    "episodeNumber": 4,
+    "title": "The Band",
+    "airDate": "2026-10-07",
+    "airDateUtc": "2026-10-07T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85383,
+    "seasonNumber": 1,
+    "episodeNumber": 5,
+    "title": "Valentine's Day",
+    "airDate": "2026-10-14",
+    "airDateUtc": "2026-10-14T04:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85384,
+    "seasonNumber": 1,
+    "episodeNumber": 6,
+    "title": "The Dance",
+    "airDate": "2026-10-21",
+    "airDateUtc": "2026-10-21T04:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85385,
+    "seasonNumber": 1,
+    "episodeNumber": 7,
+    "title": "The Interview",
+    "airDate": "2026-10-28",
+    "airDateUtc": "2026-10-28T04:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85386,
+    "seasonNumber": 1,
+    "episodeNumber": 8,
+    "title": "On the Road Again",
+    "airDate": "2026-11-04",
+    "airDateUtc": "2026-11-04T05:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   }
+  ],
+  "series": {
+   "tvdbId": 448114,
+   "tmdbId": 250203,
+   "title": "Brothers (2026)"
+  },
+  "tmdb": [
+   {
+    "names": [
+     "On the Road",
+     "Sur la route"
+    ],
+    "air_date": "2026-09-22",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "names": [
+     "The Hunt",
+     "La chasse"
+    ],
+    "air_date": "2026-09-22",
+    "season": 1,
+    "number": 2
+   },
+   {
+    "names": [
+     "Little Woody"
+    ],
+    "air_date": "2026-09-29",
+    "season": 1,
+    "number": 3
+   },
+   {
+    "names": [
+     "The Band",
+     "Le groupe"
+    ],
+    "air_date": "2026-10-06",
+    "season": 1,
+    "number": 4
+   },
+   {
+    "names": [
+     "Valentine's Day",
+     "La Saint-Valentin"
+    ],
+    "air_date": "2026-10-13",
+    "season": 1,
+    "number": 5
+   },
+   {
+    "names": [
+     "The Dance",
+     "Épisode 6"
+    ],
+    "air_date": "2026-10-20",
+    "season": 1,
+    "number": 6
+   },
+   {
+    "names": [
+     "The Interview",
+     "Épisode 7"
+    ],
+    "air_date": "2026-10-27",
+    "season": 1,
+    "number": 7
+   },
+   {
+    "names": [
+     "On the Road...Again",
+     "Épisode 8"
+    ],
+    "air_date": "2026-11-03",
+    "season": 1,
+    "number": 8
+   }
+  ],
+  "tvdb": {
+   "S01E01": "Sur la route",
+   "S01E02": "La chasse",
+   "S01E04": "Le groupe"
+  }
+ },
+ "expect": {
+  "available": {
+   "85379": {
+    "service": "S01E01",
+    "name": "Sur la route",
+    "match": "title",
+    "same": true
+   },
+   "85380": {
+    "service": "S01E02",
+    "name": "La Chasse",
+    "match": "title",
+    "same": true
+   },
+   "85381": {
+    "service": "S01E03",
+    "name": "Little Woody",
+    "match": "title",
+    "same": true
+   },
+   "85382": {
+    "service": "S01E04",
+    "name": "Le Groupe",
+    "match": "title",
+    "same": true
+   }
+  },
+  "titlesAgree": false,
+  "season_map": {}
+ }
+}

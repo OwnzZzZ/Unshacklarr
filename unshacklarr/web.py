@@ -2787,7 +2787,7 @@ def plain_title(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", re.sub(r"\(\s*\d+\s*/\s*\d+\s*\)", "", text)).strip()
 
 
-GENERIC_TITLE = re.compile(r"(tba|tbd|episode|episodio|folge|aflevering)( \d+)?")
+GENERIC_TITLE = re.compile(r"(tba|tbd|episode|episodio|folge|aflevering|emission)( \d+)?")  # MyTF1's "Émission 7" too
 
 
 def usable_title(text: str | None) -> str:
@@ -2915,6 +2915,18 @@ def list_titles(show: dict) -> list[dict]:
 SEASON_MAP_FROM = 3  # episodes listed, at least, for a season map to be suggested
 
 
+def season_map_holds(season: int, theirs: int, every: list[dict], available: dict) -> bool:
+    """A suggested map (Sonarr's `season` as the service's `theirs`) worth offering: Sonarr's season has aired, and
+    the service's season isn't already where another Sonarr season's episodes are found. Without dates, the latest
+    seasons are paired in order: a season Sonarr announces and the service hasn't got yet shifted every one by one
+    (Silo's 4 as 3, 3 as 2, 2 as 1, though its seasons 1 to 3 are found under their own numbers)."""
+    now = datetime.now(timezone.utc).isoformat()
+    if not any(e["seasonNumber"] == season and (e.get("airDateUtc") or "9") <= now for e in every):
+        return False
+    owner = {e["id"]: e["seasonNumber"] for e in every}
+    return all(owner.get(i) == season for i, m in available.items() if int(m["service"][1:].split("E")[0]) == theirs)
+
+
 def probe_series(show: dict, series_id: int, title: str = "") -> dict:
     """List the series on its service (nothing downloaded) and check the next episodes against Sonarr."""
     titles = list_titles(show)
@@ -2970,7 +2982,11 @@ def probe_series(show: dict, series_id: int, title: str = "") -> dict:
     # (Shifting Gears), yet its "Aménagements" is Sonarr's "Accommodations" under the very same number
     pairs = [(a, b) for e in every if (a := usable_title((by_key.get(sonarr_sync.service_episode(show, e["seasonNumber"], e["episodeNumber"]) or "") or {}).get("name")))
              and (b := usable_title(e.get("title")))]
-    agreeing = not pairs or 2 * sum(same_title(a, b) for a, b in pairs) >= len(pairs)
+    # ...unless the titles that do meet sit mostly under other numbers: then the numbering differs, not the language
+    # (RMC+'s J'irai dormir chez vous: "Mali" is Sonarr's S01E03 and its S17E02), and a title still says another episode
+    own_key = {e["id"]: sonarr_sync.service_episode(show, e["seasonNumber"], e["episodeNumber"]) for e in every}
+    moved = sum(key.split(".")[0] != (own_key.get(m["episodeId"]) or "").split(".")[0] for key, m in by_title.items())
+    agreeing = not pairs or 2 * sum(same_title(a, b) for a, b in pairs) >= len(pairs) or 2 * moved > len(by_title)
     comparable = enough(len(by_title)) and agreeing
     # Sonarr's own titles weigh only in the service's language (French, J'irai dormir), not in English against
     # a French Disney+ (Futurama): there, an episode with no French title from TMDB has nothing to contradict.
@@ -2978,6 +2994,12 @@ def probe_series(show: dict, series_id: int, title: str = "") -> dict:
     known = titles_of(every, tmdb_eps, own=agreeing and enough(sum(any(same_title(n, o) for o in ours) for n in names)))
     mapped = show.get("episode_map") or {}
     available = {}  # every Sonarr episode the service has, for the Episodes tab: by number and title, by title, by number
+    # A season of the service the numbering gives another Sonarr season (Koh-Lanta's S34 as MyTF1's S29) is that one's:
+    # Sonarr's own S29 (2023) is not asked there by its number
+    claimed = {}
+    for k in {e["seasonNumber"] for e in every if e["seasonNumber"] > 0}:
+        if (first := sonarr_sync.service_episode(show, k, 1)) and int(first[1:].split("E")[0]) != k:
+            claimed[int(first[1:].split("E")[0])] = k
     for e in every:
         sxxeyy = f"S{e['seasonNumber']:02}E{e['episodeNumber']:02}"
         theirs = sonarr_sync.service_episode(show, e["seasonNumber"], e["episodeNumber"])
@@ -2985,7 +3007,8 @@ def probe_series(show: dict, series_id: int, title: str = "") -> dict:
         if e["id"] in titled:
             key = titled[e["id"]]
             available[e["id"]] = {"service": key, "name": by_title[key]["name"], "match": "title"}
-        elif hit and (theirs or "").split(".")[0] not in by_title:  # a number the title gives to another episode is not this one
+        elif hit and (theirs or "").split(".")[0] not in by_title \
+                and claimed.get(int(theirs[1:].split("E")[0]), e["seasonNumber"]) == e["seasonNumber"]:  # nor another season's
             theirs_name = usable_title(hit.get("name"))
             clash = comparable and theirs_name and known[e["id"]] and not any(same_title(theirs_name, t) for t in known[e["id"]])
             if sxxeyy in mapped or not clash:
@@ -3019,7 +3042,8 @@ def probe_series(show: dict, series_id: int, title: str = "") -> dict:
         # never from a listing of one or two episodes: a link to one episode (iPlayer's /episode/) would send a whole
         # Sonarr season to that episode's season
         "season_map": {str(k): v for k, v in suggest_season_map(sonarr_eps, service_eps).items()
-                       if (show.get("season_map") or {}).get(k) != v} if len(service_eps) >= SEASON_MAP_FROM else {},
+                       if (show.get("season_map") or {}).get(k) != v and season_map_holds(k, v, every, available)}
+        if len(service_eps) >= SEASON_MAP_FROM else {},
     }
 
 

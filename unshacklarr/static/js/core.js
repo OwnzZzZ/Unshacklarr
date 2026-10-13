@@ -667,6 +667,7 @@ $("#d-url").oninput = async (e) => {
     conf.service_options = {};
     $("#d-service").value = tag;
     toast(`${svcName(tag)}: recognised from the link`);
+    dirty();  // a series without a service was not part of the save: with one now, Save shows
     renderMeta(current);
     renderCheck(current, true);
     await renderServiceOptions(conf);

@@ -1,0 +1,266 @@
+{
+ "title": "Devil in Disguise: John Wayne Gacy",
+ "tvdb": 446150,
+ "show": {
+  "service": "CanalPlus",
+  "title": "https://www.canalplus.com/series/devil-in-disguise/h/32167299_50002",
+  "release_time": "08:01",
+  "broadcast": {
+   "from": "S01E01",
+   "start": "2026-10-06",
+   "time": "08:01",
+   "every": "weekly",
+   "days": [
+    1
+   ],
+   "per_evening": 2
+  },
+  "audio_accept": "fr, en"
+ },
+ "tmdb_key": true,
+ "country": "FR",
+ "inputs": {
+  "service": [
+   {
+    "type": "episode",
+    "name": "John Wayne Gacy",
+    "id": "32149961_50002",
+    "language": "en",
+    "description": "Lorsque le jeune Robert Piest disparaît le jour de l'anniversaire de sa mère, les policiers de Des Plaines remontent la dernière piste connue : celle de John Wayne Gacy, l'entrepreneur aperçu en sa compagnie peu avant sa disparition...",
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "Devil in Disguise: John Wayne Gacy",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "John Wayne Gacy",
+    "id": "32149963_50002",
+    "language": "en",
+    "description": "John Wayne Gacy est en garde à vue. Deux cadavres sont découverts sous sa maison, mais aucune trace de Robert. Contre l'avis de son avocat, John Wayne Gacy est prêt à coopérer.",
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "Devil in Disguise: John Wayne Gacy",
+    "season": 1,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Samuel and Randy",
+    "id": "32178181_50002",
+    "language": "en",
+    "description": "Alors que Gacy est incarcéré, la police continue de faire des découvertes macabres dans sa maison. Sam Amirante, son avocat, se demande s'il fait bien de le défendre mais l'affaire va avoir de la visibilité. Des corps sont repêchés dans la rivière...",
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "Devil in Disguise: John Wayne Gacy",
+    "season": 1,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Billy",
+    "id": "32178182_50002",
+    "language": "en",
+    "description": "Lorsqu'une psychiatre s'entretient avec Gacy, des détails troublants de son passé émergent. Tovar et Kozenczak découvrent les défaillances du système qui ont permis à Gacy de tuer pendant si longtemps sans se faire attraper...",
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "Devil in Disguise: John Wayne Gacy",
+    "season": 1,
+    "number": 4
+   }
+  ],
+  "episodes": [
+   {
+    "id": 85527,
+    "seasonNumber": 1,
+    "episodeNumber": 1,
+    "title": "Ten Days",
+    "airDate": "2025-10-16",
+    "airDateUtc": "2025-10-16T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85528,
+    "seasonNumber": 1,
+    "episodeNumber": 2,
+    "title": "Johnny",
+    "airDate": "2025-10-16",
+    "airDateUtc": "2025-10-16T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85529,
+    "seasonNumber": 1,
+    "episodeNumber": 3,
+    "title": "Samuel and Randy",
+    "airDate": "2025-10-16",
+    "airDateUtc": "2025-10-16T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85530,
+    "seasonNumber": 1,
+    "episodeNumber": 4,
+    "title": "Billy",
+    "airDate": "2025-10-16",
+    "airDateUtc": "2025-10-16T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85531,
+    "seasonNumber": 1,
+    "episodeNumber": 5,
+    "title": "Billy & Dale",
+    "airDate": "2025-10-16",
+    "airDateUtc": "2025-10-16T04:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85532,
+    "seasonNumber": 1,
+    "episodeNumber": 6,
+    "title": "Tim, John and Rob",
+    "airDate": "2025-10-16",
+    "airDateUtc": "2025-10-16T04:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85533,
+    "seasonNumber": 1,
+    "episodeNumber": 7,
+    "title": "David",
+    "airDate": "2025-10-16",
+    "airDateUtc": "2025-10-16T04:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85534,
+    "seasonNumber": 1,
+    "episodeNumber": 8,
+    "title": "Jeffrey",
+    "airDate": "2025-10-16",
+    "airDateUtc": "2025-10-16T04:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   }
+  ],
+  "series": {
+   "tvdbId": 446150,
+   "tmdbId": 257534,
+   "title": "Devil in Disguise: John Wayne Gacy"
+  },
+  "tmdb": [
+   {
+    "names": [
+     "Ten Days",
+     "Épisode 1"
+    ],
+    "air_date": "2025-10-16",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "names": [
+     "Johnny",
+     "Épisode 2"
+    ],
+    "air_date": "2025-10-16",
+    "season": 1,
+    "number": 2
+   },
+   {
+    "names": [
+     "Samuel and Randy",
+     "Épisode 3"
+    ],
+    "air_date": "2025-10-16",
+    "season": 1,
+    "number": 3
+   },
+   {
+    "names": [
+     "Billy",
+     "Épisode 4"
+    ],
+    "air_date": "2025-10-16",
+    "season": 1,
+    "number": 4
+   },
+   {
+    "names": [
+     "Billy and Dale",
+     "Épisode 5"
+    ],
+    "air_date": "2025-10-16",
+    "season": 1,
+    "number": 5
+   },
+   {
+    "names": [
+     "Tim, John and Rob",
+     "Épisode 6"
+    ],
+    "air_date": "2025-10-16",
+    "season": 1,
+    "number": 6
+   },
+   {
+    "names": [
+     "David",
+     "Épisode 7"
+    ],
+    "air_date": "2025-10-16",
+    "season": 1,
+    "number": 7
+   },
+   {
+    "names": [
+     "Jeffrey",
+     "Épisode 8"
+    ],
+    "air_date": "2025-10-16",
+    "season": 1,
+    "number": 8
+   }
+  ],
+  "tvdb": {}
+ },
+ "expect": {
+  "available": {
+   "85527": {
+    "service": "S01E01",
+    "name": "John Wayne Gacy"
+   },
+   "85528": {
+    "service": "S01E02",
+    "name": "John Wayne Gacy"
+   },
+   "85529": {
+    "service": "S01E03",
+    "name": "Samuel and Randy",
+    "match": "title",
+    "same": true
+   },
+   "85530": {
+    "service": "S01E04",
+    "name": "Billy",
+    "match": "title",
+    "same": true
+   }
+  },
+  "titlesAgree": true,
+  "season_map": {}
+ }
+}
