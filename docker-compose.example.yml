@@ -10,7 +10,8 @@
 #   3. docker compose up -d (the first time, it builds unshackle serve), then open
 #      http://<this host>:8788. The setup code is in docker logs unshacklarr.
 #
-# Updating: docker compose pull && docker compose up -d for Unshacklarr; for Unshackle,
+# Updating Unshacklarr: docker compose pull unshacklarr && docker compose up -d --no-deps unshacklarr
+# (--no-deps leaves Unshackle and its downloads running). Unshackle, when nothing downloads:
 # docker compose build --pull unshackle && docker compose up -d.
 #
 # The downloads folder is mounted in both containers at the same path, /downloads.

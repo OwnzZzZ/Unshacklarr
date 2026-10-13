@@ -187,8 +187,11 @@ The setup asks for a password, Sonarr's URL and API key (in Sonarr › Settings 
 [the downloads folder as Sonarr sees it](#downloads-folder). Then, in **Series**, pick a service for
 each series you want.
 
-**Updating:** `docker compose pull && docker compose up -d` brings a new Unshacklarr; for a new
-Unshackle, `docker compose build --pull unshackle && docker compose up -d`.
+**Updating:** `docker compose pull unshacklarr && docker compose up -d --no-deps unshacklarr` brings a
+new Unshacklarr and leaves Unshackle running: without `--no-deps`, Compose may recreate Unshackle too
+(Unshacklarr depends on it), which cuts the downloads going on and leaves Unshacklarr saying Unshackle
+is unreachable until it has started again. For a new Unshackle, when nothing is downloading,
+`docker compose build --pull unshackle && docker compose up -d`.
 
 **On a Synology NAS:** its shutdown marks the containers as stopped, so `restart: unless-stopped` leaves them off
 after a reboot. Use `restart: always` there. On a small NAS, Settings › Unshackle › Downloads at once set to 1
@@ -528,7 +531,7 @@ for the commit), and on GitHub makes the release, its notes taken from the chang
   write packages).
 
 The example compose file uses that image: a server only pulls it,
-`docker compose pull unshacklarr && docker compose up -d unshacklarr`.
+`docker compose pull unshacklarr && docker compose up -d --no-deps unshacklarr`.
 
 </details>
 

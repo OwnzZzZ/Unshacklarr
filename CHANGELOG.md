@@ -46,6 +46,8 @@ The new options are off until you turn them on.
 ### Changed
 
 - **One import at a time per Sonarr:** big files no longer reach Sonarr together. (#10, by mj23au)
+- **Updating Unshacklarr alone:** the README and the example compose now use `--no-deps`, so Unshackle and its
+  downloads keep running.
 - **A slow Unshackle server is waited for** 1, 3 then 10 minutes before a download fails. (#10, by mj23au)
 - **Clearer selection in Series:** a check on each poster, the others dimmed.
 - **One schedule per series:** a series with its own broadcast schedule shows only that one in the Schedule.
