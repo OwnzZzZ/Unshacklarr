@@ -1711,3 +1711,11 @@ input[type=time]:focus:not(.bad) { border-color: var(--accent); box-shadow: 0 0 
   font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; line-height: 1; }
 .ax-seg button[aria-checked=true] .chip-default { background: var(--accent); color: var(--accent-ink); }
 .ax-seg .chip-default { display: inline-block; margin: 0; }  /* not the help line of a field (.field small) */
+/* Download options, Add audio track: the library's folders, picked or browsed, and whether a real file is found */
+#dx-lib-who .ax-seg { margin: 0 0 var(--gap-field); }
+.lib-check { margin: var(--gap-field) 0 0; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; } .lib-check:empty { display: none; }
+.lib-check.ok { color: var(--ok); } .lib-check.err { color: var(--err); }
+.folder-form { display: grid; gap: 10px; } .folder-form h2, .folder-form p { margin: 0; }
+.folder-path { font-family: ui-monospace, monospace; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.folder-list { max-height: min(50vh, 360px); margin: 0; } .folder-list .url-hit { grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 8px; }
+.folder-list .url-hit span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .folder-form .status-err:empty { display: none; }

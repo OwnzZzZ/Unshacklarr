@@ -119,8 +119,13 @@
  "A download or the sync fails": [],
  "A downloaded episode will look like this.": [],
  "A file from another group (a torrent, an older tool) is listed when the service has the episode on the same step, not only a better one.": [],
+ "A file from another source": [],
  "A file to attach to a GitHub issue: versions, settings and this attempt's log, without passwords, keys or tokens": [],
  "A first start of Unshackle takes a few seconds": [],
+ "A folder as Unshacklarr sees it": [],
+ "A folder as {0} sees it": [
+  "libWho || mainSonarr()"
+ ],
  "A folder in it is allowed: my-bucket/unshacklarr.": [],
  "A full path, from / (or a drive letter), without ..": [],
  "A kind of message turned off here goes to no address and not to this device. The bell in the page still shows them all.": [],
@@ -187,6 +192,8 @@
  "Add audio track": [],
  "Add cookies": [],
  "Add options for a service": [],
+ "Add the audio": [],
+ "Add the audio anyway": [],
  "Add {0} series": [
   "n"
  ],
@@ -279,6 +286,7 @@
  "As shown on Discord, and on a phone (this device, ntfy, Telegram, Pushover…).": [],
  "As the main one": [],
  "Ask again after": [],
+ "Ask me": [],
  "Ask the service again about {0}": [
   "eps[0].series"
  ],
@@ -316,6 +324,9 @@
   "label"
  ],
  "Audio languages that must exist. The title fails even with --best-available.": [],
+ "Audio to add: {0}": [
+  "a.label"
+ ],
  "Audio upgrade": [],
  "Audio, in this order": [],
  "Auto release times": [],
@@ -353,6 +364,7 @@
  "Blocked in this browser's settings for this site.": [],
  "Bot token": [],
  "Broadcast schedule": [],
+ "Browse…": [],
  "Bucket": [],
  "Build": [],
  "Bypass proxy for all downloads. Manifest, license, and auth still use proxy.": [],
@@ -426,6 +438,7 @@
   "label"
  ],
  "Checking…": [],
+ "Choose a folder": [],
  "Choose a passphrase: the backups are encrypted with it.": [],
  "Choose a quality ladder for Sonarr {0} in Settings, Sonarr first": [
   "sonarr"
@@ -434,6 +447,7 @@
   "name"
  ],
  "Choose one: nothing is downloaded for this Sonarr until you do.": [],
+ "Choose to add the audio or to download the whole episode": [],
  "Choose whether to download the episode again or to add the audio track to the existing file": [],
  "Choose…": [],
  "Chrome": [],
@@ -624,6 +638,7 @@
  "Download options for {0}": [
   "o.name"
  ],
+ "Download the whole episode": [],
  "Download the {0}": [
   "r.items.length"
  ],
@@ -699,6 +714,10 @@
  "Empty: unshackle from the PATH. Otherwise its full path, e.g. the .venv/bin/unshackle of a git clone.": [],
  "Empty: us-east-1. Cloudflare R2: auto.": [],
  "Empty: uses": [],
+ "Empty: {0}, as {1}": [
+  "main.library_local_root",
+  "mainSonarr()"
+ ],
  "Endpoint URL": [],
  "Ends in /playready (pyplayready adds its own paths to it)": [],
  "English": [],
@@ -815,6 +834,7 @@
   "listed(g.series)"
  ],
  "For Gmail, Outlook or iCloud: use an app password, created in your account's security settings (not your usual password).": [],
+ "For a file from another source, choose to be asked or to add the audio anyway": [],
  "For a series like BBC Documentaries, where each episode is its own programme on the service: each one is found by its title, so the series needs no URL.": [],
  "For a series with a release time, its new episode is tried at that time, then again and again for a while.": [],
  "For at most": [],
@@ -921,6 +941,7 @@
  "In Discord: the channel's settings, Integrations, Webhooks, New Webhook, Copy Webhook URL.": [],
  "In Gotify: Apps, Create Application, then copy its token.": [],
  "In Sonarr": [],
+ "In Sonarr:": [],
  "In Sonarr: Settings, General.": [],
  "In Sonarr: Settings, General. Empty keeps the saved one.": [],
  "In Sonarr: Settings, General. Leave empty to keep the saved key. A new URL needs its key too.": [],
@@ -1091,6 +1112,7 @@
   "show['service']",
   "e"
  ],
+ "Looking for one of your episode files…": [],
  "Looking on TMDB…": [],
  "Looking up where to watch it…": [],
  "Looking up your release group…": [],
@@ -1221,6 +1243,7 @@
  "No download matches.": [],
  "No download yet.": [],
  "No earlier version yet": [],
+ "No folder in it.": [],
  "No ladder yet. Create one with New ladder, or bring back the built-in ones.": [],
  "No license": [],
  "No limit: downloads run at any time.": [],
@@ -1242,6 +1265,9 @@
  "No series is downloaded by Unshackle yet.": [],
  "No series match these filters.": [],
  "No series matches.": [],
+ "No series of Sonarr's has a file in {0}": [
+  "root"
+ ],
  "No series set up yet.": [],
  "No series uses it": [],
  "No service has options of its own yet.": [],
@@ -1339,6 +1365,9 @@
  "Not checked yet.": [],
  "Not delivered": [],
  "Not downloaded by Unshackle": [],
+ "Not found here: {0}. Is the library mounted in Unshacklarr's container, in this folder?": [
+  "r.local_path"
+ ],
  "Not found on the service": [],
  "Not imported: {0}": [
   "job[4]"
@@ -1478,7 +1507,7 @@
  "Only episodes from the last": [],
  "Only for the episodes picked now. The series keeps its own settings.": [],
  "Only the fields you fill in change. Everything else stays as it is for each series. Save afterwards, as for one series.": [],
- "Only the new audio track is downloaded and added to the existing file. Unshacklarr needs access to your library: set its folder below. If the file can't be found, the whole episode is downloaded instead.": [],
+ "Only the new audio track is downloaded and added to the existing file, as its default audio: subtitles in that language then show only their forced lines. Unshacklarr needs access to your library: set its folder below. The file is written again whole: your media server rescans it, and a hard link to it (a torrent still seeding) is broken. The whole episode is downloaded instead when the file can't be found, and for an episode in parts or a series of separate programmes.": [],
  "Only use CDM, or only use Key Vaults for retrieval of Decryption Keys.": [],
  "Only {0} GB free in the downloads folder, less than the {1} GB to keep free: nothing is downloaded until there is room": [
   "free",
@@ -1794,7 +1823,9 @@
  "Set it differently for this series only": [],
  "Set the Group Tag to be used, overriding the config tag and any tag rules.": [],
  "Set the address of unshackle serve in Settings, Unshackle": [],
- "Set the library folder both as Sonarr sees it and as Unshacklarr sees it, or neither": [],
+ "Set the library folder of {0} both as it sees it and as Unshacklarr sees it, or neither": [
+  "who"
+ ],
  "Set up Unshacklarr in a few steps.": [],
  "Settings": [],
  "Settings restored": [],
@@ -1858,6 +1889,10 @@
   "IMPORT_ASKS",
   "no_credentials(str(e))"
  ],
+ "Sonarr did not list {0}: {1}": [
+  "path or 'its folders'",
+  "no_credentials(e)"
+ ],
  "Sonarr finished the import but the episode has no new file: {0}": [
   "command.get('message') or 'see Activity in Sonarr'"
  ],
@@ -1867,6 +1902,7 @@
   "number"
  ],
  "Sonarr has no TMDB ID for this series.": [],
+ "Sonarr has no episode file to try": [],
  "Sonarr has no series with TVDB id {0}": [
   "tvdb"
  ],
@@ -2062,6 +2098,7 @@
  ],
  "Testing…": [],
  "Testing… (a first start of Unshackle takes a few seconds)": [],
+ "That episode no longer waits for an answer": [],
  "That file is too large to be cookies": [],
  "That is the Sonarr above": [],
  "That is too large for unshackle.yaml": [],
@@ -2270,6 +2307,16 @@
  "The {0} URL must start with http:// or https://": [
   "what"
  ],
+ "The {0} audio came in {1} parts: not joined": [
+  "want",
+  "len(got)"
+ ],
+ "The {0} audio is on {1}, but the file you have ({2}) doesn't say it comes from {3}. If its source is another one, the added audio may be a few seconds out of step; another team's release of the same stream is fine. Add the audio to it, or download the whole episode again?": [
+  "want",
+  "show['service']",
+  "name",
+  "show['service']"
+ ],
  "The {0} audio lasts {1} s, the file {2} s: not joined": [
   "want",
   "lengths[1]",
@@ -2464,6 +2511,7 @@
  ],
  "Untick a series to leave it out. Its page has the same switch, under What to get.": [],
  "Untick all": [],
+ "Up": [],
  "Update {0}": [
   "data.update.version"
  ],
@@ -2479,6 +2527,7 @@
  "Use this IMDB ID (e.g. tt1375666) for tagging instead of an automatic search. Add --enrich to also take its title, year and original language.": [],
  "Use this TMDB ID for tagging instead of an automatic search. Add --enrich to also take its title, year and original language.": [],
  "Use this TVDB ID for --tvdb-order and tagging instead of looking the series up automatically. Add --enrich to also take its title, year and original language.": [],
+ "Use this folder": [],
  "Use {0}: {1}": [
   "l.service",
   "l.url"
@@ -2567,6 +2616,7 @@
  "When": [],
  "When 3 episodes of a series come out at the same time, that time becomes its release time. Only for series without one. You get a notification and can change it on the series page.": [],
  "When Sonarr keeps its own file or an import fails, the download stays in the downloads folder. You find it in Activity, Waiting in downloads.": [],
+ "When Sonarr's file doesn't say it comes from the series' service, its source may differ and the added audio may be a few seconds out of step. Another team's release of the same stream is fine. Ask me: the bell asks each time, nothing is downloaded until you answer.": [],
  "When the service numbers or names episodes differently from Sonarr.": [],
  "When the service publishes new episodes, so Unshackle tries at the right time.": [],
  "Where": [],
@@ -2735,6 +2785,7 @@
  ],
  "its absolute number": [],
  "its first episode must look like S01E01": [],
+ "its folders": [],
  "its time must look like 20:39": [],
  "its title": [],
  "just now": [],
@@ -2878,6 +2929,7 @@
  "settings": [],
  "shortOffset": [],
  "show": [],
+ "side is sonarr or local": [],
  "since today": [],
  "since {0} {1}": [
   "day(new Date(st.since))",
@@ -3392,6 +3444,9 @@
  "{0} must be a full path, from / (or a drive letter), without ..": [
   "folder"
  ],
+ "{0} must be a full path, from /, without ..": [
+  "path"
+ ],
  "{0} must be a number": [
   "key"
  ],
@@ -3696,6 +3751,9 @@
   "label",
   "seen_by('sonarr_downloads', out)"
  ],
+ "{0}: adding the audio": [
+  "a.label"
+ ],
  "{0}: adding the {1} audio from {2} to the file it has": [
   "label",
   "want",
@@ -3712,6 +3770,9 @@
   "label",
   "show['service']",
   "on_service"
+ ],
+ "{0}: downloading the whole episode": [
+  "a.label"
  ],
  "{0}: imported by Sonarr": [
   "item.series || item.folder"
@@ -3903,6 +3964,10 @@
  ],
  "✓ Same title": [],
  "✓ Saved": [],
+ "✓ Unshacklarr reads {0}'s library: {1}": [
+  "who",
+  "r.local_path"
+ ],
  "✓ {0} downloaded": [
   "r.name"
  ]

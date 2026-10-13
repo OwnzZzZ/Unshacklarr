@@ -1897,7 +1897,8 @@ def test_the_preferred_audio_is_added_to_the_file_it_has(tmp_path, monkeypatch):
     assert sync.library_file("/elsewhere/x.mkv") == Path("/elsewhere/x.mkv")
     ep = {**episode(111, 2, 5), "episodeFileId": 9}
     monkeypatch.setattr(sync, "chosen_episodes", lambda ids: [ep])
-    monkeypatch.setattr(sync, "sonarr_get", lambda path, **p: {"path": "/tv/Show/Season 02/Show - S02E05.mkv"})
+    file = {"path": "/tv/Show/Season 02/Show - S02E05.mkv", "sceneName": "Show.S02E05.1080p.RTLP.WEB-DL.AAC2.0.H.264"}
+    monkeypatch.setattr(sync, "sonarr_get", lambda path, **p: file)
     monkeypatch.setattr(sync, "no_cdm", lambda tag, config=None: "")
     asked = []
 
@@ -1911,7 +1912,11 @@ def test_the_preferred_audio_is_added_to_the_file_it_has(tmp_path, monkeypatch):
     def tools(cmd, **_):
         calls.append(cmd)
         if cmd[:2] == ["mkvmerge", "-J"]:
-            return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps({"container": {"properties": {"duration": 2_400_000_000_000}}}))
+            tracks = [{"id": 0, "type": "audio", "properties": {"language": "eng"}}] if cmd[2].endswith(".mka") else \
+                [{"id": 0, "type": "video", "properties": {}}, {"id": 1, "type": "audio", "properties": {"language": "eng", "default_track": True}},
+                 {"id": 2, "type": "subtitles", "properties": {"language_ietf": "fr", "default_track": True}},  # full French: shown now
+                 {"id": 3, "type": "subtitles", "properties": {"language": "fre", "track_name": "Forced"}}]
+            return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps({"container": {"properties": {"duration": 2_400_000_000_000}}, "tracks": tracks}))
         Path(cmd[cmd.index("-o") + 1]).write_bytes(b"joined")
         return subprocess.CompletedProcess(cmd, 0, stdout="")
 
@@ -1924,12 +1929,35 @@ def test_the_preferred_audio_is_added_to_the_file_it_has(tmp_path, monkeypatch):
     merge = calls[-1]
     assert merge[:4] == ["mkvmerge", "-q", "-o", str(tmp_path / "unshackle-111-S02E05" / "Show - S02E05.mkv")]
     assert str(library / "Show - S02E05.mkv") in merge and merge[-1].endswith("audio.mka")
+    # the French audio is the default one; French subtitles only its forced ones, the full ones off
+    lib = merge.index(str(library / "Show - S02E05.mkv"))
+    assert merge[4:lib] == ["--default-track-flag", "1:0", "--default-track-flag", "2:0", "--default-track-flag", "3:1"]
+    assert merge[-3:-1] == ["--default-track-flag", "0:1"]
     assert imported == [(["Show - S02E05.mkv"], True)]  # the joined file only, in place of the library's
     card = next(json.loads(p.read_text()) for p in (tmp_path / "runs").glob("*.json"))
     assert card["kind"] == "upgrade" and card["outcome"] == "downloaded"
 
-    monkeypatch.setattr(sync, "sonarr_get", lambda path, **p: {"path": "/tv/Show/Gone.mkv"})
+    file.update(path="/tv/Show/Gone.mkv", sceneName="Show.S02E05.1080p.RTLP.WEB-DL")
     assert sync.add_track(205, "fr") is False  # out of reach here: downloaded again as before
+    file.update(path="/tv/Show/Season 02/Show - S02E05.mkv", sceneName="Show.S02E05.1080p.WEB-DL.x264-OTHERTEAM")
+    sync.UPGRADES_FILE.write_text(json.dumps({"205": {"want": "fr", "tvdb": 111}}))
+    merges = len(calls)
+    assert sync.add_track(205, "fr") is True  # not said to come from RTLP: asked in the bell, nothing downloaded yet
+    assert len(calls) == merges and json.loads(sync.UPGRADES_FILE.read_text())["205"]["asked"]
+    waiting = [i for i in json.loads(sync.INBOX_FILE.read_text())["items"] if (i.get("action") or {}).get("kind") == "confirm-audio"]
+    assert waiting and waiting[0]["action"]["episode"] == 205
+    folder = tmp_path / "unshackle-111-S02E05"
+    shutil.rmtree(folder, ignore_errors=True)  # the import is a stand-in: the joined file stays, a new try would wait for it
+    assert sync.add_track(205, "fr", anyway=True) is True and len(calls) > merges  # the person said add it
+    monkeypatch.setitem(sync.SETTINGS, "add_track_other_source", "add")
+    shutil.rmtree(folder, ignore_errors=True)
+    merges = len(calls)
+    assert sync.add_track(205, "fr") is True and len(calls) > merges  # set to add it anyway: no question
+    for own in ({"parts": 2}, {"programmes": True}):  # in parts, or found by its title: the whole episode again
+        monkeypatch.setattr(sync, "read_file", lambda own=own: {"series": {111: {"service": "RTLP", "title": "t", **own}}})
+        assert sync.add_track(205, "fr") is False
+    assert sync.same_source({"path": "/tv/Show - S01E01.mkv", "originalFilePath": "x/Doc.2026.1080p.iP.WEB-DL.mkv"}, "iP")
+    assert not sync.same_source({"sceneName": "Show.S01E01.ip.WEB-DL"}, "iP")  # a short tag as Unshackle writes it
 
 
 def test_a_series_can_send_only_its_failures_or_nothing(tmp_path, monkeypatch):

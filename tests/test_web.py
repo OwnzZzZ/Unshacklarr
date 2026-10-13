@@ -1919,3 +1919,68 @@ def test_a_year_in_brackets_is_not_a_part():
     assert plain_title("The Ambush (2)") == "the ambush part 2"
     assert plain_title("Christmas Special (2023)") == "christmas special 2023"  # a year, not part 2023
     assert same_title(plain_title("Christmas Special (2023)"), plain_title("Christmas Special 2023"))
+
+
+def test_the_library_folders_are_browsed_and_checked(tmp_path, monkeypatch):
+    # Add audio track: folders listed (names only, no file), and a real file of Sonarr's looked for with the two roots
+    from unshacklarr import web
+    (tmp_path / "tv" / "Show").mkdir(parents=True)
+    (tmp_path / "tv" / "Show" / "S01E01.mkv").write_bytes(b"x")
+    (tmp_path / "tv" / ".hidden").mkdir()
+    listed = web.local_dirs(str(tmp_path / "tv"))
+    assert listed["dirs"] == [str(tmp_path / "tv" / "Show")] and listed["parent"] == str(tmp_path)
+    assert _raises(lambda: web.local_dirs("tv")) and _raises(lambda: web.local_dirs("/a/../b"))
+    series = {1: {"id": 7, "path": "/data/tv/Show", "statistics": {"episodeFileCount": 1}}}
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_series", lambda wanted: series)
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_get", lambda path, **p: [{"path": "/data/tv/"}] if path == "rootfolder"
+                        else [{"path": "/data/tv/Show/S01E01.mkv"}])
+    asked = []
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_get", lambda path, **p: asked.append((path, p)) or
+                        {"parent": "/", "directories": [{"name": "tv", "path": "/data/tv/"}]})
+    assert web.sonarr_dirs("/data") == {"path": "/data", "parent": "/", "dirs": ["/data/tv"]}
+    assert asked[0][0] == "filesystem?path=%2Fdata"  # Sonarr's own folder browser, as it sees them
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_get", lambda path, **p: [{"path": "/data/tv/"}] if path == "rootfolder"
+                        else [{"path": "/data/tv/Show/S01E01.mkv"}])
+    ok = web.library_check("/data/tv", str(tmp_path / "tv"))
+    assert ok["roots"] == ["/data/tv"] and ok["ok"] is True and ok["local_path"] == str(tmp_path / "tv" / "Show" / "S01E01.mkv")
+    assert web.library_check("/data/tv", "/nowhere")["ok"] is False
+    assert "No series" in web.library_check("/other", "/x")["why"]
+
+
+def test_another_sonarr_reads_its_own_library(monkeypatch):
+    from unshacklarr import web
+    sync = web.sonarr_sync
+    monkeypatch.setitem(sync.SETTINGS, "library_sonarr_root", "/tv")
+    monkeypatch.setitem(sync.SETTINGS, "library_local_root", "/mnt/tv")
+    four_k = {"name": "sonarr-4k", "library_sonarr_root": "/tv4k", "library_local_root": "/mnt/tv4k"}
+    assert str(sync.library_file("/tv/Show/a.mkv")) == "/mnt/tv/Show/a.mkv"
+    with sync.on_instance(four_k):
+        assert str(sync.library_file("/tv4k/Show/a.mkv")) == "/mnt/tv4k/Show/a.mkv"
+    with sync.on_instance({"name": "sonarr-2", "library_sonarr_root": "", "library_local_root": ""}):
+        assert str(sync.library_file("/tv/Show/a.mkv")) == "/mnt/tv/Show/a.mkv"  # none of its own: the main one's
+    assert _raises(lambda: web.check_library({"library_sonarr_root": "/tv4k"}, "sonarr-4k"))  # both or neither
+
+
+def test_the_bell_answers_for_audio_from_another_source(tmp_path, monkeypatch):
+    # Add audio track, a file from another source: added anyway, or the whole episode; once, then nothing waits
+    import asyncio, json
+    from unshacklarr import web
+    sync = web.sonarr_sync
+    monkeypatch.setattr(sync, "UPGRADES_FILE", tmp_path / "upgrades.json")
+    monkeypatch.setattr(sync, "inbox_resolve", lambda key: None)
+    started, threads = [], []
+    monkeypatch.setattr(web, "run_sync", lambda ids, **kw: started.append((ids, kw)))
+    monkeypatch.setattr(web.threading, "Thread", lambda target, args, daemon: type("T", (), {"start": lambda self: threads.append(args)})())
+
+    class Request:
+        def __init__(self, choice): self.match_info, self.choice = {"episode_id": "205"}, choice
+        async def json(self): return {"choice": self.choice}
+        can_read_body = True
+    monkeypatch.setattr(web, "json_object", lambda request: request.json())
+    sync.UPGRADES_FILE.write_text(json.dumps({"205": {"want": "fr", "asked": "2026-10-13T10:00:00+00:00"}}))
+    asyncio.run(web.confirm_audio(Request("add")))
+    assert threads == [(205, "fr", True)] and "asked" not in json.loads(sync.UPGRADES_FILE.read_text())["205"]
+    assert _raises(lambda: asyncio.run(web.confirm_audio(Request("whole"))))  # answered already: nothing waits
+    sync.UPGRADES_FILE.write_text(json.dumps({"205": {"want": "fr", "asked": "x"}}))
+    asyncio.run(web.confirm_audio(Request("whole")))
+    assert started == [([205], {"replace": True, "kind": "upgrade"})]

@@ -20,7 +20,11 @@ Every change worth knowing, newest first. The format follows
 - **Episodes, Catch up and Upgrades per Sonarr.** Pick the library, download for it.
 
 **Downloads**
-- **Add audio track.** Get only the new audio, not the whole episode again. In Settings › Download options.
+- **Add audio track.** Get only the new audio, not the whole episode again: it becomes the default audio, and that
+  language's subtitles show only their forced lines. A file not from the series' service is asked about in the bell
+  first (or added anyway). In Settings › Download options.
+- **Library folders picked, not typed:** Sonarr's root folders offered, both sides browsable, one pair per Sonarr, and
+  a real episode file looked for to say the pair is right.
 - **Fallback service.** A second service for a series, used when the main one doesn't have the episode.
 - **Separate programmes.** For documentary strands like BBC Documentaries: each episode is found on the service by its
   title, so the series needs no URL. In a series' Numbering. (#17, by mj23au)

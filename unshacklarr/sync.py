@@ -163,6 +163,7 @@ SETTINGS_DEFAULTS = {
     "upgrade_mode": "redownload",  # once the preferred audio comes: download the episode again, or add_track (its audio only, added)
     "library_sonarr_root": "",   # add_track reads the library's file: its folder as Sonarr sees it (/tv)…
     "library_local_root": "",    # …and as Unshacklarr sees it (/mnt/tv); both empty: the same path
+    "add_track_other_source": "ask",  # a file not named as from the series' service: ask in the bell, or "add" anyway
     "release_learn": False,      # set a series' release time from when its episodes come out, once it is clear
     "download_from": "",         # the automatic sync downloads only from…
     "download_to": "",           # …to (local time, "01:00" to "07:00"); empty: any time
@@ -235,7 +236,10 @@ def apply_settings(settings: dict) -> None:
     for i in settings.get("sonarrs") or []:
         SONARRS[i["name"]] = {"name": i["name"], "url": str(i.get("url") or "").rstrip("/"), "api_key": str(i.get("api_key") or ""),
                               "downloads": str(i.get("downloads") or ""), "quality_ladder": str(i.get("quality_ladder") or ""),
-                              "download_only": i.get("download_only")}
+                              "download_only": i.get("download_only"),
+                              # its library, for Add audio track; both empty: the main Sonarr's
+                              "library_sonarr_root": str(i.get("library_sonarr_root") or ""),
+                              "library_local_root": str(i.get("library_local_root") or "")}
 
 
 BACKENDS: dict[str, Unshackle] = {}  # the other unshackle serve, by name
@@ -1685,15 +1689,61 @@ UPGRADES_FILE = DATA / "upgrades.json"  # episode id -> the preferred language i
 upgrades_lock = threading.Lock()
 
 
-def library_file(sonarr_path: str) -> Path:
-    """A library file, as Sonarr names it, where Unshacklarr reads it (the two roots of Settings)."""
-    root, local = str(SETTINGS.get("library_sonarr_root") or "").rstrip("/\\"), str(SETTINGS.get("library_local_root") or "").rstrip("/\\")
+def library_file(sonarr_path: str, roots: tuple[str, str] | None = None) -> Path:
+    """A library file, as Sonarr names it, where Unshacklarr reads it (the two roots of Settings, or those given)."""
+    inst = instance() or {}
+    own = inst.get("library_sonarr_root") and inst.get("library_local_root")  # another Sonarr's library, when set
+    root, local = roots or ((inst if own else SETTINGS).get("library_sonarr_root"), (inst if own else SETTINGS).get("library_local_root"))
+    root, local = str(root or "").rstrip("/\\"), str(local or "").rstrip("/\\")
     if root and local and (sonarr_path == root or sonarr_path.startswith(root + "/") or sonarr_path.startswith(root + "\\")):
         return Path(local + sonarr_path[len(root):].replace("\\", "/"))
     return Path(sonarr_path)
 
 
-def add_track(episode_id: int, want: str) -> bool:
+def same_source(file: dict, tag: str) -> bool:
+    """Whether Sonarr's file came from that service, as Unshackle names its downloads (…1080p.ALL4.WEB-DL…): its name
+    kept by Sonarr (sceneName) though it renames the file. Only then does an audio track from the service fit its video:
+    another source (a broadcast, another service) may start a few seconds apart, the same length or not."""
+    pattern = re.compile(rf"\.{re.escape(tag)}\.WEB", re.IGNORECASE if len(tag) > 3 else 0)  # "iP" as written, not "ip"
+    return any(pattern.search(str(n)) for n in (file.get("sceneName"), Path(str(file.get("path") or "")).name,
+                                                file.get("originalFilePath")) if n)
+
+
+def track_lang(props: dict) -> str:
+    code = str(props.get("language_ietf") or props.get("language") or "").split("-")[0].lower()
+    return LANGS.get(code, code)
+
+
+def default_flags(have: list[dict], got: list[dict], want: str) -> tuple[list[str], list[str]]:
+    """mkvmerge's --default-track-flag for the joined file: the added audio is the default one, the file's own audio
+    no longer; subtitles in that language become its forced ones (if any), never its full ones, and the others none."""
+    flag = lambda t, on: ["--default-track-flag", f"{t['id']}:{1 if on else 0}"]
+    forced = lambda t: bool((t.get("properties") or {}).get("forced_track")) or "forced" in str((t.get("properties") or {}).get("track_name") or "").lower()
+    subs = [t for t in have if t.get("type") == "subtitles"]
+    pick = next((t for t in subs if forced(t) and track_lang(t.get("properties") or {}) == want), None)
+    mine = [a for t in have if t.get("type") == "audio" for a in flag(t, False)] + [a for t in subs for a in flag(t, t is pick)]
+    audio = [t for t in got if t.get("type") == "audio"]
+    return mine, [a for t in audio for a in flag(t, t is audio[0])]
+
+
+def ask_audio(ep: dict, show: dict, want: str, file: dict) -> None:
+    """A file that doesn't say it came from the series' service: its audio may be out of step with the one added (another
+    source), or not (another team's release of the same stream). The person says, in the bell; asked once, not hourly."""
+    label = f"{ep['series']['title']} S{ep['seasonNumber']:02}E{ep['episodeNumber']:02}"
+    with upgrades_lock:
+        watched = read_json(UPGRADES_FILE, {})
+        if str(ep["id"]) in watched:
+            watched[str(ep["id"])]["asked"] = datetime.now(timezone.utc).isoformat()
+            write_atomic(UPGRADES_FILE, json.dumps(watched))
+    name = Path(str(file.get("sceneName") or file.get("path") or "")).name
+    text = (f"The {want} audio is on {show['service']}, but the file you have ({name}) doesn't say it comes from {show['service']}. "
+            "If its source is another one, the added audio may be a few seconds out of step; another team's release of the same "
+            "stream is fine. Add the audio to it, or download the whole episode again?")
+    inbox_add("warning", f"Audio to add: {label}", text,
+              action={"kind": "confirm-audio", "id": f"audio:{ep['id']}", "episode": ep["id"], "service": show["service"], "label": label, "text": text})
+
+
+def add_track(episode_id: int, want: str, anyway: bool = False) -> bool:
     """The preferred audio added to the episode's file, not the whole episode again (upgrade_mode add_track): its
     audio only is downloaded, joined to the library's file with mkvmerge, and Sonarr imports the joined file in its
     place. False when that can't be done (the file out of reach, no audio came, lengths that differ): the caller
@@ -1703,7 +1753,14 @@ def add_track(episode_id: int, want: str) -> bool:
     show = (config.get("series") or {}).get(ep["series"]["tvdbId"]) or {}
     if not ep.get("episodeFileId") or not show.get("service"):
         return False
-    have = library_file(sonarr_get(f"episodefile/{ep['episodeFileId']}")["path"])
+    if show.get("programmes") or int(show.get("parts") or 0) > 1:  # found by title, or in parts: the whole episode again
+        print(f"Add the audio: {ep['series']['title']} is {'separate programmes' if show.get('programmes') else 'in parts'}, the episode is downloaded again", flush=True)
+        return False
+    file = sonarr_get(f"episodefile/{ep['episodeFileId']}")
+    if not anyway and not same_source(file, show["service"]) and SETTINGS.get("add_track_other_source") != "add":
+        ask_audio(ep, show, want, file)  # the person chooses; nothing is downloaded meanwhile
+        return True
+    have = library_file(file["path"])
     if not have.is_file():
         print(f"Add the audio: {have} is out of reach here, the episode is downloaded again", flush=True)
         return False
@@ -1725,15 +1782,19 @@ def add_track(episode_id: int, want: str) -> bool:
             got = videos_in(out) + [f for f in out.rglob("*.mka")]
             if not got:
                 raise RuntimeError(f"No {want} audio came from {show['service']}")
+            if len(got) > 1:
+                raise RuntimeError(f"The {want} audio came in {len(got)} parts: not joined")
             lengths = [duration_of(have), duration_of(got[0])]
-            if all(lengths) and abs(lengths[0] - lengths[1]) > 2:
+            if all(lengths) and abs(lengths[0] - lengths[1]) > 1:  # the same source: the same length within a second
                 raise RuntimeError(f"The {want} audio lasts {lengths[1]:.0f} s, the file {lengths[0]:.0f} s: not joined")
             joined = out / have.name
             # the downloads folder is shared: a link planted there must not make mkvmerge write through it (as finalize)
             if out.is_symlink() or joined.exists() or joined.is_symlink() or any(f.is_symlink() for f in out.rglob("*")):
                 raise RuntimeError(f"{out.name} holds a link or a file named like the library's: not joined")
             run.step("joining")
-            cmd = ["mkvmerge", "-q", "-o", str(joined), str(have), "--no-video", "--no-subtitles", "--no-chapters", "--no-attachments", str(got[0])]
+            mine, theirs = default_flags(mkv_tracks(have), mkv_tracks(got[0]), want)
+            cmd = ["mkvmerge", "-q", "-o", str(joined), *mine, str(have),
+                   "--no-video", "--no-subtitles", "--no-chapters", "--no-attachments", *theirs, str(got[0])]
             done = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace")
             if done.returncode > 1:
                 raise RuntimeError(f"mkvmerge could not add the audio: {done.stdout.strip()[-300:]}")
@@ -1948,6 +2009,12 @@ def first_language(order: list[str], tracks: list[dict]) -> str | None:
             if hit := next((h for h in have if same(h, wanted)), None):
                 return hit
     return None
+
+
+def mkv_tracks(path: Path) -> list[dict]:
+    """A file's tracks, as mkvmerge reads them (their id, type and properties)."""
+    info = subprocess.run(["mkvmerge", "-J", str(path)], stdout=subprocess.PIPE, text=True)
+    return json.loads(info.stdout or "{}").get("tracks") or []
 
 
 def audio_languages(path: Path, kind: str = "audio") -> set[str]:

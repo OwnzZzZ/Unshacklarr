@@ -26,7 +26,7 @@ import time
 import unicodedata
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import urlencode, parse_qs, urlparse
 
 import apprise
 import requests
@@ -902,8 +902,21 @@ def check_sonarrs(given, saved, main_url: str) -> list[dict]:
         if not str(i.get("quality_ladder") or "") and name not in saved:  # a new one: chosen, never a silent default
             raise web.HTTPBadRequest(text=f"Choose a quality ladder for {name}: a ladder, Off, or Same as each series")
         only = i.get("download_only")
+        library = check_library(i, name)
         out.append({"name": name, "url": url, "api_key": key, "downloads": folder, "quality_ladder": str(i.get("quality_ladder") or ""),
-                    "download_only": only if isinstance(only, bool) else None})
+                    "download_only": only if isinstance(only, bool) else None, **library})
+    return out
+
+
+def check_library(given: dict, who: str) -> dict:
+    """A Sonarr's library for Add audio track: its folder as that Sonarr sees it and as Unshacklarr does, both or neither."""
+    out = {}
+    for name in ("library_sonarr_root", "library_local_root"):
+        out[name] = folder = str(given.get(name) or "").strip().rstrip("/\\")
+        if folder and (not (posixpath.isabs(folder) or ntpath.isabs(folder)) or ".." in re.split(r"[\\/]", folder)):
+            raise web.HTTPBadRequest(text=f"{folder} must be a full path, from / (or a drive letter), without ..")
+    if bool(out["library_sonarr_root"]) != bool(out["library_local_root"]):
+        raise web.HTTPBadRequest(text=f"Set the library folder of {who} both as it sees it and as Unshacklarr sees it, or neither")
     return out
 
 
@@ -1159,12 +1172,11 @@ def check_settings(body: dict, previous: dict) -> dict:
     if mode not in ("redownload", "add_track"):
         raise web.HTTPBadRequest(text="Choose whether to download the episode again or to add the audio track to the existing file")
     settings["upgrade_mode"] = mode
-    for name in ("library_sonarr_root", "library_local_root"):
-        settings[name] = folder = str(body.get(name) or "").strip().rstrip("/\\")
-        if folder and (not (posixpath.isabs(folder) or ntpath.isabs(folder)) or ".." in re.split(r"[\\/]", folder)):
-            raise web.HTTPBadRequest(text=f"{folder} must be a full path, from / (or a drive letter), without ..")
-    if bool(settings["library_sonarr_root"]) != bool(settings["library_local_root"]):
-        raise web.HTTPBadRequest(text="Set the library folder both as Sonarr sees it and as Unshacklarr sees it, or neither")
+    other = str(body.get("add_track_other_source") or "ask")
+    if other not in ("ask", "add"):
+        raise web.HTTPBadRequest(text="For a file from another source, choose to be asked or to add the audio anyway")
+    settings["add_track_other_source"] = other
+    settings.update(check_library(body, "Sonarr"))
     settings["release_learn"] = body.get("release_learn") is True
     for name in ("download_from", "download_to"):
         at = str(body.get(name) or "").strip()
@@ -1467,6 +1479,8 @@ def check_upgrades(now: datetime) -> list[str]:
     days = timedelta(days=float(sonarr_sync.SETTINGS.get("upgrade_days") or 30))
     started, dropped, checked = [], [], []
     for key, w in read_json(sonarr_sync.UPGRADES_FILE, {}).items():
+        if w.get("asked"):
+            continue  # waiting for the person: add the audio to a file from another source, or not (see add_track)
         show = config["series"].get(int(w["tvdb"])) or {}
         if show.get("service") != w["service"] or not show.get("title"):
             dropped.append(key)  # another service, or none now: what was waited for there means nothing
@@ -1502,13 +1516,34 @@ def check_upgrades(now: datetime) -> list[str]:
     return started
 
 
-def add_or_download(episode_id: int, want: str) -> None:
+def add_or_download(episode_id: int, want: str, anyway: bool = False) -> None:
     try:
-        if sonarr_sync.add_track(episode_id, want):
+        if sonarr_sync.add_track(episode_id, want, anyway):
             return
     except Exception as e:  # anything unforeseen: the whole episode again, as before
         print(f"Add the audio: {type(e).__name__}: {e}", flush=True)
     run_sync([episode_id], replace=True, kind="upgrade")
+
+
+async def confirm_audio(request):
+    """The bell's answer for a file from another source: add the audio to it anyway, or download the whole episode."""
+    episode_id = int(request.match_info["episode_id"])
+    choice = (await json_object(request)).get("choice")
+    if choice not in ("add", "whole"):
+        raise web.HTTPBadRequest(text="Choose to add the audio or to download the whole episode")
+    with sonarr_sync.upgrades_lock:
+        watched = read_json(sonarr_sync.UPGRADES_FILE, {})
+        w = watched.get(str(episode_id))
+        if not w or not w.pop("asked", None):
+            sonarr_sync.inbox_resolve(f"audio:{episode_id}")
+            raise web.HTTPNotFound(text="That episode no longer waits for an answer")
+        write_atomic(sonarr_sync.UPGRADES_FILE, json.dumps(watched))
+    sonarr_sync.inbox_resolve(f"audio:{episode_id}")
+    if choice == "add":
+        threading.Thread(target=add_or_download, args=(episode_id, w["want"], True), daemon=True).start()
+    else:
+        run_sync([episode_id], replace=True, kind="upgrade")
+    return web.json_response({"ok": True})
 
 
 async def watch_upgrades():
@@ -3497,6 +3532,76 @@ async def upgrade_groups(_):
     return web.json_response({"groups": groups, "none": none})
 
 
+LIBRARY_DIRS = 500  # folders listed at most in one place
+
+
+def local_dirs(path: str) -> dict:
+    """The folders in a folder of Unshacklarr's own (its container's): names only, never a file."""
+    path = path or "/"
+    if not posixpath.isabs(path) or ".." in path.split("/"):
+        raise web.HTTPBadRequest(text=f"{path} must be a full path, from /, without ..")
+    here = Path(path)
+    try:
+        names = sorted((e.name for e in os.scandir(here) if e.is_dir() and not e.name.startswith(".")), key=str.lower)
+    except OSError as e:
+        raise web.HTTPBadRequest(text=f"{path}: {e.strerror or e}") from None
+    return {"path": str(here), "parent": None if str(here) == "/" else str(here.parent), "dirs": [str(here / n) for n in names][:LIBRARY_DIRS]}
+
+
+def sonarr_dirs(path: str) -> dict:
+    """The folders in a folder as the main Sonarr sees it, from its own folder browser (that of Add Root Folder)."""
+    # "path" is sonarr_get's own first argument: Sonarr's is put in the address
+    found = sonarr_sync.sonarr_get(f"filesystem?{urlencode({'path': path})}", includeFiles="false", allowFoldersWithoutTrailingSlashes="true")
+    trim = lambda p: str(p or "").rstrip("/\\") or str(p or "")
+    dirs = [trim(d.get("path")) for d in found.get("directories") or [] if d.get("path")]
+    return {"path": trim(path), "parent": trim(found.get("parent")) or None if path not in ("", "/") else None, "dirs": dirs[:LIBRARY_DIRS]}
+
+
+async def library_browse(request):
+    """Settings, Add audio track: the folders to pick the library from, as Sonarr (side=sonarr) or Unshacklarr sees them."""
+    side, path = request.query.get("side"), request.query.get("path", "").strip()[:1024]
+    inst = sonarr_named(request.query.get("sonarr", ""))  # another Sonarr's folders, as it sees them
+    if side == "local":
+        return web.json_response(await asyncio.to_thread(local_dirs, path))
+    if side != "sonarr":
+        raise web.HTTPBadRequest(text="side is sonarr or local")
+    try:
+        return web.json_response(await asyncio.to_thread(on_sonarr, inst, sonarr_dirs, path))
+    except requests.RequestException as e:
+        raise web.HTTPBadGateway(text=f"Sonarr did not list {path or 'its folders'}: {no_credentials(e)}") from None
+
+
+def library_check(root: str, local: str) -> dict:
+    """Sonarr's root folders, and whether Unshacklarr finds a real episode file of Sonarr's with these two folders."""
+    out = {"roots": [], "ok": None, "sonarr_path": "", "local_path": "", "why": ""}
+    try:
+        out["roots"] = [str(r["path"]).rstrip("/\\") or r["path"] for r in sonarr_sync.sonarr_get("rootfolder") if r.get("path")]
+        root = root.rstrip("/\\")
+        under = lambda p: not root or p == root or p.startswith(root + "/") or p.startswith(root + "\\")
+        serie = next((s for s in sonarr_sync.sonarr_series(set()).values()
+                      if (s.get("statistics") or {}).get("episodeFileCount") and under(str(s.get("path") or ""))), None)
+        if not serie:
+            out["why"] = f"No series of Sonarr's has a file in {root}" if root else "Sonarr has no episode file to try"
+            return out
+        files = sonarr_sync.sonarr_get("episodefile", seriesId=serie["id"])
+    except requests.RequestException as e:
+        out["why"] = f"Sonarr is unreachable: {no_credentials(e)}"
+        return out
+    if not files:
+        out["why"] = "Sonarr has no episode file to try"
+        return out
+    out["sonarr_path"] = str(files[0].get("path") or "")
+    found = sonarr_sync.library_file(out["sonarr_path"], (root, local))
+    out["local_path"], out["ok"] = str(found), found.is_file()
+    return out
+
+
+async def library_test(request):
+    q = request.query
+    inst = sonarr_named(q.get("sonarr", ""))  # another Sonarr's roots and files
+    return web.json_response(await asyncio.to_thread(on_sonarr, inst, library_check, q.get("sonarr_root", "").strip()[:1024], q.get("local_root", "").strip()[:1024]))
+
+
 async def upgrades(request):
     """Activity, Upgrades: the last check's finds, and the check going on; another Sonarr's with ?sonarr=."""
     name = (sonarr_named(request.query.get("sonarr", "")) or {}).get("name", "")
@@ -4454,6 +4559,8 @@ app.add_routes([
     web.post("/api/download", download),
     web.get("/api/missing", missing),
     web.get("/api/upgrades", upgrades),
+    web.get("/api/library/browse", library_browse),
+    web.get("/api/library/check", library_test),
     web.get("/api/upgrades/groups", upgrade_groups),
     web.post(r"/api/upgrades/{action:check|stop}", upgrades_action),
     web.post("/api/probe", probe),
@@ -4515,6 +4622,7 @@ app.add_routes([
     web.delete(r"/api/runs/{run_id}", delete_run),
     web.get(r"/api/runs/{run_id}/diagnostic", run_diagnostic),
     web.post(r"/api/runs/{run_id}/input", answer_run),
+    web.post(r"/api/audio-upgrade/{episode_id:\d{1,9}}", confirm_audio),
     web.post("/api/runs/clear", clear_runs),
     web.post("/api/password", change_password),
     web.post("/api/logout-others", logout_others),
