@@ -2190,5 +2190,7 @@
  "✓ Unshacklarr reads {0}'s library: {1}": "✓ Unshacklarr は {0} のライブラリを読み取れます：{1}",
  "{0} (contains your {1} root folders)": "{0}（{1} 個のルートフォルダーを含む）",
  "Your library was found in another folder: {0} in Sonarr is {1} in Unshacklarr.": "ライブラリは別のフォルダーで見つかりました：Sonarr の {0} は Unshacklarr の {1} です。",
- "Use these folders": "これらのフォルダーを使う"
+ "Use these folders": "これらのフォルダーを使う",
+ "title, in its series": "タイトル（シリーズ内）",
+ "{0} episodes on {1} are titled alike in its series: paste its URL on the series": "{1} のシリーズ内で {0} 件のエピソードが同じタイトルです：シリーズにその URL を貼ってください"
 }

@@ -1449,9 +1449,31 @@ def programme_for(show: dict, ep: dict, config: dict, manual: bool = False) -> d
         raise
 
 
+BRAND_LOOKS = 3  # search results looked inside when none has the episode's title: each is one listing on the service
+
+
+def episode_in_brands(show: dict, want: str, results: list[dict], backend, params: dict) -> tuple[dict, dict] | None:
+    """(result, title) for the one episode with the very title inside the first results' own listings: the search
+    answers a brand, not its episodes (iPlayer: "Fallen Women" finds the brand "Stacey Dooley", whose listing has it
+    as S01E27). None when no listing has it; Unmatched when two do (by mj23au)."""
+    hits = []
+    for r in results[:BRAND_LOOKS]:
+        if not (rid := r.get("id") or r.get("url")):
+            continue
+        try:
+            titles = backend.call("POST", "/api/list-titles", json={**params, "service": show["service"], "title_id": str(rid)})["titles"]
+        except UnshackleError:
+            continue  # one result the service can't list: the others still count
+        hits += [(r, t) for t in titles if t.get("type") == "episode" and title_key(t.get("name")) == want]
+    if len(hits) > 1:
+        raise Unmatched(f"{len(hits)} episodes on {show['service']} are titled alike in its series: paste its URL on the series")
+    return hits[0] if hits else None
+
+
 def find_programme(show: dict, ep: dict, config: dict, key: str, sxxeyy: str, pasted: str | None, backend, params: dict) -> dict:
     """programme_for's search: the pasted URL, else the service's search by the episode's title."""
     want, year = title_key(ep.get("title")), (ep.get("airDateUtc") or "")[:4]
+    chosen = None  # the episode itself, when it was found inside its series' listing
     if pasted:
         found, how = {"id": pasted, "title": ep.get("title")}, "pasted"
     else:
@@ -1464,11 +1486,13 @@ def find_programme(show: dict, ep: dict, config: dict, key: str, sxxeyy: str, pa
             found, how = exact[0], "title"
         elif not exact and len(longer) == 1:
             found, how = longer[0], "title and subtitle"
+        elif not exact and not longer and (inside := episode_in_brands(show, want, results, backend, params)):
+            (found, chosen), how = inside, "title, in its series"
         else:
             several = len(exact) or len(longer)
             raise Unmatched(f"{several} programmes on {show['service']} are titled {ep['title']!r}: paste its URL on the series" if several > 1
                             else f"No programme on {show['service']} is titled {ep['title']!r} yet")
-    titles = backend.call("POST", "/api/list-titles", json={**params, "service": show["service"], "title_id": str(found.get("id") or found.get("url"))})["titles"]
+    titles = [chosen] if chosen else backend.call("POST", "/api/list-titles", json={**params, "service": show["service"], "title_id": str(found.get("id") or found.get("url"))})["titles"]
     part = TITLE_PART.search(str(ep.get("title") or ""))
     if len(titles) == 1:
         title = titles[0]

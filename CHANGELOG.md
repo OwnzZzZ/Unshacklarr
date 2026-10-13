@@ -77,6 +77,9 @@ The new options are off until you turn them on.
 - **A programme of the same title but from other years** (a remake) is no longer taken for the episode. (#17, by mj23au)
 - **Episodes offers only the upgrades Upgrades found** on the service, once it has checked the series. (#18, by mj23au)
 - **A title only close to the episode's** no longer moves it to another number. (#12, by mj23au)
+- **A separate programme the search only finds as its series** (iPlayer's Stacey Dooley) is found inside that series' episodes. (#17, by mj23au)
+- **A flat brand page without dates** (iPlayer): titles ending in another number are other episodes, no season map is
+  offered against the titles, and the Source checks find episodes by title too. (#20, by mj23au)
 - **Pausing a job waiting for its download slot** no longer blocks every download after it until a restart.
 - **The diagnostic** leaves out your other Sonarrs' and servers' addresses, your folders and your backup account.
 - **Lighter on the server and the phone:** a single series checked alone, a server that is down, and the pages

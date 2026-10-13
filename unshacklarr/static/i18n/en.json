@@ -2989,6 +2989,7 @@
  "this download": [],
  "timeZone": [],
  "title and subtitle": [],
+ "title, in its series": [],
  "title={0} {1} {2}": [
   "name",
   "sxxeyy",
@@ -3246,6 +3247,10 @@
  "{0} episodes have another number on {1}: Download takes care of them": [
   "renumbered",
   "svc"
+ ],
+ "{0} episodes on {1} are titled alike in its series: paste its URL on the series": [
+  "len(hits)",
+  "show['service']"
  ],
  "{0} episodes queued, one after the other": [
   "r.items.length"

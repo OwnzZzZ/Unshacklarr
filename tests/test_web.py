@@ -1996,3 +1996,39 @@ def test_the_bell_answers_for_audio_from_another_source(tmp_path, monkeypatch):
     sync.UPGRADES_FILE.write_text(json.dumps({"205": {"want": "fr", "asked": "x"}}))
     asyncio.run(web.confirm_audio(Request("whole")))
     assert started == [([205], {"replace": True, "kind": "upgrade"})]
+
+
+def test_a_flat_brand_page_is_matched_by_title_and_offered_no_season_map(tmp_path, monkeypatch):
+    # By mj23au: Stacey Dooley on iPlayer (b048vy8l) is one flat page, 27 unnumbered one-offs as S01 and three as S02,
+    # with no dates; Sonarr has ten seasons. The two-part titles differ only by their number (0.96 alike), the latest
+    # seasons paired in order (9 as 1, 10 as 2) would send S10E01 to a 2014 programme, and the Source checks looked
+    # by number only
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    names = {1: "Rape on Trial: Episode 1", 2: "Rape on Trial: Episode 2", 3: "Border Wars", 21: "Stalkers: Episode 1",
+             22: "Stalkers: Episode 2", 26: "Meet the Shoplifters", 27: "Fallen Women"}
+    service = [{"type": "episode", "season": 1, "number": n, "name": t, "date": None} for n, t in names.items()]
+    service += [{"type": "episode", "season": 2, "number": n, "name": t, "date": None}
+                for n, t in ((1, "Giving Up My Baby"), (2, "Young, Bright and on the Right"), (3, "Kids Selling Sex"))]
+    ep = lambda id_, s, n, title, aired: {"id": id_, "seasonNumber": s, "episodeNumber": n, "title": title, "airDateUtc": aired, "hasFile": False}
+    sonarr = [ep(81, 8, 1, "Stalkers: Episode 1", "2025-02-01T21:00:00Z"), ep(82, 8, 2, "Stalkers: Episode 2", "2025-02-08T21:00:00Z"),
+              ep(91, 9, 1, "Rape on Trial: Episode 1", "2025-11-01T21:00:00Z"), ep(92, 9, 2, "Rape on Trial: Episode 2", "2025-11-08T21:00:00Z"),
+              ep(93, 9, 3, "Meet the Shoplifters", "2026-01-10T21:00:00Z"), ep(101, 10, 1, "Fallen Women", "2026-09-20T21:00:00Z")]
+    monkeypatch.setattr(web.UNSHACKLE, "call", lambda method, path, **k: {"titles": service, "services": [{"tag": "iP", "cli_params": []}]})
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_get", lambda path, **q: sonarr if path == "episode" else {})
+    monkeypatch.setattr(web, "tmdb_key", lambda: "")
+    found = web.probe_series({"service": "iP", "title": "https://www.bbc.co.uk/iplayer/episodes/b048vy8l"}, 1)
+    av = found["available"]
+    assert {i: av[i]["service"] for i in (81, 82, 91, 92, 93, 101)} == {81: "S01E21", 82: "S01E22", 91: "S01E01", 92: "S01E02",
+                                                                       93: "S01E26", 101: "S01E27"}
+    assert found["season_map"] == {}  # 9 as 1 and 10 as 2 is what the titles say it isn't
+    assert web.suggest_season_map([{"season": 9, "air_date": "2025-11-01"}, {"season": 10, "air_date": "2026-09-20"}],
+                                  service) == {10: 2, 9: 1}  # what was offered: the order fallback, kept for others
+    checks = {c["sxxeyy"]: (c["service"], c["found"]) for c in found["checks"]}
+    assert checks["S10E01"] == ("S01E27", True) and checks["S09E02"] == ("S01E02", True)  # by title, as the Episodes tab
+    assert not web.same_title("rape on trial episode 1", "rape on trial episode 2")
+    assert not web.same_title("christmas special 2023", "christmas special 2024")
+    assert web.same_title("the ambush part 2", "the ambush part 2") and web.same_title("fallen women", "fallen women")

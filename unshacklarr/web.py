@@ -2892,15 +2892,18 @@ def tvdb_titles(tvdb_id: int) -> dict[str, str]:
 
 
 TITLE_PART = re.compile(r"\bpart (\d+)$")
+TITLE_NUMBER = re.compile(r"(?:^|\D)(\d+)$")  # a plain title's last number: "… part 2", "… episode 2", "… 2"
 
 
 def same_title(a: str, b: str) -> bool:
     """Two plain titles naming the same episode: a longer one when close (accents, a typo) or one holds the
     other; a short one (a country, under 8 letters) when the same, or spelt alike from the same start (Serbie,
     Serbia) but never merely close (Mali, Malibu; Chili, Chine)."""
-    parts = [m[1] if (m := TITLE_PART.search(t)) else None for t in (a, b)]
-    if parts[0] and parts[1] and parts[0] != parts[1]:
-        return False  # "the ambush part 1" is never "the ambush part 2", however close the rest
+    numbers = [int(m[1]) if (m := TITLE_NUMBER.search(t)) else None for t in (a, b)]
+    if None not in numbers and numbers[0] != numbers[1]:
+        # "the ambush part 1" is never "the ambush part 2", nor "rape on trial episode 1" "… episode 2" (0.96
+        # alike: each fitted both Sonarr episodes, so neither was matched), however close the rest (by mj23au)
+        return False
     if a == b:
         return True
     # compared for every pair of the service's and Sonarr's episodes: the cheap upper bounds of ratio() first
@@ -2971,6 +2974,18 @@ def list_titles(show: dict) -> list[dict]:
 SEASON_MAP_FROM = 3  # episodes listed, at least, for a season map to be suggested
 
 
+def titled_elsewhere(season: int, theirs: int, every: list[dict], available: dict) -> bool:
+    """A suggested map (Sonarr's `season` as the service's `theirs`) that the titles contradict: an episode of that
+    season found by its very title under another number than the map would ask. A flat page (iPlayer's Stacey
+    Dooley: 27 unnumbered one-offs as S01, three as S02, no dates) had the latest seasons paired in order, 9 as 1 and
+    10 as 2, while S10E01's title is its S01E27 and S09E03's its S01E26, not S01E03 (by mj23au)."""
+    for e in every:
+        m = available.get(e["id"]) if e["seasonNumber"] == season else None
+        if m and m.get("match") == "title" and m.get("same") and m["service"].split(".")[0] != f"S{theirs:02}E{e['episodeNumber']:02}":
+            return True
+    return False
+
+
 def probe_series(show: dict, series_id: int, title: str = "") -> dict:
     """List the series on its service (nothing downloaded) and check the next episodes against Sonarr."""
     titles = list_titles(show)
@@ -2988,15 +3003,7 @@ def probe_series(show: dict, series_id: int, title: str = "") -> dict:
     coming = sorted((e for e in sonarr if e.get("airDateUtc") and e["airDateUtc"] > now), key=lambda e: e["airDateUtc"])
     name = show.get("file_name") or title
     dots = lambda text: re.sub(r"[^\w-]+", ".", text).strip(".")
-    checks = []
-    for e in aired[-3:] + coming[:1]:
-        sxxeyy = f"S{e['seasonNumber']:02}E{e['episodeNumber']:02}"
-        theirs = sonarr_sync.service_episode(show, e["seasonNumber"], e["episodeNumber"])
-        hit = by_key.get(theirs or "")
-        checks.append({
-            "sxxeyy": sxxeyy, "service": theirs, "aired": e["airDateUtc"] <= now, "air": e["airDateUtc"], "hasFile": e.get("hasFile"),
-            "found": bool(hit), "name": (hit or {}).get("name"), "file": f"{dots(name)}.{sxxeyy}….mkv" if name else None,
-        })
+    checked = aired[-3:] + coming[:1]  # checked below, once the titles are matched
     seasons = {}
     for t in service_eps:
         seasons[t["season"]] = seasons.get(t["season"], 0) + 1
@@ -3058,6 +3065,20 @@ def probe_series(show: dict, series_id: int, title: str = "") -> dict:
                 available[e["id"]] = {"service": key, "name": hit.get("name"), "match": "absolute"}
                 taken.add(key)
                 break
+    checks = []
+    for e in checked:  # as the sync and the Episodes tab find them: by title too, not by number alone (by mj23au)
+        sxxeyy = f"S{e['seasonNumber']:02}E{e['episodeNumber']:02}"
+        theirs = sonarr_sync.service_episode(show, e["seasonNumber"], e["episodeNumber"])
+        if have := available.get(e["id"]):
+            theirs, hit = have["service"], by_key.get(have["service"]) or {"name": have.get("name")}
+        else:
+            hit = by_key.get(theirs or "")
+        checks.append({
+            "sxxeyy": sxxeyy, "service": theirs, "aired": e["airDateUtc"] <= now, "air": e["airDateUtc"], "hasFile": e.get("hasFile"),
+            "found": bool(hit), "name": (hit or {}).get("name"), "file": f"{dots(name)}.{sxxeyy}….mkv" if name else None,
+        })
+    suggested = {k: v for k, v in suggest_season_map(sonarr_eps, service_eps).items()
+                 if not titled_elsewhere(k, v, every, available)}
     return {
         "available": available,
         "titled": sorted(by_title),  # the service's numbers some Sonarr episode's title points to
@@ -3070,7 +3091,7 @@ def probe_series(show: dict, series_id: int, title: str = "") -> dict:
         "checks": checks,
         # never from a listing of one or two episodes: a link to one episode (iPlayer's /episode/) would send a whole
         # Sonarr season to that episode's season
-        "season_map": {str(k): v for k, v in suggest_season_map(sonarr_eps, service_eps).items()
+        "season_map": {str(k): v for k, v in suggested.items()
                        if (show.get("season_map") or {}).get(k) != v} if len(service_eps) >= SEASON_MAP_FROM else {},
     }
 

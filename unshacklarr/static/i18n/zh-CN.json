@@ -2195,5 +2195,7 @@
  "✓ Unshacklarr reads {0}'s library: {1}": "✓ Unshacklarr 可读取 {0} 的媒体库：{1}",
  "{0} (contains your {1} root folders)": "{0}（包含你的 {1} 个根文件夹）",
  "Your library was found in another folder: {0} in Sonarr is {1} in Unshacklarr.": "你的媒体库在另一个文件夹中找到：Sonarr 中的 {0} 即 Unshacklarr 中的 {1}。",
- "Use these folders": "使用这些文件夹"
+ "Use these folders": "使用这些文件夹",
+ "title, in its series": "标题（在其剧集中）",
+ "{0} episodes on {1} are titled alike in its series: paste its URL on the series": "{1} 上有 {0} 集在其剧集中同名：请在剧集中粘贴其 URL"
 }

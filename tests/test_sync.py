@@ -2452,3 +2452,29 @@ def test_a_finished_run_is_never_read_as_interrupted(tmp_path, monkeypatch):
     run.finish("unavailable", "Not on HMAX yet")
     assert seen[-1] == ("unavailable", True)  # written while still active: never "no end, not running"
     assert run.id not in sync.EpisodeRun.active
+
+
+def test_a_programme_is_found_inside_the_series_its_search_answers(tmp_path, monkeypatch):
+    # By mj23au: in programmes mode, iPlayer's search for "Fallen Women" answers the brand "Stacey Dooley", not a
+    # programme of that title; the episode is in the brand's listing, as S01E27. Two listings holding it: not guessed
+    sync = load(tmp_path, monkeypatch)
+    listings = {"b048vy8l": [{"type": "episode", "season": 1, "number": 26, "name": "Meet the Shoplifters"},
+                             {"type": "episode", "season": 1, "number": 27, "name": "Fallen Women"}],
+                "other": [{"type": "episode", "season": 1, "number": 1, "name": "Something Else"}]}
+    results = [{"id": "b048vy8l", "title": "Stacey Dooley"}, {"id": "other", "title": "Other"}]
+
+    class Serve:
+        def call(self, method, path, json=None):
+            return {"results": results} if path == "/api/search" else {"titles": listings[json["title_id"]]}
+    monkeypatch.setattr(sync, "backend_for", lambda tag, config=None: Serve())
+    monkeypatch.setattr(sync, "serve_params", lambda show, config: {})
+    show = {"service": "iP", "programmes": True}
+    ep = {"id": 101, "seasonNumber": 10, "episodeNumber": 1, "title": "Fallen Women", "airDateUtc": "2026-09-20T21:00:00Z"}
+    match = sync.programme_for(show, ep, {}, True)
+    assert (match["title"], match["code"], match["how"]) == ("b048vy8l", "S01E27", "title, in its series")
+    listings["other"] = [{"type": "episode", "season": 3, "number": 4, "name": "Fallen Women"}]
+    try:
+        sync.programme_for(show, {**ep, "id": 102}, {}, True)
+        raise AssertionError("a title found in two series was guessed")
+    except sync.Unmatched as e:
+        assert "2 episodes" in str(e)

@@ -2172,5 +2172,7 @@
  "✓ Unshacklarr reads {0}'s library: {1}": "✓ O Unshacklarr lê a biblioteca de {0}: {1}",
  "{0} (contains your {1} root folders)": "{0} (contém suas {1} pastas raiz)",
  "Your library was found in another folder: {0} in Sonarr is {1} in Unshacklarr.": "Sua biblioteca foi encontrada em outra pasta: {0} no Sonarr é {1} no Unshacklarr.",
- "Use these folders": "Usar estas pastas"
+ "Use these folders": "Usar estas pastas",
+ "title, in its series": "título, na sua série",
+ "{0} episodes on {1} are titled alike in its series: paste its URL on the series": "{0} episódios no {1} têm esse título na série: cole a URL na série"
 }
