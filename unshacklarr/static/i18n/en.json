@@ -743,6 +743,9 @@
  "Episode titles": [],
  "Episode titles are blurred in the Schedule, on series pages and in Catch up. Click or tap a title to show it. A series can change this in its Settings tab.": [],
  "Episode titles hidden": [],
+ "Episode titles in {0}": [
+  "current.language"
+ ],
  "Episode titles shown": [],
  "EpisodeRun | None": [],
  "Episodes": [],
@@ -1444,6 +1447,7 @@
  "Numbering": [],
  "Numbering and file names": [],
  "Numbering and file names, for this download": [],
+ "Numbering is correct": [],
  "OK": [],
  "Off": [],
  "Off for every series": [],
@@ -1889,11 +1893,6 @@
   "command.get('message') or 'see Activity in Sonarr'"
  ],
  "Sonarr gave no command to follow: the import is unconfirmed": [],
- "Sonarr gives this series' episode titles in {0}; services where you watch name them in {1}. In {2}, they match its episodes better.": [
-  "current.language",
-  "want",
-  "want"
- ],
  "Sonarr has no S{0}E{1} for this series": [
   "season",
   "number"
@@ -1908,6 +1907,7 @@
  "Sonarr has no {0} for this series": [
   "', '.join(missing)"
  ],
+ "Sonarr has not updated the titles yet. Reload the page in a few minutes.": [],
  "Sonarr import": [],
  "Sonarr imports each episode from this folder. Give its path as Sonarr sees it.": [],
  "Sonarr imports each episode once it is downloaded and checked.": [],
@@ -1917,14 +1917,18 @@
  "Sonarr is unreachable: {0}": [
   "no_credentials(e)"
  ],
+ "Sonarr is updating {0} with {1} titles.": [
+  "current.title",
+  "want"
+ ],
  "Sonarr kept its own file": [],
  "Sonarr lists no episode for this series.": [],
  "Sonarr name": [],
- "Sonarr now numbers this series in {0}, not in {1} as when its numbering below was set. Its new episodes wait: check the numbering, then confirm it.": [
+ "Sonarr now numbers this series in {0}, but the numbering below was set for {1}. New episodes of this series are not downloaded until you check the numbering and confirm it.": [
   "name(now)",
   "name(conf.sonarr_order)"
  ],
- "Sonarr now numbers {0} in {1}, its numbering here was set for {2}": [
+ "Sonarr now numbers {0} in {1}, but its numbering in Unshacklarr was set for {2}": [
   "serie.get('title')",
   "name(now)",
   "name(was)"
@@ -1932,12 +1936,8 @@
  "Sonarr numbers it {0}: this series' Numbering settings map it there": [
   "sxxeyy"
  ],
- "Sonarr numbers this series in {0}: set the numbering below for that order.": [
+ "Sonarr numbers this series in {0}. Set the numbering below for this order.": [
   "name(now)"
- ],
- "Sonarr refreshes {0} in {1}: ask the service again in a minute": [
-  "current.title",
-  "want"
  ],
  "Sonarr refused the API key": [],
  "Sonarr refused the import ({0}): asked again ({1} of {2})": [
@@ -1960,6 +1960,18 @@
  "Sonarr sees {0}: {1}": [
   "Path(c['path']).name",
   "c['quality']['quality']['name']"
+ ],
+ "Sonarr shows this series' episode titles in {0}, but streaming services in your country show them in {1}. With {2} titles in Sonarr, Unshacklarr can match each episode by its title.": [
+  "current.language",
+  "want",
+  "want"
+ ],
+ "Sonarr shows this series' episode titles in {0}, but {1} shows them in {2}. With {3} titles in Sonarr, Unshacklarr can match each episode with {4} by its title.": [
+  "current.language",
+  "svcName(conf.service)",
+  "want",
+  "want",
+  "svcName(conf.service)"
  ],
  "Sonarr up: {0} · Unshackle up: {1}": [
   "health['sonarr'].get('ok')",
@@ -2234,7 +2246,6 @@
   "seen_by('sonarr_downloads', out)"
  ],
  "The next episode starts": [],
- "The numbering is right": [],
  "The offsets of {0} must be whole numbers": [
   "key"
  ],
@@ -2331,6 +2342,13 @@
  ],
  "The {0} command was not found. Install Unshackle, or give the full path to its command in Settings, Unshackle.": [
   "command or 'unshackle'"
+ ],
+ "The {0} titles are in Sonarr, and {1} was checked again.": [
+  "want",
+  "svcName(conf.service)"
+ ],
+ "The {0} titles are in Sonarr.": [
+  "want"
  ],
  "Then add the file here with Add cookies.": [],
  "These {0} episodes are": [
@@ -2530,7 +2548,7 @@
  "Use this IMDB ID (e.g. tt1375666) for tagging instead of an automatic search. Add --enrich to also take its title, year and original language.": [],
  "Use this TMDB ID for tagging instead of an automatic search. Add --enrich to also take its title, year and original language.": [],
  "Use this TVDB ID for --tvdb-order and tagging instead of looking the series up automatically. Add --enrich to also take its title, year and original language.": [],
- "Use {0} titles in Sonarr": [
+ "Use {0} titles": [
   "want"
  ],
  "Use {0}: {1}": [
@@ -3705,11 +3723,11 @@
  "{0}'s unshackle.yaml (dl:)": [
   "backend.name or 'Unshackle'"
  ],
- "{0}. Its new episodes wait until you check its numbering in Unshacklarr.": [
-  "why"
- ],
  "{0}. Make room, or lower the room kept free in Settings, Unshackle, Folders.": [
   "full"
+ ],
+ "{0}. New episodes of this series are not downloaded until you check its numbering in Unshacklarr.": [
+  "why"
  ],
  "{0}. The episode is tried again at each sync, and downloaded when one is there.": [
   "why"

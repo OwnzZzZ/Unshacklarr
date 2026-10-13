@@ -2462,7 +2462,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
             if not manual and (why := order_changed(show, ep["series"])):  # its numbering may now name other episodes
                 if first_warning(f"order:{ep['series']['tvdbId']}:{ep['series'].get('seasonType')}"):
                     notify_series(show, settings, "warning", f"Episode order changed: {ep['series']['title']}",
-                                  f"{why}. Its new episodes wait until you check its numbering in Unshacklarr.")
+                                  f"{why}. New episodes of this series are not downloaded until you check its numbering in Unshacklarr.")
                 continue
 
             sxxeyy = f"S{ep['seasonNumber']:02}E{ep['episodeNumber']:02}"
@@ -2720,7 +2720,7 @@ def order_changed(show: dict, serie: dict) -> str:
         return ""
     name = lambda t: next((x.get("name") for x in serie.get("seasonTypes") or [] if x.get("type") == t), None) or \
         ("the aired order" if t == "official" else f"the {t} order")
-    return f"Sonarr now numbers {serie.get('title')} in {name(now)}, its numbering here was set for {name(was)}"
+    return f"Sonarr now numbers {serie.get('title')} in {name(now)}, but its numbering in Unshacklarr was set for {name(was)}"
 
 
 def first_warning(key: str) -> bool:

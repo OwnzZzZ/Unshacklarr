@@ -1709,3 +1709,9 @@ input[type=time]:focus:not(.bad) { border-color: var(--accent); box-shadow: 0 0 
 /* Schedule: the end of a season or of the series, beside its episode */
 .finale-tag { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600;
   vertical-align: 1px; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); }
+/* A series' titles in your language: a suggestion that stands out, in its Settings and atop its Episodes */
+.lang-note { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin: var(--gap-field) 0;
+  padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line)); border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.lang-note[hidden] { display: none; } .lang-note > div { flex: 1 1 260px; min-width: 0; }
+.lang-note b { color: var(--accent); } .lang-note p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }

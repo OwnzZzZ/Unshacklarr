@@ -2787,6 +2787,18 @@ def set_series_language(tvdb: int, name: str) -> None:
     serie["language"] = full["language"]  # the library kept here says so too
 
 
+async def series_fresh(request):
+    """One series of the main Sonarr as the page lists it, asked again: its title in its new language, say."""
+    try:
+        s = await asyncio.to_thread(sonarr_sync.sonarr_get, f"series/{int(request.match_info['series_id'])}")
+    except requests.RequestException as e:
+        raise web.HTTPBadGateway(text=f"Sonarr is unreachable: {no_credentials(e)}") from None
+    kept = sonarr_sync._series_by_tvdb.get("", (0.0, {}))[1]
+    if s.get("tvdbId") in kept:
+        kept[s["tvdbId"]] = s  # the library kept here: the sync's labels say its new title too
+    return web.json_response(series_entry(s))
+
+
 async def series_language(request):
     """A series' page, Sonarr 5: its titles in the language where you watch, as its service names its episodes."""
     tvdb, name = int(request.match_info["tvdb"]), metadata_language()
@@ -3018,7 +3030,11 @@ def probe_series(show: dict, series_id: int, title: str = "") -> dict:
     # (Shifting Gears), yet its "Aménagements" is Sonarr's "Accommodations" under the very same number
     pairs = [(a, b) for e in every if (a := usable_title((by_key.get(sonarr_sync.service_episode(show, e["seasonNumber"], e["episodeNumber"]) or "") or {}).get("name")))
              and (b := usable_title(e.get("title")))]
-    agreeing = not pairs or 2 * sum(same_title(a, b) for a, b in pairs) >= len(pairs)
+    # ...unless the titles that do meet sit mostly under other numbers: then the numbering differs, not the language
+    # (RMC+'s J'irai dormir chez vous: "Mali" is Sonarr's S01E03 and its S17E02), and a title still says another episode
+    own_key = {e["id"]: sonarr_sync.service_episode(show, e["seasonNumber"], e["episodeNumber"]) for e in every}
+    moved = sum(key.split(".")[0] != (own_key.get(m["episodeId"]) or "").split(".")[0] for key, m in by_title.items())
+    agreeing = not pairs or 2 * sum(same_title(a, b) for a, b in pairs) >= len(pairs) or 2 * moved > len(by_title)
     comparable = enough(len(by_title)) and agreeing
     # Sonarr's own titles weigh only in the service's language (French, J'irai dormir), not in English against
     # a French Disney+ (Futurama): there, an episode with no French title from TMDB has nothing to contradict.
@@ -3056,6 +3072,9 @@ def probe_series(show: dict, series_id: int, title: str = "") -> dict:
                 break
     return {
         "available": available,
+        # whether the service's titles and Sonarr's agree where both number an episode alike: when they don't, the
+        # page offers Sonarr's titles in your language (Sonarr 5)
+        "titlesAgree": agreeing,
         "titled": sorted(by_title),  # the service's numbers some Sonarr episode's title points to
         "local_titles": local,  # TVDB's titles in your language, for the page to show over Sonarr's "TBA"
         # everything the service lists, as it numbers it: what a download's own numbering can ask for
@@ -3078,7 +3097,8 @@ SERVICE_LIST_HOURS = 12
 def keep_service_list(tvdb: int, show: dict, found: dict) -> None:
     lists = read_json(SERVICE_LISTS, {})
     lists[str(tvdb)] = {"checked": datetime.now(timezone.utc).isoformat(), "service": show["service"], "title": str(show["title"]),
-                        "available": found["available"], "titles": found["titles"], "local_titles": found.get("local_titles") or {}}
+                        "available": found["available"], "titles": found["titles"], "local_titles": found.get("local_titles") or {},
+                        "titlesAgree": found.get("titlesAgree", True)}
     write_atomic(SERVICE_LISTS, json.dumps(lists))
 
 
@@ -4533,6 +4553,7 @@ app.add_routes([
     web.get("/api/notifications/sent", sent_notifications),
     web.post("/api/sync", start_sync),
     web.get(r"/api/series/{series_id:\d+}/episodes", episodes),
+    web.get(r"/api/series/{series_id:\d+}", series_fresh),
     web.post("/api/download", download),
     web.get("/api/missing", missing),
     web.get("/api/upgrades", upgrades),

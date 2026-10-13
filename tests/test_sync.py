@@ -2309,7 +2309,7 @@ def test_a_numbering_set_for_another_episode_order_is_said(tmp_path, monkeypatch
     sync = load(tmp_path, monkeypatch)
     serie = {"title": "Show", "seasonType": "netflix", "seasonTypes": [{"type": "official", "name": "Aired Order"}, {"type": "netflix", "name": "Netflix Order"}]}
     show = {"service": "NF", "season_map": {"2": 3}, "sonarr_order": "official"}
-    assert sync.order_changed(show, serie) == "Sonarr now numbers Show in Netflix Order, its numbering here was set for Aired Order"
+    assert sync.order_changed(show, serie) == "Sonarr now numbers Show in Netflix Order, but its numbering in Unshacklarr was set for Aired Order"
     assert sync.order_changed({**show, "sonarr_order": "netflix"}, serie) == ""  # set for that order
     assert sync.order_changed({"service": "NF", "sonarr_order": "official"}, serie) == ""  # no numbering of its own
     assert sync.order_changed(show, {"title": "Show"}) == ""  # Sonarr 4: no order, the aired one

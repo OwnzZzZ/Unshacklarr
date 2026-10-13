@@ -670,6 +670,7 @@ $("#d-url").oninput = async (e) => {
     conf.service_options = {};
     $("#d-service").value = tag;
     toast(`${svcName(tag)}: recognised from the link`);
+    dirty();  // a series without a service was not part of the save: with one now, Save shows
     renderMeta(current);
     renderCheck(current, true);
     await renderServiceOptions(conf);
@@ -723,9 +724,9 @@ function renderOrder() {
   if (box.hidden) return box.replaceChildren();
   if (changed) $("#d-adv").open = true;
   box.replaceChildren(el("p", { textContent: changed
-    ? `Sonarr now numbers this series in ${name(now)}, not in ${name(conf.sonarr_order)} as when its numbering below was set. Its new episodes wait: check the numbering, then confirm it.`
-    : `Sonarr numbers this series in ${name(now)}: set the numbering below for that order.` }),
-    ...(changed ? [el("button", { type: "button", className: "btn small", textContent: "The numbering is right",
+    ? `Sonarr now numbers this series in ${name(now)}, but the numbering below was set for ${name(conf.sonarr_order)}. New episodes of this series are not downloaded until you check the numbering and confirm it.`
+    : `Sonarr numbers this series in ${name(now)}. Set the numbering below for this order.` }),
+    ...(changed ? [el("button", { type: "button", className: "btn small", textContent: "Numbering is correct",
       onclick: () => { conf.sonarr_order = now; dirty(); renderOrder(); } })] : []));
 }
 $("#d-adv").addEventListener("input", (e) => {  // numbering set now: for the order Sonarr has now
@@ -737,19 +738,28 @@ $("#d-adv").addEventListener("input", (e) => {  // numbering set now: for the or
 /* Sonarr 5 gives a series' titles in its metadata language: English by default, against a service naming episodes in
    your language, they meet less; one click asks Sonarr for them in yours (it refreshes the series at once). */
 function renderSeriesLanguage() {
-  const box = $("#d-lang"), conf = S.config.series[current.tvdbId] || {}, want = S.metadataLanguage;
-  // a series set up here, or one made in your language (Surveillant !), whatever the service picked yet
-  box.hidden = !want || !current.language || current.language === want || !(conf.service || current.originalLanguage === want);
-  if (box.hidden) return box.replaceChildren();
-  box.replaceChildren(el("p", { textContent: `Sonarr gives this series' episode titles in ${current.language}; services where you watch name them in ${want}. In ${want}, they match its episodes better.` }),
-    el("button", { type: "button", className: "btn small", textContent: `Use ${want} titles in Sonarr`, onclick: async (e) => {
-      e.target.disabled = true;
-      try {
-        await api(`/api/series/${current.tvdbId}/language`, { method: "POST", body: "{}" });
-        current.language = want;
-        toast(`Sonarr refreshes ${current.title} in ${want}: ask the service again in a minute`);
-        renderSeriesLanguage();
-      } catch (err) { e.target.disabled = false; toast(err.message, true); }
-    } }));
+  const conf = S.config.series[current.tvdbId] || {}, want = S.metadataLanguage;
+  // once its service was asked and their titles don't agree with Sonarr's (Shifting Gears on a French Disney+), or for
+  // a series made in your language (Surveillant !); in its Settings and atop its Episodes
+  const off = !want || !current.language || current.language === want || !(epTitlesAgree === false || current.originalLanguage === want);
+  document.querySelectorAll(".lang-note").forEach((box) => {
+    box.hidden = off;
+    if (off) return box.replaceChildren();
+    box.replaceChildren(
+      el("div", {}, el("b", { textContent: `Episode titles in ${current.language}` }),
+        el("p", { textContent: conf.service
+          ? `Sonarr shows this series' episode titles in ${current.language}, but ${svcName(conf.service)} shows them in ${want}. With ${want} titles in Sonarr, Unshacklarr can match each episode with ${svcName(conf.service)} by its title.`
+          : `Sonarr shows this series' episode titles in ${current.language}, but streaming services in your country show them in ${want}. With ${want} titles in Sonarr, Unshacklarr can match each episode by its title.` })),
+      el("button", { type: "button", className: "btn small primary", textContent: `Use ${want} titles`, onclick: async (e) => {
+        e.target.disabled = true;
+        try {
+          await api(`/api/series/${current.tvdbId}/language`, { method: "POST", body: "{}" });
+          current.language = want;
+          toast(`Sonarr is updating ${current.title} with ${want} titles.`);
+          renderSeriesLanguage();
+          followTitles(current, want);  // the list follows, then the service is asked again
+        } catch (err) { e.target.disabled = false; toast(err.message, true); }
+      } }));
+  });
 }
 

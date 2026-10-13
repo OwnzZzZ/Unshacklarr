@@ -238,10 +238,11 @@ async function loadEpisodes(s, keep = false) {  // keep: a reload after a downlo
     updateEpBar();
     box.replaceChildren(loading("Loading episodes from Sonarr…"));
     refreshEpBusy(s);
-    epChecked = null;
+    epChecked = null; epTitlesAgree = null;
     api(`/api/probe/${s.tvdbId}`).then((hit) => {  // the last check of the service, kept 12 h: no need to ask again
       if (!hit || current !== s || epAvail) return;
       epAvail = viewAvail(hit.available); epTitles = hit.titles; epChecked = hit.checked; localTitles(hit.local_titles);
+      epTitlesAgree = hit.titlesAgree ?? null; renderSeriesLanguage();
       if ($("#ep-list")) { $("#ep-avail").hidden = false; renderSeason(); checkLabel(`Refresh what's on ${svcName(S.config.series[s.tvdbId]?.service)}`); }
     }).catch(() => {});
   }
@@ -272,6 +273,7 @@ async function loadEpisodes(s, keep = false) {  // keep: a reload after a downlo
       return b;
     })),
     cdmNote(S.config.series[s.tvdbId]?.service),
+    el("div", { className: "lang-note", hidden: true }),  // titles in your language: offered here too (renderSeriesLanguage)
     el("div", { className: "ep-catchup", id: "ep-catchup", hidden: true }),
     /* Two lines: the season and what the service has; then what to select, and how to show the list. */
     el("div", { className: "ep-tools" },
@@ -288,6 +290,7 @@ async function loadEpisodes(s, keep = false) {  // keep: a reload after a downlo
             onchange: (e) => { hideOnDisk = e.target.checked; renderSeason(); } }), "Hide on disk"),
           colsButton()))),
     el("ul", { className: "ep-list", id: "ep-list" }));
+  renderSeriesLanguage();
   renderCheck(s);
   renderSeason();
 }
@@ -312,6 +315,7 @@ function renderCheck(s, changed = false) {
 let epAvail = null;  // episode id -> what the service calls it, once "What's on <service>?" asked it
 let epTitles = null;  // everything the service lists then: [{key: "S26E11", part, name}]
 let epChecked = null;  // when that was
+let epTitlesAgree = null;  // whether the service's titles and Sonarr's agree, once asked; null: not asked yet
 /* TVDB's titles in your language (its website), over Sonarr's where it has none ("TBA"): a French series reads. */
 function localTitles(names) {
   for (const e of Object.values(epSeasons || {}).flat()) {
@@ -612,6 +616,29 @@ function renderCatchUp() {
         onclick: () => { free.forEach((e) => picked.add(e.id)); renderSeason(); updateEpBar(); } })] : [])));
 }
 /* What the service lists of the series (unshackle's --list-titles): marked on the episodes, and for a download's preview. */
+/* After Sonarr was asked for the series' titles in your language: its refresh takes a few seconds; the episodes are
+   loaded again every 3 s until their titles change, then the service is asked again so its episodes match. */
+async function followTitles(s, want) {
+  const titles = () => Object.values(epSeasons).flat().map((e) => e.title).join("|");
+  if (!Object.keys(epSeasons).length) await loadEpisodes(s);  // its Episodes not open yet: what Sonarr had before
+  const before = titles(), conf = S.config.series[s.tvdbId] || {};
+  for (let i = 0; i < 20; i++) {
+    await new Promise((r) => setTimeout(r, 3000));
+    if (current !== s) return;
+    await loadEpisodes(s, true);
+    if (titles() === before) continue;
+    if (s.id) {  // its own title changed too ("Famille en Réparation"): in its panel and on the wall
+      try {
+        Object.assign(s, await api(`/api/series/${s.id}`));
+        if (current === s) { $("#d-title").textContent = s.title; renderMeta(s); }
+        renderWall();
+      } catch { /* the next page load shows it */ }
+    }
+    const asked = conf.service && conf.title ? await askService(s) : null;  // its own message when that fails
+    return toast(asked ? `The ${want} titles are in Sonarr, and ${svcName(conf.service)} was checked again.` : `The ${want} titles are in Sonarr.`);
+  }
+  toast(`Sonarr has not updated the titles yet. Reload the page in a few minutes.`, true);
+}
 async function askService(s) {
   const conf = S.config.series[s.tvdbId], svc = svcName(conf.service), check = $(".ep-check");
   if (check) { check.disabled = true; check.replaceChildren(el("span", { className: "spinner", ariaHidden: "true" }), ` Asking ${svc}…`); }
@@ -620,7 +647,8 @@ async function askService(s) {
   try {
     r = await api("/api/probe", { method: "POST", signal: AbortSignal.timeout(120000), body: JSON.stringify({ show: conf, seriesId: s.id ?? S.sonarrsOf?.[s.tvdbId]?.[0]?.id, tvdbId: s.tvdbId, title: s.title,
       ...(s.id ? {} : { sonarr: S.sonarrsOf?.[s.tvdbId]?.[0]?.name }) }) });  // in no main Sonarr: its own Sonarr's episodes
-    if (current === s) { epAvail = viewAvail(r.available); epTitles = r.titles || []; epChecked = r.checked; localTitles(r.local_titles); $("#ep-avail").hidden = false; renderSeason(); renderPreview(); }
+    if (current === s) { epAvail = viewAvail(r.available); epTitles = r.titles || []; epChecked = r.checked; localTitles(r.local_titles); $("#ep-avail").hidden = false; renderSeason(); renderPreview();
+      epTitlesAgree = r.titlesAgree ?? null; renderSeriesLanguage(); }
   } catch (e) { toast(e.message, true); }
   clearTimeout(slow);
   if (current === s && $(".ep-check")) { $(".ep-check").disabled = false; checkLabel(epAvail ? `Refresh what's on ${svc}` : `What's on ${svc}?`); }

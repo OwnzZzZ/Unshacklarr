@@ -413,7 +413,9 @@ def test_a_country_title_finds_its_episode_and_a_number_saying_another_finds_not
     monkeypatch.setattr(web.UNSHACKLE, "call", lambda method, path, **k: {"titles": service, "services": [{"tag": "RMCP", "cli_params": []}]})
     monkeypatch.setattr(web.sonarr_sync, "sonarr_get", lambda path, **q: sonarr if path == "episode" else {})
     monkeypatch.setattr(web, "tmdb_key", lambda: "")
-    found = web.probe_series({"service": "RMCP", "title": "x"}, 1)["available"]
+    probed = web.probe_series({"service": "RMCP", "title": "x"}, 1)
+    assert probed["titlesAgree"] is True  # the same language: nothing offered
+    found = probed["available"]
     assert found[13] == {"service": "S17E02", "name": "Mali", "match": "title"}  # same title, whatever the number
     assert found[11]["service"] == "S01E01"  # "Japon" both sides
     assert found[32]["service"] == "S03E02"  # no title to say otherwise: its number
@@ -1848,8 +1850,10 @@ def test_words_alike_in_two_languages_do_not_make_a_service_speak_ours(tmp_path,
     monkeypatch.setattr(web.sonarr_sync, "sonarr_get", lambda path, **q: sonarr if path == "episode" else {})
     monkeypatch.setattr(web, "tmdb_key", lambda: "")
     monkeypatch.setattr(web, "tvdb_titles", lambda tvdb: {})
-    found = web.probe_series({"service": "DSNP", "title": "x"}, 1)["available"]
+    probed = web.probe_series({"service": "DSNP", "title": "x"}, 1)
+    found = probed["available"]
     assert found[102] == {"service": "S01E02", "name": "Aménagements"}  # by its number: no longer "not on Disney+"
+    assert probed["titlesAgree"] is False  # the page then offers Sonarr's titles in French
     assert len(found) == 23
 
 
@@ -1900,3 +1904,19 @@ def test_a_series_titles_are_asked_of_sonarr_in_your_language(monkeypatch):
     web.set_series_language(447183, "French")
     assert put[0][0].endswith("/api/v3/series/974") and put[0][1]["language"] == {"id": 2, "name": "French"}
     assert serie["language"]["name"] == "French"  # the library kept here says so too
+
+
+def test_one_series_is_asked_again_with_its_new_title(monkeypatch):
+    # After its titles were asked in French, the page asks the series again: its title in French too
+    import asyncio, json
+    from unshacklarr import web
+    sync = web.sonarr_sync
+    fresh = {"id": 974, "tvdbId": 447183, "title": "Famille en Réparation", "images": [], "language": {"id": 2, "name": "French"}}
+    monkeypatch.setattr(sync, "sonarr_get", lambda path, **p: fresh if path == "series/974" else {})
+    monkeypatch.setitem(sync._series_by_tvdb, "", (0.0, {447183: {"id": 974, "tvdbId": 447183, "title": "Shifting Gears"}}))
+
+    class Request:
+        match_info = {"series_id": "974"}
+    shown = json.loads(asyncio.run(web.series_fresh(Request())).body)
+    assert shown["title"] == "Famille en Réparation" and shown["language"] == "French"
+    assert sync._series_by_tvdb[""][1][447183]["title"] == "Famille en Réparation"  # the sync's labels follow
