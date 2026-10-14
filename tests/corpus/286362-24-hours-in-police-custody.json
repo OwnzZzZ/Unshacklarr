@@ -1,0 +1,2748 @@
+{
+ "known_bug_available": "Needs dev-programmes-upgrades' title matching (#17, #20): passes once it is merged in",
+ "title": "24 Hours in Police Custody",
+ "tvdb": 286362,
+ "show": {
+  "service": "ALL4",
+  "title": "https://www.channel4.com/programmes/24-hours-in-police-custody"
+ },
+ "tmdb_key": true,
+ "country": "AU",
+ "inputs": {
+  "service": [
+   {
+    "type": "episode",
+    "name": "The Conspiracy to Murder",
+    "id": "57099-001",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "One Punch",
+    "id": "61751-006",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 2,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "A Moment of Madness",
+    "id": "61751-013",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 2,
+    "number": 10
+   },
+   {
+    "type": "episode",
+    "name": "Their Time Will Come",
+    "id": "61751-015",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 2,
+    "number": 11
+   },
+   {
+    "type": "episode",
+    "name": "The Detective and the Surgeon",
+    "id": "61751-009",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 2,
+    "number": 15
+   },
+   {
+    "type": "episode",
+    "name": "The Predator",
+    "id": "68464-004",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 3,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Two Wrongs",
+    "id": "68464-006",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 3,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Til Death Do Us Part",
+    "id": "68464-009",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 3,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "The Horror House - Part 1",
+    "id": "68464-011",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 3,
+    "number": 11
+   },
+   {
+    "type": "episode",
+    "name": "The Home County Cartel - Part 1",
+    "id": "68464-012",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 3,
+    "number": 12
+   },
+   {
+    "type": "episode",
+    "name": "The Home County Cartel - Part 2",
+    "id": "68464-013",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 3,
+    "number": 13
+   },
+   {
+    "type": "episode",
+    "name": "The Search for Justice",
+    "id": "68464-005",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 3,
+    "number": 14
+   },
+   {
+    "type": "episode",
+    "name": "The Horror House - Part 2",
+    "id": "68464-021",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 3,
+    "number": 21
+   },
+   {
+    "type": "episode",
+    "name": "The No Body Murder",
+    "id": "68464-022",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 3,
+    "number": 22
+   },
+   {
+    "type": "episode",
+    "name": "Murder in the Woods (Feature-Length Version)",
+    "id": "68464-025",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 3,
+    "number": 25
+   },
+   {
+    "type": "episode",
+    "name": "The Murder of Rikki Neave - Part 1",
+    "id": "73855-001",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 4,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "The Murder of Rikki Neave - Part 2",
+    "id": "73855-002",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 4,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "The Unusual Suspects",
+    "id": "73855-006",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 4,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "The Siege",
+    "id": "73855-007",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 4,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "Murder on Camera - Part 1",
+    "id": "73855-009",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 4,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "Murder on Camera - Part 2",
+    "id": "73855-010",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 4,
+    "number": 10
+   },
+   {
+    "type": "episode",
+    "name": "Living the High Life",
+    "id": "73855-011",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 4,
+    "number": 11
+   },
+   {
+    "type": "episode",
+    "name": "Murder on Prescription - Part 1",
+    "id": "73855-013",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 4,
+    "number": 13
+   },
+   {
+    "type": "episode",
+    "name": "Murder on Prescription - Part 2",
+    "id": "73855-014",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 4,
+    "number": 14
+   },
+   {
+    "type": "episode",
+    "name": "The Murder Messages",
+    "id": "73855-015",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 4,
+    "number": 15
+   },
+   {
+    "type": "episode",
+    "name": "The Secret Network",
+    "id": "73855-016",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 4,
+    "number": 16
+   },
+   {
+    "type": "episode",
+    "name": "Breakout",
+    "id": "73855-017",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 4,
+    "number": 17
+   },
+   {
+    "type": "episode",
+    "name": "The Norfolk Narco Cartel",
+    "id": "73855-018",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 4,
+    "number": 18
+   },
+   {
+    "type": "episode",
+    "name": "The Murder of Jane Doe",
+    "id": "73855-020",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 4,
+    "number": 20
+   },
+   {
+    "type": "episode",
+    "name": "The Ambush - Part 1",
+    "id": "73855-021",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 4,
+    "number": 21
+   },
+   {
+    "type": "episode",
+    "name": "The Ambush - Part 2",
+    "id": "73855-022",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 4,
+    "number": 22
+   },
+   {
+    "type": "episode",
+    "name": "The Butcher of Suburbia - Part 1",
+    "id": "77005-001",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 5,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "The Butcher of Suburbia - Part 2",
+    "id": "77005-002",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 5,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Nightclub Predator - Part 1",
+    "id": "77005-003",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 5,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Nightclub Predator - Part 2",
+    "id": "77005-004",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 5,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Murder Is No Game - Part 1",
+    "id": "77005-005",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 5,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Murder Is No Game - Part 2",
+    "id": "77005-006",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 5,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "A Family Vendetta - Part 1",
+    "id": "77005-007",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 5,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "A Family Vendetta - Part 2",
+    "id": "77005-008",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 5,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "Burying Horror",
+    "id": "77005-009",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 5,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "Sex and Corruption",
+    "id": "65249-001",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 6,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Left for Dead",
+    "id": "65249-008",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 6,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Sudden Death: Think Murder",
+    "id": "65249-002",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "24 Hours in Police Custody",
+    "season": 6,
+    "number": 19
+   }
+  ],
+  "episodes": [
+   {
+    "id": 12593,
+    "seasonNumber": 0,
+    "episodeNumber": 1,
+    "title": "Murder in the Woods (1)",
+    "airDate": "2020-01-06",
+    "airDateUtc": "2020-01-06T21:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12594,
+    "seasonNumber": 0,
+    "episodeNumber": 2,
+    "title": "Murder in the Woods (2)",
+    "airDate": "2020-01-07",
+    "airDateUtc": "2020-01-07T21:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12595,
+    "seasonNumber": 0,
+    "episodeNumber": 3,
+    "title": "The Home County Cartel (1)",
+    "airDate": "2020-11-08",
+    "airDateUtc": "2020-11-08T21:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12596,
+    "seasonNumber": 0,
+    "episodeNumber": 4,
+    "title": "The Home County Cartel (2)",
+    "airDate": "2020-11-09",
+    "airDateUtc": "2020-11-09T21:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12597,
+    "seasonNumber": 0,
+    "episodeNumber": 5,
+    "title": "Black Widow (1)",
+    "airDate": "2021-01-04",
+    "airDateUtc": "2021-01-04T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12598,
+    "seasonNumber": 0,
+    "episodeNumber": 6,
+    "title": "Black Widow (2)",
+    "airDate": "2021-01-05",
+    "airDateUtc": "2021-01-05T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12599,
+    "seasonNumber": 0,
+    "episodeNumber": 7,
+    "title": "Bedfordshire's Most Wanted",
+    "airDate": "2021-03-22",
+    "airDateUtc": "2021-03-22T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12600,
+    "seasonNumber": 0,
+    "episodeNumber": 8,
+    "title": "The Search for Justice",
+    "airDate": "2021-03-29",
+    "airDateUtc": "2021-03-29T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12601,
+    "seasonNumber": 0,
+    "episodeNumber": 9,
+    "title": "The No Body Murder",
+    "airDate": "2021-04-05",
+    "airDateUtc": "2021-04-05T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12602,
+    "seasonNumber": 0,
+    "episodeNumber": 10,
+    "title": "Til Death Do Us Part",
+    "airDate": "2021-04-12",
+    "airDateUtc": "2021-04-12T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12603,
+    "seasonNumber": 0,
+    "episodeNumber": 11,
+    "title": "Cold to the Touch (1)",
+    "airDate": "2022-01-03",
+    "airDateUtc": "2022-01-03T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12604,
+    "seasonNumber": 0,
+    "episodeNumber": 12,
+    "title": "Cold to the Touch (2)",
+    "airDate": "2022-01-04",
+    "airDateUtc": "2022-01-04T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12605,
+    "seasonNumber": 0,
+    "episodeNumber": 13,
+    "title": "The Murder of Rikki Neave (1)",
+    "airDate": "2022-07-04",
+    "airDateUtc": "2022-07-04T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12606,
+    "seasonNumber": 0,
+    "episodeNumber": 14,
+    "title": "The Murder of Rikki Neave (2)",
+    "airDate": "2022-07-05",
+    "airDateUtc": "2022-07-05T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12607,
+    "seasonNumber": 0,
+    "episodeNumber": 15,
+    "title": "The Honeytrap Murder (1)",
+    "airDate": "2023-03-20",
+    "airDateUtc": "2023-03-20T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12608,
+    "seasonNumber": 0,
+    "episodeNumber": 16,
+    "title": "The Honeytrap Murder (2)",
+    "airDate": "2023-03-21",
+    "airDateUtc": "2023-03-21T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12609,
+    "seasonNumber": 1,
+    "episodeNumber": 1,
+    "title": "The Conspiracy to Murder",
+    "airDate": "2014-09-29",
+    "airDateUtc": "2014-09-29T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12610,
+    "seasonNumber": 1,
+    "episodeNumber": 2,
+    "title": "Love Hurts",
+    "airDate": "2014-10-06",
+    "airDateUtc": "2014-10-06T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12611,
+    "seasonNumber": 1,
+    "episodeNumber": 3,
+    "title": "The Confession of a Paedophile",
+    "airDate": "2014-10-13",
+    "airDateUtc": "2014-10-13T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12612,
+    "seasonNumber": 1,
+    "episodeNumber": 4,
+    "title": "The Drug Drop",
+    "airDate": "2014-10-20",
+    "airDateUtc": "2014-10-20T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12613,
+    "seasonNumber": 1,
+    "episodeNumber": 5,
+    "title": "The Morning After",
+    "airDate": "2014-10-27",
+    "airDateUtc": "2014-10-27T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12614,
+    "seasonNumber": 1,
+    "episodeNumber": 6,
+    "title": "Honour Thy Father",
+    "airDate": "2014-11-10",
+    "airDateUtc": "2014-11-10T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12615,
+    "seasonNumber": 1,
+    "episodeNumber": 7,
+    "title": "The Crime of the Century",
+    "airDate": "2014-11-17",
+    "airDateUtc": "2014-11-17T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12616,
+    "seasonNumber": 2,
+    "episodeNumber": 1,
+    "title": "A Crime of Passion",
+    "airDate": "2015-01-06",
+    "airDateUtc": "2015-01-06T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12617,
+    "seasonNumber": 2,
+    "episodeNumber": 2,
+    "title": "A Short, Sharp Shock",
+    "airDate": "2015-01-13",
+    "airDateUtc": "2015-01-13T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12618,
+    "seasonNumber": 2,
+    "episodeNumber": 3,
+    "title": "Human Traffic",
+    "airDate": "2015-01-20",
+    "airDateUtc": "2015-01-20T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12619,
+    "seasonNumber": 2,
+    "episodeNumber": 4,
+    "title": "Punchdrunk Love",
+    "airDate": "2015-01-27",
+    "airDateUtc": "2015-01-27T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12620,
+    "seasonNumber": 2,
+    "episodeNumber": 5,
+    "title": "Age Concern",
+    "airDate": "2015-02-03",
+    "airDateUtc": "2015-02-03T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12621,
+    "seasonNumber": 2,
+    "episodeNumber": 6,
+    "title": "Frequent Flyers",
+    "airDate": "2015-02-10",
+    "airDateUtc": "2015-02-10T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12622,
+    "seasonNumber": 3,
+    "episodeNumber": 1,
+    "title": "Bad Blood",
+    "airDate": "2015-07-27",
+    "airDateUtc": "2015-07-27T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12623,
+    "seasonNumber": 3,
+    "episodeNumber": 2,
+    "title": "Guilty Little Secrets",
+    "airDate": "2015-08-03",
+    "airDateUtc": "2015-08-03T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12624,
+    "seasonNumber": 3,
+    "episodeNumber": 3,
+    "title": "Partners in Crime",
+    "airDate": "2015-08-10",
+    "airDateUtc": "2015-08-10T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12625,
+    "seasonNumber": 3,
+    "episodeNumber": 4,
+    "title": "Mother's Pride",
+    "airDate": "2015-08-17",
+    "airDateUtc": "2015-08-17T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12626,
+    "seasonNumber": 3,
+    "episodeNumber": 5,
+    "title": "A Sixth Sense",
+    "airDate": "2015-08-24",
+    "airDateUtc": "2015-08-24T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12627,
+    "seasonNumber": 4,
+    "episodeNumber": 1,
+    "title": "Human Cargo",
+    "airDate": "2016-04-20",
+    "airDateUtc": "2016-04-20T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12628,
+    "seasonNumber": 4,
+    "episodeNumber": 2,
+    "title": "To Catch a Paedophile",
+    "airDate": "2016-04-27",
+    "airDateUtc": "2016-04-27T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12629,
+    "seasonNumber": 4,
+    "episodeNumber": 3,
+    "title": "Love Thy Neighbour",
+    "airDate": "2016-05-05",
+    "airDateUtc": "2016-05-05T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12630,
+    "seasonNumber": 4,
+    "episodeNumber": 4,
+    "title": "One Punch",
+    "airDate": "2016-05-12",
+    "airDateUtc": "2016-05-12T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12631,
+    "seasonNumber": 4,
+    "episodeNumber": 5,
+    "title": "The Black Balaclava",
+    "airDate": "2016-05-19",
+    "airDateUtc": "2016-05-19T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12632,
+    "seasonNumber": 4,
+    "episodeNumber": 6,
+    "title": "Home Truths",
+    "airDate": "2016-05-26",
+    "airDateUtc": "2016-05-26T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12633,
+    "seasonNumber": 4,
+    "episodeNumber": 7,
+    "title": "Lethal Weapon",
+    "airDate": "2016-06-01",
+    "airDateUtc": "2016-06-01T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12634,
+    "seasonNumber": 4,
+    "episodeNumber": 8,
+    "title": "In Plain Sight",
+    "airDate": "2016-06-08",
+    "airDateUtc": "2016-06-08T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12635,
+    "seasonNumber": 4,
+    "episodeNumber": 9,
+    "title": "A Complaint of Rape",
+    "airDate": "2016-06-15",
+    "airDateUtc": "2016-06-15T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12636,
+    "seasonNumber": 5,
+    "episodeNumber": 1,
+    "title": "A Moment of Madness",
+    "airDate": "2017-06-05",
+    "airDateUtc": "2017-06-05T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12637,
+    "seasonNumber": 5,
+    "episodeNumber": 2,
+    "title": "Their Time Will Come",
+    "airDate": "2017-06-12",
+    "airDateUtc": "2017-06-12T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12638,
+    "seasonNumber": 5,
+    "episodeNumber": 3,
+    "title": "Invisible Chains",
+    "airDate": "2017-06-19",
+    "airDateUtc": "2017-06-19T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12639,
+    "seasonNumber": 5,
+    "episodeNumber": 4,
+    "title": "Code of Silence",
+    "airDate": "2017-06-26",
+    "airDateUtc": "2017-06-26T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12640,
+    "seasonNumber": 5,
+    "episodeNumber": 5,
+    "title": "The Golden Bracelet",
+    "airDate": "2017-07-03",
+    "airDateUtc": "2017-07-03T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12641,
+    "seasonNumber": 6,
+    "episodeNumber": 1,
+    "title": "Sex and Corruption",
+    "airDate": "2018-02-19",
+    "airDateUtc": "2018-02-19T21:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12642,
+    "seasonNumber": 6,
+    "episodeNumber": 2,
+    "title": "Car Attack",
+    "airDate": "2018-02-26",
+    "airDateUtc": "2018-02-26T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12643,
+    "seasonNumber": 6,
+    "episodeNumber": 3,
+    "title": "Left for Dead",
+    "airDate": "2018-03-05",
+    "airDateUtc": "2018-03-05T21:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12644,
+    "seasonNumber": 6,
+    "episodeNumber": 4,
+    "title": "Shallow Grave",
+    "airDate": "2018-03-12",
+    "airDateUtc": "2018-03-12T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12645,
+    "seasonNumber": 6,
+    "episodeNumber": 5,
+    "title": "Frequent Flyers",
+    "airDate": "2018-03-19",
+    "airDateUtc": "2018-03-19T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12646,
+    "seasonNumber": 6,
+    "episodeNumber": 6,
+    "title": "Too Close For Comfort",
+    "airDate": "2018-03-26",
+    "airDateUtc": "2018-03-26T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12647,
+    "seasonNumber": 7,
+    "episodeNumber": 1,
+    "title": "Body in the Grass",
+    "airDate": "2018-05-21",
+    "airDateUtc": "2018-05-21T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12648,
+    "seasonNumber": 7,
+    "episodeNumber": 2,
+    "title": "The Kane Line",
+    "airDate": "2018-05-28",
+    "airDateUtc": "2018-05-28T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12649,
+    "seasonNumber": 7,
+    "episodeNumber": 3,
+    "title": "A Knife Through the Heart",
+    "airDate": "2018-06-04",
+    "airDateUtc": "2018-06-04T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12650,
+    "seasonNumber": 7,
+    "episodeNumber": 4,
+    "title": "A Second Chance",
+    "airDate": "2018-06-11",
+    "airDateUtc": "2018-06-11T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12651,
+    "seasonNumber": 7,
+    "episodeNumber": 5,
+    "title": "Fifty Shades of Abuse",
+    "airDate": "2018-06-18",
+    "airDateUtc": "2018-06-18T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12652,
+    "seasonNumber": 7,
+    "episodeNumber": 6,
+    "title": "What Lies Beneath",
+    "airDate": "2018-06-25",
+    "airDateUtc": "2018-06-25T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12653,
+    "seasonNumber": 7,
+    "episodeNumber": 7,
+    "title": "Lost in Translation",
+    "airDate": "2018-07-02",
+    "airDateUtc": "2018-07-02T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12654,
+    "seasonNumber": 7,
+    "episodeNumber": 8,
+    "title": "Living Among Us",
+    "airDate": "2018-07-09",
+    "airDateUtc": "2018-07-09T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12655,
+    "seasonNumber": 8,
+    "episodeNumber": 1,
+    "title": "Predators",
+    "airDate": "2019-03-11",
+    "airDateUtc": "2019-03-11T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12656,
+    "seasonNumber": 8,
+    "episodeNumber": 2,
+    "title": "Family Secrets",
+    "airDate": "2019-03-18",
+    "airDateUtc": "2019-03-18T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12657,
+    "seasonNumber": 8,
+    "episodeNumber": 3,
+    "title": "Knifed",
+    "airDate": "2019-03-25",
+    "airDateUtc": "2019-03-25T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12658,
+    "seasonNumber": 8,
+    "episodeNumber": 4,
+    "title": "Smuggled",
+    "airDate": "2019-04-01",
+    "airDateUtc": "2019-04-01T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12659,
+    "seasonNumber": 8,
+    "episodeNumber": 5,
+    "title": "The Detective and the Surgeon",
+    "airDate": "2019-04-08",
+    "airDateUtc": "2019-04-08T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12660,
+    "seasonNumber": 8,
+    "episodeNumber": 6,
+    "title": "Sudden Death: Think Murder",
+    "airDate": "2019-04-15",
+    "airDateUtc": "2019-04-15T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12661,
+    "seasonNumber": 9,
+    "episodeNumber": 1,
+    "title": "Wanted",
+    "airDate": "2021-09-27",
+    "airDateUtc": "2021-09-27T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12662,
+    "seasonNumber": 9,
+    "episodeNumber": 2,
+    "title": "Chicken Shop Wars",
+    "airDate": "2021-10-04",
+    "airDateUtc": "2021-10-04T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12663,
+    "seasonNumber": 9,
+    "episodeNumber": 3,
+    "title": "The Horror House (1)",
+    "airDate": "2021-10-11",
+    "airDateUtc": "2021-10-11T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12664,
+    "seasonNumber": 9,
+    "episodeNumber": 4,
+    "title": "The Horror House (2)",
+    "airDate": "2021-10-18",
+    "airDateUtc": "2021-10-18T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12665,
+    "seasonNumber": 9,
+    "episodeNumber": 5,
+    "title": "Murder on the Doorstep",
+    "airDate": "2021-10-25",
+    "airDateUtc": "2021-10-25T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12666,
+    "seasonNumber": 9,
+    "episodeNumber": 6,
+    "title": "Holding the Baby",
+    "airDate": "2021-11-01",
+    "airDateUtc": "2021-11-01T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12667,
+    "seasonNumber": 10,
+    "episodeNumber": 1,
+    "title": "Two Wrongs",
+    "airDate": "2022-11-28",
+    "airDateUtc": "2022-11-28T21:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 12668,
+    "seasonNumber": 10,
+    "episodeNumber": 2,
+    "title": "A Wolf in Sheep's Clothing",
+    "airDate": "2022-12-05",
+    "airDateUtc": "2022-12-05T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 27878,
+    "seasonNumber": 0,
+    "episodeNumber": 17,
+    "title": "The Siege",
+    "airDate": "2023-12-03",
+    "airDateUtc": "2023-12-03T21:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 28127,
+    "seasonNumber": 0,
+    "episodeNumber": 18,
+    "title": "The Night Prowler",
+    "airDate": "2023-12-10",
+    "airDateUtc": "2023-12-10T21:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 28152,
+    "seasonNumber": 0,
+    "episodeNumber": 19,
+    "title": "The Predator",
+    "airDate": "2023-12-17",
+    "airDateUtc": "2023-12-17T21:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 28822,
+    "seasonNumber": 0,
+    "episodeNumber": 20,
+    "title": "Murder on Camera (1)",
+    "airDate": "2024-01-08",
+    "airDateUtc": "2024-01-08T21:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 28823,
+    "seasonNumber": 0,
+    "episodeNumber": 21,
+    "title": "Murder on Camera (2)",
+    "airDate": "2024-01-09",
+    "airDateUtc": "2024-01-09T21:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 39207,
+    "seasonNumber": 0,
+    "episodeNumber": 22,
+    "title": "The Devil's Chain",
+    "airDate": "2024-06-05",
+    "airDateUtc": "2024-06-05T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 40693,
+    "seasonNumber": 0,
+    "episodeNumber": 23,
+    "title": "Murder on Prescription (1)",
+    "airDate": "2024-09-09",
+    "airDateUtc": "2024-09-09T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 40694,
+    "seasonNumber": 0,
+    "episodeNumber": 24,
+    "title": "Murder on Prescription (2)",
+    "airDate": "2024-09-10",
+    "airDateUtc": "2024-09-10T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 41933,
+    "seasonNumber": 0,
+    "episodeNumber": 25,
+    "title": "The Murder Messages",
+    "airDate": "2024-11-25",
+    "airDateUtc": "2024-11-25T21:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 41934,
+    "seasonNumber": 0,
+    "episodeNumber": 26,
+    "title": "Living The High Life",
+    "airDate": "2024-12-02",
+    "airDateUtc": "2024-12-02T21:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 42039,
+    "seasonNumber": 0,
+    "episodeNumber": 27,
+    "title": "The Murder of Jane Doe",
+    "airDate": "2024-12-09",
+    "airDateUtc": "2024-12-09T21:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 42330,
+    "seasonNumber": 0,
+    "episodeNumber": 28,
+    "title": "Breakout",
+    "airDate": "2025-01-06",
+    "airDateUtc": "2025-01-06T21:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 42350,
+    "seasonNumber": 0,
+    "episodeNumber": 29,
+    "title": "The Norfolk Narco Cartel",
+    "airDate": "2025-01-13",
+    "airDateUtc": "2025-01-13T21:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 42495,
+    "seasonNumber": 0,
+    "episodeNumber": 30,
+    "title": "The Unusual Suspects",
+    "airDate": "2025-01-20",
+    "airDateUtc": "2025-01-20T21:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 46293,
+    "seasonNumber": 0,
+    "episodeNumber": 31,
+    "title": "The Butcher of Suburbia (1)",
+    "airDate": "2025-06-29",
+    "airDateUtc": "2025-06-29T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 46294,
+    "seasonNumber": 0,
+    "episodeNumber": 32,
+    "title": "The Butcher of Suburbia (2)",
+    "airDate": "2025-06-30",
+    "airDateUtc": "2025-06-30T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 46356,
+    "seasonNumber": 0,
+    "episodeNumber": 33,
+    "title": "Nightclub Predator (1)",
+    "airDate": "2025-07-06",
+    "airDateUtc": "2025-07-06T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 46357,
+    "seasonNumber": 0,
+    "episodeNumber": 34,
+    "title": "Nightclub Predator (2)",
+    "airDate": "2025-07-07",
+    "airDateUtc": "2025-07-07T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 46403,
+    "seasonNumber": 0,
+    "episodeNumber": 35,
+    "title": "Lost Boys",
+    "airDate": "2025-07-13",
+    "airDateUtc": "2025-07-13T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 50719,
+    "seasonNumber": 0,
+    "episodeNumber": 36,
+    "title": "Murder Is No Game (1)",
+    "airDate": "2025-10-05",
+    "airDateUtc": "2025-10-05T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 50720,
+    "seasonNumber": 0,
+    "episodeNumber": 37,
+    "title": "Murder Is No Game (2)",
+    "airDate": "2025-10-06",
+    "airDateUtc": "2025-10-06T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 52322,
+    "seasonNumber": 0,
+    "episodeNumber": 38,
+    "title": "A Family Vendetta (1)",
+    "airDate": "2025-12-08",
+    "airDateUtc": "2025-12-08T21:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 52323,
+    "seasonNumber": 0,
+    "episodeNumber": 39,
+    "title": "A Family Vendetta (2)",
+    "airDate": "2025-12-09",
+    "airDateUtc": "2025-12-09T21:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 54047,
+    "seasonNumber": 0,
+    "episodeNumber": 40,
+    "title": "The Secret Network",
+    "airDate": "2026-01-13",
+    "airDateUtc": "2026-01-13T21:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 54238,
+    "seasonNumber": 0,
+    "episodeNumber": 41,
+    "title": "Investigates: Zombie Knives",
+    "airDate": "2026-01-20",
+    "airDateUtc": "2026-01-20T21:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 54239,
+    "seasonNumber": 0,
+    "episodeNumber": 42,
+    "title": "Burying Horror",
+    "airDate": "2026-01-27",
+    "airDateUtc": "2026-01-27T21:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56378,
+    "seasonNumber": 0,
+    "episodeNumber": 43,
+    "title": "The Cold Case Murder (1)",
+    "airDate": "2026-04-13",
+    "airDateUtc": "2026-04-13T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 56379,
+    "seasonNumber": 0,
+    "episodeNumber": 44,
+    "title": "The Cold Case Murder (2)",
+    "airDate": "2026-04-14",
+    "airDateUtc": "2026-04-14T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 58694,
+    "seasonNumber": 0,
+    "episodeNumber": 45,
+    "title": "The Ambush (1)",
+    "airDate": "2026-08-30",
+    "airDateUtc": "2026-08-30T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 58695,
+    "seasonNumber": 0,
+    "episodeNumber": 46,
+    "title": "The Ambush (2)",
+    "airDate": "2026-09-06",
+    "airDateUtc": "2026-09-06T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   }
+  ],
+  "series": {
+   "tvdbId": 286362,
+   "tmdbId": 61956,
+   "title": "24 Hours in Police Custody"
+  },
+  "tmdb": [
+   {
+    "names": [
+     "Murder in the Woods (1)"
+    ],
+    "air_date": "2020-01-06",
+    "season": 0,
+    "number": 1
+   },
+   {
+    "names": [
+     "Murder in the Woods (2)"
+    ],
+    "air_date": "2020-01-07",
+    "season": 0,
+    "number": 2
+   },
+   {
+    "names": [
+     "The Home County Cartel (1)"
+    ],
+    "air_date": "2020-11-08",
+    "season": 0,
+    "number": 3
+   },
+   {
+    "names": [
+     "The Home County Cartel (2)"
+    ],
+    "air_date": "2020-11-09",
+    "season": 0,
+    "number": 4
+   },
+   {
+    "names": [
+     "Black Widow (1)"
+    ],
+    "air_date": "2021-01-04",
+    "season": 0,
+    "number": 5
+   },
+   {
+    "names": [
+     "Black Widow (2)"
+    ],
+    "air_date": "2021-01-05",
+    "season": 0,
+    "number": 6
+   },
+   {
+    "names": [
+     "Bedfordshire's Most Wanted"
+    ],
+    "air_date": "2021-03-22",
+    "season": 0,
+    "number": 7
+   },
+   {
+    "names": [
+     "The Search for Justice"
+    ],
+    "air_date": "2021-03-29",
+    "season": 0,
+    "number": 8
+   },
+   {
+    "names": [
+     "The No Body Murder"
+    ],
+    "air_date": "2021-04-05",
+    "season": 0,
+    "number": 9
+   },
+   {
+    "names": [
+     "Til Death Do Us Part"
+    ],
+    "air_date": "2021-04-12",
+    "season": 0,
+    "number": 10
+   },
+   {
+    "names": [
+     "Cold to the Touch (1)"
+    ],
+    "air_date": "2022-01-03",
+    "season": 0,
+    "number": 11
+   },
+   {
+    "names": [
+     "Cold to the Touch (2)"
+    ],
+    "air_date": "2022-01-04",
+    "season": 0,
+    "number": 12
+   },
+   {
+    "names": [
+     "The Murder of Rikki Neave (1)"
+    ],
+    "air_date": "2022-07-04",
+    "season": 0,
+    "number": 13
+   },
+   {
+    "names": [
+     "The Murder of Rikki Neave (2)"
+    ],
+    "air_date": "2022-07-05",
+    "season": 0,
+    "number": 14
+   },
+   {
+    "names": [
+     "The Honeytrap Murder (1)"
+    ],
+    "air_date": "2023-03-20",
+    "season": 0,
+    "number": 15
+   },
+   {
+    "names": [
+     "The Honeytrap Murder (2)"
+    ],
+    "air_date": "2023-03-21",
+    "season": 0,
+    "number": 16
+   },
+   {
+    "names": [
+     "The Siege"
+    ],
+    "air_date": "2023-12-03",
+    "season": 0,
+    "number": 17
+   },
+   {
+    "names": [
+     "Night Prowler"
+    ],
+    "air_date": "2023-12-10",
+    "season": 0,
+    "number": 18
+   },
+   {
+    "names": [
+     "The Predator"
+    ],
+    "air_date": "2023-12-17",
+    "season": 0,
+    "number": 19
+   },
+   {
+    "names": [
+     "Murder on Camera (1)"
+    ],
+    "air_date": "2024-01-08",
+    "season": 0,
+    "number": 20
+   },
+   {
+    "names": [
+     "Murder on Camera (2)"
+    ],
+    "air_date": "2024-01-09",
+    "season": 0,
+    "number": 21
+   },
+   {
+    "names": [
+     "The Devil's Chain"
+    ],
+    "air_date": "2024-06-05",
+    "season": 0,
+    "number": 22
+   },
+   {
+    "names": [
+     "Murder on Prescription (1)"
+    ],
+    "air_date": "2024-09-09",
+    "season": 0,
+    "number": 23
+   },
+   {
+    "names": [
+     "Murder on Prescription (2)"
+    ],
+    "air_date": "2024-09-10",
+    "season": 0,
+    "number": 24
+   },
+   {
+    "names": [
+     "The Murder Messages"
+    ],
+    "air_date": "2024-11-25",
+    "season": 0,
+    "number": 25
+   },
+   {
+    "names": [
+     "Living the High Life"
+    ],
+    "air_date": "2024-12-02",
+    "season": 0,
+    "number": 26
+   },
+   {
+    "names": [
+     "Murder of Jane Doe"
+    ],
+    "air_date": "2024-12-09",
+    "season": 0,
+    "number": 27
+   },
+   {
+    "names": [
+     "Breakout"
+    ],
+    "air_date": "2025-01-06",
+    "season": 0,
+    "number": 28
+   },
+   {
+    "names": [
+     "The Norfolk Narco Cartel"
+    ],
+    "air_date": "2025-01-13",
+    "season": 0,
+    "number": 29
+   },
+   {
+    "names": [
+     "The Unusual Suspects"
+    ],
+    "air_date": "2025-01-20",
+    "season": 0,
+    "number": 30
+   },
+   {
+    "names": [
+     "The Butcher of Suburbia (1)"
+    ],
+    "air_date": "2025-06-29",
+    "season": 0,
+    "number": 31
+   },
+   {
+    "names": [
+     "The Butcher of Suburbia (2)"
+    ],
+    "air_date": "2025-06-30",
+    "season": 0,
+    "number": 32
+   },
+   {
+    "names": [
+     "Nightclub Predator (1)"
+    ],
+    "air_date": "2025-07-06",
+    "season": 0,
+    "number": 33
+   },
+   {
+    "names": [
+     "Nightclub Predator (2)"
+    ],
+    "air_date": "2025-07-07",
+    "season": 0,
+    "number": 34
+   },
+   {
+    "names": [
+     "Lost Boys"
+    ],
+    "air_date": "2025-07-13",
+    "season": 0,
+    "number": 35
+   },
+   {
+    "names": [
+     "Murder Is No Game (1)"
+    ],
+    "air_date": "2025-10-05",
+    "season": 0,
+    "number": 36
+   },
+   {
+    "names": [
+     "Murder Is No Game (2)"
+    ],
+    "air_date": "2025-10-06",
+    "season": 0,
+    "number": 37
+   },
+   {
+    "names": [
+     "A Family Vendetta (1)"
+    ],
+    "air_date": "2025-12-08",
+    "season": 0,
+    "number": 38
+   },
+   {
+    "names": [
+     "A Family Vendetta (2)"
+    ],
+    "air_date": "2025-12-09",
+    "season": 0,
+    "number": 39
+   },
+   {
+    "names": [
+     "The Secret Network"
+    ],
+    "air_date": "2026-01-13",
+    "season": 0,
+    "number": 40
+   },
+   {
+    "names": [
+     "...Investigates: Zombie Knives"
+    ],
+    "air_date": "2026-01-20",
+    "season": 0,
+    "number": 41
+   },
+   {
+    "names": [
+     "Burying Horror"
+    ],
+    "air_date": "2026-01-27",
+    "season": 0,
+    "number": 42
+   },
+   {
+    "names": [
+     "The Cold Case Murder (1)"
+    ],
+    "air_date": "2026-04-13",
+    "season": 0,
+    "number": 43
+   },
+   {
+    "names": [
+     "The Cold Case Murder (2)"
+    ],
+    "air_date": "2026-04-14",
+    "season": 0,
+    "number": 44
+   },
+   {
+    "names": [
+     "The Ambush (1)"
+    ],
+    "air_date": "2026-08-30",
+    "season": 0,
+    "number": 45
+   },
+   {
+    "names": [
+     "The Ambush (2)"
+    ],
+    "air_date": "2026-09-06",
+    "season": 0,
+    "number": 46
+   },
+   {
+    "names": [
+     "The Conspiracy to Murder"
+    ],
+    "air_date": "2014-09-29",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "names": [
+     "Love Hurts"
+    ],
+    "air_date": "2014-10-06",
+    "season": 1,
+    "number": 2
+   },
+   {
+    "names": [
+     "The Confession Of A Paedophile"
+    ],
+    "air_date": "2014-10-13",
+    "season": 1,
+    "number": 3
+   },
+   {
+    "names": [
+     "The Drug Drop"
+    ],
+    "air_date": "2014-10-20",
+    "season": 1,
+    "number": 4
+   },
+   {
+    "names": [
+     "The Morning After"
+    ],
+    "air_date": "2014-10-27",
+    "season": 1,
+    "number": 5
+   },
+   {
+    "names": [
+     "Honour Thy Father"
+    ],
+    "air_date": "2014-11-10",
+    "season": 1,
+    "number": 6
+   },
+   {
+    "names": [
+     "The Crime Of The Century"
+    ],
+    "air_date": "2014-11-17",
+    "season": 1,
+    "number": 7
+   },
+   {
+    "names": [
+     "A Crime Of Passion"
+    ],
+    "air_date": "2015-01-06",
+    "season": 2,
+    "number": 1
+   },
+   {
+    "names": [
+     "A Short Sharp Shock"
+    ],
+    "air_date": "2015-01-13",
+    "season": 2,
+    "number": 2
+   },
+   {
+    "names": [
+     "Human Traffic"
+    ],
+    "air_date": "2015-01-20",
+    "season": 2,
+    "number": 3
+   },
+   {
+    "names": [
+     "Punchdrunk Love"
+    ],
+    "air_date": "2015-01-27",
+    "season": 2,
+    "number": 4
+   },
+   {
+    "names": [
+     "Age Concern"
+    ],
+    "air_date": "2015-02-03",
+    "season": 2,
+    "number": 5
+   },
+   {
+    "names": [
+     "Frequent Flyers"
+    ],
+    "air_date": "2015-02-10",
+    "season": 2,
+    "number": 6
+   },
+   {
+    "names": [
+     "Bad Blood"
+    ],
+    "air_date": "2015-07-27",
+    "season": 3,
+    "number": 1
+   },
+   {
+    "names": [
+     "Guilty Little Secrets"
+    ],
+    "air_date": "2015-08-03",
+    "season": 3,
+    "number": 2
+   },
+   {
+    "names": [
+     "Partners In Crime"
+    ],
+    "air_date": "2015-08-10",
+    "season": 3,
+    "number": 3
+   },
+   {
+    "names": [
+     "Mother's Day"
+    ],
+    "air_date": "2015-08-17",
+    "season": 3,
+    "number": 4
+   },
+   {
+    "names": [
+     "A Sixth Sense"
+    ],
+    "air_date": "2015-08-24",
+    "season": 3,
+    "number": 5
+   },
+   {
+    "names": [
+     "Human Cargo"
+    ],
+    "air_date": "2016-04-20",
+    "season": 4,
+    "number": 1
+   },
+   {
+    "names": [
+     "To Catch A Paedophile"
+    ],
+    "air_date": "2016-04-27",
+    "season": 4,
+    "number": 2
+   },
+   {
+    "names": [
+     "Love Thy Neighbour"
+    ],
+    "air_date": "2016-05-05",
+    "season": 4,
+    "number": 3
+   },
+   {
+    "names": [
+     "One Punch"
+    ],
+    "air_date": "2016-05-12",
+    "season": 4,
+    "number": 4
+   },
+   {
+    "names": [
+     "The Black Balaclava"
+    ],
+    "air_date": "2016-05-19",
+    "season": 4,
+    "number": 5
+   },
+   {
+    "names": [
+     "Home Truths"
+    ],
+    "air_date": "2016-05-26",
+    "season": 4,
+    "number": 6
+   },
+   {
+    "names": [
+     "The Lethal Weapon"
+    ],
+    "air_date": "2016-06-02",
+    "season": 4,
+    "number": 7
+   },
+   {
+    "names": [
+     "In Plain Sight"
+    ],
+    "air_date": "2016-06-08",
+    "season": 4,
+    "number": 8
+   },
+   {
+    "names": [
+     "A Complaint Of Rape"
+    ],
+    "air_date": "2016-06-15",
+    "season": 4,
+    "number": 9
+   },
+   {
+    "names": [
+     "A Moment of Madness"
+    ],
+    "air_date": "2017-06-05",
+    "season": 5,
+    "number": 1
+   },
+   {
+    "names": [
+     "Their Time Will Come"
+    ],
+    "air_date": "2017-06-14",
+    "season": 5,
+    "number": 2
+   },
+   {
+    "names": [
+     "Human Chains"
+    ],
+    "air_date": "2017-06-19",
+    "season": 5,
+    "number": 3
+   },
+   {
+    "names": [
+     "Code Of Silence"
+    ],
+    "air_date": "2017-06-26",
+    "season": 5,
+    "number": 4
+   },
+   {
+    "names": [
+     "The Golden Bracelet"
+    ],
+    "air_date": "2017-07-03",
+    "season": 5,
+    "number": 5
+   },
+   {
+    "names": [
+     "Sex & Corruption"
+    ],
+    "air_date": "2018-02-19",
+    "season": 6,
+    "number": 1
+   },
+   {
+    "names": [
+     "Car Attack"
+    ],
+    "air_date": "2018-02-26",
+    "season": 6,
+    "number": 2
+   },
+   {
+    "names": [
+     "Left For Dead"
+    ],
+    "air_date": "2018-03-05",
+    "season": 6,
+    "number": 3
+   },
+   {
+    "names": [
+     "Shallow Grave"
+    ],
+    "air_date": "2018-03-12",
+    "season": 6,
+    "number": 4
+   },
+   {
+    "names": [
+     "Frequent Flyers"
+    ],
+    "air_date": "2018-03-19",
+    "season": 6,
+    "number": 5
+   },
+   {
+    "names": [
+     "Too Close For Comfort"
+    ],
+    "air_date": "2018-03-26",
+    "season": 6,
+    "number": 6
+   },
+   {
+    "names": [
+     "Body In The Grass"
+    ],
+    "air_date": "2018-05-21",
+    "season": 7,
+    "number": 1
+   },
+   {
+    "names": [
+     "The Kane Line"
+    ],
+    "air_date": "2018-05-27",
+    "season": 7,
+    "number": 2
+   },
+   {
+    "names": [
+     "A Knife through The Heart"
+    ],
+    "air_date": "2018-06-04",
+    "season": 7,
+    "number": 3
+   },
+   {
+    "names": [
+     "A Second Chance"
+    ],
+    "air_date": "2018-06-11",
+    "season": 7,
+    "number": 4
+   },
+   {
+    "names": [
+     "Fifty Shades Of Abuse"
+    ],
+    "air_date": "2018-06-18",
+    "season": 7,
+    "number": 5
+   },
+   {
+    "names": [
+     "What Lies Beneath"
+    ],
+    "air_date": "2018-06-25",
+    "season": 7,
+    "number": 6
+   },
+   {
+    "names": [
+     "Lost In Translation"
+    ],
+    "air_date": "2018-07-02",
+    "season": 7,
+    "number": 7
+   },
+   {
+    "names": [
+     "Living Amongst Us"
+    ],
+    "air_date": "2018-07-09",
+    "season": 7,
+    "number": 8
+   },
+   {
+    "names": [
+     "Predators"
+    ],
+    "air_date": "2019-03-11",
+    "season": 8,
+    "number": 1
+   },
+   {
+    "names": [
+     "Family Secrets"
+    ],
+    "air_date": "2019-03-18",
+    "season": 8,
+    "number": 2
+   },
+   {
+    "names": [
+     "Knifed"
+    ],
+    "air_date": "2019-03-25",
+    "season": 8,
+    "number": 3
+   },
+   {
+    "names": [
+     "Smuggled"
+    ],
+    "air_date": "2019-04-01",
+    "season": 8,
+    "number": 4
+   },
+   {
+    "names": [
+     "The Detective & The Surgeon"
+    ],
+    "air_date": "2019-04-08",
+    "season": 8,
+    "number": 5
+   },
+   {
+    "names": [
+     "Sudden Death: Think Murder"
+    ],
+    "air_date": "2019-04-15",
+    "season": 8,
+    "number": 6
+   },
+   {
+    "names": [
+     "Wanted"
+    ],
+    "air_date": "2021-09-27",
+    "season": 9,
+    "number": 1
+   },
+   {
+    "names": [
+     "Chicken Shop Wars"
+    ],
+    "air_date": "2021-10-04",
+    "season": 9,
+    "number": 2
+   },
+   {
+    "names": [
+     "The Horror House (Part One)"
+    ],
+    "air_date": "2021-10-11",
+    "season": 9,
+    "number": 3
+   },
+   {
+    "names": [
+     "The Horror House (Part Two)"
+    ],
+    "air_date": "2021-10-18",
+    "season": 9,
+    "number": 4
+   },
+   {
+    "names": [
+     "Murder on the Doorstep"
+    ],
+    "air_date": "2021-10-25",
+    "season": 9,
+    "number": 5
+   },
+   {
+    "names": [
+     "Holding the Baby"
+    ],
+    "air_date": "2021-11-01",
+    "season": 9,
+    "number": 6
+   },
+   {
+    "names": [
+     "Two Wrongs"
+    ],
+    "air_date": "2022-11-28",
+    "season": 10,
+    "number": 1
+   },
+   {
+    "names": [
+     "A Wolf in Sheep's Clothing"
+    ],
+    "air_date": "2022-12-05",
+    "season": 10,
+    "number": 2
+   }
+  ],
+  "tvdb": {}
+ },
+ "expect": {
+  "available": {
+   "12595": {
+    "service": "S03E12",
+    "name": "The Home County Cartel - Part 1",
+    "match": "title",
+    "same": true
+   },
+   "12596": {
+    "service": "S03E13",
+    "name": "The Home County Cartel - Part 2",
+    "match": "title",
+    "same": true
+   },
+   "12600": {
+    "service": "S03E14",
+    "name": "The Search for Justice",
+    "match": "title",
+    "same": true
+   },
+   "12601": {
+    "service": "S03E22",
+    "name": "The No Body Murder",
+    "match": "title",
+    "same": true
+   },
+   "12602": {
+    "service": "S03E09",
+    "name": "Til Death Do Us Part",
+    "match": "title",
+    "same": true
+   },
+   "12605": {
+    "service": "S04E01",
+    "name": "The Murder of Rikki Neave - Part 1",
+    "match": "title",
+    "same": true
+   },
+   "12606": {
+    "service": "S04E02",
+    "name": "The Murder of Rikki Neave - Part 2",
+    "match": "title",
+    "same": true
+   },
+   "12609": {
+    "service": "S01E01",
+    "name": "The Conspiracy to Murder",
+    "match": "title",
+    "same": true
+   },
+   "12630": {
+    "service": "S02E04",
+    "name": "One Punch",
+    "match": "title",
+    "same": true
+   },
+   "12636": {
+    "service": "S02E10",
+    "name": "A Moment of Madness",
+    "match": "title",
+    "same": true
+   },
+   "12637": {
+    "service": "S02E11",
+    "name": "Their Time Will Come",
+    "match": "title",
+    "same": true
+   },
+   "12641": {
+    "service": "S06E01",
+    "name": "Sex and Corruption",
+    "match": "title",
+    "same": true
+   },
+   "12643": {
+    "service": "S06E03",
+    "name": "Left for Dead",
+    "match": "title",
+    "same": true
+   },
+   "12659": {
+    "service": "S02E15",
+    "name": "The Detective and the Surgeon",
+    "match": "title",
+    "same": true
+   },
+   "12660": {
+    "service": "S06E19",
+    "name": "Sudden Death: Think Murder",
+    "match": "title",
+    "same": true
+   },
+   "12667": {
+    "service": "S03E06",
+    "name": "Two Wrongs",
+    "match": "title",
+    "same": true
+   },
+   "27878": {
+    "service": "S04E07",
+    "name": "The Siege",
+    "match": "title",
+    "same": true
+   },
+   "28152": {
+    "service": "S03E04",
+    "name": "The Predator",
+    "match": "title",
+    "same": true
+   },
+   "28822": {
+    "service": "S04E09",
+    "name": "Murder on Camera - Part 1",
+    "match": "title",
+    "same": true
+   },
+   "28823": {
+    "service": "S04E10",
+    "name": "Murder on Camera - Part 2",
+    "match": "title",
+    "same": true
+   },
+   "40693": {
+    "service": "S04E13",
+    "name": "Murder on Prescription - Part 1",
+    "match": "title",
+    "same": true
+   },
+   "40694": {
+    "service": "S04E14",
+    "name": "Murder on Prescription - Part 2",
+    "match": "title",
+    "same": true
+   },
+   "41933": {
+    "service": "S04E15",
+    "name": "The Murder Messages",
+    "match": "title",
+    "same": true
+   },
+   "41934": {
+    "service": "S04E11",
+    "name": "Living the High Life",
+    "match": "title",
+    "same": true
+   },
+   "42039": {
+    "service": "S04E20",
+    "name": "The Murder of Jane Doe",
+    "match": "title",
+    "same": true
+   },
+   "42330": {
+    "service": "S04E17",
+    "name": "Breakout",
+    "match": "title",
+    "same": true
+   },
+   "42350": {
+    "service": "S04E18",
+    "name": "The Norfolk Narco Cartel",
+    "match": "title",
+    "same": true
+   },
+   "42495": {
+    "service": "S04E06",
+    "name": "The Unusual Suspects",
+    "match": "title",
+    "same": true
+   },
+   "46293": {
+    "service": "S05E01",
+    "name": "The Butcher of Suburbia - Part 1",
+    "match": "title",
+    "same": true
+   },
+   "46294": {
+    "service": "S05E02",
+    "name": "The Butcher of Suburbia - Part 2",
+    "match": "title",
+    "same": true
+   },
+   "46356": {
+    "service": "S05E03",
+    "name": "Nightclub Predator - Part 1",
+    "match": "title",
+    "same": true
+   },
+   "46357": {
+    "service": "S05E04",
+    "name": "Nightclub Predator - Part 2",
+    "match": "title",
+    "same": true
+   },
+   "50719": {
+    "service": "S05E05",
+    "name": "Murder Is No Game - Part 1",
+    "match": "title",
+    "same": true
+   },
+   "50720": {
+    "service": "S05E06",
+    "name": "Murder Is No Game - Part 2",
+    "match": "title",
+    "same": true
+   },
+   "52322": {
+    "service": "S05E07",
+    "name": "A Family Vendetta - Part 1",
+    "match": "title",
+    "same": true
+   },
+   "52323": {
+    "service": "S05E08",
+    "name": "A Family Vendetta - Part 2",
+    "match": "title",
+    "same": true
+   },
+   "54047": {
+    "service": "S04E16",
+    "name": "The Secret Network",
+    "match": "title",
+    "same": true
+   },
+   "54239": {
+    "service": "S05E09",
+    "name": "Burying Horror",
+    "match": "title",
+    "same": true
+   },
+   "58694": {
+    "service": "S04E21",
+    "name": "The Ambush - Part 1",
+    "match": "title",
+    "same": true
+   },
+   "58695": {
+    "service": "S04E22",
+    "name": "The Ambush - Part 2",
+    "match": "title",
+    "same": true
+   },
+   "12663": {
+    "service": "S03E11",
+    "name": "The Horror House - Part 1",
+    "match": "title"
+   },
+   "12664": {
+    "service": "S03E21",
+    "name": "The Horror House - Part 2",
+    "match": "title"
+   }
+  },
+  "titlesAgree": true,
+  "season_map": {}
+ }
+}
