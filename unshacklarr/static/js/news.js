@@ -11,6 +11,8 @@ const NEWS = [
   { id: "series-notify", version: "1.5.0", title: "Notifications per series", series: true, target: "#d-notify-l" },
   { id: "no-spoilers", version: "1.5.0", title: "No spoilers", sec: "interface", target: "#rg-spoiler-card" },
   { id: "more-sonarr", version: "1.5.0", title: "Other Sonarr instances", sec: "sonarr", target: "#sn-card" },
+  { id: "season-pages", version: "1.5.0", title: "Seasons listed as separate shows", series: true, target: "#d-pages-field" },
+  { id: "separate-programmes", version: "1.5.0", title: "Separate programmes", series: true, target: "#d-programmes-field" },
   { id: "sonarr-name", version: "1.5.0", title: "Sonarr name", sec: "sonarr", target: "#sx-name-field" },
   { id: "upgrade-series", version: "1.5.0", title: "Upgrades you choose", sec: "upgrades", target: "#ug-series-card" },
   { id: "other-groups", version: "1.5.0", title: "Other release groups", sec: "upgrades", target: "#ug-other-card" },
@@ -19,7 +21,8 @@ const NEWS = [
 const NEWS_KINDS = { new: "New", improved: "Improved", fix: "Fix", security: "Security", note: "Note" };
 const versionKey = (v) => String(v || "0").split(".").map((n) => parseInt(n, 10) || 0).reduce((a, n) => a * 1000 + n, 0);
 function newsUnseen() {
-  const news = S.news || {}, seen = new Set(news.seen || []);
+  if (!S.news) return [];  // the state not in yet (a route applied first): nothing is new, nothing seen by mistake
+  const news = S.news, seen = new Set(news.seen || []);
   return NEWS.filter((n) => !seen.has(n.id) && !(news.installed && versionKey(n.version) <= versionKey(news.installed)));
 }
 async function markNews(ids, list = false) {
@@ -99,7 +102,7 @@ function showOption(n) {
   if (n.series) {
     const s = S.series.find((x) => S.config.series[x.tvdbId]?.service) || S.series[0];
     if (s) openDrawer(s, "settings");
-    setTimeout(() => { const box = document.querySelector(n.target); if (box?.tagName === "DETAILS") box.open = true; box?.scrollIntoView({ behavior: "smooth", block: "center" }); }, 400);
+    setTimeout(() => { const box = document.querySelector(n.target), fold = box?.closest("details"); if (fold) fold.open = true; box?.scrollIntoView({ behavior: "smooth", block: "center" }); }, 400);  // in a folded section: opened
   } else {
     showTab("settings");
     showSettingsSec(n.sec);

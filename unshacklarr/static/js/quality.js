@@ -487,10 +487,98 @@ function renderUpgradeMode() {
   const set = S.config.settings, mode = set.upgrade_mode || "redownload";
   $("#dx-upmode").querySelectorAll("button").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.mode === mode)));
   $("#dx-library").hidden = mode !== "add_track";
+  if (mode === "add_track") renderLibrary();
+  const other = set.add_track_other_source || "ask";
+  $("#dx-lib-other").querySelectorAll("button").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.other === other)));
   $("#dx-upmode-say").textContent = mode === "add_track"
-    ? "Only the new audio track is downloaded and added to the existing file. Unshacklarr needs access to your library: set its folder below. If the file can't be found, the whole episode is downloaded instead."
+    ? "Only the new audio track is downloaded and added to the existing file, as its default audio: subtitles in that language then show only their forced lines. Unshacklarr needs access to your library: set its folder below. The file is written again whole: your media server rescans it, and a hard link to it (a torrent still seeding) is broken. The whole episode is downloaded instead when the file can't be found, and for an episode in parts or a series of separate programmes."
     : "The whole episode is downloaded again and replaces the existing file.";
 }
+/* Add audio track: each Sonarr's library, as it sees it and as Unshacklarr does; its root folders offered, both sides
+   browsable, and a real episode file of that Sonarr's looked for with the two folders, so a wrong pair shows at once. */
+let libWho = "", libRoots = [], libCommon = "", libTimer = null;  // "": the main Sonarr; else another one's name
+const libOf = () => (libWho && (S.config.settings.sonarrs || []).find((i) => i.name === libWho)) || S.config.settings;
+const FOLDER_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
+function renderLibrary() {
+  if (libWho && !(S.config.settings.sonarrs || []).some((i) => i.name === libWho)) libWho = "";
+  const lib = libOf(), main = S.config.settings, own = lib !== main;
+  $("#dx-lib-who").replaceChildren(...[sonarrPicker(libWho, (n) => { libWho = n; renderLibrary(); })].filter(Boolean));
+  $("#dx-lib-sonarr").value = lib.library_sonarr_root || "";
+  $("#dx-lib-local").value = lib.library_local_root || "";
+  // another Sonarr with none of its own reads the main one's library
+  $("#dx-lib-sonarr").placeholder = own && main.library_sonarr_root ? `Empty: ${main.library_sonarr_root}, as ${mainSonarr()}` : "Example: /tv";
+  $("#dx-lib-local").placeholder = own && main.library_local_root ? `Empty: ${main.library_local_root}, as ${mainSonarr()}` : "Example: /mnt/tv";
+  renderLibraryPicks();
+  checkLibrary();
+}
+function renderLibraryPicks() {
+  const lib = libOf(), browse = (side) => el("button", { type: "button", className: "chip-btn", textContent: "Browse…",
+    onclick: () => openFolders(side, (side === "sonarr" ? $("#dx-lib-sonarr") : $("#dx-lib-local")).value.trim(), (path) => setLibrary(side, path)) });
+  // several root folders: the one setting converts a single folder, so their common one comes first (it holds them all)
+  const roots = libRoots.length > 1 && libCommon ? [libCommon] : libRoots.filter((r) => r !== lib.library_sonarr_root);
+  $("#dx-lib-sonarr-pick").replaceChildren(...(roots.length && roots[0] !== lib.library_sonarr_root ? [el("span", { textContent: "In Sonarr:" }),
+    ...roots.map((r) => el("button", { type: "button", className: "chip-btn", onclick: () => setLibrary("sonarr", r),
+      textContent: r === libCommon ? `${r} (contains your ${libRoots.length} root folders)` : r }))] : []), browse("sonarr"));
+  $("#dx-lib-local-pick").replaceChildren(browse("local"));
+}
+function setLibrary(side, path) {
+  libOf()[side === "sonarr" ? "library_sonarr_root" : "library_local_root"] = path || undefined;
+  (side === "sonarr" ? $("#dx-lib-sonarr") : $("#dx-lib-local")).value = path;
+  dirty(); renderLibraryPicks(); checkLibrary();
+}
+$("#dx-lib-sonarr").oninput = (e) => { libOf().library_sonarr_root = e.target.value.trim() || undefined; dirty(); checkLibrary(); };
+$("#dx-lib-local").oninput = (e) => { libOf().library_local_root = e.target.value.trim() || undefined; dirty(); checkLibrary(); };
+function checkLibrary() {
+  clearTimeout(libTimer);
+  libTimer = setTimeout(async () => {
+    const lib = libOf(), main = S.config.settings, own = lib.library_sonarr_root || lib.library_local_root ? lib : main;
+    const q = new URLSearchParams({ sonarr_root: own.library_sonarr_root || "", local_root: own.library_local_root || "", ...(libWho ? { sonarr: libWho } : {}) });
+    const say = $("#dx-lib-check"), who = libWho || mainSonarr();
+    say.className = "lib-check"; say.textContent = "Looking for one of your episode files…";
+    let r;
+    try { r = await api(`/api/library/check?${q}`); } catch (e) { say.textContent = e.message; return; }
+    if ((libWho || "") !== (q.get("sonarr") || "")) return;  // another Sonarr picked meanwhile
+    libRoots = r.roots || []; libCommon = r.common || ""; renderLibraryPicks();
+    if (r.ok === true) { say.className = "lib-check ok"; say.textContent = `✓ Unshacklarr reads ${who}'s library: ${r.local_path}`; }
+    else if (r.ok === false && r.guess) {  // found elsewhere in the container: both folders, one click
+      say.className = "lib-check";
+      say.replaceChildren(el("span", { textContent: `Your library was found in another folder: ${r.guess.sonarr_root} in Sonarr is ${r.guess.local_root} in Unshacklarr.` }), " ",
+        el("button", { type: "button", className: "chip-btn", textContent: "Use these folders",
+          onclick: () => { setLibrary("sonarr", r.guess.sonarr_root); setLibrary("local", r.guess.local_root); } }));
+    }
+    else if (r.ok === false) { say.className = "lib-check err"; say.textContent = `Not found here: ${r.local_path}. Is the library mounted in Unshacklarr's container, in this folder?`; }
+    else say.textContent = r.why || "";
+  }, 400);
+}
+/* A folder picked by browsing: as Sonarr sees them (its own folder browser), or Unshacklarr's (its container's) */
+function openFolders(side, start, use) {
+  const dlg = $("#folder-dialog");
+  let here = "";
+  $("#folder-title").textContent = side === "sonarr" ? `A folder as ${libWho || mainSonarr()} sees it` : "A folder as Unshacklarr sees it";
+  const load = async (path) => {
+    $("#folder-err").textContent = "";
+    let r;
+    try { r = await api(`/api/library/browse?${new URLSearchParams({ side, path, ...(libWho && side === "sonarr" ? { sonarr: libWho } : {}) })}`); }
+    catch (e) { $("#folder-err").textContent = e.message; if (path) return load(""); return; }  // a folder that isn't there: from the top
+    here = r.path || "/";
+    $("#folder-path").textContent = here;
+    $("#folder-use").disabled = !r.path;
+    const row = (label, path, icon = true) => el("button", { type: "button", className: "url-hit", onclick: () => load(path) },
+      ...(icon ? [el("i", { innerHTML: FOLDER_ICON })] : [el("i", { textContent: "↑" })]), el("span", { textContent: label }));
+    $("#folder-list").replaceChildren(...(r.parent != null ? [row("Up", r.parent, false)] : []),
+      ...r.dirs.map((d) => row(d.split(/[\\/]/).filter(Boolean).pop() || d, d)),
+      ...(!r.dirs.length ? [el("p", { className: "muted", textContent: "No folder in it." })] : []));
+  };
+  dlg.addEventListener("close", () => { if (dlg.returnValue === "use" && here) use(here); }, { once: true });
+  dlg.returnValue = "";
+  dlg.showModal();
+  load(start || (side === "local" ? "/library" : ""));  // the usual mount for the library; absent, from the top
+}
+
+$("#dx-lib-other").querySelectorAll("button").forEach((b) => b.onclick = () => {
+  S.config.settings.add_track_other_source = b.dataset.other;
+  dirty(); renderUpgradeMode();
+});
 $("#dx-upmode").querySelectorAll("button").forEach((b) => b.onclick = () => {
   S.config.settings.upgrade_mode = b.dataset.mode;
   dirty(); renderUpgradeMode();

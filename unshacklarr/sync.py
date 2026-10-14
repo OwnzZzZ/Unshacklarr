@@ -72,6 +72,7 @@ import shutil
 import subprocess
 import sys
 import threading
+import unicodedata
 import uuid
 import time
 from datetime import datetime, timedelta, timezone
@@ -162,6 +163,7 @@ SETTINGS_DEFAULTS = {
     "upgrade_mode": "redownload",  # once the preferred audio comes: download the episode again, or add_track (its audio only, added)
     "library_sonarr_root": "",   # add_track reads the library's file: its folder as Sonarr sees it (/tv)…
     "library_local_root": "",    # …and as Unshacklarr sees it (/mnt/tv); both empty: the same path
+    "add_track_other_source": "ask",  # a file not named as from the series' service: ask in the bell, or "add" anyway
     "release_learn": False,      # set a series' release time from when its episodes come out, once it is clear
     "download_from": "",         # the automatic sync downloads only from…
     "download_to": "",           # …to (local time, "01:00" to "07:00"); empty: any time
@@ -234,7 +236,10 @@ def apply_settings(settings: dict) -> None:
     for i in settings.get("sonarrs") or []:
         SONARRS[i["name"]] = {"name": i["name"], "url": str(i.get("url") or "").rstrip("/"), "api_key": str(i.get("api_key") or ""),
                               "downloads": str(i.get("downloads") or ""), "quality_ladder": str(i.get("quality_ladder") or ""),
-                              "download_only": i.get("download_only")}
+                              "download_only": i.get("download_only"),
+                              # its library, for Add audio track; both empty: the main Sonarr's
+                              "library_sonarr_root": str(i.get("library_sonarr_root") or ""),
+                              "library_local_root": str(i.get("library_local_root") or "")}
 
 
 BACKENDS: dict[str, Unshackle] = {}  # the other unshackle serve, by name
@@ -673,13 +678,15 @@ class EpisodeRun:
         if getattr(current, "run", None) is self:
             current.run = None
         self.card.update(cause=cause, detail=detail)
-        EpisodeRun.active.discard(self.id)
         self.log.close()
         self.card.update(ended=datetime.now(timezone.utc).isoformat(), outcome=outcome)
         if outcome in ("downloaded", "kept", "import"):  # a later try of this attempt got through: nothing left unconfirmed (#10)
             self.card.pop("unconfirmed_job", None)
         self.fold_checks()
         self.save()
+        # Only once its end is on disk: the page, told a run ended, reads the history at once; read between the two, a
+        # card without an end that no run follows was "interrupted", and stayed so on the page (by mj23au, #17)
+        EpisodeRun.active.discard(self.id)
         prune_runs()
 
     def take_over_failures(self, batch: str | None = None, automatic: bool = False) -> None:
@@ -843,10 +850,11 @@ def download_slot(server: str, run: EpisodeRun | None = None):
         if job not in holders:  # its job doesn't hold a slot yet: in line, first asked, first served
             line = slot_line.setdefault(server, [])
             job_order.setdefault(job, next(job_numbers))  # an episode on its own: numbered as it comes
-            line.append(job)
-            line.sort(key=job_order.__getitem__)  # in the order picked, whenever each got here
             told = False
             try:
+                line.append(job)
+                # in the order picked, whenever each got here; a job paused while it waited lost its number: last
+                line.sort(key=lambda j: job_order.get(j, float("inf")))
                 while (limit := int(SETTINGS.get("downloads_at_once") or 0)) and (len(holders) >= limit or line[0] != job):
                     if run and run.id in stop_waiting:
                         stop_waiting.discard(run.id)
@@ -896,7 +904,7 @@ def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float) -> l
     if run:  # what Activity's Stop button cancels
         run.card["job_id"] = job_id
         run.save()
-    last_status, line, logged = None, "", 0
+    last_status, line, logged, saved = None, "", 0, ""
     seen: dict[str, float] = {}  # serve lists only the tracks downloading now: keep the others
     timed: dict[str, list] = {}  # each track's [first seen, done]: how long it took
     labels: dict[str, str] = {}  # a track's key (its part and its place, or its label from an older serve): its label
@@ -957,7 +965,9 @@ def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float) -> l
                 run.card["step"] = "downloading"
             ask_for_action(run, job.get("action_needed") if status not in TERMINAL else None)
             ask_for_input(run, job.get("input_prompt") if status not in TERMINAL else None)
-            run.save()
+            if (snapshot := json.dumps(run.card)) != saved:  # unchanged: not written again every half second, which
+                run.save()                                   # would make every reader parse the whole history again
+                saved = snapshot
         if run and (count := int(job.get("log_count") or 0)) > logged:  # Unshackle's own log, as it goes
             lines = (job.get("log") or [])[-(count - logged):]
             if count - logged > len(lines):
@@ -1056,7 +1066,7 @@ def run_job_retrying(payload: dict, run: EpisodeRun | None = None, sleep=time.sl
             cause = getattr(e, "cause", str(e))
             waits = SERVE_RETRY_AFTER if UNREACHABLE in cause else RETRY_AFTER
             wait = waits[tries] if tries < len(waits) else None
-            if not subs_tried and (m := SUBS_MISSING.search(f"{cause}\n{e}")):  # its one line, else all it said
+            if not subs_tried and (m := SUBS_MISSING.search(f"{cause}\n{e}"[-4000:])):  # its one line, else all it said
                 missing = {base_lang(x) for x in re.split(r"[,\s]+", m.group(1)) if x.strip(" '[]")} if m.group(1) else None
                 if fixed := subs_dropped(payload, missing):
                     subs_tried, payload = True, fixed
@@ -1281,9 +1291,17 @@ def wrong_number(show: dict, ep: dict, asked: str, run) -> dict | None:
     nowhere. None when nothing says so: a title that merely differs (a translation TMDB lacks on release day)
     never stops a download."""
     found = service_listing(show, ep, run)
-    if not found or asked not in found.get("listed", ()):
-        return None  # not listed (not out yet, a stale list): asked as before
+    if not found:
+        return None
     hit = (found.get("available") or {}).get(ep["id"])
+    if asked not in found.get("listed", ()):
+        # Not listed under its number: its title may list it under another (a Sonarr special the service numbers
+        # in a season of its own, 24 Hours in Police Custody's S00E45 as C4's S04E21); else not out yet or a stale
+        # list, and asked as before. By title only when it is the episode's very title once plain ("One Punch",
+        # "The Ambush (2)" = "The Ambush - Part 2"), not merely close: a new episode not listed yet on its release
+        # day must not be asked as an older one with a like title (by mj23au, #12)
+        sure = hit and (hit.get("match") == "absolute" or (hit.get("match") == "title" and hit.get("same")))
+        return {"service": hit["service"], "match": hit["match"], "unlisted": True} if sure and hit["service"] != asked else None
     if hit and hit.get("match") in ("title", "absolute") and hit["service"] != asked:
         return {"service": hit["service"], "match": hit["match"]}  # its own title puts it elsewhere
     if not hit and asked.split(".")[0] in found.get("titled", ()):
@@ -1376,6 +1394,134 @@ def release_group_of(show: dict, config: dict) -> tuple[str, str]:
     return "", ""
 
 
+# ---- A series of separate programmes (documentaries, specials): each Sonarr episode is its own title on the service ----
+PROGRAMMES_FILE = DATA / "programmes.json"  # "<sonarr>:<episode id>" -> the programme matched to it, kept
+TITLE_PART = re.compile(r"\bpart\s+(\d+)\b", re.IGNORECASE)
+GENERIC_NAME = re.compile(r"(episode|ep\.?|part)\s*\d+", re.IGNORECASE)
+
+
+class Unmatched(Exception):
+    """No programme on the service could be told to be this episode: not downloaded, tried again at each sync."""
+
+
+def title_key(text: str) -> str:
+    """A title as titles are compared: accents, quotes, case, punctuation and a leading "The" set aside."""
+    t = re.sub(r"['\u2018\u2019\u02bc`]", "", str(text or ""))  # Britain's and Britain’s alike
+    t = unicodedata.normalize("NFKD", t).encode("ascii", "ignore").decode().lower()
+    t = re.sub(r"[^a-z0-9]+", " ", t).strip()
+    return re.sub(r"^the ", "", t)
+
+
+def serve_params(show: dict, config: dict) -> dict:
+    """A search's or listing's options: the series' profile, proxy and service options, as a download has them."""
+    dl, own = stacked(show, config)
+    params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy")}
+    params.update(options.to_params(own, options.service_specs(service_entry(show["service"], config))))
+    return params
+
+
+PROGRAMME_RETRY = 86400  # seconds before the automatic sync looks again for an episode no programme matched
+
+
+def programme_for(show: dict, ep: dict, config: dict, manual: bool = False) -> dict:
+    """The programme on the series' service that is this episode: {"title": its id or URL, "code": what to ask for,
+    "name", "how"}. Its URL pasted on the series (programme_map) first; else a search by the episode's title,
+    taken only when one result has that very title, or one has it before a subtitle ("My Mom Jayne: A Film by...")
+    and the year agrees. A match is kept; Unmatched when none is sure."""
+    sxxeyy = f"S{ep['seasonNumber']:02}E{ep['episodeNumber']:02}"
+    key = f"{(instance() or {}).get('name', '')}:{ep['id']}"
+    pasted = (show.get("programme_map") or {}).get(sxxeyy)
+    known = read_json(PROGRAMMES_FILE, {})
+    if not pasted and (kept := known.get(key)):
+        return kept
+    missed = known.get(f"miss:{key}") or {}
+    if not pasted and not manual and time.time() - float(missed.get("at") or 0) < PROGRAMME_RETRY:
+        raise Unmatched(missed.get("why") or "Not found on the service")  # searched less than a day ago: not again yet
+    try:
+        return find_programme(show, ep, config, key, sxxeyy, pasted, backend_for(show["service"], config), serve_params(show, config))
+    except Unmatched as e:
+        if not pasted:
+            with jobs_lock:
+                known = read_json(PROGRAMMES_FILE, {})
+                # a miss still wanted is looked for again daily, which renews it: one a week old is no longer wanted
+                known = {k: v for k, v in known.items() if not k.startswith("miss:") or time.time() - v.get("at", 0) < 7 * 86400}
+                known[f"miss:{key}"] = {"at": time.time(), "why": str(e)}
+                write_atomic(PROGRAMMES_FILE, json.dumps(known))
+        raise
+
+
+BRAND_LOOKS = 3  # search results looked inside when none has the episode's title: each is one listing on the service
+
+
+def episode_in_brands(show: dict, want: str, results: list[dict], backend, params: dict) -> tuple[dict, dict] | None:
+    """(result, title) for the one episode with the very title inside the first results' own listings: the search
+    answers a brand, not its episodes (iPlayer: "Fallen Women" finds the brand "Stacey Dooley", whose listing has it
+    as S01E27). None when no listing has it; Unmatched when two do (by mj23au)."""
+    hits = []
+    for r in results[:BRAND_LOOKS]:
+        if not (rid := r.get("id") or r.get("url")):
+            continue
+        try:
+            titles = backend.call("POST", "/api/list-titles", json={**params, "service": show["service"], "title_id": str(rid)})["titles"]
+        except UnshackleError:
+            continue  # one result the service can't list: the others still count
+        hits += [(r, t) for t in titles if t.get("type") == "episode" and title_key(t.get("name")) == want]
+    if len(hits) > 1:
+        raise Unmatched(f"{len(hits)} episodes on {show['service']} are titled alike in its series: paste its URL on the series")
+    return hits[0] if hits else None
+
+
+def find_programme(show: dict, ep: dict, config: dict, key: str, sxxeyy: str, pasted: str | None, backend, params: dict) -> dict:
+    """programme_for's search: the pasted URL, else the service's search by the episode's title."""
+    want, year = title_key(ep.get("title")), (ep.get("airDateUtc") or "")[:4]
+    chosen = None  # the episode itself, when it was found inside its series' listing
+    if pasted:
+        found, how = {"id": pasted, "title": ep.get("title")}, "pasted"
+    else:
+        if not want:
+            raise Unmatched(f"{sxxeyy} has no title in Sonarr to look for on {show['service']}")
+        results = backend.call("POST", "/api/search", json={**params, "service": show["service"], "query": ep["title"]}).get("results") or []
+        exact = [r for r in results if title_key(r.get("title")) == want]
+        longer = [r for r in results if title_key(r.get("title")).startswith(want + " ") and ":" in str(r.get("title"))]
+        if len(exact) == 1:
+            found, how = exact[0], "title"
+        elif not exact and len(longer) == 1:
+            found, how = longer[0], "title and subtitle"
+        elif not exact and not longer and (inside := episode_in_brands(show, want, results, backend, params)):
+            (found, chosen), how = inside, "title, in its series"
+        else:
+            several = len(exact) or len(longer)
+            raise Unmatched(f"{several} programmes on {show['service']} are titled {ep['title']!r}: paste its URL on the series" if several > 1
+                            else f"No programme on {show['service']} is titled {ep['title']!r} yet")
+    titles = [chosen] if chosen else backend.call("POST", "/api/list-titles", json={**params, "service": show["service"], "title_id": str(found.get("id") or found.get("url"))})["titles"]
+    part = TITLE_PART.search(str(ep.get("title") or ""))
+    if len(titles) == 1:
+        title = titles[0]
+    elif part and len(titles) >= int(part.group(1)) >= 1:
+        title = titles[int(part.group(1)) - 1]  # a two-part documentary: Part 2 is its second
+    else:
+        raise Unmatched(f"{found.get('title')} on {show['service']} has {len(titles)} titles: which is {sxxeyy}? Paste its URL on the series")
+    if how == "title and subtitle" and year and title.get("year") and str(title["year"]) != year:
+        raise Unmatched(f"{found.get('title')} on {show['service']} is from {title['year']}, {sxxeyy} aired in {year}")
+    # The very title, but another programme by its year (a remake, an older film of the same name): a year apart is
+    # still this one (made one year, aired the next); none given, nothing to go by (by mj23au, #17)
+    if how == "title" and year and str(title.get("year") or "").isdigit() and abs(int(title["year"]) - int(year)) > 1:
+        raise Unmatched(f"{found.get('title')} on {show['service']} is from {title['year']}, {sxxeyy} aired in {year}: "
+                        "another programme of that title? Paste its URL on the series")
+    code = f"S{int(title.get('season') or 0):02}E{int(title.get('number') or 0):02}" if title.get("type") == "episode" else sxxeyy
+    name = str(title.get("name") or "")
+    if not name or GENERIC_NAME.fullmatch(name):  # "Episode 01": the listing's placeholder, the programme's own title says more
+        name = str(found.get("title") or name)
+    match = {"title": str(found.get("id") or found.get("url")), "code": code, "name": name, "how": how}
+    if not pasted:
+        with jobs_lock:
+            kept = read_json(PROGRAMMES_FILE, {})
+            kept[key] = match
+            kept.pop(f"miss:{key}", None)
+            write_atomic(PROGRAMMES_FILE, json.dumps(kept))
+    return match
+
+
 def download_request(show: dict, config: dict, service_sxxeyy: str, out: Path) -> dict:
     """The same download, as unshackle serve's /api/download takes it."""
     if why := no_cdm(show["service"], config):
@@ -1416,6 +1562,19 @@ def episode_folder(ep: dict) -> Path:
     return DOWNLOADS / f"unshackle-{inst['name'] + '-' if inst else ''}{ep['series']['tvdbId']}-S{ep['seasonNumber']:02}E{ep['episodeNumber']:02}"
 
 
+def season_page(show: dict, season: int) -> dict:
+    """The series as one Sonarr season downloads: from that season's own page when it has one (`season_pages`: SBS
+    lists Has Fallen's S01 as the show "Paris Has Fallen" and S02 as "Apollo Has Fallen"), asked as that page's season
+    (1 unless set); else the series as set. The series' own numbering (season and episode offsets) and fallback are the
+    main page's and stay with it (by mj23au)."""
+    pages = show.get("season_pages") or {}
+    page = pages.get(season) or pages.get(str(season))
+    if not page or not page.get("url"):
+        return show
+    own = {k: v for k, v in show.items() if k not in ("season_map", "season_offset", "season_offset_from", "episode_offset", "fallback")}
+    return {**own, "title": page["url"], "season_map": {season: int(page.get("season") or 1)}, "page_of": season}
+
+
 def service_episode(show: dict, season: int, number: int) -> str | None:
     """How the service numbers Sonarr's episode, None when the offset leaves no episode."""
     mapped = (show.get("episode_map") or {}).get(f"S{season:02}E{number:02}")
@@ -1436,13 +1595,14 @@ def parts_in(out: Path) -> int:
 
 
 def finalize(out: Path, sxxeyy: str, name: str, join_parts: bool = True, episode_name: str = "joined",
-             on_step=lambda step, parts: None) -> int:
+             on_step=lambda step, parts: None, programme: bool = False) -> int:
     """Join split parts into one file, then name it and title it after Sonarr's series.
 
     `name` replaces whatever the service calls the show ("Koh-Lanta : All stars") and
     `sxxeyy` its numbering, both in the file name and in the MKV's title. `episode_name`
     says when to drop the episode's name: "keep", "always", or once parts were "joined"
-    (each part has its own name then, and none names the whole episode).
+    (each part has its own name then, and none names the whole episode). A `programme` (a series of separate
+    programmes) may come named as a film, with no episode in its name: the series and `sxxeyy` go in front of it.
     """
     # The downloads folder is shared (Sonarr, a NAS): a link planted there must not make mkvmerge or a
     # rename write through it, outside the folder
@@ -1480,10 +1640,15 @@ def finalize(out: Path, sxxeyy: str, name: str, join_parts: bool = True, episode
 
     for f in out.rglob("*.mkv"):
         match = SXXEYY.search(f.name)
-        if not match:
+        if not match and not programme:
             continue
         info = subprocess.run(["mkvmerge", "-J", str(f)], stdout=subprocess.PIPE, text=True)
         title = json.loads(info.stdout or "{}").get("container", {}).get("properties", {}).get("title", "")
+        if not match:  # Britains.Forgotten.Girls.2026.1080p...mkv: BBC.Documentaries.S2026E14.Britains.Forgotten...
+            trace(f"renamed {f.name} to {dots(name)}.{sxxeyy}.{f.name}")
+            f = f.rename(f.with_name(f"{dots(name)}.{sxxeyy}.{f.name}"))
+            subprocess.run(["mkvpropedit", "-q", str(f), "--edit", "info", "--set", f"title={name} {sxxeyy} {title}".strip()], check=True)
+            continue
         episode = title[m.end():].strip() if (m := TITLE_SXXEYY.search(title)) else ""
         rest = f.name[match.end():]
         if episode_name == "always" or (episode_name == "joined" and len(parts) > 1):
@@ -1596,15 +1761,61 @@ UPGRADES_FILE = DATA / "upgrades.json"  # episode id -> the preferred language i
 upgrades_lock = threading.Lock()
 
 
-def library_file(sonarr_path: str) -> Path:
-    """A library file, as Sonarr names it, where Unshacklarr reads it (the two roots of Settings)."""
-    root, local = str(SETTINGS.get("library_sonarr_root") or "").rstrip("/\\"), str(SETTINGS.get("library_local_root") or "").rstrip("/\\")
+def library_file(sonarr_path: str, roots: tuple[str, str] | None = None) -> Path:
+    """A library file, as Sonarr names it, where Unshacklarr reads it (the two roots of Settings, or those given)."""
+    inst = instance() or {}
+    own = inst.get("library_sonarr_root") and inst.get("library_local_root")  # another Sonarr's library, when set
+    root, local = roots or ((inst if own else SETTINGS).get("library_sonarr_root"), (inst if own else SETTINGS).get("library_local_root"))
+    root, local = str(root or "").rstrip("/\\"), str(local or "").rstrip("/\\")
     if root and local and (sonarr_path == root or sonarr_path.startswith(root + "/") or sonarr_path.startswith(root + "\\")):
         return Path(local + sonarr_path[len(root):].replace("\\", "/"))
     return Path(sonarr_path)
 
 
-def add_track(episode_id: int, want: str) -> bool:
+def same_source(file: dict, tag: str) -> bool:
+    """Whether Sonarr's file came from that service, as Unshackle names its downloads (…1080p.ALL4.WEB-DL…): its name
+    kept by Sonarr (sceneName) though it renames the file. Only then does an audio track from the service fit its video:
+    another source (a broadcast, another service) may start a few seconds apart, the same length or not."""
+    pattern = re.compile(rf"\.{re.escape(tag)}\.WEB", re.IGNORECASE if len(tag) > 3 else 0)  # "iP" as written, not "ip"
+    return any(pattern.search(str(n)) for n in (file.get("sceneName"), Path(str(file.get("path") or "")).name,
+                                                file.get("originalFilePath")) if n)
+
+
+def track_lang(props: dict) -> str:
+    code = str(props.get("language_ietf") or props.get("language") or "").split("-")[0].lower()
+    return LANGS.get(code, code)
+
+
+def default_flags(have: list[dict], got: list[dict], want: str) -> tuple[list[str], list[str]]:
+    """mkvmerge's --default-track-flag for the joined file: the added audio is the default one, the file's own audio
+    no longer; subtitles in that language become its forced ones (if any), never its full ones, and the others none."""
+    flag = lambda t, on: ["--default-track-flag", f"{t['id']}:{1 if on else 0}"]
+    forced = lambda t: bool((t.get("properties") or {}).get("forced_track")) or "forced" in str((t.get("properties") or {}).get("track_name") or "").lower()
+    subs = [t for t in have if t.get("type") == "subtitles"]
+    pick = next((t for t in subs if forced(t) and track_lang(t.get("properties") or {}) == want), None)
+    mine = [a for t in have if t.get("type") == "audio" for a in flag(t, False)] + [a for t in subs for a in flag(t, t is pick)]
+    audio = [t for t in got if t.get("type") == "audio"]
+    return mine, [a for t in audio for a in flag(t, t is audio[0])]
+
+
+def ask_audio(ep: dict, show: dict, want: str, file: dict) -> None:
+    """A file that doesn't say it came from the series' service: its audio may be out of step with the one added (another
+    source), or not (another team's release of the same stream). The person says, in the bell; asked once, not hourly."""
+    label = f"{ep['series']['title']} S{ep['seasonNumber']:02}E{ep['episodeNumber']:02}"
+    with upgrades_lock:
+        watched = read_json(UPGRADES_FILE, {})
+        if str(ep["id"]) in watched:
+            watched[str(ep["id"])]["asked"] = datetime.now(timezone.utc).isoformat()
+            write_atomic(UPGRADES_FILE, json.dumps(watched))
+    name = Path(str(file.get("sceneName") or file.get("path") or "")).name
+    text = (f"The {want} audio is on {show['service']}, but the file you have ({name}) doesn't say it comes from {show['service']}. "
+            "If its source is another one, the added audio may be a few seconds out of step; another team's release of the same "
+            "stream is fine. Add the audio to it, or download the whole episode again?")
+    inbox_add("warning", f"Audio to add: {label}", text,
+              action={"kind": "confirm-audio", "id": f"audio:{ep['id']}", "episode": ep["id"], "service": show["service"], "label": label, "text": text})
+
+
+def add_track(episode_id: int, want: str, anyway: bool = False) -> bool:
     """The preferred audio added to the episode's file, not the whole episode again (upgrade_mode add_track): its
     audio only is downloaded, joined to the library's file with mkvmerge, and Sonarr imports the joined file in its
     place. False when that can't be done (the file out of reach, no audio came, lengths that differ): the caller
@@ -1614,7 +1825,14 @@ def add_track(episode_id: int, want: str) -> bool:
     show = (config.get("series") or {}).get(ep["series"]["tvdbId"]) or {}
     if not ep.get("episodeFileId") or not show.get("service"):
         return False
-    have = library_file(sonarr_get(f"episodefile/{ep['episodeFileId']}")["path"])
+    if show.get("programmes") or int(show.get("parts") or 0) > 1:  # found by title, or in parts: the whole episode again
+        print(f"Add the audio: {ep['series']['title']} is {'separate programmes' if show.get('programmes') else 'in parts'}, the episode is downloaded again", flush=True)
+        return False
+    file = sonarr_get(f"episodefile/{ep['episodeFileId']}")
+    if not anyway and not same_source(file, show["service"]) and SETTINGS.get("add_track_other_source") != "add":
+        ask_audio(ep, show, want, file)  # the person chooses; nothing is downloaded meanwhile
+        return True
+    have = library_file(file["path"])
     if not have.is_file():
         print(f"Add the audio: {have} is out of reach here, the episode is downloaded again", flush=True)
         return False
@@ -1636,12 +1854,19 @@ def add_track(episode_id: int, want: str) -> bool:
             got = videos_in(out) + [f for f in out.rglob("*.mka")]
             if not got:
                 raise RuntimeError(f"No {want} audio came from {show['service']}")
+            if len(got) > 1:
+                raise RuntimeError(f"The {want} audio came in {len(got)} parts: not joined")
             lengths = [duration_of(have), duration_of(got[0])]
-            if all(lengths) and abs(lengths[0] - lengths[1]) > 2:
+            if all(lengths) and abs(lengths[0] - lengths[1]) > 1:  # the same source: the same length within a second
                 raise RuntimeError(f"The {want} audio lasts {lengths[1]:.0f} s, the file {lengths[0]:.0f} s: not joined")
             joined = out / have.name
+            # the downloads folder is shared: a link planted there must not make mkvmerge write through it (as finalize)
+            if out.is_symlink() or joined.exists() or joined.is_symlink() or any(f.is_symlink() for f in out.rglob("*")):
+                raise RuntimeError(f"{out.name} holds a link or a file named like the library's: not joined")
             run.step("joining")
-            cmd = ["mkvmerge", "-q", "-o", str(joined), str(have), "--no-video", "--no-subtitles", "--no-chapters", "--no-attachments", str(got[0])]
+            mine, theirs = default_flags(mkv_tracks(have), mkv_tracks(got[0]), want)
+            cmd = ["mkvmerge", "-q", "-o", str(joined), *mine, str(have),
+                   "--no-video", "--no-subtitles", "--no-chapters", "--no-attachments", *theirs, str(got[0])]
             done = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace")
             if done.returncode > 1:
                 raise RuntimeError(f"mkvmerge could not add the audio: {done.stdout.strip()[-300:]}")
@@ -1858,6 +2083,12 @@ def first_language(order: list[str], tracks: list[dict]) -> str | None:
     return None
 
 
+def mkv_tracks(path: Path) -> list[dict]:
+    """A file's tracks, as mkvmerge reads them (their id, type and properties)."""
+    info = subprocess.run(["mkvmerge", "-J", str(path)], stdout=subprocess.PIPE, text=True)
+    return json.loads(info.stdout or "{}").get("tracks") or []
+
+
 def audio_languages(path: Path, kind: str = "audio") -> set[str]:
     """The languages of a file's audio (or subtitles: forced ones left out), as mkvmerge reads them."""
     info = subprocess.run(["mkvmerge", "-J", str(path)], stdout=subprocess.PIPE, text=True)
@@ -1991,40 +2222,54 @@ def import_episode(ep: dict, out: Path, replace: bool = False) -> None:
     # the downloads still run side by side
     with IMPORT_LOCKS.setdefault(sonarr_url(), threading.Lock()):
         old_file = ep.get("episodeFileId") if ep.get("hasFile") else None
-        for attempt in range(1, IMPORT_ASKS + 1):
+        for round_ in (1, 2):  # once more when Sonarr said it imported but moved nothing (by mj23au, #10)
+            for attempt in range(1, IMPORT_ASKS + 1):
+                try:
+                    r = requests.post(
+                        f"{sonarr_url()}/api/v3/command",
+                        headers=sonarr_headers(),
+                        json={"name": "ManualImport", "files": files, "importMode": "move"},
+                        timeout=120,  # as long as its reads: a Sonarr busy moving another big file answers late
+                    )
+                except (requests.Timeout, requests.ConnectionError) as e:
+                    # It may have taken it and imported all the same: the episode's file says, before asking again
+                    time.sleep(IMPORT_RETRY_WAIT)
+                    now = sonarr_get(f"episode/{ep['id']}")
+                    if now.get("hasFile") and now.get("episodeFileId") != old_file:
+                        trace(f"Sonarr did not answer the import ({type(e).__name__}), but the episode has its new file: imported")
+                        return
+                    if attempt == IMPORT_ASKS:
+                        raise RuntimeError(f"Sonarr did not answer the import {IMPORT_ASKS} times ({no_credentials(str(e))})") from e
+                    trace(f"Sonarr did not answer the import ({type(e).__name__}): asked again ({attempt + 1} of {IMPORT_ASKS})")
+                    continue
+                # Sonarr refused it (500: "database is locked" while it is busy; by mj23au, #10): StartCommand queued
+                # nothing, so asking again cannot import twice
+                if r.status_code >= 500 and attempt < IMPORT_ASKS:
+                    trace(f"Sonarr refused the import ({r.status_code}): asked again ({attempt + 1} of {IMPORT_ASKS})")
+                    time.sleep(IMPORT_RETRY_WAIT)
+                    continue
+                break
+            r.raise_for_status()
+            trace(f"Sonarr's import asked (command {r.json().get('id')}), moving {len(files)} file{'s' if len(files) != 1 else ''}{', replacing its file' if replace else ''}")
             try:
-                r = requests.post(
-                    f"{sonarr_url()}/api/v3/command",
-                    headers=sonarr_headers(),
-                    json={"name": "ManualImport", "files": files, "importMode": "move"},
-                    timeout=120,  # as long as its reads: a Sonarr busy moving another big file answers late
-                )
-            except (requests.Timeout, requests.ConnectionError) as e:
-                # It may have taken it and imported all the same: the episode's file says, before asking again
+                wait_for_import(ep, r.json().get("id"), old_file)
+                return
+            except NoNewFile:
+                # Its database locked mid-import: the command ends "completed", the file is still here and the
+                # episode keeps its old one. Asked again a minute later; it cannot import twice what it never moved
+                if round_ == 2 or not videos_in(out):
+                    raise
+                trace("Sonarr said the import was done but moved nothing (its log may say \"database is locked\"): asked again")
                 time.sleep(IMPORT_RETRY_WAIT)
-                now = sonarr_get(f"episode/{ep['id']}")
-                if now.get("hasFile") and now.get("episodeFileId") != old_file:
-                    trace(f"Sonarr did not answer the import ({type(e).__name__}), but the episode has its new file: imported")
-                    return
-                if attempt == IMPORT_ASKS:
-                    raise RuntimeError(f"Sonarr did not answer the import {IMPORT_ASKS} times ({no_credentials(str(e))})") from e
-                trace(f"Sonarr did not answer the import ({type(e).__name__}): asked again ({attempt + 1} of {IMPORT_ASKS})")
-                continue
-            # Sonarr refused it (500: "database is locked" while it is busy; by mj23au, #10): StartCommand queued
-            # nothing, so asking again cannot import twice
-            if r.status_code >= 500 and attempt < IMPORT_ASKS:
-                trace(f"Sonarr refused the import ({r.status_code}): asked again ({attempt + 1} of {IMPORT_ASKS})")
-                time.sleep(IMPORT_RETRY_WAIT)
-                continue
-            break
-        r.raise_for_status()
-        trace(f"Sonarr's import asked (command {r.json().get('id')}), moving {len(files)} file{'s' if len(files) != 1 else ''}{', replacing its file' if replace else ''}")
-        wait_for_import(ep, r.json().get("id"), old_file)
 
 
 IMPORT_WAIT, IMPORT_POLL = 300, 3  # seconds
 IMPORT_ASKS, IMPORT_RETRY_WAIT = 3, 60  # an import Sonarr does not answer: asked so many times, a minute apart
 IMPORT_LOCKS: dict[str, threading.Lock] = {}  # by Sonarr URL
+
+
+class NoNewFile(RuntimeError):
+    """Sonarr's import command ended "completed", yet the episode has no new file."""
 
 
 def wait_for_import(ep: dict, command_id: int | None, old_file: int | None) -> None:
@@ -2046,7 +2291,7 @@ def wait_for_import(ep: dict, command_id: int | None, old_file: int | None) -> N
     now = sonarr_get(f"episode/{ep['id']}")
     trace(f"Sonarr's import done: {command.get('message') or 'completed'}; episode file {now.get('episodeFileId')}")
     if not now.get("hasFile") or now.get("episodeFileId") == old_file:
-        raise RuntimeError(f"Sonarr finished the import but the episode has no new file: {command.get('message') or 'see Activity in Sonarr'}")
+        raise NoNewFile(f"Sonarr finished the import but the episode has no new file: {command.get('message') or 'see Activity in Sonarr'}")
 
 
 seen_lock = threading.Lock()
@@ -2367,6 +2612,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                 show.get("join_parts", True),
                 show.get("episode_name") or "joined",
                 on_step,
+                bool(show.get("programmes")),
             )
             check_audio(out, accepted_audio(show, config))
             check_subs(out, accepted_subs(show, config))
@@ -2455,8 +2701,8 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
             if taken_out:
                 continue  # taken out of the queue
             show = series.get(ep["series"]["tvdbId"])
-            if not show or not show.get("service") or not show.get("title"):
-                continue
+            if not show or not show.get("service") or not (show.get("title") or show.get("programmes")):
+                continue  # separate programmes need no series URL: each episode finds its own
             if not manual and not wanted_automatically(show, ep, datetime.now(timezone.utc)):
                 continue
             if not manual and (why := order_changed(show, ep["series"])):  # its numbering may now name other episodes
@@ -2464,9 +2710,10 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                     notify_series(show, settings, "warning", f"Episode order changed: {ep['series']['title']}",
                                   f"{why}. New episodes of this series are not downloaded until you check its numbering in Unshacklarr.")
                 continue
+            show = season_page(show, ep["seasonNumber"])  # a season on a page of its own downloads from there
 
             sxxeyy = f"S{ep['seasonNumber']:02}E{ep['episodeNumber']:02}"
-            service_sxxeyy = service_episode(show, ep["seasonNumber"], ep["episodeNumber"])
+            service_sxxeyy = sxxeyy if show.get("programmes") else service_episode(show, ep["seasonNumber"], ep["episodeNumber"])
             label = f"{ep['series']['title']} {sxxeyy}" + (f" ({instance()['name']})" if instance() else "")
             if not service_sxxeyy:
                 continue  # the episode offset puts it before the service's first episode
@@ -2510,6 +2757,25 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                     run.card["replace"] = True
                 if numbering is not None or replace:
                     run.save()
+                if show.get("programmes"):  # each episode its own programme: found by its title, or its pasted URL (#17)
+                    try:
+                        match = programme_for(show, ep, config, manual)
+                    except Unmatched as e:
+                        run.say(f"{label}: {e}, not downloaded")
+                        run.card["notOn"] = show["service"]  # aired, just not found there: not "not out yet"
+                        run.finish("unavailable", str(e))
+                        if first_warning(f"{out.name}:programme"):
+                            notify_series(show, settings, "warning", f"No programme found yet: {label}",
+                                          f"{e}.\nIt is looked for again once a day.", batch=batch)
+                        continue
+                    except (UnshackleError, requests.RequestException) as e:
+                        run.say(f"{label}: looking for its programme on {show['service']}: {e}")
+                        run.finish("failed", f"Looking for its programme on {show['service']}: {e}")
+                        continue
+                    show = {**show, "title": match["title"]}  # this episode's own programme, for this download only
+                    service_sxxeyy = match["code"]
+                    run.card["serviceEpisode"] = service_sxxeyy
+                    run.say(f"{label}: matched to {match['name']} on {show['service']} (by {match['how']})")
                 on_service = f" as {service_sxxeyy}" if service_sxxeyy != sxxeyy else ""
                 run.say(f"{label}: downloading from {show['service']}{on_service}")
                 wanted_langs = {"audio": accepted_audio(show, config) if show.get("audio_accept") or (config.get("settings") or {}).get("audio_accept") else [],
@@ -2553,7 +2819,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                   try:
                     # Its number on the service may hold another episode (a same-named series elsewhere, seasons
                     # numbered apart): its title says so before anything is downloaded
-                    if numbering is None and int(show.get("parts") or 0) <= 1 and sxxeyy not in (show.get("episode_map") or {}) \
+                    if numbering is None and not show.get("programmes") and int(show.get("parts") or 0) <= 1 and sxxeyy not in (show.get("episode_map") or {}) \
                             and (wrong := wrong_number(show, ep, service_sxxeyy, run)) is not None:
                         if not wrong:
                             why = f"{service_sxxeyy} on {show['service']} is another episode, by its title"
@@ -2565,7 +2831,8 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                             run.finish("failed", why, "Check this series' Numbering (its episode table), then try again")
                             continue
                         how = "its absolute number" if wrong.get("match") == "absolute" else "its title"
-                        run.say(f"{label}: {service_sxxeyy} on {show['service']} is a different episode; found by {how} as {wrong['service']} instead")
+                        what = f"not listed on {show['service']} as {service_sxxeyy}" if wrong.get("unlisted") else f"{service_sxxeyy} on {show['service']} is a different episode"
+                        run.say(f"{label}: {what}; found by {how} as {wrong['service']} instead")
                         own = {k: show[k] for k in NUMBERING if k in show}  # a retry asks the same again
                         run.card.update(serviceEpisode=wrong["service"],
                                         numbering={**own, "episode_map": {**(own.get("episode_map") or {}), sxxeyy: wrong["service"]}})

@@ -208,12 +208,27 @@ class Unshackle:
         self._services: tuple[float, list] = (0.0, [])
         self._remote: tuple[float, list] = (0.0, [])
         self._config: tuple[float, dict] = (0.0, {})
+        self._down: tuple[float, UnshackleError | None] = (0.0, None)
 
     def configure(self, settings: dict) -> None:
         self.settings = settings
         self._services = (0.0, [])
         self._remote = (0.0, [])
         self._config = (0.0, {})
+        self._down = (0.0, None)
+
+    def cached_get(self, path: str) -> dict:
+        """A GET whose answer is kept: an unreachable serve is said at once for a minute, instead of each call (the
+        page's state asks for the services three times) waiting for the connection to time out (5 s) again."""
+        at, error = self._down
+        if error and time.monotonic() - at < 60:
+            raise error
+        try:
+            return self.call("GET", path)
+        except UnshackleError as e:
+            if "unreachable" in str(e):
+                self._down = (time.monotonic(), e)
+            raise
 
     def sign_in(self) -> dict | None:
         """A sign-in code a service waits for, when serve runs here (local): see Local.sign_in."""
@@ -258,7 +273,7 @@ class Unshackle:
         """Tag, URL and help of each service, kept 10 minutes."""
         fetched, services = self._services
         if not services or time.monotonic() - fetched > 600:
-            services = self.call("GET", "/api/services")["services"]
+            services = self.cached_get("/api/services")["services"]
             self._services = (time.monotonic(), services)
         return services
 
@@ -302,7 +317,7 @@ class Unshackle:
         """Its unshackle.yaml (secrets redacted), kept 10 minutes."""
         fetched, config = self._config
         if not fetched or time.monotonic() - fetched > 600:
-            config = self.call("GET", "/api/config")["config"] or {}
+            config = self.cached_get("/api/config")["config"] or {}
             self._config = (time.monotonic(), config)
         return config
 
