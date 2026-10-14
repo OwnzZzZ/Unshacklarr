@@ -1,6 +1,24 @@
 const $ = (s) => document.querySelector(s);
 /* A help text, one sentence a line: easier to read than a block. */
 const breakSentences = (text) => text.replace(/([.!?]) (?=\p{Lu})/gu, "$1\n").replace(/([。！？])(?=\S)/gu, "$1\n");
+/* A series' poster, or one made of its initials when Sonarr has none or it doesn't load: never the browser's broken
+   image ("The Search for Leah Croucher: A Parent's Nightmare", banner only on TheTVDB, is SL). An image all the same,
+   so every place sizes it as before. By mj23au */
+function initialsOf(name) {
+  const words = String(name || "").replace(/\([^)]*\)/g, " ").split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  const small = /^(the|a|an|and|of|for|in|on|at|to|with|from|by|le|la|les|de|du|des|et|der|die|das|el|los)$/i;
+  const kept = words.filter((w) => !small.test(w));
+  return (kept.length ? kept : words).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
+}
+function posterSrc(src, name) {
+  if (src) return src;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 300"><rect width="200" height="300" fill="#1c2430"/>`
+    + `<text x="100" y="150" dy=".35em" text-anchor="middle" font-family="system-ui,-apple-system,Segoe UI,sans-serif" `
+    + `font-size="84" font-weight="700" fill="#8c97a8">${initialsOf(name)}</text></svg>`;
+  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+}
+const posterFail = (name) => (e) => { const s = posterSrc("", name); if (e.target.getAttribute("src") !== s) e.target.src = s; };
+
 function lineBySentence(node) {
   const walk = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
   while (walk.nextNode()) walk.currentNode.nodeValue = breakSentences(walk.currentNode.nodeValue);
@@ -382,7 +400,7 @@ async function openDrawer(s, tab, fromRoute = false) {
   const conf = (S.config.series[s.tvdbId] ??= { service: "", title: "", options: {}, service_options: {} });
   conf.options ??= {}; conf.service_options ??= {};  // before the snapshot: filling them in is no change
   drawerSnapshot = { id: s.tvdbId, existed, conf: JSON.stringify(conf) };  // what closing it compares with
-  if (s.poster) $("#d-poster").src = s.poster; else $("#d-poster").removeAttribute("src");
+  $("#d-poster").src = posterSrc(s.poster, s.title);
   $("#d-title").textContent = s.title;
   renderMeta(s);
   $("#d-service").replaceChildren(el("option", { value: "", textContent: "Not downloaded by Unshackle" }),

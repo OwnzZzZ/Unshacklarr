@@ -78,7 +78,7 @@ $("#hidden-open").onclick = () => {
   const rows = S.config.hidden_series.map((tvdbId) => {
     const series = S.series.find((x) => x.tvdbId === tvdbId), name = series?.title || `TVDB ${tvdbId}`;
     const input = el("input", { type: "checkbox", checked: false, ariaLabel: `Show ${name} in the schedule` });
-    const li = el("li", { className: "off" }, el("img", { alt: "", loading: "lazy", src: series?.poster || "" }), el("span", { className: "n", textContent: name }),
+    const li = el("li", { className: "off" }, el("img", { alt: "", loading: "lazy", src: posterSrc(series?.poster, name), onerror: posterFail(name) }), el("span", { className: "n", textContent: name }),
       el("label", { className: "switch" }, "In schedule", input, el("i")));
     input.onchange = async () => {
       li.classList.toggle("off", !input.checked);
@@ -270,7 +270,7 @@ $("#cal-today").onclick = () => moveMonth(0);
 function schedRow(d, when) {
   const quote = (a) => /^[\w@%+=:,./-]+$/.test(a) ? a : `'${a.replaceAll("'", "'\\''")}'`;
   const series = S.series.find((x) => x.tvdbId === d.tvdbId);
-  const thumb = el("img", { className: "thumb", alt: "", loading: "lazy", src: series?.poster || "" });
+  const thumb = el("img", { className: "thumb", alt: "", loading: "lazy", src: posterSrc(series?.poster, series?.title || d.series), onerror: posterFail(series?.title || d.series) });
   const hideCtl = d.fromLate ? "" : hideButton(d);
   const FINALE = { season: "Season finale", series: "Series finale", midseason: "Mid-season finale" };
   const what = el("span", { className: "what" }, el("b", { textContent: `${d.series} ${d.sxxeyy}` },

@@ -12,7 +12,7 @@ function duration(ms) {
   const s = Math.round(ms / 1000);
   return s < 60 ? `${s} s` : s < 3600 ? `${Math.floor(s / 60)} min ${String(s % 60).padStart(2, "0")}` : `${Math.floor(s / 3600)} h ${String(Math.round(s / 60) % 60).padStart(2, "0")}`;
 }
-const posterOf = (c) => S.series.find((x) => x.tvdbId === c.tvdbId)?.poster || "";
+const posterOf = (c) => { const s = S.series.find((x) => x.tvdbId === c.tvdbId); return posterSrc(s?.poster, s?.title || c.series); };
 const isLive = (c) => c.outcome === "running";
 const speedOf = (c) => (c.live?.speed || "").replace(/^[A-Za-z]+\s+(?=\d)/, "");  // serve writes "DASH 8.4 MB/s"
 const isQueued = (c) => isLive(c) && (c.live?.status || "queued") === "queued" && c.step === "queued";
@@ -131,7 +131,7 @@ const pulse = () => el("span", { className: "pulse", ariaLabel: "Running", style
 const thumbs = new Map();
 function thumb(key, src) {
   let img = thumbs.get(key);
-  if (!img || img.getAttribute("src") !== src) thumbs.set(key, img = el("img", { alt: "", loading: "lazy", src }));
+  if (!img || img.getAttribute("src") !== src) thumbs.set(key, img = el("img", { alt: "", loading: "lazy", src, onerror: posterFail("") }));
   return img;
 }
 const itemKey = (i) => (i?.job ? `job:${i.job}` : i?.id);
@@ -346,9 +346,9 @@ async function showLeftovers() {
     } catch (err) { e.target.disabled = false; toast(err.message, true); }
   } });
   const rows = r.items.map((it) => {
-    const poster = S.series.find((x) => x.tvdbId === it.tvdbId)?.poster || "";
+    const poster = posterSrc(S.series.find((x) => x.tvdbId === it.tvdbId)?.poster, it.series);
     const age = Math.floor((Date.now() / 1000 - it.since) / 86400);
-    return el("div", { className: "left-row" }, el("img", { alt: "", loading: "lazy", src: poster }),
+    return el("div", { className: "left-row" }, el("img", { alt: "", loading: "lazy", src: poster, onerror: posterFail(it.series) }),
       el("div", {}, el("b", { textContent: `${it.series || `TVDB ${it.tvdbId}`} ${it.sxxeyy}` }),
         el("small", { className: "why", textContent: it.cause || (it.outcome ? OUTCOME[it.outcome] : "No download history for it") }),
         el("small", { textContent: `${it.size >= 2 ** 30 ? `${(it.size / 2 ** 30).toFixed(1)} GB` : `${Math.max(1, Math.round(it.size / 2 ** 20))} MB`} · waiting ${age < 1 ? "since today" : `${age} day${age > 1 ? "s" : ""}`} · ${it.sonarr_path}` }),
@@ -403,8 +403,8 @@ async function showMissing() {
       } catch (err) { e.target.disabled = false; toast(err.message, true); }
     } });
   const rows = r.items.map((it) => {
-    const poster = S.series.find((x) => x.tvdbId === it.tvdbId)?.poster || "";
-    return el("div", { className: "left-row" }, el("img", { alt: "", loading: "lazy", src: poster }),
+    const poster = posterSrc(S.series.find((x) => x.tvdbId === it.tvdbId)?.poster, it.series);
+    return el("div", { className: "left-row" }, el("img", { alt: "", loading: "lazy", src: poster, onerror: posterFail(it.series) }),
       el("div", {}, el("b", { textContent: `${it.series} ${it.sxxeyy}` }),
         el("small", {}, ...(it.title ? [episodeTitle(it.tvdbId, it.sxxeyy, it.title), " · "] : []), `aired ${ago(it.aired)}`)));
   });
@@ -451,10 +451,10 @@ async function showUpgrades() {
   const state = scan.running ? `Checking ${scan.done} of ${scan.total}${scan.sonarr ? ` in ${scan.sonarr}` : ""}${scan.series ? ` · ${scan.series}` : ""}…`
     : r.checked ? `Checked ${ago(r.checked)}${r.stopped ? ", stopped before the end" : ""}${scan.errors ? ` · ${scan.errors} could not be asked` : ""}` : "Not checked yet.";
   const rows = r.items.map((it) => {
-    const poster = S.series.find((x) => x.tvdbId === it.tvdbId)?.poster || "";
+    const poster = posterSrc(S.series.find((x) => x.tvdbId === it.tvdbId)?.poster, it.series);
     const box = el("input", { type: "checkbox", checked: !upgradeSkip.has(it.episodeId), disabled: it.running, ariaLabel: `Replace ${it.series} ${it.sxxeyy}`,
       onchange: (e) => { if (e.target.checked) upgradeSkip.delete(it.episodeId); else upgradeSkip.add(it.episodeId); showUpgrades(); } });
-    return el("label", { className: "left-row up-row" }, box, el("img", { alt: "", loading: "lazy", src: poster }),
+    return el("label", { className: "left-row up-row" }, box, el("img", { alt: "", loading: "lazy", src: poster, onerror: posterFail(it.series) }),
       el("div", {}, el("b", { textContent: `${it.series} ${it.sxxeyy}` }),
         el("small", { textContent: `${it.file} here${it.fileStep ? ` (step ${it.fileStep})` : " (outside the ladder)"} → ${it.better} on the service (step ${it.betterStep} of ${it.ladder})` }),
         ...(it.running ? [el("small", { className: "left-hand", textContent: "Being replaced now" })] : [])));
