@@ -112,6 +112,10 @@
  "A PlayReady remote CDM's address ends in /playready": [],
  "A bot token looks like 123456789:AAE…": [],
  "A chat ID is a number (or @channel)": [],
+ "A check of {0} is running{1}. Try again once it ends.": [
+  "upgrade_scan.get('sonarr') or 'Sonarr'",
+  "': ' + upgrade_scan['series'] if upgrade_scan.get('series') else ''"
+ ],
  "A device is a .wvd (Widevine) or .prd (PlayReady) file": [],
  "A device of its own for…": [],
  "A device on a server: pywidevine serve, a PlayReady API, Decrypt Labs. Saved in unshackle.yaml.": [],
@@ -144,6 +148,7 @@
  "A remote unshackle serve is restarted where it runs": [],
  "A remote unshackle serve keeps its log where it runs": [],
  "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes come with the automatic sync: release times stay with the Sonarr above.": [],
+ "A series you set up with episodes already on disk is checked within the hour, without waiting for the next automatic check.": [],
  "A service is waiting for you to sign in before Unshackle can go on. Open this link on any device and enter the code.": [],
  "A service that logs in with a username and password (set in unshackle.yaml) needs no cookies.": [],
  "A sync is already running": [],
@@ -413,12 +418,24 @@
  "Chat ID": [],
  "Check": [],
  "Check again": [],
+ "Check automatically": [],
+ "Check automatically every": [],
+ "Check automatically every {0} days is not shorter than Ask again after ({1} days): each check would ask the service about every episode again. Use fewer days.": [
+  "every",
+  "keep"
+ ],
  "Check its Numbering, then try again.": [],
+ "Check new series": [],
  "Check now": [],
  "Check now asks each service what it has, one episode at a time.": [],
  "Check now reads each series' files from Sonarr.": [],
  "Check this series' Numbering (its episode table), then try again": [],
  "Checked a moment ago": [],
+ "Checked automatically every day": [],
+ "Checked automatically every {0} days": [
+  "every"
+ ],
+ "Checked only when you click Check": [],
  "Checked {0} of {1}": [
   "++done",
   "todo.length"
@@ -716,6 +733,7 @@
  "E-mail": [],
  "EXAMPLE": [],
  "Each automatic backup is also sent, encrypted, to a WebDAV folder or an S3 bucket. If this server's disk fails, your settings are still safe.": [],
+ "Each check asks the service only about episodes whose answer is older than Ask again after, so use fewer days than that. 0: only when you click Check.": [],
  "Each download's output shows much more: Unshackle's debug log, every call to Sonarr, and the job as unshackle serve reports it.": [],
  "Each episode stays in Activity, Waiting in downloads, until you import or delete it. It is never deleted automatically.": [],
  "Each series' own": [],
@@ -1946,6 +1964,7 @@
  "Skip upgrades": [],
  "Skipped: the episode offset puts it before the service's first episode.": [],
  "Slack": [],
+ "Some answers are kept up to this much shorter, so episodes checked on the same day are not all asked again on the same day. 0: no spreading.": [],
  "Sonarr": [],
  "Sonarr GET {0} {1} → {2}, {3} bytes": [
   "path",
@@ -2115,6 +2134,7 @@
  "Specials": [],
  "Speed": [],
  "Split a track's segment downloads across this many processes; only engages for large segment batches (default 1).": [],
+ "Spread the questions": [],
  "Start": [],
  "Stats": [],
  "Step {0} of {1}": [

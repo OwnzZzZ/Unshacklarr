@@ -418,7 +418,10 @@ function upgradeSay(all) {
   const st = $("#ug-state"), days = Number(S.config.settings?.upgrade_recheck_days ?? 30);
   st.className = `sx-state${on ? " ok" : ""}`;
   st.querySelector("b").textContent = `${on} of ${all.length} series checked`;
-  st.querySelector("small").textContent = [days ? (days === 1 ? "Answers kept 1 day" : `Answers kept ${days} days`) : "Asked every time",
+  const every = Number(S.config.settings?.upgrade_check_days ?? 7);
+  $("#ug-new").checked = !!S.config.settings?.upgrade_check_new;
+  st.querySelector("small").textContent = [every ? (every === 1 ? "Checked automatically every day" : `Checked automatically every ${every} days`) : "Checked only when you click Check",
+    days ? (days === 1 ? "Answers kept 1 day" : `Answers kept ${days} days`) : "Asked every time",
     S.config.settings?.upgrade_other_groups ? "Other release groups are replaced" : ""].filter(Boolean).join(" · ");
 }
 $("#ug-find").oninput = renderUpgradeSeries;
@@ -451,6 +454,7 @@ async function renderUpgradeGroups(fetch = true) {
         : none.length === 1 ? `1 series has no group and is left as it is: ${listed(none)}. Set a Group Tag in Download options to include it.`
         : `${none.length} series have no group and are left as they are: ${listed(none)}. Set a Group Tag in Download options to include them.` }))] : []));
 }
+$("#ug-new").onchange = (e) => { S.config.settings.upgrade_check_new = e.target.checked; dirty(); };
 $("#ug-other").onchange = (e) => { S.config.settings.upgrade_other_groups = e.target.checked; dirty(); renderUpgradeSeries(); renderUpgradeGroups(false); };
 
 /* What is sent for this series: every notification, its failures only, or nothing (the bell keeps all). */

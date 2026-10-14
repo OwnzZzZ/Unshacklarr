@@ -38,6 +38,11 @@ Every change worth knowing, newest first. The format follows
 **Upgrades**
 - **Upgrades you choose.** Which series are checked, how long an answer is kept, how far back. (#10, by mj23au)
 - **Other release groups.** A file from another group is replaced by the same quality too. (#10, by mj23au)
+- **Check automatically.** Upgrades checks by itself every 7 days, asking only about answers that are too old, spread over
+  several checks. In Settings › Upgrades. (#23, by mj23au)
+- **Check new series.** A series set up with episodes on disk is checked within the hour. Off by default. (#23)
+- **Fewer questions.** A download counts as an answer, and episodes the service no longer has are not asked about at
+  every check. (#23)
 
 **Sonarr 5**
 - **Languages.** Your files without your audio languages, read from Sonarr 5's own tracks: watch them for the
@@ -120,6 +125,9 @@ The new options are off until you turn them on.
   (Koh-Lanta's 2023 episodes against MyTF1's All Stars).
 - **Save shows** as soon as a pasted link picks the series' service.
 - **A series without a poster** shows its initials instead of a broken image (Schedule, Activity, the series page). (#22, by mj23au)
+- **A replaced episode** leaves Upgrades for good, even once the history has forgotten its download. (#23, by mj23au)
+- **Check while a check runs** says why it doesn't start, instead of doing nothing. (#23)
+- **Release group** in Settings › Upgrades no longer runs two lines together. (#23)
 
 ## [1.4.0] - 2026-10-07
 

@@ -2250,5 +2250,17 @@
  "Series {0}, seasons listed as separate shows: {1} is not a season number.": "シリーズ{0}、別の番組として扱われるシーズン：{1}はシーズン番号ではありません。",
  "Use this show": "この番組を使う",
  "{0} lists season {1} as a separate show: {2} (1 episode).": "{0}はシーズン{1}を別の番組として扱っています：{2}（1エピソード）。",
- "{0} lists season {1} as a separate show: {2} ({3} episodes).": "{0}はシーズン{1}を別の番組として扱っています：{2}（{3}エピソード）。"
+ "{0} lists season {1} as a separate show: {2} ({3} episodes).": "{0}はシーズン{1}を別の番組として扱っています：{2}（{3}エピソード）。",
+ "A check of {0} is running{1}. Try again once it ends.": "{0}の確認が実行中です{1}。終わってからもう一度お試しください。",
+ "A series you set up with episodes already on disk is checked within the hour, without waiting for the next automatic check.": "ディスクにエピソードがある状態で設定したシリーズは、次の自動確認を待たずに1時間以内に確認されます。",
+ "Check automatically": "自動で確認",
+ "Check automatically every": "自動で確認する間隔",
+ "Check automatically every {0} days is not shorter than Ask again after ({1} days): each check would ask the service about every episode again. Use fewer days.": "{0}日ごとの自動確認は「再確認までの期間」({1}日)より短くありません。毎回すべてのエピソードをサービスに再度問い合わせることになります。日数を減らしてください。",
+ "Check new series": "新しいシリーズを確認",
+ "Checked automatically every day": "毎日自動で確認",
+ "Checked automatically every {0} days": "{0}日ごとに自動で確認",
+ "Some answers are kept up to this much shorter, so episodes checked on the same day are not all asked again on the same day. 0: no spreading.": "一部の回答の保持期間をこの割合まで短くし、同じ日に確認したエピソードが同じ日にまとめて再確認されないようにします。0：分散しない。",
+ "Spread the questions": "問い合わせを分散",
+ "Checked only when you click Check": "「確認」をクリックしたときのみ確認",
+ "Each check asks the service only about episodes whose answer is older than Ask again after, so use fewer days than that. 0: only when you click Check.": "各確認では、回答が「再確認までの期間」より古いエピソードだけをサービスに問い合わせます。そのため日数はそれより短くしてください。0：「確認」をクリックしたときのみ。"
 }

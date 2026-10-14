@@ -2232,5 +2232,17 @@
  "Series {0}, seasons listed as separate shows: {1} is not a season number.": "Série {0}, temporadas apresentadas como programas separados: {1} não é um número de temporada.",
  "Use this show": "Usar este programa",
  "{0} lists season {1} as a separate show: {2} (1 episode).": "{0} apresenta a temporada {1} como um programa separado: {2} (1 episódio).",
- "{0} lists season {1} as a separate show: {2} ({3} episodes).": "{0} apresenta a temporada {1} como um programa separado: {2} ({3} episódios)."
+ "{0} lists season {1} as a separate show: {2} ({3} episodes).": "{0} apresenta a temporada {1} como um programa separado: {2} ({3} episódios).",
+ "A check of {0} is running{1}. Try again once it ends.": "Uma verificação de {0} está em andamento{1}. Tente novamente quando terminar.",
+ "A series you set up with episodes already on disk is checked within the hour, without waiting for the next automatic check.": "Uma série que você configura com episódios já no disco é verificada em até uma hora, sem esperar a próxima verificação automática.",
+ "Check automatically": "Verificar automaticamente",
+ "Check automatically every": "Verificar automaticamente a cada",
+ "Check automatically every {0} days is not shorter than Ask again after ({1} days): each check would ask the service about every episode again. Use fewer days.": "Verificar automaticamente a cada {0} dias não é mais curto que Perguntar de novo após ({1} dias): cada verificação perguntaria ao serviço sobre todos os episódios de novo. Use menos dias.",
+ "Check new series": "Verificar séries novas",
+ "Checked automatically every day": "Verificado automaticamente todo dia",
+ "Checked automatically every {0} days": "Verificado automaticamente a cada {0} dias",
+ "Some answers are kept up to this much shorter, so episodes checked on the same day are not all asked again on the same day. 0: no spreading.": "Algumas respostas são guardadas até essa porcentagem a menos, para que episódios verificados no mesmo dia não sejam todos perguntados de novo no mesmo dia. 0: sem distribuição.",
+ "Spread the questions": "Distribuir as perguntas",
+ "Checked only when you click Check": "Verificado só quando você clica em Verificar",
+ "Each check asks the service only about episodes whose answer is older than Ask again after, so use fewer days than that. 0: only when you click Check.": "Cada verificação só pergunta ao serviço sobre episódios cuja resposta é mais antiga que Perguntar de novo após, então use menos dias. 0: só quando você clica em Verificar."
 }

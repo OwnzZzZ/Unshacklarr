@@ -2244,5 +2244,17 @@
  "Series {0}, seasons listed as separate shows: {1} is not a season number.": "Serie {0}, stagioni presentate come programmi a sé: {1} non è un numero di stagione.",
  "Use this show": "Usa questo programma",
  "{0} lists season {1} as a separate show: {2} (1 episode).": "{0} presenta la stagione {1} come un programma a sé: {2} (1 episodio).",
- "{0} lists season {1} as a separate show: {2} ({3} episodes).": "{0} presenta la stagione {1} come un programma a sé: {2} ({3} episodi)."
+ "{0} lists season {1} as a separate show: {2} ({3} episodes).": "{0} presenta la stagione {1} come un programma a sé: {2} ({3} episodi).",
+ "A check of {0} is running{1}. Try again once it ends.": "È in corso un controllo di {0}{1}. Riprova quando è finito.",
+ "A series you set up with episodes already on disk is checked within the hour, without waiting for the next automatic check.": "Una serie che configuri con episodi già sul disco viene controllata entro un'ora, senza aspettare il prossimo controllo automatico.",
+ "Check automatically": "Controlla automaticamente",
+ "Check automatically every": "Controlla automaticamente ogni",
+ "Check automatically every {0} days is not shorter than Ask again after ({1} days): each check would ask the service about every episode again. Use fewer days.": "Controllare automaticamente ogni {0} giorni non è più breve di Richiedi dopo ({1} giorni): ogni controllo richiederebbe al servizio tutti gli episodi. Usa meno giorni.",
+ "Check new series": "Controlla le nuove serie",
+ "Checked automatically every day": "Controllato automaticamente ogni giorno",
+ "Checked automatically every {0} days": "Controllato automaticamente ogni {0} giorni",
+ "Some answers are kept up to this much shorter, so episodes checked on the same day are not all asked again on the same day. 0: no spreading.": "Alcune risposte vengono tenute fino a questa percentuale in meno, così gli episodi controllati lo stesso giorno non vengono richiesti tutti lo stesso giorno. 0: nessuna distribuzione.",
+ "Spread the questions": "Distribuisci le richieste",
+ "Checked only when you click Check": "Controllato solo quando fai clic su Verifica",
+ "Each check asks the service only about episodes whose answer is older than Ask again after, so use fewer days than that. 0: only when you click Check.": "Ogni controllo chiede al servizio solo gli episodi la cui risposta è più vecchia di Richiedi dopo, quindi usa meno giorni. 0: solo quando fai clic su Verifica."
 }

@@ -16,6 +16,9 @@ const NEWS = [
   { id: "sonarr-name", version: "1.5.0", title: "Sonarr name", sec: "sonarr", target: "#sx-name-field" },
   { id: "upgrade-series", version: "1.5.0", title: "Upgrades you choose", sec: "upgrades", target: "#ug-series-card" },
   { id: "other-groups", version: "1.5.0", title: "Other release groups", sec: "upgrades", target: "#ug-other-card" },
+  { id: "upgrade-auto", version: "1.5.0", title: "Check automatically", sec: "upgrades", target: "#ug-every-field" },
+  { id: "upgrade-spread", version: "1.5.0", title: "Spread the questions", sec: "upgrades", target: "#ug-spread-field" },
+  { id: "upgrade-new", version: "1.5.0", title: "Check new series", sec: "upgrades", target: "#ug-new-field" },
   { id: "downloads-at-once", version: "1.5.0", title: "Downloads at once", sec: "unshackle", target: "#ux-at-once-field" },
 ];
 const NEWS_KINDS = { new: "New", improved: "Improved", fix: "Fix", security: "Security", note: "Note" };

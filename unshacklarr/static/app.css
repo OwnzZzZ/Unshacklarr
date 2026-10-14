@@ -1618,7 +1618,7 @@ input.bad, select.bad { border-color: var(--err) !important; box-shadow: 0 0 0 3
 .ug-line span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ug-switch { display: flex; align-items: flex-start; gap: 12px; padding: 4px 0 10px; cursor: pointer; }
 .ug-switch span { display: grid; gap: 2px; } .ug-switch small { color: var(--muted); }
-.ug-groups { display: grid; gap: 6px; } .ug-group small { color: var(--muted); } .ug-group.warn b { color: var(--warn); }
+.ug-groups { display: grid; gap: 6px; } .ug-group small { color: var(--muted); } .ug-group > small { display: block; } .ug-group.warn b { color: var(--warn); }
 /* A series' libraries: one chip each, lit when it gets new episodes; what it misses one click from Episodes */
 .d-libs { display: flex; flex-wrap: wrap; gap: 8px; }
 .d-lib { display: inline-flex; align-items: stretch; border: 1.5px solid var(--line); border-radius: 12px; background: var(--field-bg); overflow: hidden; }

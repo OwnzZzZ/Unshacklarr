@@ -2255,5 +2255,17 @@
  "Series {0}, seasons listed as separate shows: {1} is not a season number.": "剧集 {0}，作为独立节目列出的季：{1} 不是季号。",
  "Use this show": "使用此节目",
  "{0} lists season {1} as a separate show: {2} (1 episode).": "{0} 将第 {1} 季作为独立节目列出：{2}（1 集）。",
- "{0} lists season {1} as a separate show: {2} ({3} episodes).": "{0} 将第 {1} 季作为独立节目列出：{2}（{3} 集）。"
+ "{0} lists season {1} as a separate show: {2} ({3} episodes).": "{0} 将第 {1} 季作为独立节目列出：{2}（{3} 集）。",
+ "A check of {0} is running{1}. Try again once it ends.": "正在检查 {0}{1}。请在检查结束后重试。",
+ "A series you set up with episodes already on disk is checked within the hour, without waiting for the next automatic check.": "你设置时磁盘上已有剧集的剧，会在一小时内检查，不必等待下一次自动检查。",
+ "Check automatically": "自动检查",
+ "Check automatically every": "自动检查间隔",
+ "Check automatically every {0} days is not shorter than Ask again after ({1} days): each check would ask the service about every episode again. Use fewer days.": "每 {0} 天自动检查不短于“多久后重新询问”（{1} 天）：每次检查都会向服务重新询问所有剧集。请减少天数。",
+ "Check new series": "检查新剧",
+ "Checked automatically every day": "每天自动检查",
+ "Checked automatically every {0} days": "每 {0} 天自动检查",
+ "Some answers are kept up to this much shorter, so episodes checked on the same day are not all asked again on the same day. 0: no spreading.": "部分回答的保留时间最多缩短这个比例，使同一天检查的剧集不会在同一天全部再次询问。0：不分散。",
+ "Spread the questions": "分散询问",
+ "Checked only when you click Check": "仅在点击“检查”时检查",
+ "Each check asks the service only about episodes whose answer is older than Ask again after, so use fewer days than that. 0: only when you click Check.": "每次检查只向服务询问回答早于“多久后重新询问”的剧集，因此请设置更少的天数。0：仅在点击“检查”时。"
 }

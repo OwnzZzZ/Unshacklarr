@@ -2238,5 +2238,17 @@
  "Series {0}, seasons listed as separate shows: {1} is not a season number.": "Serie {0}, Staffeln als eigene Sendungen: {1} ist keine Staffelnummer.",
  "Use this show": "Diese Sendung verwenden",
  "{0} lists season {1} as a separate show: {2} (1 episode).": "{0} führt Staffel {1} als eigene Sendung: {2} (1 Folge).",
- "{0} lists season {1} as a separate show: {2} ({3} episodes).": "{0} führt Staffel {1} als eigene Sendung: {2} ({3} Folgen)."
+ "{0} lists season {1} as a separate show: {2} ({3} episodes).": "{0} führt Staffel {1} als eigene Sendung: {2} ({3} Folgen).",
+ "A check of {0} is running{1}. Try again once it ends.": "Eine Prüfung von {0} läuft{1}. Versuchen Sie es erneut, wenn sie beendet ist.",
+ "A series you set up with episodes already on disk is checked within the hour, without waiting for the next automatic check.": "Eine Serie, die Sie mit bereits vorhandenen Folgen einrichten, wird innerhalb einer Stunde geprüft, ohne auf die nächste automatische Prüfung zu warten.",
+ "Check automatically": "Automatisch prüfen",
+ "Check automatically every": "Automatisch prüfen alle",
+ "Check automatically every {0} days is not shorter than Ask again after ({1} days): each check would ask the service about every episode again. Use fewer days.": "Automatisch alle {0} Tage prüfen ist nicht kürzer als Erneut fragen nach ({1} Tage): Jede Prüfung würde den Dienst erneut nach jeder Folge fragen. Weniger Tage wählen.",
+ "Check new series": "Neue Serien prüfen",
+ "Checked automatically every day": "Täglich automatisch geprüft",
+ "Checked automatically every {0} days": "Automatisch alle {0} Tage geprüft",
+ "Some answers are kept up to this much shorter, so episodes checked on the same day are not all asked again on the same day. 0: no spreading.": "Manche Antworten werden bis zu diesem Anteil kürzer behalten, damit am selben Tag geprüfte Folgen nicht alle am selben Tag erneut gefragt werden. 0: keine Verteilung.",
+ "Spread the questions": "Fragen verteilen",
+ "Checked only when you click Check": "Nur geprüft, wenn Sie auf Prüfen klicken",
+ "Each check asks the service only about episodes whose answer is older than Ask again after, so use fewer days than that. 0: only when you click Check.": "Jede Prüfung fragt den Dienst nur nach Folgen, deren Antwort älter als Erneut fragen nach ist; wählen Sie also weniger Tage. 0: nur, wenn Sie auf Prüfen klicken."
 }
