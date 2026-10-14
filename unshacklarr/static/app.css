@@ -218,6 +218,13 @@ body.drawer-open .savebar { display: none; }
 .term { height: 60vh; min-height: 320px; background: #0d1219; border: 1px solid var(--line); border-radius: 8px;
   padding: 8px; overflow-x: auto; overflow-y: hidden; }
 .term .xterm { width: max-content; }
+/* The fit reads the box's height: with border-box it counted the padding too, one row more than shows, so the
+   newest line sat under the bottom edge (by mj23au). And a scrollbar that stays, so the output reads as scrollable */
+.term { box-sizing: content-box; }
+.term .xterm-viewport { scrollbar-width: thin; scrollbar-color: #3a4660 transparent; }
+.term .xterm-viewport::-webkit-scrollbar { width: 10px; }
+.term .xterm-viewport::-webkit-scrollbar-thumb { background: #3a4660; border-radius: 5px; border: 2px solid #0d1219; }
+.term .xterm-viewport::-webkit-scrollbar-track { background: transparent; }
 .ep:hover { background: var(--bg); }
 .ep .num { color: var(--muted); font-variant-numeric: tabular-nums; }
 .ep .t { display: flex; flex-wrap: wrap; align-items: center; overflow: hidden; white-space: nowrap; min-width: 0; }

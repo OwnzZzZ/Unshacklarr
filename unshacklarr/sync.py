@@ -2208,40 +2208,54 @@ def import_episode(ep: dict, out: Path, replace: bool = False) -> None:
     # the downloads still run side by side
     with IMPORT_LOCKS.setdefault(sonarr_url(), threading.Lock()):
         old_file = ep.get("episodeFileId") if ep.get("hasFile") else None
-        for attempt in range(1, IMPORT_ASKS + 1):
+        for round_ in (1, 2):  # once more when Sonarr said it imported but moved nothing (by mj23au, #10)
+            for attempt in range(1, IMPORT_ASKS + 1):
+                try:
+                    r = requests.post(
+                        f"{sonarr_url()}/api/v3/command",
+                        headers=sonarr_headers(),
+                        json={"name": "ManualImport", "files": files, "importMode": "move"},
+                        timeout=120,  # as long as its reads: a Sonarr busy moving another big file answers late
+                    )
+                except (requests.Timeout, requests.ConnectionError) as e:
+                    # It may have taken it and imported all the same: the episode's file says, before asking again
+                    time.sleep(IMPORT_RETRY_WAIT)
+                    now = sonarr_get(f"episode/{ep['id']}")
+                    if now.get("hasFile") and now.get("episodeFileId") != old_file:
+                        trace(f"Sonarr did not answer the import ({type(e).__name__}), but the episode has its new file: imported")
+                        return
+                    if attempt == IMPORT_ASKS:
+                        raise RuntimeError(f"Sonarr did not answer the import {IMPORT_ASKS} times ({no_credentials(str(e))})") from e
+                    trace(f"Sonarr did not answer the import ({type(e).__name__}): asked again ({attempt + 1} of {IMPORT_ASKS})")
+                    continue
+                # Sonarr refused it (500: "database is locked" while it is busy; by mj23au, #10): StartCommand queued
+                # nothing, so asking again cannot import twice
+                if r.status_code >= 500 and attempt < IMPORT_ASKS:
+                    trace(f"Sonarr refused the import ({r.status_code}): asked again ({attempt + 1} of {IMPORT_ASKS})")
+                    time.sleep(IMPORT_RETRY_WAIT)
+                    continue
+                break
+            r.raise_for_status()
+            trace(f"Sonarr's import asked (command {r.json().get('id')}), moving {len(files)} file{'s' if len(files) != 1 else ''}{', replacing its file' if replace else ''}")
             try:
-                r = requests.post(
-                    f"{sonarr_url()}/api/v3/command",
-                    headers=sonarr_headers(),
-                    json={"name": "ManualImport", "files": files, "importMode": "move"},
-                    timeout=120,  # as long as its reads: a Sonarr busy moving another big file answers late
-                )
-            except (requests.Timeout, requests.ConnectionError) as e:
-                # It may have taken it and imported all the same: the episode's file says, before asking again
+                wait_for_import(ep, r.json().get("id"), old_file)
+                return
+            except NoNewFile:
+                # Its database locked mid-import: the command ends "completed", the file is still here and the
+                # episode keeps its old one. Asked again a minute later; it cannot import twice what it never moved
+                if round_ == 2 or not videos_in(out):
+                    raise
+                trace("Sonarr said the import was done but moved nothing (its log may say \"database is locked\"): asked again")
                 time.sleep(IMPORT_RETRY_WAIT)
-                now = sonarr_get(f"episode/{ep['id']}")
-                if now.get("hasFile") and now.get("episodeFileId") != old_file:
-                    trace(f"Sonarr did not answer the import ({type(e).__name__}), but the episode has its new file: imported")
-                    return
-                if attempt == IMPORT_ASKS:
-                    raise RuntimeError(f"Sonarr did not answer the import {IMPORT_ASKS} times ({no_credentials(str(e))})") from e
-                trace(f"Sonarr did not answer the import ({type(e).__name__}): asked again ({attempt + 1} of {IMPORT_ASKS})")
-                continue
-            # Sonarr refused it (500: "database is locked" while it is busy; by mj23au, #10): StartCommand queued
-            # nothing, so asking again cannot import twice
-            if r.status_code >= 500 and attempt < IMPORT_ASKS:
-                trace(f"Sonarr refused the import ({r.status_code}): asked again ({attempt + 1} of {IMPORT_ASKS})")
-                time.sleep(IMPORT_RETRY_WAIT)
-                continue
-            break
-        r.raise_for_status()
-        trace(f"Sonarr's import asked (command {r.json().get('id')}), moving {len(files)} file{'s' if len(files) != 1 else ''}{', replacing its file' if replace else ''}")
-        wait_for_import(ep, r.json().get("id"), old_file)
 
 
 IMPORT_WAIT, IMPORT_POLL = 300, 3  # seconds
 IMPORT_ASKS, IMPORT_RETRY_WAIT = 3, 60  # an import Sonarr does not answer: asked so many times, a minute apart
 IMPORT_LOCKS: dict[str, threading.Lock] = {}  # by Sonarr URL
+
+
+class NoNewFile(RuntimeError):
+    """Sonarr's import command ended "completed", yet the episode has no new file."""
 
 
 def wait_for_import(ep: dict, command_id: int | None, old_file: int | None) -> None:
@@ -2263,7 +2277,7 @@ def wait_for_import(ep: dict, command_id: int | None, old_file: int | None) -> N
     now = sonarr_get(f"episode/{ep['id']}")
     trace(f"Sonarr's import done: {command.get('message') or 'completed'}; episode file {now.get('episodeFileId')}")
     if not now.get("hasFile") or now.get("episodeFileId") == old_file:
-        raise RuntimeError(f"Sonarr finished the import but the episode has no new file: {command.get('message') or 'see Activity in Sonarr'}")
+        raise NoNewFile(f"Sonarr finished the import but the episode has no new file: {command.get('message') or 'see Activity in Sonarr'}")
 
 
 seen_lock = threading.Lock()
