@@ -2097,3 +2097,20 @@ def test_a_season_missing_from_the_page_is_offered_the_show_its_titles_name(tmp_
     assert "page_suggest" not in web.probe_series(show, 1, "Has Fallen")  # the sync's own look: no searching
     with_page = web.probe_series({**show, "season_pages": {2: {"url": "https://sbs/apollo-has-fallen"}}}, 1, "Has Fallen", discover=True)
     assert with_page["page_suggest"] == {} and with_page["available"][203]["service"] == "S01E03"
+
+
+def test_a_title_close_to_two_is_the_one_without_its_own_and_a_last_part_finds_a_short_title():
+    # By mj23au: Stacey Dooley on iPlayer. "Back on the Psych Ward" fits Sonarr's "Back in the Psych Ward" and "On the
+    # Psych Ward", but the latter is iPlayer's own "On the Psych Ward": the former it is. "Investigates: Sex in Strange
+    # Places: Brazil" is Sonarr's "Brazil" by its last part; a numbered last part ("Episode 2") never is
+    from unshacklarr.web import match_by_title
+    service = [{"season": 1, "number": 17, "name": "On the Psych Ward"}, {"season": 1, "number": 18, "name": "Back on the Psych Ward"},
+               {"season": 1, "number": 5, "name": "Investigates: Sex in Strange Places: Brazil"},
+               {"season": 1, "number": 6, "name": "Investigates: Sex in Strange Places: Russia"},
+               {"season": 1, "number": 9, "name": "Rape on Trial: Episode 2"}]
+    sonarr = [{"id": 25, "seasonNumber": 0, "episodeNumber": 25, "title": "On the Psych Ward"},
+              {"id": 26, "seasonNumber": 0, "episodeNumber": 26, "title": "Back in the Psych Ward"},
+              {"id": 72, "seasonNumber": 7, "episodeNumber": 2, "title": "Brazil"}, {"id": 73, "seasonNumber": 7, "episodeNumber": 3, "title": "Russia"},
+              {"id": 99, "seasonNumber": 9, "episodeNumber": 9, "title": "Episode 2"}]
+    found = {k: m["episodeId"] for k, m in match_by_title(service, sonarr, []).items()}
+    assert found == {"S01E17": 25, "S01E18": 26, "S01E05": 72, "S01E06": 73}  # nothing for "Episode 2"

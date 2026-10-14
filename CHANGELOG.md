@@ -82,6 +82,9 @@ The new options are off until you turn them on.
 - **A separate programme the search only finds as its series** (iPlayer's Stacey Dooley) is found inside that series' episodes. (#17, by mj23au)
 - **A flat brand page without dates** (iPlayer): titles ending in another number are other episodes, no season map is
   offered against the titles, and the Source checks find episodes by title too. (#20, by mj23au)
+- **Episodes under a slightly different title** are found too: of two close titles, the one the service doesn't have
+  under its own name; a short title at the end of a longer one ("Brazil" in "Investigates: Sex in Strange Places:
+  Brazil"). (#20, by mj23au)
 - **Pausing a job waiting for its download slot** no longer blocks every download after it until a restart.
 - **The diagnostic** leaves out your other Sonarrs' and servers' addresses, your folders and your backup account.
 - **Lighter on the server and the phone:** a single series checked alone, a server that is down, and the pages

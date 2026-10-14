@@ -2964,12 +2964,21 @@ def match_by_title(service_eps: list[dict], sonarr_eps: list[dict], tmdb_eps: li
     keys_by_name: dict[str, set] = {}
     for t in service_eps:
         keys_by_name.setdefault(usable_title(t.get("name")), set()).add(key(t))
+    exact: dict[int, set] = {}  # a Sonarr episode -> the service's names that are its very title
+    for title, id_ in named:
+        if title in keys_by_name:
+            exact.setdefault(id_, set()).add(title)
     found: dict[str, list] = {}
     for t in service_eps:
         name = usable_title(t.get("name"))
         if not name or len(keys_by_name[name]) > 1:
             continue
         ids = {id_ for other, id_ in named if same_title(name, other)}
+        if len(ids) > 1:
+            # one that has its very title elsewhere on the service is that one, not this: iPlayer's "Back on the
+            # Psych Ward" fits Sonarr's "Back in the Psych Ward" and "On the Psych Ward", the latter its own S01E17
+            # (by mj23au)
+            ids = {i for i in ids if not (exact.get(i) and name not in exact[i])}
         if len(ids) == 1:
             found.setdefault(key(t), []).append((t.get("part"), ids.pop(), t.get("name")))
     matches = {}
@@ -2979,7 +2988,25 @@ def match_by_title(service_eps: list[dict], sonarr_eps: list[dict], tmdb_eps: li
     claims: dict[int, int] = {}
     for m in matches.values():
         claims[m["episodeId"]] = claims.get(m["episodeId"], 0) + 1
-    return {k: m for k, m in matches.items() if claims[m["episodeId"]] == 1}  # one Sonarr episode, two of theirs: neither
+    matches = {k: m for k, m in matches.items() if claims[m["episodeId"]] == 1}  # one Sonarr episode, two of theirs: neither
+    # Left over: Sonarr's title as the last part of the service's ("Brazil" for iPlayer's "Investigates: Sex in
+    # Strange Places: Brazil"), when that part is the whole of one Sonarr title still unmatched, no number in it, and
+    # no other service title ends so (by mj23au)
+    taken = {m["episodeId"] for m in matches.values()}
+    tails: dict[int, list] = {}
+    for t in service_eps:
+        if key(t) in matches or ":" not in str(t.get("name") or ""):
+            continue
+        tail = usable_title(str(t["name"]).rsplit(":", 1)[1])
+        if not tail or re.search(r"\d", tail):
+            continue
+        ids = {id_ for title, id_ in named if title == tail and id_ not in taken}
+        if len(ids) == 1:
+            tails.setdefault(ids.pop(), []).append(t)
+    for id_, ts in tails.items():
+        if len({key(t) for t in ts}) == 1:
+            matches[key(ts[0])] = {"episodeId": id_, "name": str(ts[0].get("name") or "")[:300].rstrip()}
+    return matches
 
 
 def list_titles(show: dict) -> list[dict]:
