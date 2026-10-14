@@ -153,7 +153,7 @@ async function openBulk() {
   const todo = S.series.filter((s) => !S.config.series[s.tvdbId]?.service && s.monitored && s.status !== "ended"
     && !S.config.hidden_series.includes(s.tvdbId) && s.tmdbId);
   const rows = todo.map((s) => {
-    const li = el("li", {}, el("img", { alt: "", loading: "lazy", src: s.poster || "" }),
+    const li = el("li", {}, el("img", { alt: "", loading: "lazy", src: posterSrc(s.poster, s.title), onerror: posterFail(s.title) }),
       el("div", {}, el("b", { textContent: s.title }), el("div", { className: "opts" }, loading("Looking on TMDB…"))));
     li.dataset.tvdb = s.tvdbId;
     return li;

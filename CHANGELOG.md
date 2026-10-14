@@ -83,6 +83,7 @@ The new options are off until you turn them on.
 - **A season the numbering gives another one** is no longer asked by number for Sonarr's season of the same number
   (Koh-Lanta's 2023 episodes against MyTF1's All Stars).
 - **Save shows** as soon as a pasted link picks the series' service.
+- **A series without a poster** shows its initials instead of a broken image (Schedule, Activity, the series page). (#22, by mj23au)
 
 ## [1.4.0] - 2026-10-07
 
