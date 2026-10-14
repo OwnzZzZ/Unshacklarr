@@ -90,7 +90,8 @@ function renderInbox(animate = false) {
   empty.innerHTML = `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${INBOX_ICONS.info}<path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg><p>All quiet. Downloads, failures and anything that waits for you show up here.</p>`;
   keepPromptFocus(() => $("#inbox-list").replaceChildren(
     ...(waiting.length ? [el("div", { className: "inbox-sub", textContent: "Waiting for you" }),
-      ...waiting.map((i) => (i.action.kind === "input" ? promptBox(i.action) : actionBox({ action: i.action, service: i.action.service })))] : []),
+      ...waiting.map((i) => (i.action.kind === "input" ? promptBox(i.action) : i.action.kind === "confirm-audio" ? audioBox(i.action)
+        : actionBox({ action: i.action, service: i.action.service })))] : []),
     ...days.flatMap((d) => [el("div", { className: "inbox-sub", textContent: d.label }), ...d.groups.map((g) => inboxRow(g, n++))]),
     ...(!items.length ? [empty] : [])));
   $("#inbox-list").classList.toggle("enter", animate);
@@ -134,3 +135,19 @@ $("#inbox-clear").onclick = async () => {
   catch (e) { toast(e.message, true); }
 };
 setInterval(() => { if (!document.hidden) refreshInbox(); }, 30000);  // a tab out of sight asks nothing
+/* Add audio track, a file that doesn't say it comes from the series' service: add the audio to it anyway, or the whole episode */
+function audioBox(a) {
+  const choose = (choice) => async (e) => {
+    e.target.closest(".act-row").querySelectorAll("button").forEach((b) => { b.disabled = true; });
+    try {
+      await api(`/api/audio-upgrade/${a.episode}`, { method: "POST", body: JSON.stringify({ choice }) });
+      toast(choice === "add" ? `${a.label}: adding the audio` : `${a.label}: downloading the whole episode`);
+    } catch (err) { toast(err.message, true); }
+    refreshInbox();
+  };
+  return el("div", { className: "act-box", role: "status" }, el("b", { textContent: `Audio to add: ${a.label}` }),
+    el("span", { className: "q", textContent: a.text }),
+    el("div", { className: "act-row" },
+      el("button", { className: "btn primary", type: "button", textContent: "Add the audio", onclick: choose("add") }),
+      el("button", { className: "btn", type: "button", textContent: "Download the whole episode", onclick: choose("whole") })));
+}

@@ -414,7 +414,7 @@ def test_a_country_title_finds_its_episode_and_a_number_saying_another_finds_not
     monkeypatch.setattr(web.sonarr_sync, "sonarr_get", lambda path, **q: sonarr if path == "episode" else {})
     monkeypatch.setattr(web, "tmdb_key", lambda: "")
     found = web.probe_series({"service": "RMCP", "title": "x"}, 1)["available"]
-    assert found[13] == {"service": "S17E02", "name": "Mali", "match": "title"}  # same title, whatever the number
+    assert found[13] == {"service": "S17E02", "name": "Mali", "match": "title", "same": True}  # same title, whatever the number
     assert found[11]["service"] == "S01E01"  # "Japon" both sides
     assert found[32]["service"] == "S03E02"  # no title to say otherwise: its number
     assert not ({99, 98} & set(found))  # "France" names two of Sonarr's: none is picked
@@ -460,7 +460,7 @@ def test_a_service_naming_episodes_in_another_language_is_matched_through_tmdb(t
     monkeypatch.setattr(web, "tmdb_key", lambda: "key")
     monkeypatch.setattr(web, "tmdb_episodes", lambda tmdb_id: tmdb)
     found = web.probe_series(show, 1)["available"]
-    assert found[202] == {"service": "S02E02", "name": "L'Université martienne", "match": "title"}  # its French name on TMDB
+    assert found[202] == {"service": "S02E02", "name": "L'Université martienne", "match": "title", "same": True}  # its French name on TMDB
     swapped = [{**t, "number": 5 - t["number"]} if t["season"] == 2 else t for t in service]  # the service's order reversed
     monkeypatch.setattr(web.UNSHACKLE, "call", lambda method, path, **k: {"titles": swapped, "services": [{"tag": "DSNP", "cli_params": []}]})
     found = web.probe_series(show, 1)["available"]
@@ -1789,6 +1789,39 @@ def test_a_series_with_its_own_schedule_shows_that_one_only(monkeypatch):
         query = {"start": "2026-10-12", "days": "1"}
     shown = json.loads(asyncio.run(web.calendar(Request())).body)
     assert sorted(e["id"] for e in shown) == [3, 5]
+def test_a_check_of_chosen_series_leaves_the_others_finds(tmp_path, monkeypatch):
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    sync = web.sonarr_sync
+    ladder = {"name": "HEVC first", "steps": [{"codec": "HEVC", "range": "SDR", "min": 1080, "max": 1080},
+                                              {"codec": "AVC", "range": "SDR", "min": 1080, "max": 1080}]}
+    (tmp_path / "config.yaml").write_text("series:\n  1: {service: X, title: a, ladder: HEVC first}\n  2: {service: X, title: b, ladder: HEVC first}\n")
+    config = sync.read_file()
+    config["quality_ladders"] = [ladder]
+    monkeypatch.setattr(sync, "read_file", lambda: config)
+    series = {1: {"id": 7, "tvdbId": 1, "title": "One"}, 2: {"id": 8, "tvdbId": 2, "title": "Two"}}
+    avc = {"resolution": "1920x1080", "videoCodec": "h264"}
+    monkeypatch.setattr(sync, "sonarr_series", lambda wanted: series)
+    monkeypatch.setattr(sync, "sonarr_get", lambda path, **p: [{"id": p["seriesId"], "seasonNumber": 1, "episodeNumber": 1, "hasFile": True,
+                        "episodeFileId": 70 + p["seriesId"], "episodeFile": {"id": 70 + p["seriesId"], "mediaInfo": avc}}])
+    monkeypatch.setattr(sync, "download_request", lambda show, config, wanted, out: {"service": "X", "title_id": "t", "wanted": [wanted]})
+    asked = []
+    monkeypatch.setattr(sync, "list_tracks", lambda show, config, request, ladder: asked.append(show["title"]) or
+                        [{"title": {"season": 1, "number": 1}, "video": [{"height": 1080, "codec": "HEVC", "range": "SDR"}]}])
+    monkeypatch.setattr(web, "UPGRADE_PAUSE", 0)
+    web.scan_upgrades()
+    first = web.read_json(web.UPGRADES_FILE, {})
+    assert asked == ["a", "b"] and {i["tvdbId"] for i in first["items"]} == {1, 2}
+    web.scan_upgrades("", {2})  # asked afresh although the answer is kept; series 1 is not asked and stays listed
+    after = web.read_json(web.UPGRADES_FILE, {})
+    assert asked == ["a", "b", "b"] and {i["tvdbId"] for i in after["items"]} == {1, 2} and after["checked"] == first["checked"]
+    assert list(after["series_checked"]) == ["2"]  # its card says when it was checked on its own
+    assert first["scanned"] == [1, 2] and after["scanned"] == [1, 2]  # Episodes goes by Upgrades for these only
+    web.scan_upgrades()
+    assert web.read_json(web.UPGRADES_FILE, {})["series_checked"] == {}  # a full check: the header's date holds for all
 
 
 def test_tvdb_titles_keep_only_true_translations(tmp_path, monkeypatch):
@@ -1817,6 +1850,279 @@ def test_tvdb_titles_keep_only_true_translations(tmp_path, monkeypatch):
     monkeypatch.setattr(web.time, "sleep", lambda s: None)
     shows["fra"] = [episode(1, 1, None)]  # SkyHook answering without its titles: asked once more, nothing kept
     assert web.tvdb_titles(447183) == {} and asked[-2:] == [asked[-1]] * 2 and "447183:fra:skyhook" not in web.read_json(web.TVDB_TITLES, {})
+
+
+def test_upgrades_ask_the_service_for_the_episode_its_title_found():
+    from unshacklarr import web
+    # 24 Hours in Police Custody: Channel 4 numbers apart, its listing kept by Episodes (or the sync)
+    show = {"service": "ALL4", "title": "https://c4/24-hours"}
+    serie = {"tvdbId": 286362}
+    lists = {"286362": {"service": "ALL4", "title": "https://c4/24-hours", "available": {
+        "501": {"service": "S02E10", "name": "A Moment of Madness", "match": "title", "same": True},     # Sonarr's S05E01
+        "13": {"service": "S04E01", "name": "The Murder of Rikki Neave - Part 1", "match": "title", "same": True},  # Sonarr's S00E13
+        "601": {"service": "S06E01", "name": "Sex and Corruption", "match": "title", "same": True},
+        "801": {"service": "S03E02", "name": "The Secret Network: Part One", "match": "title"}}}}  # close, not the very title
+    ep = lambda id_, s, n: {"id": id_, "seasonNumber": s, "episodeNumber": n}
+    assert web.upgrade_number(lists, serie, show, ep(501, 5, 1)) == "S02E10"  # found by its title, under another number
+    assert web.upgrade_number(lists, serie, show, ep(801, 8, 1)) == "S08E01"  # a close title only: by its number (#12)
+    assert web.upgrade_number(lists, serie, show, ep(401, 4, 1)) is None  # its number is another episode's: not asked
+    assert web.upgrade_number(lists, serie, show, ep(601, 6, 1)) == "S06E01"
+    assert web.upgrade_number(lists, serie, show, ep(701, 7, 2)) == "S07E02"  # nothing says otherwise: its number
+    assert web.upgrade_number({}, serie, show, ep(401, 4, 1)) == "S04E01"  # no listing: as before
+    other = {"286362": {**lists["286362"], "title": "https://c4/another"}}
+    assert web.upgrade_number(other, serie, show, ep(401, 4, 1)) == "S04E01"  # a listing of another URL: as before
+
+
+def test_a_diagnostic_shows_no_address_folder_or_account(tmp_path, monkeypatch):
+    # Pasted in a public issue: the other Sonarrs' and servers' addresses, the S3 account and folders stay out
+    import json
+    from unshacklarr import web
+    monkeypatch.setattr(web.sonarr_sync, "RUNS_DIR", tmp_path)
+    (tmp_path / "r1.json").write_text(json.dumps({"tvdbId": 1, "series": "Show", "sxxeyy": "S01E01",
+                                                   "setup": {"via": "nas (10.0.0.5)"}}))
+    config = {"series": {}, "settings": {"sonarrs": [{"name": "sonarr-4k", "url": "https://sonarr4k.example.org"}],
+                                         "backends": [{"name": "nas", "url": "http://10.0.0.5:8786"}],
+                                         "backup_remote_user": "AKIAIOSFODNN7EXAMPLE", "backup_remote_bucket": "my-bucket",
+                                         "downloads": "/data/downloads", "library_4k_root": "/media/4k", "country": "GB"}}
+    monkeypatch.setattr(web, "read_config", lambda: config)
+    monkeypatch.setattr(web, "public_config", lambda c: c)
+    text = web.diagnostic("r1")
+    for private in ("sonarr4k.example.org", "10.0.0.5", "AKIA", "my-bucket", "/data/downloads", "/media/4k"):
+        assert private not in text, private
+    assert "sonarr-4k" in text and '"nas"' in text and "GB" in text
+
+
+
+def test_an_unreachable_serve_is_said_at_once_for_a_minute(tmp_path):
+    from unshacklarr.backend import Unshackle, UnshackleError
+    serve, asked = Unshackle(tmp_path), []
+
+    def call(method, path, **kw):
+        asked.append(path)
+        raise UnshackleError("unshackle serve is unreachable at http://nas:8786: timed out")
+    serve.call = call
+    for _ in range(3):  # the page's state asks three times: the connection is waited for once
+        assert _raises(serve.services, UnshackleError)
+    assert asked == ["/api/services"]
+    serve.configure({})  # settings saved: asked again at once
+    assert _raises(serve.services, UnshackleError) and len(asked) == 2
+
+
+def test_sonarr_specials_are_found_in_the_services_seasons_by_title_and_part():
+    from unshacklarr.web import match_by_title, same_title
+    # 24 Hours in Police Custody: TVDB keeps the new episodes as specials, "(1)" and "(2)"; Channel 4 numbers them
+    # in seasons of its own, "- Part 1" and "- Part 2"
+    service = [{"season": 4, "number": 21, "name": "The Ambush - Part 1"}, {"season": 4, "number": 22, "name": "The Ambush - Part 2"},
+               {"season": 5, "number": 9, "name": "Burying Horror"}, {"season": 4, "number": 16, "name": "The Secret Network"}]
+    sonarr = [{"id": 45, "seasonNumber": 0, "episodeNumber": 45, "title": "The Ambush (1)", "airDate": "2026-08-30"},
+              {"id": 46, "seasonNumber": 0, "episodeNumber": 46, "title": "The Ambush (2)", "airDate": "2026-09-06"},
+              {"id": 42, "seasonNumber": 0, "episodeNumber": 42, "title": "Burying Horror", "airDate": "2026-01-27"},
+              {"id": 40, "seasonNumber": 0, "episodeNumber": 40, "title": "The Secret Network", "airDate": "2026-01-13"}]
+    found = match_by_title(service, sonarr, [])
+    assert {k: m["episodeId"] for k, m in found.items()} == {"S04E21": 45, "S04E22": 46, "S05E09": 42, "S04E16": 40}
+    assert not same_title("a family vendetta part 2", "a family vendetta part 1")  # close, but another part
+
+
+def test_a_year_in_brackets_is_not_a_part():
+    from unshacklarr.web import plain_title, same_title
+    assert plain_title("The Ambush (2)") == "the ambush part 2"
+    assert plain_title("Christmas Special (2023)") == "christmas special 2023"  # a year, not part 2023
+    assert same_title(plain_title("Christmas Special (2023)"), plain_title("Christmas Special 2023"))
+
+
+def test_the_library_folders_are_browsed_and_checked(tmp_path, monkeypatch):
+    # Add audio track: folders listed (names only, no file), and a real file of Sonarr's looked for with the two roots
+    from unshacklarr import web
+    (tmp_path / "tv" / "Show").mkdir(parents=True)
+    (tmp_path / "tv" / "Show" / "S01E01.mkv").write_bytes(b"x")
+    (tmp_path / "tv" / ".hidden").mkdir()
+    listed = web.local_dirs(str(tmp_path / "tv"))
+    assert listed["dirs"] == [str(tmp_path / "tv" / "Show")] and listed["parent"] == str(tmp_path)
+    assert _raises(lambda: web.local_dirs("tv")) and _raises(lambda: web.local_dirs("/a/../b"))
+    series = {1: {"id": 7, "path": "/data/tv/Show", "statistics": {"episodeFileCount": 1}}}
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_series", lambda wanted: series)
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_get", lambda path, **p: [{"path": "/data/tv/"}] if path == "rootfolder"
+                        else [{"path": "/data/tv/Show/S01E01.mkv"}])
+    asked = []
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_get", lambda path, **p: asked.append((path, p)) or
+                        {"parent": "/", "directories": [{"name": "tv", "path": "/data/tv/"}]})
+    assert web.sonarr_dirs("/data") == {"path": "/data", "parent": "/", "dirs": ["/data/tv"]}
+    assert asked[0][0] == "filesystem?path=%2Fdata"  # Sonarr's own folder browser, as it sees them
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_get", lambda path, **p: [{"path": "/data/tv/"}] if path == "rootfolder"
+                        else [{"path": "/data/tv/Show/S01E01.mkv"}])
+    ok = web.library_check("/data/tv", str(tmp_path / "tv"))
+    assert ok["roots"] == ["/data/tv"] and ok["ok"] is True and ok["local_path"] == str(tmp_path / "tv" / "Show" / "S01E01.mkv")
+    missed = web.library_check("/data/tv", "/nowhere")
+    assert missed["ok"] is False and missed["guess"] is None  # nowhere mounted holds it
+    locked = tmp_path / "locked"
+    locked.mkdir()
+    locked.chmod(0)  # a mount it may not read (/boot/efi on a CI runner): passed over, not an error
+    monkeypatch.setattr(web, "LIBRARY_GUESSES", [str(locked)])
+    assert web.library_check("/data/tv", "/nowhere")["guess"] is None
+    locked.chmod(0o700)
+    monkeypatch.setattr(web, "LIBRARY_GUESSES", [str(tmp_path / "tv")])  # the library mounted there: both folders found
+    assert web.library_check("/data/tv", "/nowhere")["guess"] == {"sonarr_root": "/data/tv", "local_root": str(tmp_path / "tv")}
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_get", lambda path, **p: [{"path": "/Syno/Séries/"}, {"path": "/Syno/Dessins Animés/"}]
+                        if path == "rootfolder" else [{"path": "/data/tv/Show/S01E01.mkv"}])
+    assert web.library_check("", "")["common"] == "/Syno"  # several root folders: the one holding them all
+    assert "No series" in web.library_check("/other", "/x")["why"]
+
+
+def test_another_sonarr_reads_its_own_library(monkeypatch):
+    from unshacklarr import web
+    sync = web.sonarr_sync
+    monkeypatch.setitem(sync.SETTINGS, "library_sonarr_root", "/tv")
+    monkeypatch.setitem(sync.SETTINGS, "library_local_root", "/mnt/tv")
+    four_k = {"name": "sonarr-4k", "library_sonarr_root": "/tv4k", "library_local_root": "/mnt/tv4k"}
+    assert str(sync.library_file("/tv/Show/a.mkv")) == "/mnt/tv/Show/a.mkv"
+    with sync.on_instance(four_k):
+        assert str(sync.library_file("/tv4k/Show/a.mkv")) == "/mnt/tv4k/Show/a.mkv"
+    with sync.on_instance({"name": "sonarr-2", "library_sonarr_root": "", "library_local_root": ""}):
+        assert str(sync.library_file("/tv/Show/a.mkv")) == "/mnt/tv/Show/a.mkv"  # none of its own: the main one's
+    assert _raises(lambda: web.check_library({"library_sonarr_root": "/tv4k"}, "sonarr-4k"))  # both or neither
+
+
+def test_the_bell_answers_for_audio_from_another_source(tmp_path, monkeypatch):
+    # Add audio track, a file from another source: added anyway, or the whole episode; once, then nothing waits
+    import asyncio, json
+    from unshacklarr import web
+    sync = web.sonarr_sync
+    monkeypatch.setattr(sync, "UPGRADES_FILE", tmp_path / "upgrades.json")
+    monkeypatch.setattr(sync, "inbox_resolve", lambda key: None)
+    started, threads = [], []
+    monkeypatch.setattr(web, "run_sync", lambda ids, **kw: started.append((ids, kw)))
+    monkeypatch.setattr(web.threading, "Thread", lambda target, args, daemon: type("T", (), {"start": lambda self: threads.append(args)})())
+
+    class Request:
+        def __init__(self, choice): self.match_info, self.choice = {"episode_id": "205"}, choice
+        async def json(self): return {"choice": self.choice}
+        can_read_body = True
+    monkeypatch.setattr(web, "json_object", lambda request: request.json())
+    sync.UPGRADES_FILE.write_text(json.dumps({"205": {"want": "fr", "asked": "2026-10-13T10:00:00+00:00"}}))
+    asyncio.run(web.confirm_audio(Request("add")))
+    assert threads == [(205, "fr", True)] and "asked" not in json.loads(sync.UPGRADES_FILE.read_text())["205"]
+    assert _raises(lambda: asyncio.run(web.confirm_audio(Request("whole"))))  # answered already: nothing waits
+    sync.UPGRADES_FILE.write_text(json.dumps({"205": {"want": "fr", "asked": "x"}}))
+    asyncio.run(web.confirm_audio(Request("whole")))
+    assert started == [([205], {"replace": True, "kind": "upgrade"})]
+
+
+def test_a_flat_brand_page_is_matched_by_title_and_offered_no_season_map(tmp_path, monkeypatch):
+    # By mj23au: Stacey Dooley on iPlayer (b048vy8l) is one flat page, 27 unnumbered one-offs as S01 and three as S02,
+    # with no dates; Sonarr has ten seasons. The two-part titles differ only by their number (0.96 alike), the latest
+    # seasons paired in order (9 as 1, 10 as 2) would send S10E01 to a 2014 programme, and the Source checks looked
+    # by number only
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    names = {1: "Rape on Trial: Episode 1", 2: "Rape on Trial: Episode 2", 3: "Border Wars", 21: "Stalkers: Episode 1",
+             22: "Stalkers: Episode 2", 26: "Meet the Shoplifters", 27: "Fallen Women"}
+    service = [{"type": "episode", "season": 1, "number": n, "name": t, "date": None} for n, t in names.items()]
+    service += [{"type": "episode", "season": 2, "number": n, "name": t, "date": None}
+                for n, t in ((1, "Giving Up My Baby"), (2, "Young, Bright and on the Right"), (3, "Kids Selling Sex"))]
+    ep = lambda id_, s, n, title, aired: {"id": id_, "seasonNumber": s, "episodeNumber": n, "title": title, "airDateUtc": aired, "hasFile": False}
+    sonarr = [ep(81, 8, 1, "Stalkers: Episode 1", "2025-02-01T21:00:00Z"), ep(82, 8, 2, "Stalkers: Episode 2", "2025-02-08T21:00:00Z"),
+              ep(91, 9, 1, "Rape on Trial: Episode 1", "2025-11-01T21:00:00Z"), ep(92, 9, 2, "Rape on Trial: Episode 2", "2025-11-08T21:00:00Z"),
+              ep(93, 9, 3, "Meet the Shoplifters", "2026-01-10T21:00:00Z"), ep(101, 10, 1, "Fallen Women", "2026-09-20T21:00:00Z")]
+    monkeypatch.setattr(web.UNSHACKLE, "call", lambda method, path, **k: {"titles": service, "services": [{"tag": "iP", "cli_params": []}]})
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_get", lambda path, **q: sonarr if path == "episode" else {})
+    monkeypatch.setattr(web, "tmdb_key", lambda: "")
+    found = web.probe_series({"service": "iP", "title": "https://www.bbc.co.uk/iplayer/episodes/b048vy8l"}, 1)
+    av = found["available"]
+    assert {i: av[i]["service"] for i in (81, 82, 91, 92, 93, 101)} == {81: "S01E21", 82: "S01E22", 91: "S01E01", 92: "S01E02",
+                                                                       93: "S01E26", 101: "S01E27"}
+    assert found["season_map"] == {}  # 9 as 1 and 10 as 2 is what the titles say it isn't
+    assert web.suggest_season_map([{"season": 9, "air_date": "2025-11-01"}, {"season": 10, "air_date": "2026-09-20"}],
+                                  service) == {10: 2, 9: 1}  # what was offered: the order fallback, kept for others
+    checks = {c["sxxeyy"]: (c["service"], c["found"]) for c in found["checks"]}
+    assert checks["S10E01"] == ("S01E27", True) and checks["S09E02"] == ("S01E02", True)  # by title, as the Episodes tab
+    assert not web.same_title("rape on trial episode 1", "rape on trial episode 2")
+    assert not web.same_title("christmas special 2023", "christmas special 2024")
+    assert web.same_title("the ambush part 2", "the ambush part 2") and web.same_title("fallen women", "fallen women")
+
+
+def test_a_season_on_a_page_of_its_own_is_listed_from_there(tmp_path, monkeypatch):
+    # By mj23au: Has Fallen on SBS. Each page is listed for its own season; S02 isn't looked for on Paris's page (nor
+    # offered a season map for it), and is found on Apollo's as its S01
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    listing = {"https://sbs/paris-has-fallen": [{"type": "episode", "season": 1, "number": n, "name": f"Episode {n}"} for n in range(1, 9)],
+               "https://sbs/apollo-has-fallen": [{"type": "episode", "season": 1, "number": n, "name": f"Episode {n}"} for n in range(1, 9)]}
+    monkeypatch.setattr(web, "list_titles", lambda show: listing[show["title"]])
+    ep = lambda s, n: {"id": s * 100 + n, "seasonNumber": s, "episodeNumber": n, "title": f"{'Paris' if s == 1 else 'Apollo'} Has Fallen ({n})",
+                       "airDateUtc": f"202{4 + s}-0{n % 9 + 1}-01T20:00:00Z", "hasFile": False}
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_get", lambda path, **q: [ep(s, n) for s in (1, 2) for n in range(1, 9)] if path == "episode" else {})
+    monkeypatch.setattr(web, "tmdb_key", lambda: "")
+    show = {"service": "SBS", "title": "https://sbs/paris-has-fallen", "season_pages": {2: {"url": "https://sbs/apollo-has-fallen"}}}
+    found = web.probe_series(show, 1, "Has Fallen")
+    assert found["available"][103]["service"] == "S01E03" and found["available"][203]["service"] == "S01E03"
+    assert found["season_map"] == {} and found["pages"]["2"]["count"] == 8
+    alone = web.probe_series({k: v for k, v in show.items() if k != "season_pages"}, 1, "Has Fallen")
+    assert 203 not in alone["available"]  # without it, S02 was looked for on Paris's page: not there
+    assert web.check_season_pages({"2": {"url": " https://sbs/apollo "}, 3: {"url": "u", "season": "1"}}, "x") == \
+        {2: {"url": "https://sbs/apollo"}, 3: {"url": "u"}}
+    import pytest
+    with pytest.raises(web.web.HTTPBadRequest):
+        web.check_season_pages({2: {"url": "two words"}}, "x")
+
+
+def test_a_season_missing_from_the_page_is_offered_the_show_its_titles_name(tmp_path, monkeypatch):
+    # By mj23au: Has Fallen's S02 is titled "Apollo Has Fallen (1)…(8)" in Sonarr and isn't on Paris's page; SBS has
+    # "Apollo Has Fallen" as a show of its own, which the Episodes check offers. A season whose titles share no name
+    # (each its own) is offered nothing, and the series' own page is never offered back
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    assert web.season_stem([f"Apollo Has Fallen ({n})" for n in range(1, 9)]) == "Apollo Has Fallen"
+    assert web.season_stem(["Stalkers: Episode 1", "Stalkers: Episode 2", "Other"]) == "Stalkers"
+    assert web.season_stem(["Pilot", "The Ride", "Homecoming"]) == ""  # titles of their own
+    assert web.season_stem(["Episode 1", "Episode 2"]) == ""  # nothing left once numbered off
+    listing = {"https://sbs/paris-has-fallen": [{"type": "episode", "season": 1, "number": n, "name": f"Episode {n}"} for n in range(1, 9)],
+               "https://sbs/apollo-has-fallen": [{"type": "episode", "season": 1, "number": n, "name": f"Episode {n}"} for n in range(1, 9)]}
+    searched = []
+
+    class Serve:
+        def call(self, method, path, json=None):
+            searched.append(json["query"])
+            return {"results": [{"id": "x", "url": "https://sbs/apollo-has-fallen", "title": "Apollo Has Fallen"},
+                                {"id": "y", "url": "https://sbs/olympus", "title": "Olympus Has Fallen"}]}
+    monkeypatch.setattr(web, "list_titles", lambda show: listing[show["title"]])
+    monkeypatch.setattr(web.sonarr_sync, "backend_for", lambda tag, config=None: Serve())
+    ep = lambda s, n, t: {"id": s * 100 + n, "seasonNumber": s, "episodeNumber": n, "title": t, "airDateUtc": f"202{4 + s}-01-0{n}T20:00:00Z", "hasFile": False}
+    every = [ep(1, n, f"Paris Has Fallen ({n})") for n in range(1, 9)] + [ep(2, n, f"Apollo Has Fallen ({n})") for n in range(1, 9)]
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_get", lambda path, **q: every if path == "episode" else {})
+    monkeypatch.setattr(web, "tmdb_key", lambda: "")
+    show = {"service": "SBS", "title": "https://sbs/paris-has-fallen"}
+    found = web.probe_series(show, 1, "Has Fallen", discover=True)
+    assert found["page_suggest"] == {"2": {"url": "https://sbs/apollo-has-fallen", "name": "Apollo Has Fallen", "count": 8}}
+    assert searched == ["Apollo Has Fallen"]  # S01, found on its page, is not searched for
+    assert "page_suggest" not in web.probe_series(show, 1, "Has Fallen")  # the sync's own look: no searching
+    with_page = web.probe_series({**show, "season_pages": {2: {"url": "https://sbs/apollo-has-fallen"}}}, 1, "Has Fallen", discover=True)
+    assert with_page["page_suggest"] == {} and with_page["available"][203]["service"] == "S01E03"
+
+
+def test_a_title_close_to_two_is_the_one_without_its_own_and_a_last_part_finds_a_short_title():
+    # By mj23au: Stacey Dooley on iPlayer. "Back on the Psych Ward" fits Sonarr's "Back in the Psych Ward" and "On the
+    # Psych Ward", but the latter is iPlayer's own "On the Psych Ward": the former it is. "Investigates: Sex in Strange
+    # Places: Brazil" is Sonarr's "Brazil" by its last part; a numbered last part ("Episode 2") never is
+    from unshacklarr.web import match_by_title
+    service = [{"season": 1, "number": 17, "name": "On the Psych Ward"}, {"season": 1, "number": 18, "name": "Back on the Psych Ward"},
+               {"season": 1, "number": 5, "name": "Investigates: Sex in Strange Places: Brazil"},
+               {"season": 1, "number": 6, "name": "Investigates: Sex in Strange Places: Russia"},
+               {"season": 1, "number": 9, "name": "Rape on Trial: Episode 2"}]
+    sonarr = [{"id": 25, "seasonNumber": 0, "episodeNumber": 25, "title": "On the Psych Ward"},
+              {"id": 26, "seasonNumber": 0, "episodeNumber": 26, "title": "Back in the Psych Ward"},
+              {"id": 72, "seasonNumber": 7, "episodeNumber": 2, "title": "Brazil"}, {"id": 73, "seasonNumber": 7, "episodeNumber": 3, "title": "Russia"},
+              {"id": 99, "seasonNumber": 9, "episodeNumber": 9, "title": "Episode 2"}]
+    found = {k: m["episodeId"] for k, m in match_by_title(service, sonarr, []).items()}
+    assert found == {"S01E17": 25, "S01E18": 26, "S01E05": 72, "S01E06": 73}  # nothing for "Episode 2"
 
 
 def test_season_titles_and_finales_reach_the_page():
@@ -1851,3 +2157,4 @@ def test_words_alike_in_two_languages_do_not_make_a_service_speak_ours(tmp_path,
     found = web.probe_series({"service": "DSNP", "title": "x"}, 1)["available"]
     assert found[102] == {"service": "S01E02", "name": "Aménagements"}  # by its number: no longer "not on Disney+"
     assert len(found) == 23
+

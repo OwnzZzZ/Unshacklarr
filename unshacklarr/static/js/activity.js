@@ -2,6 +2,8 @@
    its steps, a bar per track and why it ended, with Unshackle's raw output (xterm) folded underneath. */
 const TERM_COLS = 110;
 const OUTCOME = { running: "Running", downloaded: "Downloaded", failed: "Failed", kept: "Kept", import: "Import needed", interrupted: "Interrupted", stopped: "Stopped", unavailable: "Not out yet", cancelled: "Cancelled" };
+/* A separate programme no search found has aired: it is not on the service, rather than not out yet */
+const outcomeOf = (c) => c.outcome === "unavailable" && c.notOn ? `Not on ${c.notOn}` : OUTCOME[c.outcome] || c.outcome;
 const KIND = { auto: "automatic sync", burst: "release time", manual: "started by hand", retry: "retried by hand", upgrade: "better language" };
 let term = null, termFit = null, termSocket = null, termFor = null, runsShown = 50, runsTimer = null;
 let runCards = [], picked_run = null, conFilter = "all";
@@ -37,7 +39,10 @@ async function openActivity() {
   api("/api/leftovers").then((r) => { $("#con-left-n").textContent = r.items.length ? `(${r.items.length})` : ""; }).catch(() => {});
   if ($("#tab-log").hidden) return;
   followLive();
-  runsTimer = setTimeout(openActivity, liveFeed ? 15000 : runCards.some(isLive) ? 2000 : 15000);  // without the feed: polling
+  runsTimer = setTimeout(activityLater, liveFeed ? 15000 : runCards.some(isLive) ? 2000 : 15000);  // without the feed: polling
+}
+function activityLater() {  // the history asked again, not while the tab is out of sight (left open for days)
+  if (document.hidden) runsTimer = setTimeout(activityLater, 15000); else openActivity();
 }
 /* The downloads going on now, pushed by the server as they move; the whole list again when one starts or ends. */
 let liveFeed = null;
@@ -233,7 +238,7 @@ function renderJob(j) {
   const cards = el("ol", { className: "job-cards" }, ...j.cards.map((c) => {
     const live = isLive(c);
     const label = c.waiting ? "Queued" : live ? (FINISHING.has(c.step) ? { joining: "Joining parts", finishing: "Finishing", renaming: "Renaming", importing: "Importing" }[c.step]
-      : isQueued(c) ? "Waiting for a slot" : afterTracks(c) || `Downloading ${Math.round(Number(c.live?.progress) || 0)}%`) : OUTCOME[c.outcome] || c.outcome;
+      : isQueued(c) ? "Waiting for a slot" : afterTracks(c) || `Downloading ${Math.round(Number(c.live?.progress) || 0)}%`) : outcomeOf(c);
     const tone = c.waiting ? "" : live ? "now" : c.outcome === "downloaded" ? "ok" : c.outcome === "failed" ? "err" : c.outcome === "kept" || c.outcome === "import" ? "warn" : "";
     const downloading = isDownloading(c);
     const detail = downloading ? el("div", { className: "jmeta" },  // how fast, how long still: in sight, not a grey line
@@ -310,7 +315,7 @@ function listRow(c) {
     : c.outcome === "unavailable" && c.checks > 1 ? `${c.service} · checked ${c.checks} times, last ${day(started)} ${time(started)}`
     : `${day(started)} ${time(started)}${c.ended ? ` · ${duration(new Date(c.ended) - started)}` : ""}`;
   const side = isLive(c) ? (isQueued(c) ? el("span", { className: "chip", textContent: "Queued" }) : pulse())
-    : el("span", { className: `chip o-${c.outcome}`, textContent: OUTCOME[c.outcome] || c.outcome });
+    : el("span", { className: `chip o-${c.outcome}`, textContent: outcomeOf(c) });
   const row = el("button", { className: "crow" + (c.id === picked_run ? " sel" : "") + hovering(`row:${c.id}`), dataset: { hk: `row:${c.id}` }, onclick: () => pickRun(c.id) },
     thumb(`row:${c.id}`, posterOf(c)),
     el("span", {}, el("b", {}, el("span", { textContent: c.series }), el("em", { textContent: c.sxxeyy })),
@@ -419,8 +424,9 @@ $("#con-missing").onclick = showMissing;
 
 /* Upgrades: the files of the series with a quality ladder that are not on its first step, checked against the
    service's tracks (a series' episodes 10 at a time, in the background; answers kept); those it has on an earlier step are replaced. */
-let upgradeTimer = null, upgradeSkip = new Set(), upgradeSonarr = "";
-async function showUpgrades() {
+let upgradeTimer = null, upgradePick = new Set(), upgradeOpen = new Set(), upgradeSonarr = "";
+let upgradeLast = null;  // the last answer: a tick of a box draws again from it, without asking the server
+async function showUpgrades(fresh = true) {
   picked_run = "upgrades";
   clearTimeout(upgradeTimer);
   $("#con").classList.add("open");
@@ -430,42 +436,79 @@ async function showUpgrades() {
   $("#cd-foot").replaceChildren();
   let r;
   if (upgradeSonarr && !(S.config.settings.sonarrs || []).some((i) => i.name === upgradeSonarr)) upgradeSonarr = "";
-  try { r = await api(`/api/upgrades${upgradeSonarr ? `?sonarr=${encodeURIComponent(upgradeSonarr)}` : ""}`); } catch (e) { return $("#cd-main").replaceChildren(failed(e.message, showUpgrades)); }
+  if (fresh !== false || !upgradeLast) {
+    try { r = upgradeLast = await api(`/api/upgrades${upgradeSonarr ? `?sonarr=${encodeURIComponent(upgradeSonarr)}` : ""}`); } catch (e) { return $("#cd-main").replaceChildren(failed(e.message, showUpgrades)); }
+  } else r = upgradeLast;
   if (picked_run !== "upgrades") return;
-  const scan = r.scan, picked = r.items.filter((i) => !upgradeSkip.has(i.episodeId) && !i.running);
-  const check = el("button", { className: "btn" + (scan.running ? " danger" : ""), textContent: scan.running ? "Stop the check" : r.checked ? "Check again" : "Check now",
-    onclick: async (e) => {
-      e.target.disabled = true;
-      try { await api(scan.running ? "/api/upgrades/stop" : "/api/upgrades/check", { method: "POST", body: JSON.stringify({ sonarr: upgradeSonarr }) }); } catch (err) { toast(err.message, true); }
-      showUpgrades();
-    } });
+  const scan = r.scan, free = r.items.filter((i) => !i.running), picked = free.filter((i) => upgradePick.has(i.episodeId));
+  // every series, or one from its card (asked afresh); the ticks only choose what is replaced (by mj23au, #18)
+  const checkUp = async (button, only = []) => {
+    button.disabled = true;
+    try { await api(scan.running ? "/api/upgrades/stop" : "/api/upgrades/check", { method: "POST", body: JSON.stringify({ sonarr: upgradeSonarr, series: only }) }); } catch (err) { toast(err.message, true); }
+    showUpgrades();
+  };
+  // a stopped check ends the batch it is asking (up to 10 episodes of a series): said, so Stop is seen to work
+  const check = el("button", { className: "btn" + (scan.running ? " danger" : ""), disabled: !!scan.stopping,
+    textContent: scan.stopping ? "Stopping after this batch…" : scan.running ? "Stop the check" : r.checked ? "Check again" : "Check now", onclick: (e) => checkUp(e.target) });
   const go = el("button", { className: "btn primary", hidden: !picked.length || scan.running,
-    textContent: picked.length === 1 ? "Replace it" : `Replace the ${picked.length}`, onclick: async (e) => {
+    textContent: picked.length === 1 ? "Replace it" : `Replace the ${picked.length} selected`, onclick: async (e) => {
       e.target.disabled = true;
       try {
         await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: picked.map((i) => i.episodeId), replace: true, ...(upgradeSonarr ? { sonarr: upgradeSonarr } : {}) }) });
         toast(picked.length === 1 ? "1 episode queued, replacing its file" : `${picked.length} episodes queued, replacing their files`);
+        picked.forEach((i) => upgradePick.delete(i.episodeId));
         showUpgrades();
       } catch (err) { e.target.disabled = false; toast(err.message, true); }
     } });
   const state = scan.running ? `Checking ${scan.done} of ${scan.total}${scan.sonarr ? ` in ${scan.sonarr}` : ""}${scan.series ? ` · ${scan.series}` : ""}…`
     : r.checked ? `Checked ${ago(r.checked)}${r.stopped ? ", stopped before the end" : ""}${scan.errors ? ` · ${scan.errors} could not be asked` : ""}` : "Not checked yet.";
-  const rows = r.items.map((it) => {
-    const poster = posterSrc(S.series.find((x) => x.tvdbId === it.tvdbId)?.poster, it.series);
-    const box = el("input", { type: "checkbox", checked: !upgradeSkip.has(it.episodeId), disabled: it.running, ariaLabel: `Replace ${it.series} ${it.sxxeyy}`,
-      onchange: (e) => { if (e.target.checked) upgradeSkip.delete(it.episodeId); else upgradeSkip.add(it.episodeId); showUpgrades(); } });
-    return el("label", { className: "left-row up-row" }, box, el("img", { alt: "", loading: "lazy", src: poster, onerror: posterFail(it.series) }),
-      el("div", {}, el("b", { textContent: `${it.series} ${it.sxxeyy}` }),
-        el("small", { textContent: `${it.file} here${it.fileStep ? ` (step ${it.fileStep})` : " (outside the ladder)"} → ${it.better} on the service (step ${it.betterStep} of ${it.ladder})` }),
-        ...(it.running ? [el("small", { className: "left-hand", textContent: "Being replaced now" })] : [])));
+  const selAll = el("button", { className: "btn", hidden: !free.length || scan.running,
+    textContent: picked.length === free.length ? "Select none" : "Select all",
+    onclick: () => { if (picked.length === free.length) upgradePick.clear(); else free.forEach((i) => upgradePick.add(i.episodeId)); showUpgrades(false); } });
+  const bySeries = new Map();
+  for (const it of r.items) { const k = `${it.tvdbId}|${it.series}`; if (!bySeries.has(k)) bySeries.set(k, []); bySeries.get(k).push(it); }
+  const FIN = { joining: "Joining parts", finishing: "Finishing", renaming: "Renaming", importing: "Importing" };
+  const liveBy = new Map(runCards.filter((c) => isLive(c) && (c.instance || "") === upgradeSonarr).map((c) => [`${c.tvdbId}|${c.sxxeyy}`, c]));
+  const liveOf = (it) => liveBy.get(`${it.tvdbId}|${it.sxxeyy}`);  // one lookup per row, not a scan of every card
+  const stateOf = (c) => !c ? "" : c.waiting || isQueued(c) ? "Queued" : FIN[c.step] || `Downloading ${Math.round(Number(c.live?.progress) || 0)}%`;
+  const rows = [...bySeries].map(([k, eps]) => {
+    const poster = posterSrc(S.series.find((x) => x.tvdbId === eps[0].tvdbId)?.poster, eps[0].series);
+    const ids = eps.filter((i) => !i.running).map((i) => i.episodeId), n = ids.filter((id) => upgradePick.has(id)).length;
+    const all = el("input", { type: "checkbox", checked: ids.length > 0 && n === ids.length, indeterminate: n > 0 && n < ids.length, disabled: !ids.length,
+      ariaLabel: `Select every ${eps[0].series} episode`,
+      onclick: (e) => e.stopPropagation(),
+      onchange: (e) => { ids.forEach((id) => (e.target.checked ? upgradePick.add(id) : upgradePick.delete(id))); showUpgrades(false); } });
+    const busy = eps.filter((i) => i.running), queued = busy.filter((i) => { const c = liveOf(i); return !c || c.waiting || isQueued(c); }).length;
+    const busyText = [busy.length - queued && `${busy.length - queued} downloading`, queued && `${queued} queued`].filter(Boolean).join(", ");
+    const list = eps.map((it) => {
+      const box = el("input", { type: "checkbox", checked: upgradePick.has(it.episodeId), disabled: it.running, ariaLabel: `Replace ${it.series} ${it.sxxeyy}`,
+        onchange: (e) => { if (e.target.checked) upgradePick.add(it.episodeId); else upgradePick.delete(it.episodeId); showUpgrades(false); } });
+      return el("label", { className: "left-row up-row up-ep" }, box,
+        el("div", {}, el("b", { textContent: it.sxxeyy }),
+          el("small", { textContent: `${it.file} here${it.fileStep ? ` (step ${it.fileStep})` : " (outside the ladder)"} → ${it.better} on the service (step ${it.betterStep} of ${it.ladder})` }),
+          ...(it.running ? [el("small", { className: "left-hand up-live", textContent: `↓ ${stateOf(liveOf(it)) || "Being replaced now"}` })] : [])));
+    });
+    const card = el("details", { className: "up-card", open: upgradeOpen.has(k), ontoggle: (e) => { if (e.target.open) upgradeOpen.add(k); else upgradeOpen.delete(k); } },
+      el("summary", { className: "left-row up-row" }, all, thumb(`up:${eps[0].tvdbId}`, poster),  // the same image every 3 s
+        el("div", {}, el("b", { textContent: eps[0].series }),
+          el("small", { textContent: [eps.length === 1 ? "1 episode" : `${eps.length} episodes`, n && `${n} selected`, busyText,
+            r.seriesChecked?.[eps[0].tvdbId] && `checked ${ago(r.seriesChecked[eps[0].tvdbId])}`].filter(Boolean).join(" · ") }),
+          ...(busy.length ? [el("small", { className: "left-hand up-live", textContent: "↓ Replacing" })] : [])),
+        el("button", { type: "button", className: "btn small", textContent: "Check", hidden: scan.running,
+          title: `Ask the service again about ${eps[0].series}`,
+          onclick: (e) => { e.preventDefault(); e.stopPropagation(); checkUp(e.target, [eps[0].tvdbId]); } })),
+      ...list);
+    return card;
   });
   $("#cd-main").replaceChildren(el("div", { style: "display:grid;gap:14px" },
     el("div", { className: "cd-head" }, el("div", {}, el("h3", { textContent: "Upgrades" }),
       el("small", { className: "line1", textContent: "Files your quality ladder says could be better. Check now asks each service what it has, up to 10 episodes of a series at a time, and keeps each answer for the days set in Settings, Upgrades. Replace downloads the better ones over your files, even when Sonarr ranks both the same (H.264 and H.265 in 1080p)." }))),
-    ...[sonarrPicker(upgradeSonarr, (n) => { upgradeSonarr = n; upgradeSkip.clear(); showUpgrades(); }), unsetNote(upgradeSonarr)].filter(Boolean),
-    el("div", { className: "miss-bar" }, el("span", { className: "muted", textContent: state }), el("span", { className: "up-acts" }, check, go)),
+    ...[sonarrPicker(upgradeSonarr, (n) => { upgradeSonarr = n; upgradePick.clear(); upgradeOpen.clear(); showUpgrades(); }), unsetNote(upgradeSonarr)].filter(Boolean),
+    el("div", { className: "miss-bar" }, el("span", { className: "muted", textContent: state }), el("span", { className: "up-acts" }, selAll, check, go)),
     ...(rows.length ? [el("div", {}, ...rows)] : [el("p", { className: "muted", textContent: scan.running ? "Nothing better found yet." : r.checked ? "Nothing better on the services: every file is already on the best step they have." : "Check now asks each service what it has, one episode at a time." })])));
-  if (scan.running) upgradeTimer = setTimeout(() => picked_run === "upgrades" && showUpgrades(), 3000);
+  // asked again every 3 s while something runs, but not while Activity or the tab is out of sight
+  const tick = () => { if (picked_run !== "upgrades") return; if (document.hidden || $("#tab-log").hidden) upgradeTimer = setTimeout(tick, 3000); else showUpgrades(); };
+  if (scan.running || r.items.some((i) => i.running)) upgradeTimer = setTimeout(tick, 3000);
 }
 $("#con-upgrades").onclick = showUpgrades;
 
@@ -504,7 +547,8 @@ async function showStats() {
 }
 $("#con-stats").onclick = showStats;
 $("#cd-back").onclick = () => { $("#con").classList.remove("open"); picked_run = null; renderConsole(); };
-$("#con-search").oninput = renderConsole;
+let searchTimer = null;  // typed: the history filtered once the typing pauses, not at each key
+$("#con-search").oninput = () => { clearTimeout(searchTimer); searchTimer = setTimeout(renderConsole, 150); };
 document.querySelectorAll("#tab-log .con-filters button").forEach((b) => b.onclick = () => {
   conFilter = b.dataset.f;
   document.querySelectorAll("#tab-log .con-filters button").forEach((x) => x.setAttribute("aria-pressed", x === b));
@@ -643,7 +687,7 @@ function runBody(c) {
   } else {
     const note = { downloaded: ["ok", "Downloaded"], failed: ["err", "Failed"], kept: ["warn", "Sonarr kept its own file"], import: ["warn", "Downloaded, import needed"],
       stopped: ["mut", "Stopped"], interrupted: ["mut", "Interrupted: Unshacklarr stopped during it"],
-      unavailable: ["mut", "Not out yet: nothing to download"] }[c.outcome] || ["mut", c.outcome];
+      unavailable: ["mut", c.notOn ? `${outcomeOf(c)}: nothing to download` : "Not out yet: nothing to download"] }[c.outcome] || ["mut", c.outcome];
     if (c.outcome === "downloaded") {  // all went well: one quiet line, not a block
       parts.push(el("div", { className: "cd-note ok inline" }, el("b", { textContent: "✓ Imported" }),  // imported says downloaded too
         ...[c.ended && duration(new Date(c.ended) - started), c.size && size(c.size), checksNote(c)].filter(Boolean).map((t) => el("span", { textContent: t }))));

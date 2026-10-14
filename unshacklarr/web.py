@@ -24,8 +24,8 @@ import threading
 import time
 import unicodedata
 from datetime import date, datetime, timedelta, timezone
-from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from pathlib import Path, PurePosixPath
+from urllib.parse import urlencode, parse_qs, urlparse
 
 import apprise
 import requests
@@ -731,6 +731,12 @@ async def save_config(request):
             series[int(key)]["sonarrs"] = per
         if show.get("main_off") is True:  # not downloaded for the main Sonarr, only for the others
             series[int(key)]["main_off"] = True
+        if show.get("programmes") is True:  # each episode its own programme on the service: see sonarr_sync.programme_for
+            series[int(key)]["programmes"] = True
+        if pasted := check_programme_map(show.get("programme_map"), str(key)):
+            series[int(key)]["programme_map"] = pasted
+        if pages := check_season_pages(show.get("season_pages"), str(key)):
+            series[int(key)]["season_pages"] = pages
     notifications = body.get("notifications") or {}
     targets = check_targets(notifications, [t["url"] for t in sonarr_sync.notification_targets(previous["notifications"])])
     countries = [c for c in body.get("tmdb_countries") or [] if re.fullmatch(r"[A-Z]{2}", c)]
@@ -771,6 +777,36 @@ async def save_config(request):
     }
     write_config(config)
     return web.json_response(public_config(read_config()))
+
+
+def check_season_pages(given, key: str) -> dict:
+    """Seasons on a page of their own: {Sonarr season: {"url", "season": its season there, when not 1}} (by mj23au)."""
+    out = {}
+    for season, page in (given or {}).items() if isinstance(given, dict) else ():
+        url = str((page or {}).get("url") or "").strip() if isinstance(page, dict) else ""
+        try:
+            season, there = int(season), int((page or {}).get("season") or 1)
+        except (TypeError, ValueError):
+            raise web.HTTPBadRequest(text=f"Series {key}, seasons listed as separate shows: {season!r} is not a season number.") from None
+        if season < 1 or not 1 <= there <= 9999:
+            raise web.HTTPBadRequest(text=f"Series {key}, seasons listed as separate shows: season {season} or its season {there} on the show's page is not a valid number.")
+        if not url or url.startswith("-") or any(c.isspace() for c in url):
+            raise web.HTTPBadRequest(text=f"Series {key}, seasons listed as separate shows: season {season} needs one URL or ID, without spaces.")
+        out[season] = {"url": url, **({"season": there} if there != 1 else {})}
+    return out
+
+
+def check_programme_map(given, key: str) -> dict:
+    """Programme URLs pasted for episodes: {"S2026E14": "https://..."}, the code as Sonarr numbers the episode."""
+    out = {}
+    for code, url in (given or {}).items() if isinstance(given, dict) else ():
+        m, url = re.fullmatch(r"S(\d{1,4})E(\d{1,4})", str(code).strip(), re.IGNORECASE), str(url or "").strip()
+        if not m:
+            raise web.HTTPBadRequest(text=f"The programme URLs of {key}: {code!r} is not an episode like S2026E14")
+        if not url or url.startswith("-") or any(c.isspace() for c in url):
+            raise web.HTTPBadRequest(text=f"The programme URLs of {key}: give {code} one URL or ID")
+        out[f"S{int(m[1]):02}E{int(m[2]):02}"] = url
+    return out
 
 
 def check_fallback(alt: dict, known: dict | None, dl_specs: list[dict], key: str) -> dict:
@@ -887,8 +923,21 @@ def check_sonarrs(given, saved, main_url: str) -> list[dict]:
         if not str(i.get("quality_ladder") or "") and name not in saved:  # a new one: chosen, never a silent default
             raise web.HTTPBadRequest(text=f"Choose a quality ladder for {name}: a ladder, Off, or Same as each series")
         only = i.get("download_only")
+        library = check_library(i, name)
         out.append({"name": name, "url": url, "api_key": key, "downloads": folder, "quality_ladder": str(i.get("quality_ladder") or ""),
-                    "download_only": only if isinstance(only, bool) else None})
+                    "download_only": only if isinstance(only, bool) else None, **library})
+    return out
+
+
+def check_library(given: dict, who: str) -> dict:
+    """A Sonarr's library for Add audio track: its folder as that Sonarr sees it and as Unshacklarr does, both or neither."""
+    out = {}
+    for name in ("library_sonarr_root", "library_local_root"):
+        out[name] = folder = str(given.get(name) or "").strip().rstrip("/\\")
+        if folder and (not (posixpath.isabs(folder) or ntpath.isabs(folder)) or ".." in re.split(r"[\\/]", folder)):
+            raise web.HTTPBadRequest(text=f"{folder} must be a full path, from / (or a drive letter), without ..")
+    if bool(out["library_sonarr_root"]) != bool(out["library_local_root"]):
+        raise web.HTTPBadRequest(text=f"Set the library folder of {who} both as it sees it and as Unshacklarr sees it, or neither")
     return out
 
 
@@ -1144,12 +1193,11 @@ def check_settings(body: dict, previous: dict) -> dict:
     if mode not in ("redownload", "add_track"):
         raise web.HTTPBadRequest(text="Choose whether to download the episode again or to add the audio track to the existing file")
     settings["upgrade_mode"] = mode
-    for name in ("library_sonarr_root", "library_local_root"):
-        settings[name] = folder = str(body.get(name) or "").strip().rstrip("/\\")
-        if folder and (not (posixpath.isabs(folder) or ntpath.isabs(folder)) or ".." in re.split(r"[\\/]", folder)):
-            raise web.HTTPBadRequest(text=f"{folder} must be a full path, from / (or a drive letter), without ..")
-    if bool(settings["library_sonarr_root"]) != bool(settings["library_local_root"]):
-        raise web.HTTPBadRequest(text="Set the library folder both as Sonarr sees it and as Unshacklarr sees it, or neither")
+    other = str(body.get("add_track_other_source") or "ask")
+    if other not in ("ask", "add"):
+        raise web.HTTPBadRequest(text="For a file from another source, choose to be asked or to add the audio anyway")
+    settings["add_track_other_source"] = other
+    settings.update(check_library(body, "Sonarr"))
     settings["release_learn"] = body.get("release_learn") is True
     for name in ("download_from", "download_to"):
         at = str(body.get(name) or "").strip()
@@ -1452,6 +1500,8 @@ def check_upgrades(now: datetime) -> list[str]:
     days = timedelta(days=float(sonarr_sync.SETTINGS.get("upgrade_days") or 30))
     started, dropped, checked = [], [], []
     for key, w in read_json(sonarr_sync.UPGRADES_FILE, {}).items():
+        if w.get("asked"):
+            continue  # waiting for the person: add the audio to a file from another source, or not (see add_track)
         show = config["series"].get(int(w["tvdb"])) or {}
         if show.get("service") != w["service"] or not show.get("title"):
             dropped.append(key)  # another service, or none now: what was waited for there means nothing
@@ -1487,13 +1537,34 @@ def check_upgrades(now: datetime) -> list[str]:
     return started
 
 
-def add_or_download(episode_id: int, want: str) -> None:
+def add_or_download(episode_id: int, want: str, anyway: bool = False) -> None:
     try:
-        if sonarr_sync.add_track(episode_id, want):
+        if sonarr_sync.add_track(episode_id, want, anyway):
             return
     except Exception as e:  # anything unforeseen: the whole episode again, as before
         print(f"Add the audio: {type(e).__name__}: {e}", flush=True)
     run_sync([episode_id], replace=True, kind="upgrade")
+
+
+async def confirm_audio(request):
+    """The bell's answer for a file from another source: add the audio to it anyway, or download the whole episode."""
+    episode_id = int(request.match_info["episode_id"])
+    choice = (await json_object(request)).get("choice")
+    if choice not in ("add", "whole"):
+        raise web.HTTPBadRequest(text="Choose to add the audio or to download the whole episode")
+    with sonarr_sync.upgrades_lock:
+        watched = read_json(sonarr_sync.UPGRADES_FILE, {})
+        w = watched.get(str(episode_id))
+        if not w or not w.pop("asked", None):
+            sonarr_sync.inbox_resolve(f"audio:{episode_id}")
+            raise web.HTTPNotFound(text="That episode no longer waits for an answer")
+        write_atomic(sonarr_sync.UPGRADES_FILE, json.dumps(watched))
+    sonarr_sync.inbox_resolve(f"audio:{episode_id}")
+    if choice == "add":
+        threading.Thread(target=add_or_download, args=(episode_id, w["want"], True), daemon=True).start()
+    else:
+        run_sync([episode_id], replace=True, kind="upgrade")
+    return web.json_response({"ok": True})
 
 
 async def watch_upgrades():
@@ -2399,7 +2470,7 @@ def describe_episode(ep: dict, config: dict, now: datetime, all_series: bool = F
         "hasFile": ep.get("hasFile"),
         **({"finale": ep["finaleType"]} if ep.get("finaleType") else {}),  # season, series or midseason, as TVDB has it
     }
-    if not show or not show.get("service") or not show.get("title"):
+    if not show or not show.get("service") or not (show.get("title") or show.get("programmes")):
         # Sonarr's calendar: shown too, so the series can be added to Unshackle from there.
         return {**base, "managed": False} if all_series else None
     service_sxxeyy = sonarr_sync.service_episode(show, ep["seasonNumber"], ep["episodeNumber"])
@@ -2654,7 +2725,9 @@ def instances_of_series() -> dict[int, list[dict]]:
         if health.get("sonarrs", {}).get(inst["name"], {}).get("ok") is False:
             continue
         try:
-            found = on_sonarr(inst, sonarr_sync.sonarr_series, managed)
+            # its library kept an hour, as sonarrs_of_series has it: an instance lacking some series set up here
+            # (a 4K one) would otherwise be asked for its whole library again at each page load
+            found = on_sonarr(inst, sonarr_sync.sonarr_series, set())
         except requests.RequestException:
             continue
         for tvdb in managed & set(found):
@@ -2782,9 +2855,11 @@ def tmdb_episodes(tmdb_id: int) -> list[dict]:
 
 
 def plain_title(text: str) -> str:
-    """A title to compare: no accents, case, punctuation or "(1/2)"."""
+    """A title to compare: no accents, case, punctuation or "(1/2)"; TVDB's part "(2)" as the services write it, "part 2"
+    (one or two digits: "Special (2023)" is a year, left as it is)."""
     text = unicodedata.normalize("NFKD", text or "").encode("ascii", "ignore").decode().lower()
-    return re.sub(r"[^a-z0-9]+", " ", re.sub(r"\(\s*\d+\s*/\s*\d+\s*\)", "", text)).strip()
+    text = re.sub(r"\(\s*(\d{1,2})\s*\)\s*$", r" part \1", re.sub(r"\(\s*\d+\s*/\s*\d+\s*\)", "", text).rstrip())
+    return re.sub(r"[^a-z0-9]+", " ", text).strip()
 
 
 GENERIC_TITLE = re.compile(r"(tba|tbd|episode|episodio|folge|aflevering|emission)( \d+)?")  # MyTF1's "Émission 7" too
@@ -2845,14 +2920,27 @@ def tvdb_titles(tvdb_id: int) -> dict[str, str]:
     return titles
 
 
+TITLE_PART = re.compile(r"\bpart (\d+)$")
+TITLE_NUMBER = re.compile(r"(?:^|\D)(\d+)$")  # a plain title's last number: "… part 2", "… episode 2", "… 2"
+
+
 def same_title(a: str, b: str) -> bool:
     """Two plain titles naming the same episode: a longer one when close (accents, a typo) or one holds the
     other; a short one (a country, under 8 letters) when the same, or spelt alike from the same start (Serbie,
     Serbia) but never merely close (Mali, Malibu; Chili, Chine)."""
-    ratio = difflib.SequenceMatcher(None, a, b).ratio()
+    numbers = [int(m[1]) if (m := TITLE_NUMBER.search(t)) else None for t in (a, b)]
+    if None not in numbers and numbers[0] != numbers[1]:
+        # "the ambush part 1" is never "the ambush part 2", nor "rape on trial episode 1" "… episode 2" (0.96
+        # alike: each fitted both Sonarr episodes, so neither was matched), however close the rest (by mj23au)
+        return False
+    if a == b:
+        return True
+    # compared for every pair of the service's and Sonarr's episodes: the cheap upper bounds of ratio() first
+    m = difflib.SequenceMatcher(None, a, b)
+    close = lambda at: m.real_quick_ratio() >= at and m.quick_ratio() >= at and m.ratio() >= at
     if min(len(a), len(b)) < 8:
-        return a == b or (a[:4] == b[:4] and ratio >= 0.82)
-    return a in b or b in a or ratio >= 0.85
+        return a[:4] == b[:4] and close(0.82)
+    return a in b or b in a or close(0.85)
 
 
 def titles_of(sonarr_eps: list[dict], tmdb_eps: list[dict], own: bool = True) -> dict[int, set]:
@@ -2886,12 +2974,21 @@ def match_by_title(service_eps: list[dict], sonarr_eps: list[dict], tmdb_eps: li
     keys_by_name: dict[str, set] = {}
     for t in service_eps:
         keys_by_name.setdefault(usable_title(t.get("name")), set()).add(key(t))
+    exact: dict[int, set] = {}  # a Sonarr episode -> the service's names that are its very title
+    for title, id_ in named:
+        if title in keys_by_name:
+            exact.setdefault(id_, set()).add(title)
     found: dict[str, list] = {}
     for t in service_eps:
         name = usable_title(t.get("name"))
         if not name or len(keys_by_name[name]) > 1:
             continue
         ids = {id_ for other, id_ in named if same_title(name, other)}
+        if len(ids) > 1:
+            # one that has its very title elsewhere on the service is that one, not this: iPlayer's "Back on the
+            # Psych Ward" fits Sonarr's "Back in the Psych Ward" and "On the Psych Ward", the latter its own S01E17
+            # (by mj23au)
+            ids = {i for i in ids if not (exact.get(i) and name not in exact[i])}
         if len(ids) == 1:
             found.setdefault(key(t), []).append((t.get("part"), ids.pop(), t.get("name")))
     matches = {}
@@ -2901,7 +2998,25 @@ def match_by_title(service_eps: list[dict], sonarr_eps: list[dict], tmdb_eps: li
     claims: dict[int, int] = {}
     for m in matches.values():
         claims[m["episodeId"]] = claims.get(m["episodeId"], 0) + 1
-    return {k: m for k, m in matches.items() if claims[m["episodeId"]] == 1}  # one Sonarr episode, two of theirs: neither
+    matches = {k: m for k, m in matches.items() if claims[m["episodeId"]] == 1}  # one Sonarr episode, two of theirs: neither
+    # Left over: Sonarr's title as the last part of the service's ("Brazil" for iPlayer's "Investigates: Sex in
+    # Strange Places: Brazil"), when that part is the whole of one Sonarr title still unmatched, no number in it, and
+    # no other service title ends so (by mj23au)
+    taken = {m["episodeId"] for m in matches.values()}
+    tails: dict[int, list] = {}
+    for t in service_eps:
+        if key(t) in matches or ":" not in str(t.get("name") or ""):
+            continue
+        tail = usable_title(str(t["name"]).rsplit(":", 1)[1])
+        if not tail or re.search(r"\d", tail):
+            continue
+        ids = {id_ for title, id_ in named if title == tail and id_ not in taken}
+        if len(ids) == 1:
+            tails.setdefault(ids.pop(), []).append(t)
+    for id_, ts in tails.items():
+        if len({key(t) for t in ts}) == 1:
+            matches[key(ts[0])] = {"episodeId": id_, "name": str(ts[0].get("name") or "")[:300].rstrip()}
+    return matches
 
 
 def list_titles(show: dict) -> list[dict]:
@@ -2927,8 +3042,108 @@ def season_map_holds(season: int, theirs: int, every: list[dict], available: dic
     return all(owner.get(i) == season for i, m in available.items() if int(m["service"][1:].split("E")[0]) == theirs)
 
 
-def probe_series(show: dict, series_id: int, title: str = "") -> dict:
-    """List the series on its service (nothing downloaded) and check the next episodes against Sonarr."""
+
+def titled_elsewhere(season: int, theirs: int, every: list[dict], available: dict) -> bool:
+    """A suggested map (Sonarr's `season` as the service's `theirs`) that the titles contradict: an episode of that
+    season found by its very title under another number than the map would ask. A flat page (iPlayer's Stacey
+    Dooley: 27 unnumbered one-offs as S01, three as S02, no dates) had the latest seasons paired in order, 9 as 1 and
+    10 as 2, while S10E01's title is its S01E27 and S09E03's its S01E26, not S01E03 (by mj23au)."""
+    for e in every:
+        m = available.get(e["id"]) if e["seasonNumber"] == season else None
+        if m and m.get("match") == "title" and m.get("same") and m["service"].split(".")[0] != f"S{theirs:02}E{e['episodeNumber']:02}":
+            return True
+    return False
+
+
+SEASON_STEM = re.compile(r"\s*[-:,]?\s*(?:\(\s*(?:part\s*)?\d+\s*\)|(?:part|episode|ep\.?|chapter)\s*\d+|\d+)\s*$", re.IGNORECASE)
+
+
+def season_stem(titles: list) -> str:
+    """The show's own name in a season's episode titles, when most of them share it once numbered off: "Apollo Has
+    Fallen (3)" -> "Apollo Has Fallen". "" when no name stands out (titles of their own, "Pilot", "The Ride")."""
+    stems = [SEASON_STEM.sub("", str(t or "")).strip(" -:,") for t in titles]
+    stems = [s for s, t in zip(stems, titles) if s and s != str(t or "").strip()]  # only titles that had a number
+    if not stems:
+        return ""
+    best = max(set(stems), key=stems.count)
+    return best if stems.count(best) * 2 > len(titles) and len(best) >= 4 and usable_title(best) else ""
+
+
+def page_of_season(show: dict, name: str, aired: int) -> dict | None:
+    """A show of its own on the series' service for one of its seasons: one search result of that very name, not the
+    series' own page, whose listing holds at least half of the season's aired episodes in one of its seasons."""
+    dl, _ = sonarr_sync.stacked(show, read_config())  # as search_series_url: the series' profile and proxy
+    params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy")}
+    try:
+        found = sonarr_sync.backend_for(show["service"]).call("POST", "/api/search", json={**params, "service": show["service"], "query": name})
+    except UnshackleError as e:
+        print(f"Search {show['service']} for {name!r}: {no_credentials(e)}", flush=True)
+        return None
+    same = [r for r in found.get("results") or [] if title_key(str(r.get("title") or "")) == title_key(name)
+            and (r.get("url") or r.get("id")) and str(r.get("url") or r.get("id")) != str(show.get("title"))]
+    if len(same) != 1:
+        return None
+    url = str(same[0].get("url") or same[0].get("id"))
+    try:
+        listed = [t for t in list_titles({**show, "title": url}) if t.get("type") == "episode"]
+    except (UnshackleError, requests.RequestException):
+        return None
+    counts: dict[int, int] = {}
+    for t in listed:
+        counts[int(t.get("season") or 0)] = counts.get(int(t.get("season") or 0), 0) + 1
+    if not counts:
+        return None
+    season, count = max(counts.items(), key=lambda kv: kv[1])
+    return {"url": url, "name": str(same[0].get("title") or name), "count": count, **({"season": season} if season != 1 else {})} \
+        if count * 2 >= aired else None
+
+
+def suggest_pages(show: dict, series_id: int, found: dict, pages: dict) -> dict:
+    """Sonarr seasons aired and found nowhere on the page, with the show of their own the service has for them, by
+    their episode titles' name (Has Fallen's S02, "Apollo Has Fallen (1)…(8)", is SBS's "Apollo Has Fallen"): the
+    Episodes tab offers it. Only when asked from the page: a search and a listing for each such season (by mj23au)."""
+    now = datetime.now(timezone.utc).isoformat()
+    seasons: dict[int, list] = {}
+    for e in sonarr_sync.sonarr_get("episode", seriesId=series_id) if series_id else []:
+        if e["seasonNumber"] > 0 and e.get("airDateUtc") and e["airDateUtc"] <= now:
+            seasons.setdefault(e["seasonNumber"], []).append(e)
+    out = {}
+    missing = [(s, eps) for s, eps in sorted(seasons.items()) if s not in pages and not any(e["id"] in found["available"] for e in eps)]
+    for season, eps in missing[-2:]:  # ponytail: the latest two only, a long series the service has little of asks no more
+        if (name := season_stem([e.get("title") for e in eps])) and (page := page_of_season(show, name, len(eps))):
+            out[str(season)] = page
+    return out
+
+
+def probe_series(show: dict, series_id: int, title: str = "", discover: bool = False) -> dict:
+    """List the series on its service (nothing downloaded) and check the next episodes against Sonarr. A season on a
+    page of its own (season_pages) is checked against that page alone, and the main page against the rest (by mj23au)."""
+    pages = {int(k): v for k, v in (show.get("season_pages") or {}).items() if (v or {}).get("url")}
+    if show.get("page_of"):
+        return probe_one(show, series_id, title, None)
+    if not pages:
+        found = probe_one(show, series_id, title, None)
+        if discover:
+            found["page_suggest"] = suggest_pages(show, series_id, found, pages)
+        return found
+    found = probe_one(show, series_id, title, {"not": set(pages)})
+    found["pages"] = {}
+    for season in sorted(pages):
+        try:
+            part = probe_one(sonarr_sync.season_page(show, season), series_id, title, {"only": {season}})
+        except (UnshackleError, requests.RequestException, ValueError) as e:
+            found["pages"][str(season)] = {"url": pages[season]["url"], "error": str(e)[:200]}
+            continue
+        found["available"].update(part["available"])
+        found["checks"] = sorted(found["checks"] + part["checks"], key=lambda c: c.get("air") or "")[-4:]
+        found["pages"][str(season)] = {"url": pages[season]["url"], "count": part["count"], "series": part.get("series")}
+    if discover:
+        found["page_suggest"] = suggest_pages(show, series_id, found, pages)
+    return found
+
+
+def probe_one(show: dict, series_id: int, title: str, seasons: dict | None) -> dict:
+    """probe_series for one page: Sonarr's episodes all, or {"only": seasons} or {"not": seasons}."""
     titles = list_titles(show)
     service_eps = [t for t in titles if t.get("type") == "episode"]
     by_key = {}
@@ -2937,6 +3152,9 @@ def probe_series(show: dict, series_id: int, title: str = "") -> dict:
         by_key[key] = t
         by_key.setdefault(f"S{t['season']:02}E{t['number']:02}", t)  # a split episode answers to its plain number too
     every = sonarr_sync.sonarr_get("episode", seriesId=series_id) if series_id else []
+    if seasons:  # a season on a page of its own is looked for there only
+        keep = (lambda n: n in seasons["only"]) if "only" in seasons else (lambda n: n not in seasons["not"])
+        every = [e for e in every if keep(e["seasonNumber"])]
     sonarr = [e for e in every if e["seasonNumber"] > 0]
     sonarr_eps = [{"season": e["seasonNumber"], "air_date": (e.get("airDateUtc") or "")[:10] or None} for e in sonarr]
     now = datetime.now(timezone.utc).isoformat()
@@ -2944,15 +3162,7 @@ def probe_series(show: dict, series_id: int, title: str = "") -> dict:
     coming = sorted((e for e in sonarr if e.get("airDateUtc") and e["airDateUtc"] > now), key=lambda e: e["airDateUtc"])
     name = show.get("file_name") or title
     dots = lambda text: re.sub(r"[^\w-]+", ".", text).strip(".")
-    checks = []
-    for e in aired[-3:] + coming[:1]:
-        sxxeyy = f"S{e['seasonNumber']:02}E{e['episodeNumber']:02}"
-        theirs = sonarr_sync.service_episode(show, e["seasonNumber"], e["episodeNumber"])
-        hit = by_key.get(theirs or "")
-        checks.append({
-            "sxxeyy": sxxeyy, "service": theirs, "aired": e["airDateUtc"] <= now, "air": e["airDateUtc"], "hasFile": e.get("hasFile"),
-            "found": bool(hit), "name": (hit or {}).get("name"), "file": f"{dots(name)}.{sxxeyy}….mkv" if name else None,
-        })
+    checked = aired[-3:] + coming[:1]  # checked below, once the titles are matched
     seasons = {}
     for t in service_eps:
         seasons[t["season"]] = seasons.get(t["season"], 0) + 1
@@ -2992,6 +3202,7 @@ def probe_series(show: dict, series_id: int, title: str = "") -> dict:
     # a French Disney+ (Futurama): there, an episode with no French title from TMDB has nothing to contradict.
     ours = {usable_title(e.get("title")) for e in every} - {""}
     known = titles_of(every, tmdb_eps, own=agreeing and enough(sum(any(same_title(n, o) for o in ours) for n in names)))
+    own_titles = titles_of(every, tmdb_eps)  # for "same": a title match that is the episode's very title, once plain
     mapped = show.get("episode_map") or {}
     available = {}  # every Sonarr episode the service has, for the Episodes tab: by number and title, by title, by number
     # A season of the service the numbering gives another Sonarr season (Koh-Lanta's S34 as MyTF1's S29) is that one's:
@@ -3006,7 +3217,8 @@ def probe_series(show: dict, series_id: int, title: str = "") -> dict:
         hit = by_key.get(theirs or "")
         if e["id"] in titled:
             key = titled[e["id"]]
-            available[e["id"]] = {"service": key, "name": by_title[key]["name"], "match": "title"}
+            same = usable_title(by_title[key]["name"]) in own_titles.get(e["id"], set())  # not merely close (by mj23au, #12)
+            available[e["id"]] = {"service": key, "name": by_title[key]["name"], "match": "title", **({"same": True} if same else {})}
         elif hit and (theirs or "").split(".")[0] not in by_title \
                 and claimed.get(int(theirs[1:].split("E")[0]), e["seasonNumber"]) == e["seasonNumber"]:  # nor another season's
             theirs_name = usable_title(hit.get("name"))
@@ -3029,6 +3241,20 @@ def probe_series(show: dict, series_id: int, title: str = "") -> dict:
                 available[e["id"]] = {"service": key, "name": hit.get("name"), "match": "absolute"}
                 taken.add(key)
                 break
+    checks = []
+    for e in checked:  # as the sync and the Episodes tab find them: by title too, not by number alone (by mj23au)
+        sxxeyy = f"S{e['seasonNumber']:02}E{e['episodeNumber']:02}"
+        theirs = sonarr_sync.service_episode(show, e["seasonNumber"], e["episodeNumber"])
+        if have := available.get(e["id"]):
+            theirs, hit = have["service"], by_key.get(have["service"]) or {"name": have.get("name")}
+        else:
+            hit = by_key.get(theirs or "")
+        checks.append({
+            "sxxeyy": sxxeyy, "service": theirs, "aired": e["airDateUtc"] <= now, "air": e["airDateUtc"], "hasFile": e.get("hasFile"),
+            "found": bool(hit), "name": (hit or {}).get("name"), "file": f"{dots(name)}.{sxxeyy}….mkv" if name else None,
+        })
+    suggested = {k: v for k, v in suggest_season_map(sonarr_eps, service_eps).items()
+                 if not titled_elsewhere(k, v, every, available)}
     return {
         "available": available,
         "titled": sorted(by_title),  # the service's numbers some Sonarr episode's title points to
@@ -3041,7 +3267,7 @@ def probe_series(show: dict, series_id: int, title: str = "") -> dict:
         "checks": checks,
         # never from a listing of one or two episodes: a link to one episode (iPlayer's /episode/) would send a whole
         # Sonarr season to that episode's season
-        "season_map": {str(k): v for k, v in suggest_season_map(sonarr_eps, service_eps).items()
+        "season_map": {str(k): v for k, v in suggested.items()
                        if (show.get("season_map") or {}).get(k) != v and season_map_holds(k, v, every, available)}
         if len(service_eps) >= SEASON_MAP_FROM else {},
     }
@@ -3062,7 +3288,7 @@ def title_matches(show: dict, ep: dict) -> dict:
     """For the sync, before a download: where the service has each Sonarr episode (by number, title or absolute
     number: Sonarr id -> {"service", "match"}) and every number it lists, the list kept for the page too."""
     found = probe_series(show, ep["seriesId"], ep["series"]["title"])
-    if not sonarr_sync.instance():  # the page's list holds the main Sonarr's episode ids
+    if not sonarr_sync.instance() and not show.get("page_of"):  # the page's list holds the main Sonarr's episode ids
         keep_service_list(ep["series"]["tvdbId"], show, found)
     listed = {t["key"] + (f".{t['part']}" if t.get("part") else "") for t in found["titles"]} | {t["key"] for t in found["titles"]}
     return {"available": {int(i): m for i, m in found["available"].items()}, "listed": listed,
@@ -3105,7 +3331,7 @@ async def probe(request):
     show = {**show, "season_map": {int(k): int(v) for k, v in (show.get("season_map") or {}).items()}}
     try:
         inst = sonarr_named(str(body.get("sonarr") or ""))  # a series in another Sonarr only: its episodes there
-        found = await asyncio.to_thread(on_sonarr, inst, probe_series, show, int(body.get("seriesId") or 0), str(body.get("title") or ""))
+        found = await asyncio.to_thread(on_sonarr, inst, probe_series, show, int(body.get("seriesId") or 0), str(body.get("title") or ""), True)
         if body.get("tvdbId"):
             await asyncio.to_thread(keep_service_list, int(body["tvdbId"]), show, found)
         return web.json_response({**found, "checked": datetime.now(timezone.utc).isoformat()})
@@ -3310,14 +3536,16 @@ UPGRADE_PAUSE = 2.0  # seconds between two episodes asked of a service
 upgrade_scan = {"running": False, "done": 0, "total": 0, "series": "", "errors": 0, "stop": False, "sonarr": ""}
 
 
-def upgrade_candidates(config: dict) -> list[tuple]:
+def upgrade_candidates(config: dict, only: set | None = None) -> list[tuple]:
     """Every file of a series with a ladder that is not on its first step, or, with upgrade_other_groups, from another
     release group than the series' downloads carry: (series, show, ladder, episode, track, step). track["ours"] is that
-    group, track["group"] the file's other one."""
+    group, track["group"] the file's other one. only: just those series (tvdb ids); the others' files aren't asked of Sonarr."""
     other_groups = bool(sonarr_sync.SETTINGS.get("upgrade_other_groups"))
     shows = {int(k): v for k, v in (config.get("series") or {}).items() if v.get("service") and v.get("title")}
     work = []
     for tvdb, serie in sonarr_sync.sonarr_series(set(shows)).items():
+        if only and tvdb not in only:
+            continue
         show = shows.get(tvdb)
         ladder = show and not show.get("skip_upgrades") and sonarr_sync.ladder_of(show, config)
         if not ladder:
@@ -3339,16 +3567,17 @@ def upgrade_candidates(config: dict) -> list[tuple]:
                 if str(file.get("releaseGroup") or "").lower() != ours.lower():
                     track["group"] = file.get("releaseGroup") or "no group"  # not ours: the same step from the service replaces it
             if (step := sonarr_sync.step_of(ladder, track)) > 0 or track.get("group"):
-                work.append((serie, show, ladder, e, track, step))
+                work.append((serie, sonarr_sync.season_page(show, e["seasonNumber"]), ladder, e, track, step))  # its own page
     return work
 
 
-def scan_upgrades(name: str = "") -> None:
+def scan_upgrades(name: str = "", only: set | None = None) -> None:
     """Ask each candidate's service which step it has; keep those it has on an earlier step than the file. For
-    another Sonarr (name), its files, placed on its own ladder."""
+    another Sonarr (name), its files, placed on its own ladder. only: just those series (tvdb ids), asked afresh,
+    the other series' finds left as they were."""
     inst = sonarr_sync.SONARRS.get(name) if name else None
     with sonarr_sync.on_instance(inst):
-        scan_upgrades_in(inst, name)
+        scan_upgrades_in(inst, name, only)
 
 
 UPGRADE_BATCH = 10  # episodes of one series asked in one list-tracks: one login for them
@@ -3376,7 +3605,24 @@ def upgrade_item(serie: dict, ladder: dict, e: dict, track: dict, step: int, bes
             "better": sonarr_sync.track_label(have), "betterStep": number}
 
 
-def scan_upgrades_in(inst: dict | None, name: str) -> None:
+def upgrade_number(lists: dict, serie: dict, show: dict, e: dict) -> str | None:
+    """The episode's number on the service, for Upgrades: where the series' last listing there found it by its title
+    (24 Hours in Police Custody's S05E01 is Channel 4's S02E10); None when that listing gives its own number to
+    another episode's title (Channel 4's S04E01 is another episode); else the series' numbering, as before."""
+    own = sonarr_sync.service_episode(show, e["seasonNumber"], e["episodeNumber"])
+    hit = lists.get(str(serie["tvdbId"]))
+    if not hit or hit.get("service") != show.get("service") or hit.get("title") != str(show.get("title")):
+        return own  # no listing, or one of another service or URL: nothing to go by
+    available = hit.get("available") or {}
+    found = available.get(str(e["id"]))
+    if found and (found.get("match") != "title" or found.get("same")):  # a title only when the very title (#12)
+        return found["service"]
+    if own and any(m.get("match") == "title" and m["service"].split(".")[0] == own.split(".")[0] for m in available.values()):
+        return None
+    return own
+
+
+def scan_upgrades_in(inst: dict | None, name: str, only: set | None = None) -> None:
     """an answer younger than upgrade_recheck_days is reused for the same file; the rest is asked
     per series, UPGRADE_BATCH episodes in one list-tracks (each answer names its season and number)."""
     config, found = sonarr_sync.read_file(), []
@@ -3385,8 +3631,11 @@ def scan_upgrades_in(inst: dict | None, name: str) -> None:
     now = datetime.now(timezone.utc)
     keep_days = float(sonarr_sync.SETTINGS.get("upgrade_recheck_days", 30) or 0)
     seen = read_json(upgrades_seen_file(name), {})
+    lists = {} if inst else read_json(SERVICE_LISTS, {})  # kept with the main Sonarr's episode ids only
     try:
-        work = upgrade_candidates(config)
+        work = upgrade_candidates(config, only)
+        if only:
+            seen = {k: v for k, v in seen.items() if k not in {str(w[3]["id"]) for w in work}}  # asked afresh
         upgrade_scan["total"] = len(work)
         ask: dict[int, list] = {}
         for w in work:
@@ -3398,7 +3647,7 @@ def scan_upgrades_in(inst: dict | None, name: str) -> None:
                 if hit.get("item"):
                     found.append({**hit["item"], "file": file_label(w[4])})  # labelled as the file is labelled now
             else:
-                ask.setdefault(w[0]["id"], []).append(w)
+                ask.setdefault((w[0]["id"], str(w[1].get("title"))), []).append(w)  # per series and page: one listing
         for chunks in ask.values():
             show = chunks[0][1]
             size = 1 if int(show.get("parts") or 0) > 1 else UPGRADE_BATCH  # parts: one episode at a time, as before
@@ -3408,9 +3657,9 @@ def scan_upgrades_in(inst: dict | None, name: str) -> None:
                 chunk = chunks[start:start + size]
                 serie, show, ladder = chunk[0][:3]
                 upgrade_scan["series"] = serie["title"]
-                wanted = {}
+                wanted, asked = {}, False
                 for w in chunk:
-                    if key := sonarr_sync.service_episode(show, w[3]["seasonNumber"], w[3]["episodeNumber"]):
+                    if key := upgrade_number(lists, serie, show, w[3]):
                         wanted[key] = w
                 try:
                     if not wanted:
@@ -3420,6 +3669,7 @@ def scan_upgrades_in(inst: dict | None, name: str) -> None:
                     if request.get("remote"):
                         continue  # a --remote download lists no tracks
                     request["wanted"] = list(wanted)
+                    asked = True
                     listed = sonarr_sync.list_tracks(show, config, request, ladder) or []
                 except (UnshackleError, ValueError) as err:
                     upgrade_scan["errors"] += 1
@@ -3427,7 +3677,8 @@ def scan_upgrades_in(inst: dict | None, name: str) -> None:
                     continue
                 finally:
                     upgrade_scan["done"] += len(chunk)
-                    time.sleep(UPGRADE_PAUSE)
+                    if asked:  # a pause between two asks of a service, none when nothing was asked
+                        time.sleep(UPGRADE_PAUSE)
                 by_key: dict[str, list] = {}
                 for ep in listed:
                     t = ep.get("title") or {}
@@ -3444,8 +3695,16 @@ def scan_upgrades_in(inst: dict | None, name: str) -> None:
                     if item:
                         found.append(item)
         write_atomic(upgrades_seen_file(name), json.dumps(seen))
-        write_atomic(upgrades_file(name), json.dumps({"checked": datetime.now(timezone.utc).isoformat(), "items": found,
-                                                "stopped": upgrade_scan["stop"]}))
+        before = read_json(upgrades_file(name), {}) if only else {}
+        if only:  # the checked series replace their own finds; the rest, and when it was checked, stay
+            found = [i for i in before.get("items") or [] if i.get("tvdbId") not in only] + found
+        # a series checked on its own keeps its own date, shown on its card; a full check starts them afresh
+        alone = {**(before.get("series_checked") or {}), **{str(t): now.isoformat() for t in only}} if only else {}
+        # the series checked (those with a file the ladder could better): Episodes then goes by what was found for them
+        scanned = sorted({w[0]["tvdbId"] for w in work} | (set(before.get("scanned") or []) if only else set()))
+        write_atomic(upgrades_file(name), json.dumps({"checked": before.get("checked") or datetime.now(timezone.utc).isoformat(),
+                                                "items": found, "stopped": upgrade_scan["stop"] or bool(before.get("stopped")),
+                                                "series_checked": alone, "scanned": scanned}))
     except requests.RequestException as err:
         upgrade_scan["errors"] += 1
         print(f"Upgrades: Sonarr is unreachable: {no_credentials(err)}", flush=True)
@@ -3472,6 +3731,104 @@ async def upgrade_groups(_):
     return web.json_response({"groups": groups, "none": none})
 
 
+LIBRARY_DIRS = 500  # folders listed at most in one place
+
+
+def local_dirs(path: str) -> dict:
+    """The folders in a folder of Unshacklarr's own (its container's): names only, never a file."""
+    path = path or "/"
+    if not posixpath.isabs(path) or ".." in path.split("/"):
+        raise web.HTTPBadRequest(text=f"{path} must be a full path, from /, without ..")
+    here = Path(path)
+    try:
+        names = sorted((e.name for e in os.scandir(here) if e.is_dir() and not e.name.startswith(".")), key=str.lower)
+    except OSError as e:
+        raise web.HTTPBadRequest(text=f"{path}: {e.strerror or e}") from None
+    return {"path": str(here), "parent": None if str(here) == "/" else str(here.parent), "dirs": [str(here / n) for n in names][:LIBRARY_DIRS]}
+
+
+def sonarr_dirs(path: str) -> dict:
+    """The folders in a folder as the main Sonarr sees it, from its own folder browser (that of Add Root Folder)."""
+    # "path" is sonarr_get's own first argument: Sonarr's is put in the address
+    found = sonarr_sync.sonarr_get(f"filesystem?{urlencode({'path': path})}", includeFiles="false", allowFoldersWithoutTrailingSlashes="true")
+    trim = lambda p: str(p or "").rstrip("/\\") or str(p or "")
+    dirs = [trim(d.get("path")) for d in found.get("directories") or [] if d.get("path")]
+    return {"path": trim(path), "parent": trim(found.get("parent")) or None if path not in ("", "/") else None, "dirs": dirs[:LIBRARY_DIRS]}
+
+
+async def library_browse(request):
+    """Settings, Add audio track: the folders to pick the library from, as Sonarr (side=sonarr) or Unshacklarr sees them."""
+    side, path = request.query.get("side"), request.query.get("path", "").strip()[:1024]
+    inst = sonarr_named(request.query.get("sonarr", ""))  # another Sonarr's folders, as it sees them
+    if side == "local":
+        return web.json_response(await asyncio.to_thread(local_dirs, path))
+    if side != "sonarr":
+        raise web.HTTPBadRequest(text="side is sonarr or local")
+    try:
+        return web.json_response(await asyncio.to_thread(on_sonarr, inst, sonarr_dirs, path))
+    except requests.RequestException as e:
+        raise web.HTTPBadGateway(text=f"Sonarr did not list {path or 'its folders'}: {no_credentials(e)}") from None
+
+
+LIBRARY_GUESSES = ["/library", "/media", "/tv", "/mnt"]  # where a library is usually mounted, besides the container's mounts
+
+
+def library_guess(sonarr_path: str) -> dict | None:
+    """Both folders, found: the mounted folder holding the end of a real file's path as Sonarr names it (/Syno/Dessins
+    Animés/… is /library/Dessins Animés/…: /Syno as Sonarr sees it, /library as Unshacklarr does). None when none does."""
+    skip = ("/proc", "/sys", "/dev", "/run", "/etc", "/boot", "/data", "/tmp", "/unshackle-config")  # the system's, ours
+    try:  # the container's own mounts: a library bound in at any name
+        mounts = [line.split()[1].replace("\\040", " ") for line in Path("/proc/self/mounts").read_text().splitlines()]
+    except OSError:
+        mounts = []
+    parts = PurePosixPath(sonarr_path.replace("\\", "/")).parts
+    for top in dict.fromkeys([*LIBRARY_GUESSES, *(m for m in mounts if m != "/" and not m.startswith(skip))]):
+        for k in range(2, len(parts) - 1):  # the shortest Sonarr folder first: it holds the most series
+            try:
+                found = Path(top, *parts[k:]).is_file()
+            except OSError:  # a mount it may not read (/boot/efi): not there
+                found = False
+            if found:
+                return {"sonarr_root": "/" + "/".join(parts[1:k]), "local_root": top}
+    return None
+
+
+def library_check(root: str, local: str) -> dict:
+    """Sonarr's root folders, and whether Unshacklarr finds a real episode file of Sonarr's with these two folders."""
+    out = {"roots": [], "ok": None, "sonarr_path": "", "local_path": "", "why": ""}
+    try:
+        out["roots"] = [str(r["path"]).rstrip("/\\") or r["path"] for r in sonarr_sync.sonarr_get("rootfolder") if r.get("path")]
+        # several root folders: the one setting converts a single folder, their common one holds them all
+        common = posixpath.commonpath(out["roots"]) if len(out["roots"]) > 1 and all(r.startswith("/") for r in out["roots"]) else ""
+        out["common"] = common if common not in ("", "/") else ""
+        root = root.rstrip("/\\")
+        under = lambda p: not root or p == root or p.startswith(root + "/") or p.startswith(root + "\\")
+        serie = next((s for s in sonarr_sync.sonarr_series(set()).values()
+                      if (s.get("statistics") or {}).get("episodeFileCount") and under(str(s.get("path") or ""))), None)
+        if not serie:
+            out["why"] = f"No series of Sonarr's has a file in {root}" if root else "Sonarr has no episode file to try"
+            return out
+        files = sonarr_sync.sonarr_get("episodefile", seriesId=serie["id"])
+    except requests.RequestException as e:
+        out["why"] = f"Sonarr is unreachable: {no_credentials(e)}"
+        return out
+    if not files:
+        out["why"] = "Sonarr has no episode file to try"
+        return out
+    out["sonarr_path"] = str(files[0].get("path") or "")
+    found = sonarr_sync.library_file(out["sonarr_path"], (root, local))
+    out["local_path"], out["ok"] = str(found), found.is_file()
+    if not out["ok"]:
+        out["guess"] = library_guess(out["sonarr_path"])
+    return out
+
+
+async def library_test(request):
+    q = request.query
+    inst = sonarr_named(q.get("sonarr", ""))  # another Sonarr's roots and files
+    return web.json_response(await asyncio.to_thread(on_sonarr, inst, library_check, q.get("sonarr_root", "").strip()[:1024], q.get("local_root", "").strip()[:1024]))
+
+
 async def upgrades(request):
     """Activity, Upgrades: the last check's finds, and the check going on; another Sonarr's with ?sonarr=."""
     name = (sonarr_named(request.query.get("sonarr", "")) or {}).get("name", "")
@@ -3482,8 +3839,13 @@ async def upgrades(request):
     done = {(c.get("tvdbId"), c.get("sxxeyy")) for c in mine if c.get("outcome") == "downloaded" and (c.get("ended") or "") > (last.get("checked") or "")}
     busy = {(c.get("tvdbId"), c.get("sxxeyy")) for c in mine if c.get("outcome") == "running"}
     items = [{**i, "running": (i["tvdbId"], i["sxxeyy"]) in busy} for i in last.get("items") or [] if (i["tvdbId"], i["sxxeyy"]) not in done]
-    return web.json_response({"scan": {k: v for k, v in upgrade_scan.items() if k != "stop"},
-                              "checked": last.get("checked"), "items": items, "stopped": bool(last.get("stopped"))})
+    if (tvdb := request.query.get("tvdb", "")).isascii() and tvdb.isdigit():  # a series' Episodes: its finds only, and
+        tvdb = int(tvdb)                                                       # whether the check covered it at all
+        return web.json_response({"items": [i for i in items if i["tvdbId"] == tvdb],
+                                  "scanned": tvdb in (last.get("scanned") or []) or str(tvdb) in (last.get("series_checked") or {})})
+    return web.json_response({"scan": {**{k: v for k, v in upgrade_scan.items() if k != "stop"}, "stopping": upgrade_scan["running"] and upgrade_scan["stop"]},
+                              "checked": last.get("checked"), "items": items, "stopped": bool(last.get("stopped")),
+                              "seriesChecked": last.get("series_checked") or {}})
 
 
 async def upgrades_action(request):
@@ -3491,11 +3853,14 @@ async def upgrades_action(request):
     if request.match_info["action"] == "stop":
         upgrade_scan["stop"] = True
     elif not upgrade_scan["running"]:
-        inst = sonarr_named(str((await json_object(request)).get("sonarr") or "")) if request.can_read_body else None
+        body = await json_object(request) if request.can_read_body else {}
+        inst = sonarr_named(str(body.get("sonarr") or "")) if request.can_read_body else None
+        listed = body.get("series") if isinstance(body.get("series"), list) else []
+        only = {int(x) for x in listed if re.fullmatch(r"\d{1,9}", str(x))}  # "²" is a digit int() refuses
         if sonarr_sync.unset_ladder(inst):
             raise web.HTTPBadRequest(text=f"Choose a quality ladder for Sonarr {inst['name']} in Settings, Sonarr first")
         upgrade_scan["running"] = True  # at once: a second click before the thread starts is not a second check
-        threading.Thread(target=scan_upgrades, args=((inst or {}).get("name", ""),), daemon=True).start()
+        threading.Thread(target=scan_upgrades, args=((inst or {}).get("name", ""), only), daemon=True).start()
     return web.json_response({"running": upgrade_scan["running"]})
 
 
@@ -3533,7 +3898,16 @@ def diagnostic(run_id: str) -> str:
     tail = log.read_text(encoding="utf8", errors="replace").splitlines()[-300:] if log.exists() else []
     config = public_config(read_config())
     show = config["series"].get(card.get("tvdbId")) or config["series"].get(str(card.get("tvdbId"))) or {}
-    settings = {k: v for k, v in config["settings"].items() if not k.endswith("_url") and k not in ("proxy_auth_from",)}
+    # pasted in a public issue: no address, folder, bucket or account of the user's, the other Sonarrs' and servers' names only
+    private = re.compile(r".*_url$|.*downloads.*|backup_remote_.*|library_.*_root|proxy_auth_from|cookies_dir|unshackle_config_dir")
+    settings = {k: v for k, v in config["settings"].items() if not private.fullmatch(k)}
+    for key in ("sonarrs", "backends"):
+        if isinstance(settings.get(key), list):
+            settings[key] = [{k: v for k, v in i.items() if k not in ("url", "public_url", "downloads", "api_key")}
+                             for i in settings[key] if isinstance(i, dict)]
+    via = str((card.get("setup") or {}).get("via") or "")
+    if via and via != "this computer" and not via.startswith("remote server"):  # another serve's host: its name only
+        card = {**card, "setup": {**card["setup"], "via": via.split(" (")[0] if " (" in via else "another computer"}}
     parts = [
         f"# Unshacklarr diagnostic: {card.get('series')} {card.get('sxxeyy')}",
         f"Unshacklarr {__version__}{f' ({BUILD})' if BUILD else ''} · Unshackle {health['unshackle'].get('version') or '?'} · Python {sys.version.split()[0]}",
@@ -4412,6 +4786,8 @@ app.add_routes([
     web.post("/api/download", download),
     web.get("/api/missing", missing),
     web.get("/api/upgrades", upgrades),
+    web.get("/api/library/browse", library_browse),
+    web.get("/api/library/check", library_test),
     web.get("/api/upgrades/groups", upgrade_groups),
     web.post(r"/api/upgrades/{action:check|stop}", upgrades_action),
     web.post("/api/probe", probe),
@@ -4473,6 +4849,7 @@ app.add_routes([
     web.delete(r"/api/runs/{run_id}", delete_run),
     web.get(r"/api/runs/{run_id}/diagnostic", run_diagnostic),
     web.post(r"/api/runs/{run_id}/input", answer_run),
+    web.post(r"/api/audio-upgrade/{episode_id:\d{1,9}}", confirm_audio),
     web.post("/api/runs/clear", clear_runs),
     web.post("/api/password", change_password),
     web.post("/api/logout-others", logout_others),

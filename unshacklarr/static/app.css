@@ -126,12 +126,12 @@ nav .short { display: none; }
 .seg button span { opacity: .75; margin-left: 4px; font-variant-numeric: tabular-nums; }
 nav { overflow-x: auto; max-width: 100%; scrollbar-width: none; }
 nav button { white-space: nowrap; }
-input[type=text], input[type=url], input[type=search], input[type=number], input[type=password], select {
+input[type=text], input[type=url], input[type=search], input[type=number], input[type=password], select, textarea {
   background: var(--field-bg); border: 1px solid var(--field-line); border-radius: 6px; padding: 7px 10px; width: 100%; color: var(--text);
   transition: border-color .15s, box-shadow .15s;
 }
-:is(input[type=text], input[type=url], input[type=search], input[type=number], input[type=password], select):hover:not(:focus):not(.bad) { border-color: var(--field-line-hover); }
-:is(input[type=text], input[type=url], input[type=search], input[type=number], input[type=password], select):focus:not(.bad) {
+:is(input[type=text], input[type=url], input[type=search], input[type=number], input[type=password], select, textarea):hover:not(:focus):not(.bad) { border-color: var(--field-line-hover); }
+:is(input[type=text], input[type=url], input[type=search], input[type=number], input[type=password], select, textarea):focus:not(.bad) {
   border-color: var(--accent); box-shadow: 0 0 0 3px rgb(79 179 191 / .16); outline: none; }
 label.check { display: inline-flex; gap: 8px; align-items: center; cursor: pointer; }
 .muted { color: var(--muted); }
@@ -1566,6 +1566,14 @@ input.bad, select.bad { border-color: var(--err) !important; box-shadow: 0 0 0 3
 .probe-warn { margin: 8px 0; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--warn) 45%, var(--line)); border-radius: 10px; background: color-mix(in srgb, var(--warn) 8%, transparent); font-size: 13px; } .probe-warn b { color: var(--warn); }
 .ql-langs { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); } .ql-langs .field small.bad { color: var(--err); }
 .miss-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; } .miss-bar .ax-seg { margin: 0; }
+#oneoff-slot .ds-programmes, #oneoff-slot #d-progmap-field { display: none; }  /* a download's own numbering: not the series' setting */
+#d-progmap { font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; resize: vertical; min-height: 64px; border-radius: 9px; padding: 9px 12px; }  /* one "S2026E14 URL" per line */
+.ds-programmes { margin-bottom: var(--gap-field); }
+.up-card > summary { list-style: none; } .up-card > summary::-webkit-details-marker { display: none; } .up-card > summary::after { content: "▸"; color: var(--muted); }
+.up-card[open] > summary::after { content: "▾"; } .up-card > summary.up-row { grid-template-columns: 18px 30px minmax(0, 1fr) auto auto; align-items: center; }
+@keyframes up-bob { 50% { transform: translateY(2px); opacity: .55; } }
+.left-row small.up-live { color: var(--accent); font-weight: 600; animation: up-bob 1.1s ease-in-out infinite; } .up-ep small.up-live { animation: none; }  /* the series' line moves; hundreds of queued rows stay still */
+.up-card .up-ep { padding-left: 30px; grid-template-columns: 18px minmax(0, 1fr); }
 .up-row { cursor: pointer; grid-template-columns: 18px 30px minmax(0, 1fr); } .up-row input { flex: none; width: 18px; height: 18px; accent-color: var(--accent); } .up-acts { display: flex; gap: 8px; flex-wrap: wrap; }
 /* Account, the automatic backups: the saved ones under the buttons */
 .bk-pass-row { margin-top: var(--gap-field); }
@@ -1706,3 +1714,11 @@ input[type=time]:focus:not(.bad) { border-color: var(--accent); box-shadow: 0 0 
 /* Schedule: the end of a season or of the series, beside its episode */
 .finale-tag { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600;
   vertical-align: 1px; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); }
+/* Download options, Add audio track: the library's folders, picked or browsed, and whether a real file is found */
+#dx-lib-who .ax-seg { margin: 0 0 var(--gap-field); }
+.lib-check { margin: var(--gap-field) 0 0; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; } .lib-check:empty { display: none; }
+.lib-check.ok { color: var(--ok); } .lib-check.err { color: var(--err); }
+.folder-form { display: grid; gap: 10px; } .folder-form h2, .folder-form p { margin: 0; }
+.folder-path { font-family: ui-monospace, monospace; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.folder-list { max-height: min(50vh, 360px); margin: 0; } .folder-list .url-hit { grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 8px; }
+.folder-list .url-hit span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .folder-form .status-err:empty { display: none; }

@@ -1256,7 +1256,7 @@ def test_an_episode_its_number_misses_is_found_by_its_title(tmp_path, monkeypatc
 
     def find(show, ep):
         listed.append(ep["id"])
-        return {"available": {201: {"service": "S01E07", "match": "title"}}, "listed": {"S01E07"}}  # S02E01 by its title; S02E02 not out yet
+        return {"available": {201: {"service": "S01E07", "match": "title", "same": True}}, "listed": {"S01E07"}}  # S02E01 by its title; S02E02 not out yet
 
     monkeypatch.setattr(sync, "run_job_retrying", download)
     monkeypatch.setattr(sync, "download_request", lambda show, config, sx, out: {"service": "RTLP", "title_id": "t", "wanted": [sx], "output_dir": str(out)})
@@ -1266,7 +1266,7 @@ def test_an_episode_its_number_misses_is_found_by_its_title(tmp_path, monkeypatc
     monkeypatch.setattr(sync, "import_episode", lambda ep, out, replace=False: imported.append(ep["id"]))
     monkeypatch.setattr(sync, "notify", lambda *a, **k: None)
     sync.sync(sync.read_file(), {}, [episode(111, 2, 1), episode(111, 2, 2)], manual=True, kind="manual")
-    assert asked == ["S02E01", "S01E07", "S02E02"]
+    assert asked == ["S01E07", "S02E02"]  # S02E01 isn't listed and its title is: asked there at once
     assert listed == [201]  # the series listed once: S02E02 is looked up in that same list
     assert imported == [201]
     cards = {c["sxxeyy"]: c for c in (json.loads(f.read_text()) for f in sync.RUNS_DIR.glob("*.json"))}
@@ -1760,7 +1760,7 @@ def test_the_series_page_and_upgrades_know_the_other_sonarr(tmp_path, monkeypatc
     assert web.instances_of_series() == {} and web.sonarrs_of_series() == ({}, [])  # down: the page opens without waiting for it
     assert web.upgrades_file("") == web.UPGRADES_FILE and web.upgrades_file("sonarr-4k").name == "upgrades_found-sonarr-4k.json"
     seen = []
-    monkeypatch.setattr(web, "upgrade_candidates", lambda config: seen.append(((web.sonarr_sync.instance() or {}).get("name"),
+    monkeypatch.setattr(web, "upgrade_candidates", lambda config, only=None: seen.append(((web.sonarr_sync.instance() or {}).get("name"),
                                                                               config["series"][1].get("ladder"))) or [])
     web.scan_upgrades("sonarr-4k")
     assert seen == [("sonarr-4k", "4K only")]  # its files, on its own ladder
@@ -1897,7 +1897,8 @@ def test_the_preferred_audio_is_added_to_the_file_it_has(tmp_path, monkeypatch):
     assert sync.library_file("/elsewhere/x.mkv") == Path("/elsewhere/x.mkv")
     ep = {**episode(111, 2, 5), "episodeFileId": 9}
     monkeypatch.setattr(sync, "chosen_episodes", lambda ids: [ep])
-    monkeypatch.setattr(sync, "sonarr_get", lambda path, **p: {"path": "/tv/Show/Season 02/Show - S02E05.mkv"})
+    file = {"path": "/tv/Show/Season 02/Show - S02E05.mkv", "sceneName": "Show.S02E05.1080p.RTLP.WEB-DL.AAC2.0.H.264"}
+    monkeypatch.setattr(sync, "sonarr_get", lambda path, **p: file)
     monkeypatch.setattr(sync, "no_cdm", lambda tag, config=None: "")
     asked = []
 
@@ -1911,7 +1912,11 @@ def test_the_preferred_audio_is_added_to_the_file_it_has(tmp_path, monkeypatch):
     def tools(cmd, **_):
         calls.append(cmd)
         if cmd[:2] == ["mkvmerge", "-J"]:
-            return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps({"container": {"properties": {"duration": 2_400_000_000_000}}}))
+            tracks = [{"id": 0, "type": "audio", "properties": {"language": "eng"}}] if cmd[2].endswith(".mka") else \
+                [{"id": 0, "type": "video", "properties": {}}, {"id": 1, "type": "audio", "properties": {"language": "eng", "default_track": True}},
+                 {"id": 2, "type": "subtitles", "properties": {"language_ietf": "fr", "default_track": True}},  # full French: shown now
+                 {"id": 3, "type": "subtitles", "properties": {"language": "fre", "track_name": "Forced"}}]
+            return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps({"container": {"properties": {"duration": 2_400_000_000_000}}, "tracks": tracks}))
         Path(cmd[cmd.index("-o") + 1]).write_bytes(b"joined")
         return subprocess.CompletedProcess(cmd, 0, stdout="")
 
@@ -1924,12 +1929,35 @@ def test_the_preferred_audio_is_added_to_the_file_it_has(tmp_path, monkeypatch):
     merge = calls[-1]
     assert merge[:4] == ["mkvmerge", "-q", "-o", str(tmp_path / "unshackle-111-S02E05" / "Show - S02E05.mkv")]
     assert str(library / "Show - S02E05.mkv") in merge and merge[-1].endswith("audio.mka")
+    # the French audio is the default one; French subtitles only its forced ones, the full ones off
+    lib = merge.index(str(library / "Show - S02E05.mkv"))
+    assert merge[4:lib] == ["--default-track-flag", "1:0", "--default-track-flag", "2:0", "--default-track-flag", "3:1"]
+    assert merge[-3:-1] == ["--default-track-flag", "0:1"]
     assert imported == [(["Show - S02E05.mkv"], True)]  # the joined file only, in place of the library's
     card = next(json.loads(p.read_text()) for p in (tmp_path / "runs").glob("*.json"))
     assert card["kind"] == "upgrade" and card["outcome"] == "downloaded"
 
-    monkeypatch.setattr(sync, "sonarr_get", lambda path, **p: {"path": "/tv/Show/Gone.mkv"})
+    file.update(path="/tv/Show/Gone.mkv", sceneName="Show.S02E05.1080p.RTLP.WEB-DL")
     assert sync.add_track(205, "fr") is False  # out of reach here: downloaded again as before
+    file.update(path="/tv/Show/Season 02/Show - S02E05.mkv", sceneName="Show.S02E05.1080p.WEB-DL.x264-OTHERTEAM")
+    sync.UPGRADES_FILE.write_text(json.dumps({"205": {"want": "fr", "tvdb": 111}}))
+    merges = len(calls)
+    assert sync.add_track(205, "fr") is True  # not said to come from RTLP: asked in the bell, nothing downloaded yet
+    assert len(calls) == merges and json.loads(sync.UPGRADES_FILE.read_text())["205"]["asked"]
+    waiting = [i for i in json.loads(sync.INBOX_FILE.read_text())["items"] if (i.get("action") or {}).get("kind") == "confirm-audio"]
+    assert waiting and waiting[0]["action"]["episode"] == 205
+    folder = tmp_path / "unshackle-111-S02E05"
+    shutil.rmtree(folder, ignore_errors=True)  # the import is a stand-in: the joined file stays, a new try would wait for it
+    assert sync.add_track(205, "fr", anyway=True) is True and len(calls) > merges  # the person said add it
+    monkeypatch.setitem(sync.SETTINGS, "add_track_other_source", "add")
+    shutil.rmtree(folder, ignore_errors=True)
+    merges = len(calls)
+    assert sync.add_track(205, "fr") is True and len(calls) > merges  # set to add it anyway: no question
+    for own in ({"parts": 2}, {"programmes": True}):  # in parts, or found by its title: the whole episode again
+        monkeypatch.setattr(sync, "read_file", lambda own=own: {"series": {111: {"service": "RTLP", "title": "t", **own}}})
+        assert sync.add_track(205, "fr") is False
+    assert sync.same_source({"path": "/tv/Show - S01E01.mkv", "originalFilePath": "x/Doc.2026.1080p.iP.WEB-DL.mkv"}, "iP")
+    assert not sync.same_source({"sceneName": "Show.S01E01.ip.WEB-DL"}, "iP")  # a short tag as Unshackle writes it
 
 
 def test_a_series_can_send_only_its_failures_or_nothing(tmp_path, monkeypatch):
@@ -2304,6 +2332,178 @@ def test_the_sign_in_hint_waits_for_two_quiet_minutes(tmp_path, monkeypatch):
     assert len(hints) == 1 and hints[0] >= 9  # only once quiet for 2 minutes (30 s a poll here), not while serve talks
 
 
+def test_a_separate_programme_is_found_by_its_title_and_looked_for_once_a_day(tmp_path, monkeypatch):
+    # By mj23au (#17): BBC Documentaries S2026E56 is a programme of its own on iP, found by its Sonarr title; one
+    # found nowhere is looked for again by the automatic sync a day later, at once when picked by hand
+    sync = load(tmp_path, monkeypatch)
+    asked = []
+
+    class Serve:
+        def call(self, method, path, json=None):
+            asked.append(path)
+            if path == "/api/search":
+                return {"results": results}
+            return {"titles": [{"type": "movie", "name": "Britain's Forgotten Girls", "year": 2026}]}
+    monkeypatch.setattr(sync, "backend_for", lambda tag, config=None: Serve())
+    monkeypatch.setattr(sync, "serve_params", lambda show, config: {})
+    show, config = {"service": "iP", "programmes": True}, {}
+    ep = {"id": 56, "seasonNumber": 2026, "episodeNumber": 56, "title": "Britain’s Forgotten Girls", "airDateUtc": "2026-10-01T20:00:00Z"}
+    assert sync.title_key("The Britain's Forgotten Girls") == sync.title_key("britain’s forgotten girls")
+
+    results = [{"id": "m01", "title": "Britain's Forgotten Girls"}, {"id": "m02", "title": "Forgotten"}]
+    match = sync.programme_for(show, ep, config)
+    assert (match["title"], match["code"], match["how"]) == ("m01", "S2026E56", "title")  # a film: Sonarr's code
+    asked.clear()
+    assert sync.programme_for(show, ep, config)["title"] == "m01" and asked == []  # kept: not searched again
+
+    other = {**ep, "id": 57, "title": "Lost Film"}
+    results = [{"id": "a", "title": "Lost Film"}, {"id": "b", "title": "Lost Film"}]  # two alike: not guessed
+    for manual, searched in ((False, True), (False, False), (True, True)):
+        asked.clear()
+        try:
+            sync.programme_for(show, other, config, manual)
+            raise AssertionError("two programmes titled alike were guessed")
+        except sync.Unmatched as e:
+            assert "2 programmes on iP" in str(e)
+        assert bool(asked) is searched  # the automatic sync waits a day; a pick by hand looks at once
+
+
+def test_the_very_title_from_years_apart_is_another_programme(tmp_path, monkeypatch):
+    # By mj23au (#17): an exact title is still checked by its year when the service gives one; a year apart is the
+    # same programme (made one year, aired the next), more is a remake or an older film; no year, nothing to go by
+    sync = load(tmp_path, monkeypatch)
+    titles = []
+
+    class Serve:
+        def call(self, method, path, json=None):
+            return {"results": [{"id": "p", "title": "The Siege"}]} if path == "/api/search" else {"titles": titles}
+    monkeypatch.setattr(sync, "backend_for", lambda tag, config=None: Serve())
+    monkeypatch.setattr(sync, "serve_params", lambda show, config: {})
+    show = {"service": "iP", "programmes": True}
+    ep = lambda id_, aired: {"id": id_, "seasonNumber": 2026, "episodeNumber": id_, "title": "The Siege", "airDateUtc": aired}
+    titles[:] = [{"type": "movie", "name": "The Siege", "year": 2019}]
+    try:
+        sync.programme_for(show, ep(31, "2026-03-02T21:00:00Z"), {}, True)
+        raise AssertionError("a programme seven years older was taken")
+    except sync.Unmatched as e:
+        assert "from 2019" in str(e)
+    titles[:] = [{"type": "movie", "name": "The Siege", "year": 2025}]
+    assert sync.programme_for(show, ep(32, "2026-01-10T21:00:00Z"), {}, True)["title"] == "p"
+    titles[:] = [{"type": "episode", "season": 1, "number": 1, "name": "The Siege"}]
+    assert sync.programme_for(show, ep(33, "2026-01-10T21:00:00Z"), {}, True)["code"] == "S01E01"
+
+
+def test_a_job_paused_while_waiting_for_a_slot_blocks_no_one(tmp_path, monkeypatch):
+    # A job paused while it waits loses its number (release_job): the next one asking still gets in line and in
+    sync = load(tmp_path, monkeypatch)
+    monkeypatch.setitem(sync.SETTINGS, "downloads_at_once", 1)
+    sync.slot_line[""] = ["B"]  # B waits, then is paused: its number is gone
+    sync.slot_jobs[""] = []
+    sync.release_job("B")
+    sync.slot_line[""].remove("B")  # B's thread leaves the line (its finally)
+    with sync.download_slot(""):
+        assert sync.slot_jobs[""]  # C got the slot at once
+    sync.slot_line[""] = ["B"]
+    with sync.download_slot(""):  # B still in line, numberless: sorted last, the sort raises nothing
+        pass
+    sync.slot_line.clear()
+    sync.slot_jobs.clear()
+
+
+def test_a_number_the_service_doesnt_list_is_asked_where_its_title_is(tmp_path, monkeypatch):
+    # 24 Hours in Police Custody: Sonarr's special S00E45 is Channel 4's S04E21, which lists no S00E45
+    sync = load(tmp_path, monkeypatch)
+    listing = {"available": {205: {"service": "S04E21", "match": "title", "same": True}}, "listed": {"S04E21", "S04E22"}, "titled": {"S04E21"}}
+    monkeypatch.setattr(sync, "find_by_title", lambda show, ep: listing)
+    monkeypatch.setattr(sync, "no_cdm", lambda tag, config=None: "")
+    asked = []
+    monkeypatch.setattr(sync, "run_job_retrying", lambda payload, run=None: asked.append(payload["wanted"][0]))
+    monkeypatch.setattr(sync, "notify", lambda *a, **k: None)
+    sync.sync(sync.read_file(), {}, [episode(111, 2, 5)], manual=True, kind="manual")
+    assert asked == ["S04E21"]  # never the S02E05 it doesn't list
+    card = next(json.loads(p.read_text()) for p in (tmp_path / "runs").glob("*.json"))
+    assert card["numbering"]["episode_map"] == {"S02E05": "S04E21"}  # a retry asks the same again
+    log = next((tmp_path / "runs").glob("*.log")).read_text()
+    assert "not listed on RTLP as S02E05; found by its title as S04E21 instead" in log
+
+    sync.title_matches.clear()
+    listing["available"] = {205: {"service": "S04E21", "match": "title"}}  # a close title, not its very title (#12):
+    sync.sync(sync.read_file(), {}, [episode(111, 2, 5)], manual=True, kind="manual")  # its number first, not an older one
+    assert asked[1] == "S02E05"
+    del asked[1:]
+
+    sync.title_matches.clear()
+    listing["available"] = {}  # not listed, and its title finds nothing: not out yet, asked by its number
+    sync.sync(sync.read_file(), {}, [episode(111, 2, 5)], manual=True, kind="manual")
+    assert asked == ["S04E21", "S02E05"]
+
+def test_a_finished_run_is_never_read_as_interrupted(tmp_path, monkeypatch):
+    # By mj23au (#17): the run leaves the active ones only once its ended card is on disk, so the history read when
+    # the page hears it ended (run_cards: no end and not active is "interrupted") always finds its outcome
+    sync = load(tmp_path, monkeypatch)
+    run = sync.EpisodeRun({"id": 5, "seriesId": 1, "series": {"title": "Show", "tvdbId": 111}, "seasonNumber": 1,
+                           "episodeNumber": 5}, {"service": "X"}, "manual")
+    seen, save = [], sync.EpisodeRun.save
+
+    def watched(self):
+        save(self)
+        seen.append((self.card.get("outcome"), self.id in sync.EpisodeRun.active))
+    monkeypatch.setattr(sync.EpisodeRun, "save", watched)
+    run.finish("unavailable", "Not on HMAX yet")
+    assert seen[-1] == ("unavailable", True)  # written while still active: never "no end, not running"
+    assert run.id not in sync.EpisodeRun.active
+
+
+def test_a_programme_is_found_inside_the_series_its_search_answers(tmp_path, monkeypatch):
+    # By mj23au: in programmes mode, iPlayer's search for "Fallen Women" answers the brand "Stacey Dooley", not a
+    # programme of that title; the episode is in the brand's listing, as S01E27. Two listings holding it: not guessed
+    sync = load(tmp_path, monkeypatch)
+    listings = {"b048vy8l": [{"type": "episode", "season": 1, "number": 26, "name": "Meet the Shoplifters"},
+                             {"type": "episode", "season": 1, "number": 27, "name": "Fallen Women"}],
+                "other": [{"type": "episode", "season": 1, "number": 1, "name": "Something Else"}]}
+    results = [{"id": "b048vy8l", "title": "Stacey Dooley"}, {"id": "other", "title": "Other"}]
+
+    class Serve:
+        def call(self, method, path, json=None):
+            return {"results": results} if path == "/api/search" else {"titles": listings[json["title_id"]]}
+    monkeypatch.setattr(sync, "backend_for", lambda tag, config=None: Serve())
+    monkeypatch.setattr(sync, "serve_params", lambda show, config: {})
+    show = {"service": "iP", "programmes": True}
+    ep = {"id": 101, "seasonNumber": 10, "episodeNumber": 1, "title": "Fallen Women", "airDateUtc": "2026-09-20T21:00:00Z"}
+    match = sync.programme_for(show, ep, {}, True)
+    assert (match["title"], match["code"], match["how"]) == ("b048vy8l", "S01E27", "title, in its series")
+    listings["other"] = [{"type": "episode", "season": 3, "number": 4, "name": "Fallen Women"}]
+    try:
+        sync.programme_for(show, {**ep, "id": 102}, {}, True)
+        raise AssertionError("a title found in two series was guessed")
+    except sync.Unmatched as e:
+        assert "2 episodes" in str(e)
+
+
+def test_a_season_on_a_page_of_its_own_downloads_from_there(tmp_path, monkeypatch):
+    # By mj23au: SBS lists Has Fallen's S01 as the show "Paris Has Fallen" and S02 as "Apollo Has Fallen"; S02E03 is
+    # asked of Apollo's page as its S01E03, S01 stays on the series' own page with its own numbering
+    sync = load(tmp_path, monkeypatch)
+    show = {"service": "SBS", "title": "https://sbs/paris-has-fallen", "season_map": {1: 1},
+            "season_pages": {2: {"url": "https://sbs/apollo-has-fallen"}}}
+    assert sync.season_page(show, 1) is show
+    page = sync.season_page(show, 2)
+    assert (page["title"], page["season_map"], page["page_of"]) == ("https://sbs/apollo-has-fallen", {2: 1}, 2)
+    assert sync.service_episode(page, 2, 3) == "S01E03"
+    assert sync.service_episode(sync.season_page({**show, "episode_offset": 2}, 2), 2, 3) == "S01E03"  # Paris's offset stays with Paris
+    assert sync.season_page({**show, "season_pages": {"2": {"url": "x", "season": 4}}}, 2)["season_map"] == {2: 4}  # yaml keys
+    config = sync.read_file()
+    config["series"][111] = {**config["series"][111], **show}
+    asked = []
+    monkeypatch.setattr(sync, "no_cdm", lambda tag, config=None: "")
+    monkeypatch.setattr(sync, "find_by_title", None)
+    monkeypatch.setattr(sync, "download_request", lambda show, config, sx, out: {"service": "SBS", "title_id": show["title"], "wanted": [sx], "output_dir": str(out)})
+    monkeypatch.setattr(sync, "run_job_retrying", lambda payload, run=None: asked.append((payload["title_id"], payload["wanted"][0])))
+    monkeypatch.setattr(sync, "notify", lambda *a, **k: None)
+    sync.sync(config, {}, [episode(111, 2, 3), episode(111, 1, 5)], manual=True, kind="manual")
+    assert asked == [("https://sbs/apollo-has-fallen", "S01E03"), ("https://sbs/paris-has-fallen", "S01E05")]
+
+
 def test_a_full_library_folder_stops_its_series_downloads(tmp_path, monkeypatch):
     # The room kept free holds for the library folder Sonarr moves a series into, as Sonarr reports it
     sync = load(tmp_path, monkeypatch)
@@ -2316,3 +2516,4 @@ def test_a_full_library_folder_stops_its_series_downloads(tmp_path, monkeypatch)
     monkeypatch.setitem(sync.SETTINGS, "min_free_gb", 0)
     assert sync.library_space_problem({"path": "/tv/Show"}) == ""  # not checked
     sync._root_folders.clear()
+

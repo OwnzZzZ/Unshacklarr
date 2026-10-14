@@ -355,9 +355,16 @@
             <span class="sub">Audio upgrade</span>
             <div class="ax-seg" id="dx-upmode" role="radiogroup" aria-label="Audio upgrade"><button type="button" role="radio" data-mode="redownload">Redownload episode</button><button type="button" role="radio" data-mode="add_track">Add audio track</button></div>
             <p class="rt-who" id="dx-upmode-say"></p>
-            <div class="sx-grid" id="dx-library">
-              <div class="field"><label for="dx-lib-sonarr">Library folder, as Sonarr sees it</label><input id="dx-lib-sonarr" type="text" data-set="library_sonarr_root" placeholder="Example: /tv" spellcheck="false"><small>The path Sonarr uses for your library.</small></div>
-              <div class="field"><label for="dx-lib-local">Library folder, as Unshacklarr sees it</label><input id="dx-lib-local" type="text" data-set="library_local_root" placeholder="Example: /mnt/tv" spellcheck="false"><small>The same folder as Unshacklarr sees it. Leave both empty if the paths are the same.</small></div>
+            <div id="dx-library">
+              <div id="dx-lib-who"></div>
+              <div class="sx-grid">
+                <div class="field"><label for="dx-lib-sonarr">Library folder, as Sonarr sees it</label><input id="dx-lib-sonarr" type="text" placeholder="Example: /tv" spellcheck="false"><div class="fb-known" id="dx-lib-sonarr-pick"></div><small>The path Sonarr uses for your library.</small></div>
+                <div class="field"><label for="dx-lib-local">Library folder, as Unshacklarr sees it</label><input id="dx-lib-local" type="text" placeholder="Example: /mnt/tv" spellcheck="false"><div class="fb-known" id="dx-lib-local-pick"></div><small>The same folder as Unshacklarr sees it. Leave both empty if the paths are the same.</small></div>
+              </div>
+              <p class="lib-check" id="dx-lib-check" aria-live="polite"></p>
+              <div class="field"><span>A file from another source</span>
+                <div class="ax-seg" id="dx-lib-other" role="radiogroup" aria-label="A file from another source"><button type="button" role="radio" data-other="ask">Ask me</button><button type="button" role="radio" data-other="add">Add the audio anyway</button></div>
+                <small>When Sonarr's file doesn't say it comes from the series' service, its source may differ and the added audio may be a few seconds out of step. Another team's release of the same stream is fine. Ask me: the bell asks each time, nothing is downloaded until you answer.</small></div>
             </div>
           </div>
         </section>
@@ -794,6 +801,15 @@
 
     <details class="card sx-card adv" id="d-adv" data-nav="numbering">
       <summary class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></svg></span><div><h3>Numbering and file names</h3><p>When the service numbers or names episodes differently from Sonarr.</p></div></summary>
+      <div class="field ds-programmes" id="d-programmes-field">
+        <label class="check"><input type="checkbox" id="d-programmes"> Separate programmes</label>
+        <small>For a series like BBC Documentaries, where each episode is its own programme on the service: each one is found by its title, so the series needs no URL.</small>
+      </div>
+      <div class="field" id="d-progmap-field" hidden>
+        <label for="d-progmap">Programme URLs</label>
+        <textarea id="d-progmap" rows="3" spellcheck="false" placeholder="S2026E14 https://www.bbc.co.uk/iplayer/episode/m0031c4c"></textarea>
+        <small>One episode per line, for those its title doesn't find: the episode as Sonarr numbers it, then the programme's URL or ID.</small>
+      </div>
       <div class="sx-grid">
         <div class="field">
           <label for="d-filename">Show name in file names</label>
@@ -812,6 +828,11 @@
           <label for="d-seasons">Seasons on the service</label>
           <input type="text" id="d-seasons" placeholder="Example: 34=29" inputmode="numeric">
           <small>Sonarr's season = the service's season, comma-separated.</small>
+        </div>
+        <div class="field" id="d-pages-field">
+          <label for="d-pages">Seasons listed as separate shows</label>
+          <textarea id="d-pages" rows="2" spellcheck="false" placeholder="S02 https://www.sbs.com.au/ondemand/tv-series/apollo-has-fallen"></textarea>
+          <small>For a season the service lists as a separate show. One line per season: Sonarr's season, then the show's URL. If the episodes are not in season 1 of that show, add its season number at the end.</small>
         </div>
         <div class="field">
           <label for="d-offset">Episode offset</label>
@@ -946,6 +967,15 @@
     </div>
     <div class="field"><span>Download options</span><div class="opts" id="sel-options"></div><small>Added to each series' own options. An option a series already has is replaced.</small></div>
     <div class="modal-actions"><button class="btn" value="cancel" formnovalidate>Cancel</button><button class="btn primary" value="apply" id="sel-apply">Apply</button></div>
+  </form>
+</dialog>
+<dialog class="modal" id="folder-dialog" aria-labelledby="folder-title">
+  <form method="dialog" class="folder-form">
+    <h2 id="folder-title">Choose a folder</h2>
+    <p class="folder-path" id="folder-path"></p>
+    <div class="url-find-out folder-list" id="folder-list"></div>
+    <p class="status-err" id="folder-err"></p>
+    <div class="modal-actions"><button class="btn" value="cancel" formnovalidate>Cancel</button><button class="btn primary" value="use" id="folder-use">Use this folder</button></div>
   </form>
 </dialog>
 <dialog class="modal" id="unsaved-dialog" aria-labelledby="unsaved-title">

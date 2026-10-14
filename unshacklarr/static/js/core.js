@@ -83,8 +83,8 @@ function trFind(key, depth) {
     const parts = key.split(" · "), done = parts.map((x) => tr(x, depth + 1));
     if (done.some((x, i) => x !== parts[i])) out = done.join(" · ");
   }
-  if (out === undefined && depth < 3) {
-    for (const p of TP) {
+  if (out === undefined && depth < 3 && key.length <= 300) {  // a long text (a log line) is no template: their lazy groups
+    for (const p of TP) {                                       // backtrack for seconds on it
       if (!key.includes(p.anchor)) continue;
       const m = p.re.exec(key);
       // a template with little text of its own ("{0} ago", "{0} of {1}") takes short fillers only, not a whole sentence
@@ -102,6 +102,7 @@ function trText(node) {
   const t = tr(v);
   if (t === v) return;
   const out = node.parentElement?.closest(".field > small") ? breakSentences(t) : t;
+  if (translated.size > 5000) translated.clear();  // live texts ("43%", "3 min ago") would fill it over days
   translated.add(out);
   node.nodeValue = out;
 }
@@ -407,6 +408,8 @@ async function openDrawer(s, tab, fromRoute = false) {
     ...S.services.map((t) => el("option", { value: t, textContent: t })));
   $("#d-service").value = conf.service || "";
   $("#d-url").value = conf.title || "";
+  fillProgrammes(conf);
+  fillPages(conf);
   $("#d-fallback").value = conf.fallback_profiles || "";
   renderFind(conf.service);
   $("#d-subs").value = conf.subs_accept || "";
@@ -427,7 +430,8 @@ async function openDrawer(s, tab, fromRoute = false) {
   fillAdv(conf, s.title);
   fillQualityImport(conf);
   $("#d-adv").open = Boolean(conf.file_name || Object.keys(conf.season_map || {}).length || conf.episode_offset || conf.season_offset
-    || Object.keys(conf.episode_map || {}).length || conf.join_parts === false || conf.parts || (conf.episode_name && conf.episode_name !== "joined"));
+    || Object.keys(conf.episode_map || {}).length || conf.join_parts === false || conf.parts || (conf.episode_name && conf.episode_name !== "joined")
+    || conf.programmes);
   optionsEditor($("#d-opts"), S.dlOptions, conf.options);
   renderHideToggle();
   $("#drawer").classList.add("open");
@@ -454,7 +458,8 @@ function renderSeriesState() {
   const sick = conf.service && S.health[current.tvdbId];
   const [cls, text] = !conf.service ? ["", "Not downloaded by Unshackle"]
     : sick ? ["down", `Its downloads from ${svcName(conf.service)} fail`]
-    : !conf.title ? ["warn", `On ${svcName(conf.service)}: its series URL is missing`]
+    : !conf.title && !conf.programmes ? ["warn", `On ${svcName(conf.service)}: its series URL is missing`]
+    : conf.programmes ? ["ok", `Downloaded from ${svcName(conf.service)}, each episode its own programme`]
     : ["ok", `Downloaded from ${svcName(conf.service)}`];
   box.classList.remove("ok", "down", "warn");
   if (cls) box.classList.add(cls);
@@ -671,6 +676,43 @@ async function knownProfiles(service) {
 $("#d-prefer").oninput = (e) => { S.config.series[current.tvdbId].audio_prefer = e.target.value.trim() || undefined; dirty(); };
 $("#d-subs").oninput = (e) => { S.config.series[current.tvdbId].subs_accept = e.target.value.trim() || undefined; dirty(); };
 $("#d-fallback").oninput = (e) => { S.config.series[current.tvdbId].fallback_profiles = e.target.value.trim() || undefined; dirty(); };
+/* Each episode its own programme (BBC Documentaries and the like): found by its title, or by a URL pasted here. */
+function fillProgrammes(conf) {
+  $("#d-programmes").checked = !!conf.programmes;
+  showProgrammes(!!conf.programmes);
+  $("#d-progmap").value = Object.entries(conf.programme_map || {}).map(([a, b]) => `${a} ${b}`).join("\n");
+}
+function showProgrammes(on) {
+  $("#d-progmap-field").hidden = !on;
+  $("#d-probe").hidden = $("#d-probe-state").hidden = on;  // it lists a series URL's episodes
+  // each episode's number comes from its programme: the series' numbering does nothing then
+  for (const id of ["#d-seasons", "#d-pages", "#d-offset", "#d-soffset", "#d-epmap"]) $(id).closest(".field").hidden = on;
+}
+$("#d-programmes").onchange = (e) => {
+  const conf = S.config.series[current.tvdbId];
+  if (e.target.checked) conf.programmes = true; else delete conf.programmes;
+  showProgrammes(e.target.checked);
+  dirty();
+  renderSeriesState();
+};
+/* A season the service lists as a show of its own (SBS: Has Fallen's S02 is "Apollo Has Fallen"): its page. */
+function fillPages(conf) {
+  $("#d-pages").value = Object.entries(conf.season_pages || {})
+    .map(([s, p]) => `S${String(s).padStart(2, "0")} ${p.url}${Number(p.season || 1) !== 1 ? ` ${p.season}` : ""}`).join("\n");
+}
+$("#d-pages").oninput = (e) => {
+  const rows = [...e.target.value.matchAll(/^\s*S?(\d+)\s+(\S+)(?:\s+(\d+))?\s*$/gim)];
+  const conf = S.config.series[current.tvdbId];
+  if (rows.length) conf.season_pages = Object.fromEntries(rows.map((m) => [Number(m[1]), { url: m[2], ...(m[3] && Number(m[3]) !== 1 ? { season: Number(m[3]) } : {}) }]));
+  else delete conf.season_pages;
+  dirty();
+};
+$("#d-progmap").oninput = (e) => {
+  const pairs = [...e.target.value.matchAll(/^\s*(S\d+E\d+)\s+(\S+)\s*$/gim)];
+  const conf = S.config.series[current.tvdbId];
+  if (pairs.length) conf.programme_map = Object.fromEntries(pairs.map((m) => [m[1].toUpperCase(), m[2]])); else delete conf.programme_map;
+  dirty();
+};
 $("#d-url").oninput = async (e) => {
   const conf = S.config.series[current.tvdbId], before = serviceOfLink(conf.title);
   conf.title = e.target.value.trim();
