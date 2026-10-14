@@ -28,6 +28,8 @@ Every change worth knowing, newest first. The format follows
 - **Fallback service.** A second service for a series, used when the main one doesn't have the episode.
 - **Separate programmes.** For documentary strands like BBC Documentaries: each episode is found on the service by its
   title, so the series needs no URL. In a series' Numbering. (#17, by mj23au)
+- **Seasons listed as separate shows.** When the service lists a season as a show of its own, that season downloads
+  from the show's page. Checking the episodes finds such a show and offers it. In a series' Numbering. (#21, by mj23au)
 - **Download window.** Automatic downloads run only between two times. In Settings › Automation.
 - **Auto release times.** A series gets the time its episodes usually come out. In Settings › Automation.
 - **Downloads at once.** How many episodes each Unshackle server downloads together, 1 for a small NAS. Picks run

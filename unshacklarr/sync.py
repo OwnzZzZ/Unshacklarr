@@ -1561,6 +1561,19 @@ def episode_folder(ep: dict) -> Path:
     return DOWNLOADS / f"unshackle-{inst['name'] + '-' if inst else ''}{ep['series']['tvdbId']}-S{ep['seasonNumber']:02}E{ep['episodeNumber']:02}"
 
 
+def season_page(show: dict, season: int) -> dict:
+    """The series as one Sonarr season downloads: from that season's own page when it has one (`season_pages`: SBS
+    lists Has Fallen's S01 as the show "Paris Has Fallen" and S02 as "Apollo Has Fallen"), asked as that page's season
+    (1 unless set); else the series as set. The series' own numbering (season and episode offsets) and fallback are the
+    main page's and stay with it (by mj23au)."""
+    pages = show.get("season_pages") or {}
+    page = pages.get(season) or pages.get(str(season))
+    if not page or not page.get("url"):
+        return show
+    own = {k: v for k, v in show.items() if k not in ("season_map", "season_offset", "season_offset_from", "episode_offset", "fallback")}
+    return {**own, "title": page["url"], "season_map": {season: int(page.get("season") or 1)}, "page_of": season}
+
+
 def service_episode(show: dict, season: int, number: int) -> str | None:
     """How the service numbers Sonarr's episode, None when the offset leaves no episode."""
     mapped = (show.get("episode_map") or {}).get(f"S{season:02}E{number:02}")
@@ -2627,6 +2640,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                 continue  # separate programmes need no series URL: each episode finds its own
             if not manual and not wanted_automatically(show, ep, datetime.now(timezone.utc)):
                 continue
+            show = season_page(show, ep["seasonNumber"])  # a season on a page of its own downloads from there
 
             sxxeyy = f"S{ep['seasonNumber']:02}E{ep['episodeNumber']:02}"
             service_sxxeyy = sxxeyy if show.get("programmes") else service_episode(show, ep["seasonNumber"], ep["episodeNumber"])

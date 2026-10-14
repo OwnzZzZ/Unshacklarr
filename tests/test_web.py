@@ -2032,3 +2032,68 @@ def test_a_flat_brand_page_is_matched_by_title_and_offered_no_season_map(tmp_pat
     assert not web.same_title("rape on trial episode 1", "rape on trial episode 2")
     assert not web.same_title("christmas special 2023", "christmas special 2024")
     assert web.same_title("the ambush part 2", "the ambush part 2") and web.same_title("fallen women", "fallen women")
+
+
+def test_a_season_on_a_page_of_its_own_is_listed_from_there(tmp_path, monkeypatch):
+    # By mj23au: Has Fallen on SBS. Each page is listed for its own season; S02 isn't looked for on Paris's page (nor
+    # offered a season map for it), and is found on Apollo's as its S01
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    listing = {"https://sbs/paris-has-fallen": [{"type": "episode", "season": 1, "number": n, "name": f"Episode {n}"} for n in range(1, 9)],
+               "https://sbs/apollo-has-fallen": [{"type": "episode", "season": 1, "number": n, "name": f"Episode {n}"} for n in range(1, 9)]}
+    monkeypatch.setattr(web, "list_titles", lambda show: listing[show["title"]])
+    ep = lambda s, n: {"id": s * 100 + n, "seasonNumber": s, "episodeNumber": n, "title": f"{'Paris' if s == 1 else 'Apollo'} Has Fallen ({n})",
+                       "airDateUtc": f"202{4 + s}-0{n % 9 + 1}-01T20:00:00Z", "hasFile": False}
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_get", lambda path, **q: [ep(s, n) for s in (1, 2) for n in range(1, 9)] if path == "episode" else {})
+    monkeypatch.setattr(web, "tmdb_key", lambda: "")
+    show = {"service": "SBS", "title": "https://sbs/paris-has-fallen", "season_pages": {2: {"url": "https://sbs/apollo-has-fallen"}}}
+    found = web.probe_series(show, 1, "Has Fallen")
+    assert found["available"][103]["service"] == "S01E03" and found["available"][203]["service"] == "S01E03"
+    assert found["season_map"] == {} and found["pages"]["2"]["count"] == 8
+    alone = web.probe_series({k: v for k, v in show.items() if k != "season_pages"}, 1, "Has Fallen")
+    assert 203 not in alone["available"]  # without it, S02 was looked for on Paris's page: not there
+    assert web.check_season_pages({"2": {"url": " https://sbs/apollo "}, 3: {"url": "u", "season": "1"}}, "x") == \
+        {2: {"url": "https://sbs/apollo"}, 3: {"url": "u"}}
+    import pytest
+    with pytest.raises(web.web.HTTPBadRequest):
+        web.check_season_pages({2: {"url": "two words"}}, "x")
+
+
+def test_a_season_missing_from_the_page_is_offered_the_show_its_titles_name(tmp_path, monkeypatch):
+    # By mj23au: Has Fallen's S02 is titled "Apollo Has Fallen (1)…(8)" in Sonarr and isn't on Paris's page; SBS has
+    # "Apollo Has Fallen" as a show of its own, which the Episodes check offers. A season whose titles share no name
+    # (each its own) is offered nothing, and the series' own page is never offered back
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    assert web.season_stem([f"Apollo Has Fallen ({n})" for n in range(1, 9)]) == "Apollo Has Fallen"
+    assert web.season_stem(["Stalkers: Episode 1", "Stalkers: Episode 2", "Other"]) == "Stalkers"
+    assert web.season_stem(["Pilot", "The Ride", "Homecoming"]) == ""  # titles of their own
+    assert web.season_stem(["Episode 1", "Episode 2"]) == ""  # nothing left once numbered off
+    listing = {"https://sbs/paris-has-fallen": [{"type": "episode", "season": 1, "number": n, "name": f"Episode {n}"} for n in range(1, 9)],
+               "https://sbs/apollo-has-fallen": [{"type": "episode", "season": 1, "number": n, "name": f"Episode {n}"} for n in range(1, 9)]}
+    searched = []
+
+    class Serve:
+        def call(self, method, path, json=None):
+            searched.append(json["query"])
+            return {"results": [{"id": "x", "url": "https://sbs/apollo-has-fallen", "title": "Apollo Has Fallen"},
+                                {"id": "y", "url": "https://sbs/olympus", "title": "Olympus Has Fallen"}]}
+    monkeypatch.setattr(web, "list_titles", lambda show: listing[show["title"]])
+    monkeypatch.setattr(web.sonarr_sync, "backend_for", lambda tag, config=None: Serve())
+    ep = lambda s, n, t: {"id": s * 100 + n, "seasonNumber": s, "episodeNumber": n, "title": t, "airDateUtc": f"202{4 + s}-01-0{n}T20:00:00Z", "hasFile": False}
+    every = [ep(1, n, f"Paris Has Fallen ({n})") for n in range(1, 9)] + [ep(2, n, f"Apollo Has Fallen ({n})") for n in range(1, 9)]
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_get", lambda path, **q: every if path == "episode" else {})
+    monkeypatch.setattr(web, "tmdb_key", lambda: "")
+    show = {"service": "SBS", "title": "https://sbs/paris-has-fallen"}
+    found = web.probe_series(show, 1, "Has Fallen", discover=True)
+    assert found["page_suggest"] == {"2": {"url": "https://sbs/apollo-has-fallen", "name": "Apollo Has Fallen", "count": 8}}
+    assert searched == ["Apollo Has Fallen"]  # S01, found on its page, is not searched for
+    assert "page_suggest" not in web.probe_series(show, 1, "Has Fallen")  # the sync's own look: no searching
+    with_page = web.probe_series({**show, "season_pages": {2: {"url": "https://sbs/apollo-has-fallen"}}}, 1, "Has Fallen", discover=True)
+    assert with_page["page_suggest"] == {} and with_page["available"][203]["service"] == "S01E03"

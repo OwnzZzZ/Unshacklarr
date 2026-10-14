@@ -835,6 +835,7 @@
  ],
  "For Gmail, Outlook or iCloud: use an app password, created in your account's security settings (not your usual password).": [],
  "For a file from another source, choose to be asked or to add the audio anyway": [],
+ "For a season the service lists as a separate show. One line per season: Sonarr's season, then the show's URL. If the episodes are not in season 1 of that show, add its season number at the end.": [],
  "For a series like BBC Documentaries, where each episode is its own programme on the service: each one is found by its title, so the series needs no URL.": [],
  "For a series with a release time, its new episode is tried at that time, then again and again for a while.": [],
  "For at most": [],
@@ -1710,6 +1711,7 @@
  "Run sync now": [],
  "Running": [],
  "Runs on": [],
+ "S02 https://www.sbs.com.au/ondemand/tv-series/apollo-has-fallen": [],
  "S2026E14 https://www.bbc.co.uk/iplayer/episode/m0031c4c": [],
  "S3 endpoint": [],
  "S3-compatible": [],
@@ -1756,7 +1758,13 @@
  "Season {0}": [
   "epSeason"
  ],
+ "Season {0} will be downloaded from {1}. Click Save, then check {2} again.": [
+  "season",
+  "p.name",
+  "svc"
+ ],
  "Seasons": [],
+ "Seasons listed as separate shows": [],
  "Seasons on the service": [],
  "Secret (API key)": [],
  "Secret key": [],
@@ -1802,6 +1810,19 @@
  "Series links from": [],
  "Series settings": [],
  "Series whose last 3 downloads failed": [],
+ "Series {0}, seasons listed as separate shows: season {1} needs one URL or ID, without spaces.": [
+  "key",
+  "season"
+ ],
+ "Series {0}, seasons listed as separate shows: season {1} or its season {2} on the show's page is not a valid number.": [
+  "key",
+  "season",
+  "there"
+ ],
+ "Series {0}, seasons listed as separate shows: {1} is not a season number.": [
+  "key",
+  "season"
+ ],
  "Server": [],
  "Server, if not ntfy.sh": [],
  "Service": [],
@@ -2529,6 +2550,7 @@
  "Use this TMDB ID for tagging instead of an automatic search. Add --enrich to also take its title, year and original language.": [],
  "Use this TVDB ID for --tvdb-order and tagging instead of looking the series up automatically. Add --enrich to also take its title, year and original language.": [],
  "Use this folder": [],
+ "Use this show": [],
  "Use {0}: {1}": [
   "l.service",
   "l.url"
@@ -3434,6 +3456,17 @@
  ],
  "{0} lists no episodes for this series: is its URL still right?": [
   "show['service']"
+ ],
+ "{0} lists season {1} as a separate show: {2} (1 episode).": [
+  "svc",
+  "season",
+  "p.name"
+ ],
+ "{0} lists season {1} as a separate show: {2} ({3} episodes).": [
+  "svc",
+  "season",
+  "p.name",
+  "p.count"
  ],
  "{0} may have it in better quality. Activity, Upgrades checks this and can replace the file.": [
   "svc"

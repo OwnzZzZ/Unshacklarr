@@ -2180,5 +2180,14 @@
  "Your library was found in another folder: {0} in Sonarr is {1} in Unshacklarr.": "Deine Bibliothek wurde in einem anderen Ordner gefunden: {0} in Sonarr ist {1} in Unshacklarr.",
  "Use these folders": "Diese Ordner verwenden",
  "title, in its series": "Titel, in seiner Serie",
- "{0} episodes on {1} are titled alike in its series: paste its URL on the series": "{0} Folgen bei {1} tragen diesen Titel in ihrer Serie: füge ihre URL bei der Serie ein"
+ "{0} episodes on {1} are titled alike in its series: paste its URL on the series": "{0} Folgen bei {1} tragen diesen Titel in ihrer Serie: füge ihre URL bei der Serie ein",
+ "For a season the service lists as a separate show. One line per season: Sonarr's season, then the show's URL. If the episodes are not in season 1 of that show, add its season number at the end.": "Für eine Staffel, die der Dienst als eigene Sendung führt. Eine Zeile pro Staffel: die Staffel in Sonarr, dann die URL der Sendung. Wenn die Folgen dort nicht in Staffel 1 sind, die Staffelnummer am Ende angeben.",
+ "Season {0} will be downloaded from {1}. Click Save, then check {2} again.": "Staffel {0} wird von {1} heruntergeladen. Auf Speichern klicken, dann {2} erneut prüfen.",
+ "Seasons listed as separate shows": "Staffeln als eigene Sendungen",
+ "Series {0}, seasons listed as separate shows: season {1} needs one URL or ID, without spaces.": "Serie {0}, Staffeln als eigene Sendungen: Staffel {1} braucht genau eine URL oder ID, ohne Leerzeichen.",
+ "Series {0}, seasons listed as separate shows: season {1} or its season {2} on the show's page is not a valid number.": "Serie {0}, Staffeln als eigene Sendungen: Staffel {1} oder ihre Staffel {2} auf der Seite der Sendung ist keine gültige Nummer.",
+ "Series {0}, seasons listed as separate shows: {1} is not a season number.": "Serie {0}, Staffeln als eigene Sendungen: {1} ist keine Staffelnummer.",
+ "Use this show": "Diese Sendung verwenden",
+ "{0} lists season {1} as a separate show: {2} (1 episode).": "{0} führt Staffel {1} als eigene Sendung: {2} (1 Folge).",
+ "{0} lists season {1} as a separate show: {2} ({3} episodes).": "{0} führt Staffel {1} als eigene Sendung: {2} ({3} Folgen)."
 }

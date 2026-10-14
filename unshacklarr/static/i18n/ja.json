@@ -2192,5 +2192,14 @@
  "Your library was found in another folder: {0} in Sonarr is {1} in Unshacklarr.": "ライブラリは別のフォルダーで見つかりました：Sonarr の {0} は Unshacklarr の {1} です。",
  "Use these folders": "これらのフォルダーを使う",
  "title, in its series": "タイトル（シリーズ内）",
- "{0} episodes on {1} are titled alike in its series: paste its URL on the series": "{1} のシリーズ内で {0} 件のエピソードが同じタイトルです：シリーズにその URL を貼ってください"
+ "{0} episodes on {1} are titled alike in its series: paste its URL on the series": "{1} のシリーズ内で {0} 件のエピソードが同じタイトルです：シリーズにその URL を貼ってください",
+ "For a season the service lists as a separate show. One line per season: Sonarr's season, then the show's URL. If the episodes are not in season 1 of that show, add its season number at the end.": "サービスが別の番組として扱っているシーズン用です。1行に1シーズン：Sonarrのシーズン、その後に番組のURL。エピソードがその番組のシーズン1にない場合は、最後にシーズン番号を追加してください。",
+ "Season {0} will be downloaded from {1}. Click Save, then check {2} again.": "シーズン{0}は{1}からダウンロードされます。保存をクリックしてから、{2}をもう一度確認してください。",
+ "Seasons listed as separate shows": "別の番組として扱われるシーズン",
+ "Series {0}, seasons listed as separate shows: season {1} needs one URL or ID, without spaces.": "シリーズ{0}、別の番組として扱われるシーズン：シーズン{1}にはURLまたはIDが1つ必要です（空白なし）。",
+ "Series {0}, seasons listed as separate shows: season {1} or its season {2} on the show's page is not a valid number.": "シリーズ{0}、別の番組として扱われるシーズン：シーズン{1}または番組ページでのシーズン{2}は有効な番号ではありません。",
+ "Series {0}, seasons listed as separate shows: {1} is not a season number.": "シリーズ{0}、別の番組として扱われるシーズン：{1}はシーズン番号ではありません。",
+ "Use this show": "この番組を使う",
+ "{0} lists season {1} as a separate show: {2} (1 episode).": "{0}はシーズン{1}を別の番組として扱っています：{2}（1エピソード）。",
+ "{0} lists season {1} as a separate show: {2} ({3} episodes).": "{0}はシーズン{1}を別の番組として扱っています：{2}（{3}エピソード）。"
 }

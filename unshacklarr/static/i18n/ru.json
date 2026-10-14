@@ -2189,5 +2189,14 @@
  "Your library was found in another folder: {0} in Sonarr is {1} in Unshacklarr.": "Ваша библиотека найдена в другой папке: {0} в Sonarr — это {1} в Unshacklarr.",
  "Use these folders": "Использовать эти папки",
  "title, in its series": "название, в своём сериале",
- "{0} episodes on {1} are titled alike in its series: paste its URL on the series": "{0} серий на {1} носят это название в своём сериале: вставьте её URL в сериал"
+ "{0} episodes on {1} are titled alike in its series: paste its URL on the series": "{0} серий на {1} носят это название в своём сериале: вставьте её URL в сериал",
+ "For a season the service lists as a separate show. One line per season: Sonarr's season, then the show's URL. If the episodes are not in season 1 of that show, add its season number at the end.": "Для сезона, который сервис показывает как отдельное шоу. Одна строка на сезон: сезон в Sonarr, затем URL шоу. Если эпизоды там не в 1-м сезоне, добавьте номер сезона в конце.",
+ "Season {0} will be downloaded from {1}. Click Save, then check {2} again.": "Сезон {0} будет загружен из {1}. Нажмите «Сохранить», затем снова проверьте {2}.",
+ "Seasons listed as separate shows": "Сезоны как отдельные шоу",
+ "Series {0}, seasons listed as separate shows: season {1} needs one URL or ID, without spaces.": "Сериал {0}, сезоны как отдельные шоу: для сезона {1} нужен один URL или ID, без пробелов.",
+ "Series {0}, seasons listed as separate shows: season {1} or its season {2} on the show's page is not a valid number.": "Сериал {0}, сезоны как отдельные шоу: сезон {1} или его сезон {2} на странице шоу — недопустимый номер.",
+ "Series {0}, seasons listed as separate shows: {1} is not a season number.": "Сериал {0}, сезоны как отдельные шоу: {1} — не номер сезона.",
+ "Use this show": "Использовать это шоу",
+ "{0} lists season {1} as a separate show: {2} (1 episode).": "{0} показывает сезон {1} как отдельное шоу: {2} (эпизодов: 1).",
+ "{0} lists season {1} as a separate show: {2} ({3} episodes).": "{0} показывает сезон {1} как отдельное шоу: {2} (эпизодов: {3})."
 }

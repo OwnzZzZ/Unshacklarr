@@ -2478,3 +2478,27 @@ def test_a_programme_is_found_inside_the_series_its_search_answers(tmp_path, mon
         raise AssertionError("a title found in two series was guessed")
     except sync.Unmatched as e:
         assert "2 episodes" in str(e)
+
+
+def test_a_season_on_a_page_of_its_own_downloads_from_there(tmp_path, monkeypatch):
+    # By mj23au: SBS lists Has Fallen's S01 as the show "Paris Has Fallen" and S02 as "Apollo Has Fallen"; S02E03 is
+    # asked of Apollo's page as its S01E03, S01 stays on the series' own page with its own numbering
+    sync = load(tmp_path, monkeypatch)
+    show = {"service": "SBS", "title": "https://sbs/paris-has-fallen", "season_map": {1: 1},
+            "season_pages": {2: {"url": "https://sbs/apollo-has-fallen"}}}
+    assert sync.season_page(show, 1) is show
+    page = sync.season_page(show, 2)
+    assert (page["title"], page["season_map"], page["page_of"]) == ("https://sbs/apollo-has-fallen", {2: 1}, 2)
+    assert sync.service_episode(page, 2, 3) == "S01E03"
+    assert sync.service_episode(sync.season_page({**show, "episode_offset": 2}, 2), 2, 3) == "S01E03"  # Paris's offset stays with Paris
+    assert sync.season_page({**show, "season_pages": {"2": {"url": "x", "season": 4}}}, 2)["season_map"] == {2: 4}  # yaml keys
+    config = sync.read_file()
+    config["series"][111] = {**config["series"][111], **show}
+    asked = []
+    monkeypatch.setattr(sync, "no_cdm", lambda tag, config=None: "")
+    monkeypatch.setattr(sync, "find_by_title", None)
+    monkeypatch.setattr(sync, "download_request", lambda show, config, sx, out: {"service": "SBS", "title_id": show["title"], "wanted": [sx], "output_dir": str(out)})
+    monkeypatch.setattr(sync, "run_job_retrying", lambda payload, run=None: asked.append((payload["title_id"], payload["wanted"][0])))
+    monkeypatch.setattr(sync, "notify", lambda *a, **k: None)
+    sync.sync(config, {}, [episode(111, 2, 3), episode(111, 1, 5)], manual=True, kind="manual")
+    assert asked == [("https://sbs/apollo-has-fallen", "S01E03"), ("https://sbs/paris-has-fallen", "S01E05")]

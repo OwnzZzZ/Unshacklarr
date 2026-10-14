@@ -2197,5 +2197,14 @@
  "Your library was found in another folder: {0} in Sonarr is {1} in Unshacklarr.": "你的媒体库在另一个文件夹中找到：Sonarr 中的 {0} 即 Unshacklarr 中的 {1}。",
  "Use these folders": "使用这些文件夹",
  "title, in its series": "标题（在其剧集中）",
- "{0} episodes on {1} are titled alike in its series: paste its URL on the series": "{1} 上有 {0} 集在其剧集中同名：请在剧集中粘贴其 URL"
+ "{0} episodes on {1} are titled alike in its series: paste its URL on the series": "{1} 上有 {0} 集在其剧集中同名：请在剧集中粘贴其 URL",
+ "For a season the service lists as a separate show. One line per season: Sonarr's season, then the show's URL. If the episodes are not in season 1 of that show, add its season number at the end.": "用于服务将其作为独立节目列出的季。每行一季：Sonarr 中的季，然后是该节目的 URL。如果剧集不在该节目的第 1 季，请在末尾加上季号。",
+ "Season {0} will be downloaded from {1}. Click Save, then check {2} again.": "第 {0} 季将从 {1} 下载。点击保存，然后再次检查 {2}。",
+ "Seasons listed as separate shows": "作为独立节目列出的季",
+ "Series {0}, seasons listed as separate shows: season {1} needs one URL or ID, without spaces.": "剧集 {0}，作为独立节目列出的季：第 {1} 季需要一个 URL 或 ID，不含空格。",
+ "Series {0}, seasons listed as separate shows: season {1} or its season {2} on the show's page is not a valid number.": "剧集 {0}，作为独立节目列出的季：第 {1} 季或其在节目页面上的第 {2} 季不是有效编号。",
+ "Series {0}, seasons listed as separate shows: {1} is not a season number.": "剧集 {0}，作为独立节目列出的季：{1} 不是季号。",
+ "Use this show": "使用此节目",
+ "{0} lists season {1} as a separate show: {2} (1 episode).": "{0} 将第 {1} 季作为独立节目列出：{2}（1 集）。",
+ "{0} lists season {1} as a separate show: {2} ({3} episodes).": "{0} 将第 {1} 季作为独立节目列出：{2}（{3} 集）。"
 }

@@ -391,6 +391,7 @@ async function openDrawer(s, tab, fromRoute = false) {
   $("#d-service").value = conf.service || "";
   $("#d-url").value = conf.title || "";
   fillProgrammes(conf);
+  fillPages(conf);
   $("#d-fallback").value = conf.fallback_profiles || "";
   renderFind(conf.service);
   $("#d-subs").value = conf.subs_accept || "";
@@ -667,7 +668,7 @@ function showProgrammes(on) {
   $("#d-progmap-field").hidden = !on;
   $("#d-probe").hidden = $("#d-probe-state").hidden = on;  // it lists a series URL's episodes
   // each episode's number comes from its programme: the series' numbering does nothing then
-  for (const id of ["#d-seasons", "#d-offset", "#d-soffset", "#d-epmap"]) $(id).closest(".field").hidden = on;
+  for (const id of ["#d-seasons", "#d-pages", "#d-offset", "#d-soffset", "#d-epmap"]) $(id).closest(".field").hidden = on;
 }
 $("#d-programmes").onchange = (e) => {
   const conf = S.config.series[current.tvdbId];
@@ -675,6 +676,18 @@ $("#d-programmes").onchange = (e) => {
   showProgrammes(e.target.checked);
   dirty();
   renderSeriesState();
+};
+/* A season the service lists as a show of its own (SBS: Has Fallen's S02 is "Apollo Has Fallen"): its page. */
+function fillPages(conf) {
+  $("#d-pages").value = Object.entries(conf.season_pages || {})
+    .map(([s, p]) => `S${String(s).padStart(2, "0")} ${p.url}${Number(p.season || 1) !== 1 ? ` ${p.season}` : ""}`).join("\n");
+}
+$("#d-pages").oninput = (e) => {
+  const rows = [...e.target.value.matchAll(/^\s*S?(\d+)\s+(\S+)(?:\s+(\d+))?\s*$/gim)];
+  const conf = S.config.series[current.tvdbId];
+  if (rows.length) conf.season_pages = Object.fromEntries(rows.map((m) => [Number(m[1]), { url: m[2], ...(m[3] && Number(m[3]) !== 1 ? { season: Number(m[3]) } : {}) }]));
+  else delete conf.season_pages;
+  dirty();
 };
 $("#d-progmap").oninput = (e) => {
   const pairs = [...e.target.value.matchAll(/^\s*(S\d+E\d+)\s+(\S+)\s*$/gim)];

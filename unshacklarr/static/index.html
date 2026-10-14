@@ -829,6 +829,11 @@
           <input type="text" id="d-seasons" placeholder="Example: 34=29" inputmode="numeric">
           <small>Sonarr's season = the service's season, comma-separated.</small>
         </div>
+        <div class="field" id="d-pages-field">
+          <label for="d-pages">Seasons listed as separate shows</label>
+          <textarea id="d-pages" rows="2" spellcheck="false" placeholder="S02 https://www.sbs.com.au/ondemand/tv-series/apollo-has-fallen"></textarea>
+          <small>For a season the service lists as a separate show. One line per season: Sonarr's season, then the show's URL. If the episodes are not in season 1 of that show, add its season number at the end.</small>
+        </div>
         <div class="field">
           <label for="d-offset">Episode offset</label>
           <input type="number" id="d-offset" placeholder="0" step="1">

@@ -233,6 +233,7 @@ async function loadEpisodes(s, keep = false) {  // keep: a reload after a downlo
   if (!inst) epSonarr = "";
   if (!keep) {
     epAvail = epTitles = epAvailRaw = null;
+    epPages = {};
     epSeasons = {}; epSeason = null; epBusy = new Map();  // nothing of the series open before
     picked.clear();
     updateEpBar();
@@ -319,6 +320,7 @@ function renderCheck(s, changed = false) {
   $("#ep-odd").before(pick);
 }
 let epUp = null;  // episode ids Upgrades found better on the service; null: Upgrades hasn't checked the series
+let epPages = {};  // Sonarr season -> a show of its own the service has for it, as the last check found (by mj23au)
 let epAvail = null;  // episode id -> what the service calls it, once "What's on <service>?" asked it
 let epTitles = null;  // everything the service lists then: [{key: "S26E11", part, name}]
 let epChecked = null;  // when that was
@@ -616,7 +618,19 @@ function renderCatchUp() {
       : there.length ? `${svc} has ${there.length} of your ${missing.length} missing episode${missing.length > 1 ? "s" : ""}` : `${svc} has none of your ${missing.length} missing episode${missing.length > 1 ? "s" : ""}` }),
       ...(bySeason.length ? [el("small", { textContent: bySeason.map(([n, list]) => `${Number(n) === 0 ? "Specials" : `S${pad2(n)}`} (${list.length})`).join(" · ") })] : []),
       ...(upgrades.length && missing.length ? [el("small", { className: "renum", textContent: epUp ? `${upgrades.length} on disk ${svc} has in better quality (Activity, Upgrades)` : `${upgrades.length} on disk in a lower resolution than asked: ${svc} may have better` })] : []),
-      ...(renumbered ? [el("small", { className: "renum", textContent: renumbered > 1 ? `${renumbered} episodes have another number on ${svc}: Download takes care of them` : `1 episode has another number on ${svc}: Download takes care of it` })] : []),),
+      ...(renumbered ? [el("small", { className: "renum", textContent: renumbered > 1 ? `${renumbered} episodes have another number on ${svc}: Download takes care of them` : `1 episode has another number on ${svc}: Download takes care of it` })] : []),
+      // a whole season on a show of its own there (SBS: Has Fallen's S02 is "Apollo Has Fallen"): offered, saved with the series
+      ...Object.entries(epPages).map(([season, p]) => el("small", { className: "renum" },
+        p.count === 1 ? `${svc} lists season ${season} as a separate show: ${p.name} (1 episode). ` : `${svc} lists season ${season} as a separate show: ${p.name} (${p.count} episodes). `,
+        el("button", { className: "btn small", type: "button", textContent: "Use this show", title: p.url, onclick: () => {
+          const conf = S.config.series[current.tvdbId];
+          conf.season_pages = { ...(conf.season_pages || {}), [season]: { url: p.url, ...(p.season ? { season: p.season } : {}) } };
+          delete epPages[season];
+          fillPages(conf);
+          dirty();
+          toast(`Season ${season} will be downloaded from ${p.name}. Click Save, then check ${svc} again.`);
+          renderCatchUp();
+        } })))),
     el("div", { className: "catchup-acts" },
       ...(upgrades.length ? [el("button", { className: "btn small", type: "button", textContent: `Select ${upgrades.length} upgrade${upgrades.length > 1 ? "s" : ""}`,
         title: `On disk in a lower resolution than asked of ${svc}, and available on ${svc}`, onclick: () => { upgrades.forEach((e) => picked.add(e.id)); renderSeason(); updateEpBar(); } })] : []),
@@ -632,7 +646,7 @@ async function askService(s) {
   try {
     r = await api("/api/probe", { method: "POST", signal: AbortSignal.timeout(120000), body: JSON.stringify({ show: conf, seriesId: s.id ?? S.sonarrsOf?.[s.tvdbId]?.[0]?.id, tvdbId: s.tvdbId, title: s.title,
       ...(s.id ? {} : { sonarr: S.sonarrsOf?.[s.tvdbId]?.[0]?.name }) }) });  // in no main Sonarr: its own Sonarr's episodes
-    if (current === s) { epAvail = viewAvail(r.available); epTitles = r.titles || []; epChecked = r.checked; localTitles(r.local_titles); $("#ep-avail").hidden = false; renderSeason(); renderPreview(); }
+    if (current === s) { epPages = r.page_suggest || {}; epAvail = viewAvail(r.available); epTitles = r.titles || []; epChecked = r.checked; localTitles(r.local_titles); $("#ep-avail").hidden = false; renderSeason(); renderPreview(); }
   } catch (e) { toast(e.message, true); }
   clearTimeout(slow);
   if (current === s && $(".ep-check")) { $(".ep-check").disabled = false; checkLabel(epAvail ? `Refresh what's on ${svc}` : `What's on ${svc}?`); }

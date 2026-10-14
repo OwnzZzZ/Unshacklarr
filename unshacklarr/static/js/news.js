@@ -11,6 +11,7 @@ const NEWS = [
   { id: "series-notify", version: "1.5.0", title: "Notifications per series", series: true, target: "#d-notify-l" },
   { id: "no-spoilers", version: "1.5.0", title: "No spoilers", sec: "interface", target: "#rg-spoiler-card" },
   { id: "more-sonarr", version: "1.5.0", title: "Other Sonarr instances", sec: "sonarr", target: "#sn-card" },
+  { id: "season-pages", version: "1.5.0", title: "Seasons listed as separate shows", series: true, target: "#d-pages-field" },
   { id: "separate-programmes", version: "1.5.0", title: "Separate programmes", series: true, target: "#d-programmes-field" },
   { id: "sonarr-name", version: "1.5.0", title: "Sonarr name", sec: "sonarr", target: "#sx-name-field" },
   { id: "upgrade-series", version: "1.5.0", title: "Upgrades you choose", sec: "upgrades", target: "#ug-series-card" },

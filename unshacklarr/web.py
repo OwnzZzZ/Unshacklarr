@@ -733,6 +733,8 @@ async def save_config(request):
             series[int(key)]["programmes"] = True
         if pasted := check_programme_map(show.get("programme_map"), str(key)):
             series[int(key)]["programme_map"] = pasted
+        if pages := check_season_pages(show.get("season_pages"), str(key)):
+            series[int(key)]["season_pages"] = pages
     notifications = body.get("notifications") or {}
     targets = check_targets(notifications, [t["url"] for t in sonarr_sync.notification_targets(previous["notifications"])])
     countries = [c for c in body.get("tmdb_countries") or [] if re.fullmatch(r"[A-Z]{2}", c)]
@@ -773,6 +775,23 @@ async def save_config(request):
     }
     write_config(config)
     return web.json_response(public_config(read_config()))
+
+
+def check_season_pages(given, key: str) -> dict:
+    """Seasons on a page of their own: {Sonarr season: {"url", "season": its season there, when not 1}} (by mj23au)."""
+    out = {}
+    for season, page in (given or {}).items() if isinstance(given, dict) else ():
+        url = str((page or {}).get("url") or "").strip() if isinstance(page, dict) else ""
+        try:
+            season, there = int(season), int((page or {}).get("season") or 1)
+        except (TypeError, ValueError):
+            raise web.HTTPBadRequest(text=f"Series {key}, seasons listed as separate shows: {season!r} is not a season number.") from None
+        if season < 1 or not 1 <= there <= 9999:
+            raise web.HTTPBadRequest(text=f"Series {key}, seasons listed as separate shows: season {season} or its season {there} on the show's page is not a valid number.")
+        if not url or url.startswith("-") or any(c.isspace() for c in url):
+            raise web.HTTPBadRequest(text=f"Series {key}, seasons listed as separate shows: season {season} needs one URL or ID, without spaces.")
+        out[season] = {"url": url, **({"season": there} if there != 1 else {})}
+    return out
 
 
 def check_programme_map(given, key: str) -> dict:
@@ -2986,8 +3005,95 @@ def titled_elsewhere(season: int, theirs: int, every: list[dict], available: dic
     return False
 
 
-def probe_series(show: dict, series_id: int, title: str = "") -> dict:
-    """List the series on its service (nothing downloaded) and check the next episodes against Sonarr."""
+SEASON_STEM = re.compile(r"\s*[-:,]?\s*(?:\(\s*(?:part\s*)?\d+\s*\)|(?:part|episode|ep\.?|chapter)\s*\d+|\d+)\s*$", re.IGNORECASE)
+
+
+def season_stem(titles: list) -> str:
+    """The show's own name in a season's episode titles, when most of them share it once numbered off: "Apollo Has
+    Fallen (3)" -> "Apollo Has Fallen". "" when no name stands out (titles of their own, "Pilot", "The Ride")."""
+    stems = [SEASON_STEM.sub("", str(t or "")).strip(" -:,") for t in titles]
+    stems = [s for s, t in zip(stems, titles) if s and s != str(t or "").strip()]  # only titles that had a number
+    if not stems:
+        return ""
+    best = max(set(stems), key=stems.count)
+    return best if stems.count(best) * 2 > len(titles) and len(best) >= 4 and usable_title(best) else ""
+
+
+def page_of_season(show: dict, name: str, aired: int) -> dict | None:
+    """A show of its own on the series' service for one of its seasons: one search result of that very name, not the
+    series' own page, whose listing holds at least half of the season's aired episodes in one of its seasons."""
+    dl, _ = sonarr_sync.stacked(show, read_config())  # as search_series_url: the series' profile and proxy
+    params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy")}
+    try:
+        found = sonarr_sync.backend_for(show["service"]).call("POST", "/api/search", json={**params, "service": show["service"], "query": name})
+    except UnshackleError as e:
+        print(f"Search {show['service']} for {name!r}: {no_credentials(e)}", flush=True)
+        return None
+    same = [r for r in found.get("results") or [] if title_key(str(r.get("title") or "")) == title_key(name)
+            and (r.get("url") or r.get("id")) and str(r.get("url") or r.get("id")) != str(show.get("title"))]
+    if len(same) != 1:
+        return None
+    url = str(same[0].get("url") or same[0].get("id"))
+    try:
+        listed = [t for t in list_titles({**show, "title": url}) if t.get("type") == "episode"]
+    except (UnshackleError, requests.RequestException):
+        return None
+    counts: dict[int, int] = {}
+    for t in listed:
+        counts[int(t.get("season") or 0)] = counts.get(int(t.get("season") or 0), 0) + 1
+    if not counts:
+        return None
+    season, count = max(counts.items(), key=lambda kv: kv[1])
+    return {"url": url, "name": str(same[0].get("title") or name), "count": count, **({"season": season} if season != 1 else {})} \
+        if count * 2 >= aired else None
+
+
+def suggest_pages(show: dict, series_id: int, found: dict, pages: dict) -> dict:
+    """Sonarr seasons aired and found nowhere on the page, with the show of their own the service has for them, by
+    their episode titles' name (Has Fallen's S02, "Apollo Has Fallen (1)…(8)", is SBS's "Apollo Has Fallen"): the
+    Episodes tab offers it. Only when asked from the page: a search and a listing for each such season (by mj23au)."""
+    now = datetime.now(timezone.utc).isoformat()
+    seasons: dict[int, list] = {}
+    for e in sonarr_sync.sonarr_get("episode", seriesId=series_id) if series_id else []:
+        if e["seasonNumber"] > 0 and e.get("airDateUtc") and e["airDateUtc"] <= now:
+            seasons.setdefault(e["seasonNumber"], []).append(e)
+    out = {}
+    missing = [(s, eps) for s, eps in sorted(seasons.items()) if s not in pages and not any(e["id"] in found["available"] for e in eps)]
+    for season, eps in missing[-2:]:  # ponytail: the latest two only, a long series the service has little of asks no more
+        if (name := season_stem([e.get("title") for e in eps])) and (page := page_of_season(show, name, len(eps))):
+            out[str(season)] = page
+    return out
+
+
+def probe_series(show: dict, series_id: int, title: str = "", discover: bool = False) -> dict:
+    """List the series on its service (nothing downloaded) and check the next episodes against Sonarr. A season on a
+    page of its own (season_pages) is checked against that page alone, and the main page against the rest (by mj23au)."""
+    pages = {int(k): v for k, v in (show.get("season_pages") or {}).items() if (v or {}).get("url")}
+    if show.get("page_of"):
+        return probe_one(show, series_id, title, None)
+    if not pages:
+        found = probe_one(show, series_id, title, None)
+        if discover:
+            found["page_suggest"] = suggest_pages(show, series_id, found, pages)
+        return found
+    found = probe_one(show, series_id, title, {"not": set(pages)})
+    found["pages"] = {}
+    for season in sorted(pages):
+        try:
+            part = probe_one(sonarr_sync.season_page(show, season), series_id, title, {"only": {season}})
+        except (UnshackleError, requests.RequestException, ValueError) as e:
+            found["pages"][str(season)] = {"url": pages[season]["url"], "error": str(e)[:200]}
+            continue
+        found["available"].update(part["available"])
+        found["checks"] = sorted(found["checks"] + part["checks"], key=lambda c: c.get("air") or "")[-4:]
+        found["pages"][str(season)] = {"url": pages[season]["url"], "count": part["count"], "series": part.get("series")}
+    if discover:
+        found["page_suggest"] = suggest_pages(show, series_id, found, pages)
+    return found
+
+
+def probe_one(show: dict, series_id: int, title: str, seasons: dict | None) -> dict:
+    """probe_series for one page: Sonarr's episodes all, or {"only": seasons} or {"not": seasons}."""
     titles = list_titles(show)
     service_eps = [t for t in titles if t.get("type") == "episode"]
     by_key = {}
@@ -2996,6 +3102,9 @@ def probe_series(show: dict, series_id: int, title: str = "") -> dict:
         by_key[key] = t
         by_key.setdefault(f"S{t['season']:02}E{t['number']:02}", t)  # a split episode answers to its plain number too
     every = sonarr_sync.sonarr_get("episode", seriesId=series_id) if series_id else []
+    if seasons:  # a season on a page of its own is looked for there only
+        keep = (lambda n: n in seasons["only"]) if "only" in seasons else (lambda n: n not in seasons["not"])
+        every = [e for e in every if keep(e["seasonNumber"])]
     sonarr = [e for e in every if e["seasonNumber"] > 0]
     sonarr_eps = [{"season": e["seasonNumber"], "air_date": (e.get("airDateUtc") or "")[:10] or None} for e in sonarr]
     now = datetime.now(timezone.utc).isoformat()
@@ -3111,7 +3220,7 @@ def title_matches(show: dict, ep: dict) -> dict:
     """For the sync, before a download: where the service has each Sonarr episode (by number, title or absolute
     number: Sonarr id -> {"service", "match"}) and every number it lists, the list kept for the page too."""
     found = probe_series(show, ep["seriesId"], ep["series"]["title"])
-    if not sonarr_sync.instance():  # the page's list holds the main Sonarr's episode ids
+    if not sonarr_sync.instance() and not show.get("page_of"):  # the page's list holds the main Sonarr's episode ids
         keep_service_list(ep["series"]["tvdbId"], show, found)
     listed = {t["key"] + (f".{t['part']}" if t.get("part") else "") for t in found["titles"]} | {t["key"] for t in found["titles"]}
     return {"available": {int(i): m for i, m in found["available"].items()}, "listed": listed,
@@ -3154,7 +3263,7 @@ async def probe(request):
     show = {**show, "season_map": {int(k): int(v) for k, v in (show.get("season_map") or {}).items()}}
     try:
         inst = sonarr_named(str(body.get("sonarr") or ""))  # a series in another Sonarr only: its episodes there
-        found = await asyncio.to_thread(on_sonarr, inst, probe_series, show, int(body.get("seriesId") or 0), str(body.get("title") or ""))
+        found = await asyncio.to_thread(on_sonarr, inst, probe_series, show, int(body.get("seriesId") or 0), str(body.get("title") or ""), True)
         if body.get("tvdbId"):
             await asyncio.to_thread(keep_service_list, int(body["tvdbId"]), show, found)
         return web.json_response({**found, "checked": datetime.now(timezone.utc).isoformat()})
@@ -3389,7 +3498,7 @@ def upgrade_candidates(config: dict, only: set | None = None) -> list[tuple]:
                 if str(file.get("releaseGroup") or "").lower() != ours.lower():
                     track["group"] = file.get("releaseGroup") or "no group"  # not ours: the same step from the service replaces it
             if (step := sonarr_sync.step_of(ladder, track)) > 0 or track.get("group"):
-                work.append((serie, show, ladder, e, track, step))
+                work.append((serie, sonarr_sync.season_page(show, e["seasonNumber"]), ladder, e, track, step))  # its own page
     return work
 
 
@@ -3469,7 +3578,7 @@ def scan_upgrades_in(inst: dict | None, name: str, only: set | None = None) -> N
                 if hit.get("item"):
                     found.append({**hit["item"], "file": file_label(w[4])})  # labelled as the file is labelled now
             else:
-                ask.setdefault(w[0]["id"], []).append(w)
+                ask.setdefault((w[0]["id"], str(w[1].get("title"))), []).append(w)  # per series and page: one listing
         for chunks in ask.values():
             show = chunks[0][1]
             size = 1 if int(show.get("parts") or 0) > 1 else UPGRADE_BATCH  # parts: one episode at a time, as before

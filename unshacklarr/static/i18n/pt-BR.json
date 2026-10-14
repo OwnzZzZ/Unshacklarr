@@ -2174,5 +2174,14 @@
  "Your library was found in another folder: {0} in Sonarr is {1} in Unshacklarr.": "Sua biblioteca foi encontrada em outra pasta: {0} no Sonarr é {1} no Unshacklarr.",
  "Use these folders": "Usar estas pastas",
  "title, in its series": "título, na sua série",
- "{0} episodes on {1} are titled alike in its series: paste its URL on the series": "{0} episódios no {1} têm esse título na série: cole a URL na série"
+ "{0} episodes on {1} are titled alike in its series: paste its URL on the series": "{0} episódios no {1} têm esse título na série: cole a URL na série",
+ "For a season the service lists as a separate show. One line per season: Sonarr's season, then the show's URL. If the episodes are not in season 1 of that show, add its season number at the end.": "Para uma temporada que o serviço apresenta como um programa separado. Uma linha por temporada: a temporada do Sonarr e depois a URL do programa. Se os episódios não estiverem na temporada 1 desse programa, adicione o número da temporada no final.",
+ "Season {0} will be downloaded from {1}. Click Save, then check {2} again.": "A temporada {0} será baixada de {1}. Clique em Salvar e verifique {2} novamente.",
+ "Seasons listed as separate shows": "Temporadas apresentadas como programas separados",
+ "Series {0}, seasons listed as separate shows: season {1} needs one URL or ID, without spaces.": "Série {0}, temporadas apresentadas como programas separados: a temporada {1} precisa de uma única URL ou ID, sem espaços.",
+ "Series {0}, seasons listed as separate shows: season {1} or its season {2} on the show's page is not a valid number.": "Série {0}, temporadas apresentadas como programas separados: a temporada {1} ou sua temporada {2} na página do programa não é um número válido.",
+ "Series {0}, seasons listed as separate shows: {1} is not a season number.": "Série {0}, temporadas apresentadas como programas separados: {1} não é um número de temporada.",
+ "Use this show": "Usar este programa",
+ "{0} lists season {1} as a separate show: {2} (1 episode).": "{0} apresenta a temporada {1} como um programa separado: {2} (1 episódio).",
+ "{0} lists season {1} as a separate show: {2} ({3} episodes).": "{0} apresenta a temporada {1} como um programa separado: {2} ({3} episódios)."
 }

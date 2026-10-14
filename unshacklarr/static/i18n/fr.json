@@ -2180,5 +2180,14 @@
  "Your library was found in another folder: {0} in Sonarr is {1} in Unshacklarr.": "Votre bibliothèque a été trouvée dans un autre dossier : {0} dans Sonarr correspond à {1} dans Unshacklarr.",
  "Use these folders": "Utiliser ces dossiers",
  "title, in its series": "titre, dans sa série",
- "{0} episodes on {1} are titled alike in its series: paste its URL on the series": "{0} épisodes sur {1} portent ce titre dans leur série : collez son URL sur la série"
+ "{0} episodes on {1} are titled alike in its series: paste its URL on the series": "{0} épisodes sur {1} portent ce titre dans leur série : collez son URL sur la série",
+ "For a season the service lists as a separate show. One line per season: Sonarr's season, then the show's URL. If the episodes are not in season 1 of that show, add its season number at the end.": "Pour une saison que le service présente comme une émission à part. Une ligne par saison : la saison de Sonarr, puis l'URL de l'émission. Si les épisodes ne sont pas dans la saison 1 de cette émission, ajoutez son numéro de saison à la fin.",
+ "Season {0} will be downloaded from {1}. Click Save, then check {2} again.": "La saison {0} sera téléchargée depuis {1}. Cliquez sur Enregistrer, puis vérifiez {2} à nouveau.",
+ "Seasons listed as separate shows": "Saisons présentées comme des émissions à part",
+ "Series {0}, seasons listed as separate shows: season {1} needs one URL or ID, without spaces.": "Série {0}, saisons présentées comme des émissions à part : la saison {1} doit avoir une seule URL ou un seul ID, sans espace.",
+ "Series {0}, seasons listed as separate shows: season {1} or its season {2} on the show's page is not a valid number.": "Série {0}, saisons présentées comme des émissions à part : la saison {1} ou sa saison {2} sur la page de l'émission n'est pas un numéro valide.",
+ "Series {0}, seasons listed as separate shows: {1} is not a season number.": "Série {0}, saisons présentées comme des émissions à part : {1} n'est pas un numéro de saison.",
+ "Use this show": "Utiliser cette émission",
+ "{0} lists season {1} as a separate show: {2} (1 episode).": "{0} présente la saison {1} comme une émission à part : {2} (1 épisode).",
+ "{0} lists season {1} as a separate show: {2} ({3} episodes).": "{0} présente la saison {1} comme une émission à part : {2} ({3} épisodes)."
 }
