@@ -2208,5 +2208,17 @@
  "Series {0}, seasons listed as separate shows: {1} is not a season number.": "Сериал {0}, сезоны как отдельные шоу: {1} — не номер сезона.",
  "Use this show": "Использовать это шоу",
  "{0} lists season {1} as a separate show: {2} (1 episode).": "{0} показывает сезон {1} как отдельное шоу: {2} (эпизодов: 1).",
- "{0} lists season {1} as a separate show: {2} ({3} episodes).": "{0} показывает сезон {1} как отдельное шоу: {2} (эпизодов: {3})."
+ "{0} lists season {1} as a separate show: {2} ({3} episodes).": "{0} показывает сезон {1} как отдельное шоу: {2} (эпизодов: {3}).",
+ "A check of {0} is running{1}. Try again once it ends.": "Идёт проверка {0}{1}. Повторите, когда она закончится.",
+ "A series you set up with episodes already on disk is checked within the hour, without waiting for the next automatic check.": "Сериал, который вы настраиваете с уже скачанными эпизодами, проверяется в течение часа, не дожидаясь следующей автоматической проверки.",
+ "Check automatically": "Проверять автоматически",
+ "Check automatically every": "Проверять автоматически каждые",
+ "Check automatically every {0} days is not shorter than Ask again after ({1} days): each check would ask the service about every episode again. Use fewer days.": "Автоматическая проверка каждые {0} дн. не короче, чем «Спросить снова через» ({1} дн.): каждая проверка заново спрашивала бы сервис обо всех эпизодах. Укажите меньше дней.",
+ "Check new series": "Проверять новые сериалы",
+ "Checked automatically every day": "Проверяется автоматически каждый день",
+ "Checked automatically every {0} days": "Проверяется автоматически каждые {0} дн.",
+ "Some answers are kept up to this much shorter, so episodes checked on the same day are not all asked again on the same day. 0: no spreading.": "Некоторые ответы хранятся до этого процента меньше, чтобы эпизоды, проверенные в один день, не запрашивались снова все в один день. 0: без распределения.",
+ "Spread the questions": "Распределять запросы",
+ "Checked only when you click Check": "Проверяется только по нажатию «Проверить»",
+ "Each check asks the service only about episodes whose answer is older than Ask again after, so use fewer days than that. 0: only when you click Check.": "Каждая проверка спрашивает сервис только об эпизодах, чей ответ старше, чем «Спросить снова через», поэтому укажите меньше дней. 0: только по нажатию «Проверить»."
 }

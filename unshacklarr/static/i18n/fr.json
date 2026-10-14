@@ -2199,5 +2199,17 @@
  "Series {0}, seasons listed as separate shows: {1} is not a season number.": "Série {0}, saisons présentées comme des émissions à part : {1} n'est pas un numéro de saison.",
  "Use this show": "Utiliser cette émission",
  "{0} lists season {1} as a separate show: {2} (1 episode).": "{0} présente la saison {1} comme une émission à part : {2} (1 épisode).",
- "{0} lists season {1} as a separate show: {2} ({3} episodes).": "{0} présente la saison {1} comme une émission à part : {2} ({3} épisodes)."
+ "{0} lists season {1} as a separate show: {2} ({3} episodes).": "{0} présente la saison {1} comme une émission à part : {2} ({3} épisodes).",
+ "A check of {0} is running{1}. Try again once it ends.": "Une vérification de {0} est en cours{1}. Réessayez quand elle sera terminée.",
+ "A series you set up with episodes already on disk is checked within the hour, without waiting for the next automatic check.": "Une série que vous configurez avec des épisodes déjà sur le disque est vérifiée dans l'heure, sans attendre la prochaine vérification automatique.",
+ "Check automatically": "Vérifier automatiquement",
+ "Check automatically every": "Vérifier automatiquement tous les",
+ "Check automatically every {0} days is not shorter than Ask again after ({1} days): each check would ask the service about every episode again. Use fewer days.": "Vérifier automatiquement tous les {0} jours n'est pas plus court que Redemander après ({1} jours) : chaque vérification redemanderait au service chaque épisode. Mettez moins de jours.",
+ "Check new series": "Vérifier les nouvelles séries",
+ "Checked automatically every day": "Vérifié automatiquement chaque jour",
+ "Checked automatically every {0} days": "Vérifié automatiquement tous les {0} jours",
+ "Some answers are kept up to this much shorter, so episodes checked on the same day are not all asked again on the same day. 0: no spreading.": "Certaines réponses sont gardées jusqu'à ce pourcentage moins longtemps, pour que les épisodes vérifiés le même jour ne soient pas tous redemandés le même jour. 0 : pas d'étalement.",
+ "Spread the questions": "Étaler les questions",
+ "Checked only when you click Check": "Vérifié seulement quand vous cliquez sur Vérifier",
+ "Each check asks the service only about episodes whose answer is older than Ask again after, so use fewer days than that. 0: only when you click Check.": "Chaque vérification ne demande au service que les épisodes dont la réponse est plus ancienne que Redemander après : mettez donc moins de jours. 0 : seulement quand vous cliquez sur Vérifier."
 }

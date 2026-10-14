@@ -23,6 +23,7 @@ import sys
 import threading
 import time
 import unicodedata
+import zlib
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path, PurePosixPath
 from urllib.parse import urlencode, parse_qs, urlparse
@@ -776,7 +777,17 @@ async def save_config(request):
         "quality_ladders": ladders,
     }
     write_config(config)
+    if settings.get("upgrade_check_new"):  # by mj23au: a series just set up, its files already on disk, checked once
+        upgrade_pending.update(newly_set_up(series, previous.get("series") or {}))
     return web.json_response(public_config(read_config()))
+
+
+def newly_set_up(series: dict, was: dict) -> set[int]:
+    """The series given a service and a page at this Save, and not left out of Upgrades (by mj23au)."""
+    def ready(show):
+        return bool(show and show.get("service") and show.get("title"))
+    return {int(k) for k, v in series.items()
+            if ready(v) and not v.get("skip_upgrades") and not ready(was.get(k) or was.get(str(k)) or was.get(int(k)))}
 
 
 def check_season_pages(given, key: str) -> dict:
@@ -947,6 +958,7 @@ NUMBER_SETTINGS = {  # name: (smallest, largest)
     "leftovers_days": (0, 365), "min_free_gb": (0, 100000), "upgrade_days": (1, 365), "downloads_at_once": (0, 10),
     "backup_every_days": (0, 30), "backup_keep": (1, 365),
     "upgrade_recheck_days": (0, 3650), "upgrade_max_age_years": (0, 100),
+    "upgrade_check_days": (0, 365), "upgrade_recheck_spread": (0, 90),
 }
 
 
@@ -1211,6 +1223,13 @@ def check_settings(body: dict, previous: dict) -> dict:
     settings["download_only"] = body.get("download_only") is True
     settings["quality_ladder"] = str(body.get("quality_ladder") or "")  # checked against the ladders by save_config
     settings["upgrade_other_groups"] = body.get("upgrade_other_groups") is True
+    settings["upgrade_check_new"] = body.get("upgrade_check_new") is True
+    every, keep = settings["upgrade_check_days"], settings["upgrade_recheck_days"]
+    was = lambda k: previous.get(k, sonarr_sync.SETTINGS_DEFAULTS[k])
+    changed = (every, keep) != (was("upgrade_check_days"), was("upgrade_recheck_days"))  # a Save of anything else goes through
+    if changed and every and keep and every >= keep:  # by mj23au: else each check would find every answer gone and ask them all
+        raise web.HTTPBadRequest(text=f"Check automatically every {every} days is not shorter than Ask again after ({keep} days): "
+                                      f"each check would ask the service about every episode again. Use fewer days.")
     settings["backends"] = check_backends(body.get("backends"), previous.get("backends"))
     settings["sonarrs"] = check_sonarrs(body.get("sonarrs"), previous.get("sonarrs"), settings["sonarr_url"])
     name = settings["sonarr_name"] = str(body.get("sonarr_name") or "").strip()
@@ -3534,6 +3553,14 @@ def upgrades_file(name: str = "") -> Path:
     return UPGRADES_FILE.with_name(f"upgrades_found-{name}.json") if name else UPGRADES_FILE
 UPGRADE_PAUSE = 2.0  # seconds between two episodes asked of a service
 upgrade_scan = {"running": False, "done": 0, "total": 0, "series": "", "errors": 0, "stop": False, "sonarr": ""}
+upgrade_pending: set[int] = set()  # series set up since, to check once (upgrade_check_new), by mj23au
+
+
+def kept_days(episode_id, keep_days: float) -> float:
+    """How long this episode's answer is kept: upgrade_recheck_days, less up to upgrade_recheck_spread % fixed per
+    episode, so answers got on one day come due over several checks, not all at once (by mj23au)."""
+    spread = float(sonarr_sync.SETTINGS.get("upgrade_recheck_spread", 25) or 0) / 100
+    return keep_days * (1 - spread * (zlib.crc32(str(episode_id).encode()) % 1000) / 1000)
 
 
 def upgrade_candidates(config: dict, only: set | None = None) -> list[tuple]:
@@ -3562,6 +3589,7 @@ def upgrade_candidates(config: dict, only: set | None = None) -> list[tuple]:
                 continue
             file = files[e["episodeFileId"]]
             track = ladder_track(file.get("mediaInfo") or {})
+            track["added"] = file.get("dateAdded") or ""  # a download's own answer is for a file added after it
             if ours:
                 track["ours"] = ours
                 if str(file.get("releaseGroup") or "").lower() != ours.lower():
@@ -3619,6 +3647,9 @@ def upgrade_number(lists: dict, serie: dict, show: dict, e: dict) -> str | None:
         return found["service"]
     if own and any(m.get("match") == "title" and m["service"].split(".")[0] == own.split(".")[0] for m in available.values()):
         return None
+    listed = {str(t.get("key") or "").split(".")[0] for t in hit.get("titles") or []}
+    if own and listed and own.split(".")[0] not in listed:
+        return None  # by mj23au: not in the service's last listing (a long series, its old seasons gone): not asked
     return own
 
 
@@ -3641,8 +3672,10 @@ def scan_upgrades_in(inst: dict | None, name: str, only: set | None = None) -> N
         for w in work:
             e = w[3]
             hit = seen.get(str(e["id"]))
+            if hit and hit.get("download") and download_answer_fits(hit, w[4].get("added")):  # by mj23au
+                hit = seen[str(e["id"])] = {k: v for k, v in hit.items() if k != "download"} | {"file": e.get("episodeFileId")}
             if keep_days and hit and hit.get("file") == e.get("episodeFileId") and hit.get("groups", "") == w[4].get("ours", "") \
-                    and now - datetime.fromisoformat(hit["checked"]) < timedelta(days=keep_days):
+                    and now - datetime.fromisoformat(hit["checked"]) < timedelta(days=kept_days(e["id"], keep_days)):
                 upgrade_scan["done"] += 1  # answered lately, for this very file: not asked again
                 if hit.get("item"):
                     found.append({**hit["item"], "file": file_label(w[4])})  # labelled as the file is labelled now
@@ -3688,13 +3721,19 @@ def scan_upgrades_in(inst: dict | None, name: str, only: set | None = None) -> N
                     by_key[next(iter(wanted))] = listed
                 for key, (serie_, show_, ladder_, e, track, step) in wanted.items():
                     parts = by_key.get(key.split(".")[0])
-                    if parts is None:
-                        continue  # left out of the answer (not on the service now): asked again next time
+                    if parts is None:  # left out of the answer, not on the service now: kept as such, asked
+                        seen[str(e["id"])] = {"checked": now.isoformat(), "file": e.get("episodeFileId"), "item": None,
+                                              "groups": track.get("ours", ""), "absent": True}  # again once due (by mj23au)
+                        continue
                     item = upgrade_item(serie, ladder, e, track, step, sonarr_sync.climb(ladder, parts))
                     seen[str(e["id"])] = {"checked": now.isoformat(), "file": e.get("episodeFileId"), "item": item, "groups": track.get("ours", "")}
                     if item:
                         found.append(item)
-        write_atomic(upgrades_seen_file(name), json.dumps(seen))
+        with sonarr_sync.upgrades_lock:  # a download's own answer noted while this check ran stays (by mj23au)
+            for k, v in read_json(upgrades_seen_file(name), {}).items():
+                if v.get("download") and v.get("checked", "") > (seen.get(k) or {}).get("checked", ""):
+                    seen[k] = v
+            write_atomic(upgrades_seen_file(name), json.dumps(seen))
         before = read_json(upgrades_file(name), {}) if only else {}
         if only:  # the checked series replace their own finds; the rest, and when it was checked, stay
             found = [i for i in before.get("items") or [] if i.get("tvdbId") not in only] + found
@@ -3852,7 +3891,10 @@ async def upgrades_action(request):
     """Start a check (in the background: it takes a pause per episode), or stop the one going on."""
     if request.match_info["action"] == "stop":
         upgrade_scan["stop"] = True
-    elif not upgrade_scan["running"]:
+    elif upgrade_scan["running"]:  # by mj23au: said, not dropped without a word (a scheduled check may have started)
+        raise web.HTTPConflict(text=f"A check of {upgrade_scan.get('sonarr') or 'Sonarr'} is running"
+                                    f"{': ' + upgrade_scan['series'] if upgrade_scan.get('series') else ''}. Try again once it ends.")
+    else:
         body = await json_object(request) if request.can_read_body else {}
         inst = sonarr_named(str(body.get("sonarr") or "")) if request.can_read_body else None
         listed = body.get("series") if isinstance(body.get("series"), list) else []
@@ -3862,6 +3904,58 @@ async def upgrades_action(request):
         upgrade_scan["running"] = True  # at once: a second click before the thread starts is not a second check
         threading.Thread(target=scan_upgrades, args=((inst or {}).get("name", ""), only), daemon=True).start()
     return web.json_response({"running": upgrade_scan["running"]})
+
+
+def download_answer_fits(hit: dict, added: str | None) -> bool:
+    """A download's own answer (sonarr_sync.note_download_answer) is the file's when Sonarr added that file within two
+    days after it: the one it brought, not an older file nor one from elsewhere much later (by mj23au)."""
+    try:
+        at, then = sonarr_sync.parse_time(added), datetime.fromisoformat(hit["checked"])
+    except (TypeError, ValueError, KeyError):
+        return False
+    return then <= at <= then + timedelta(days=2)
+
+
+def upgrade_check_due(now: datetime) -> list[tuple[str, set]]:
+    """What the scheduled checks have to do now: each Sonarr whose last full check is upgrade_check_days old (or
+    never was), and the series set up since that are waiting for theirs. [(Sonarr name, series or empty: all)]."""
+    due = []
+    every = float(sonarr_sync.SETTINGS.get("upgrade_check_days") or 0)
+    for inst in [None, *sonarr_sync.SONARRS.values()]:
+        if sonarr_sync.unset_ladder(inst):
+            continue
+        name = (inst or {}).get("name", "")
+        last = read_json(upgrades_file(name), {}).get("checked")
+        if every and (not last or now - datetime.fromisoformat(last) >= timedelta(days=every)):
+            due.append((name, set()))
+        elif upgrade_pending:
+            due.append((name, set(upgrade_pending)))
+    return due
+
+
+def run_scheduled_upgrades(now: datetime) -> None:
+    pending = set(upgrade_pending)
+    for name, only in upgrade_check_due(now):
+        if upgrade_scan["running"]:  # one clicked meanwhile: the rest next hour
+            return
+        upgrade_scan["running"] = True
+        print(f"Upgrades: a scheduled check of {name or 'Sonarr'}" + (f", {len(only)} series just set up" if only else ""), flush=True)
+        scan_upgrades(name, only or None)
+        if upgrade_scan["stop"]:  # Stop clicked: no other Sonarr after it, the series set up still waiting
+            return
+    upgrade_pending.difference_update(pending)  # a full check covered them, or their own did
+
+
+async def watch_upgrade_checks():
+    """Every hour: the scheduled Upgrades check when it is due, and the series set up since (by mj23au)."""
+    while True:
+        await asyncio.sleep(300)  # not at start: Sonarr and the services settle first
+        try:
+            if read_config()["auth"] and sonarr_sync.SONARR and not upgrade_scan["running"]:
+                await asyncio.to_thread(run_scheduled_upgrades, datetime.now(timezone.utc))
+        except Exception as e:
+            print(f"Scheduled upgrades check: {type(e).__name__}: {e}", flush=True)
+        await asyncio.sleep(3300)
 
 
 async def missing(request):
@@ -4768,6 +4862,7 @@ app.cleanup_ctx.append(background(watch_health))
 app.cleanup_ctx.append(background(watch_alerts))
 app.cleanup_ctx.append(background(watch_prechecks))
 app.cleanup_ctx.append(background(watch_upgrades))
+app.cleanup_ctx.append(background(watch_upgrade_checks))
 app.cleanup_ctx.append(background(watch_updates))
 app.cleanup_ctx.append(background(watch_backups))
 app.add_routes([

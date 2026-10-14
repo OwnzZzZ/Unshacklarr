@@ -1871,6 +1871,11 @@ def test_upgrades_ask_the_service_for_the_episode_its_title_found():
     assert web.upgrade_number({}, serie, show, ep(401, 4, 1)) == "S04E01"  # no listing: as before
     other = {"286362": {**lists["286362"], "title": "https://c4/another"}}
     assert web.upgrade_number(other, serie, show, ep(401, 4, 1)) == "S04E01"  # a listing of another URL: as before
+    # by mj23au: a long series whose old seasons the service no longer has: not in its last listing, not asked
+    titled = {"286362": {**lists["286362"], "titles": [{"key": "S06E01"}, {"key": "S07E02"}, {"key": "S08E01"}]}}
+    assert web.upgrade_number(titled, serie, show, ep(301, 3, 1)) is None
+    assert web.upgrade_number(titled, serie, show, ep(701, 7, 2)) == "S07E02"
+    assert web.upgrade_number({"286362": {**titled["286362"], "titles": []}}, serie, show, ep(301, 3, 1)) == "S03E01"  # none listed
 
 
 def test_a_diagnostic_shows_no_address_folder_or_account(tmp_path, monkeypatch):
@@ -2158,3 +2163,154 @@ def test_words_alike_in_two_languages_do_not_make_a_service_speak_ours(tmp_path,
     assert found[102] == {"service": "S01E02", "name": "Aménagements"}  # by its number: no longer "not on Disney+"
     assert len(found) == 23
 
+
+def test_upgrades_are_checked_by_themselves_their_answers_spread_and_a_new_series_checked_once(tmp_path, monkeypatch):
+    # by mj23au: a full check every upgrade_check_days, answers kept up to upgrade_recheck_spread % less, so they come due
+    # over several checks; a series set up with files on disk checked once at its Save (upgrade_check_new)
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    sync = web.sonarr_sync
+
+    monkeypatch.setitem(sync.SETTINGS, "upgrade_recheck_spread", 0)
+    assert web.kept_days(5, 30) == 30
+    monkeypatch.setitem(sync.SETTINGS, "upgrade_recheck_spread", 25)
+    kept = [web.kept_days(i, 30) for i in range(200)]
+    assert all(22.5 <= k <= 30 for k in kept) and kept == [web.kept_days(i, 30) for i in range(200)]  # fixed per episode
+    assert min(kept) < 24 and max(kept) > 29  # spread over the range, not all the same day
+
+    from datetime import datetime, timedelta, timezone
+    now = datetime(2026, 10, 14, tzinfo=timezone.utc)
+    monkeypatch.setattr(sync, "SONARRS", {"sonarr-4k": {"name": "sonarr-4k", "quality_ladder": "4K"},
+                                          "unset": {"name": "unset", "quality_ladder": ""}})
+    monkeypatch.setitem(sync.SETTINGS, "upgrade_check_days", 7)
+    assert web.upgrade_check_due(now) == [("", set()), ("sonarr-4k", set())]  # never checked; a Sonarr without a ladder waits
+    web.write_atomic(web.upgrades_file(""), json.dumps({"checked": now.isoformat(), "items": []}))
+    web.write_atomic(web.upgrades_file("sonarr-4k"), json.dumps({"checked": (now - timedelta(days=6)).isoformat(), "items": []}))
+    assert web.upgrade_check_due(now) == []
+    assert web.upgrade_check_due(now + timedelta(days=1)) == [("sonarr-4k", set())]
+    web.upgrade_pending.add(42)
+    assert web.upgrade_check_due(now) == [("", {42}), ("sonarr-4k", {42})]  # the series set up, in each Sonarr
+    monkeypatch.setitem(sync.SETTINGS, "upgrade_check_days", 0)
+    assert web.upgrade_check_due(now + timedelta(days=99)) == [("", {42}), ("sonarr-4k", {42})]  # 0: only when clicked
+
+    scans = []
+    monkeypatch.setattr(web, "scan_upgrades", lambda name="", only=None: (scans.append((name, only)), web.upgrade_scan.update(running=False)))
+    web.run_scheduled_upgrades(now)
+    assert scans == [("", {42}), ("sonarr-4k", {42})] and not web.upgrade_pending
+    web.run_scheduled_upgrades(now)
+    assert len(scans) == 2  # nothing due, nothing asked
+
+    # Settings: checked more often than answers are kept, else each check would ask every episode again
+    assert _raises(lambda: web.check_settings({"upgrade_check_days": 30, "upgrade_recheck_days": 30}, {}))
+    saved = web.check_settings({"upgrade_check_days": 7, "upgrade_recheck_days": 90, "upgrade_recheck_spread": 40,
+                                "upgrade_check_new": True}, {})
+    assert (saved["upgrade_check_days"], saved["upgrade_recheck_days"], saved["upgrade_recheck_spread"], saved["upgrade_check_new"]) == (7, 90, 40, True)
+    assert web.check_settings({"upgrade_check_days": 0, "upgrade_recheck_days": 30}, {})["upgrade_check_days"] == 0
+    assert _raises(lambda: web.check_settings({"upgrade_recheck_spread": 95}, {}))
+    # answers kept 5 days from before the setting existed: a Save of anything else still goes through
+    assert web.check_settings({"upgrade_recheck_days": 5}, {"upgrade_recheck_days": 5})["upgrade_check_days"] == 7
+    assert _raises(lambda: web.check_settings({"upgrade_recheck_days": 5, "upgrade_check_days": 6}, {"upgrade_recheck_days": 5}))
+
+    # the series set up at this Save: a service and a page now, not before, and not left out of Upgrades
+    was = {1: {"service": "X", "title": "t"}, 2: {"service": "X", "title": ""}}
+    now_series = {1: {"service": "X", "title": "t"}, 2: {"service": "X", "title": "u"}, 3: {"service": "Y", "title": "v"},
+                  4: {"service": "Y", "title": "w", "skip_upgrades": True}, 5: {"service": "", "title": ""}}
+    assert web.newly_set_up(now_series, was) == {2, 3}
+
+
+def test_a_download_keeps_the_services_best_as_its_upgrades_answer(tmp_path, monkeypatch):
+    # by mj23au: what the ladder just read for a download is the episode's answer; the file Sonarr adds after it
+    # takes it, so Upgrades doesn't ask the service again for upgrade_recheck_days; an older file doesn't
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    sync = web.sonarr_sync
+    from datetime import datetime, timedelta, timezone
+
+    ladder = {"name": "L", "steps": [{"codec": "HEVC", "min": 1080, "max": 1080}, {"codec": "AVC", "min": 1080, "max": 1080}]}
+    (tmp_path / "config.yaml").write_text("series:\n  1: {service: X, title: t, ladder: L}\n")
+    config = sync.read_file()
+    config["quality_ladders"] = [ladder]
+    monkeypatch.setattr(sync, "read_file", lambda: config)
+    monkeypatch.setattr(sync, "list_tracks", lambda show, config, request, ladder=None: [{"video": [{"height": 1080, "codec": "AVC", "range": "SDR"}]}])
+    request = {"service": "X", "title_id": "t", "wanted": ["S01E01"]}
+    assert sync.apply_ladder(config["series"][1], config, request) == 2  # the service's best now: step 2
+    sync.note_download_answer(11, config["series"][1], config)
+    seen = web.read_json(web.upgrades_seen_file(), {})["11"]
+    assert seen["download"] and seen["file"] is None and seen["item"] is None
+
+    then = datetime.fromisoformat(seen["checked"])
+    assert web.download_answer_fits(seen, (then + timedelta(minutes=40)).isoformat().replace("+00:00", "Z"))
+    assert not web.download_answer_fits(seen, (then - timedelta(days=3)).isoformat())  # the file it had before
+    assert not web.download_answer_fits(seen, (then + timedelta(days=5)).isoformat())  # one from elsewhere, later
+    assert not web.download_answer_fits(seen, "")
+
+    series = {1: {"id": 7, "tvdbId": 1, "title": "Show"}}
+    added = (then + timedelta(minutes=40)).isoformat()
+    files = [{"id": 70, "mediaInfo": {"resolution": "1920x1080", "videoCodec": "h264"}, "dateAdded": added},
+             {"id": 71, "mediaInfo": {"resolution": "1920x1080", "videoCodec": "h264"}, "dateAdded": "2020-01-01T00:00:00Z"}]
+    eps = [{"id": 11, "seasonNumber": 1, "episodeNumber": 1, "hasFile": True, "episodeFileId": 70},
+           {"id": 12, "seasonNumber": 1, "episodeNumber": 2, "hasFile": True, "episodeFileId": 71}]
+    monkeypatch.setattr(sync, "sonarr_series", lambda wanted: series)
+    by_id = lambda: {f["id"]: f for f in files}  # Sonarr's episodes with their files, in one call
+    monkeypatch.setattr(sync, "sonarr_get", lambda path, **p: files if path == "episodefile" else
+                        [{**e, "episodeFile": by_id().get(e["episodeFileId"])} for e in eps])
+    monkeypatch.setattr(sync, "download_request", lambda show, config, wanted, out: {"service": "X", "title_id": "t", "wanted": [wanted]})
+    asked = []
+    monkeypatch.setattr(sync, "list_tracks", lambda show, config, request, ladder=None: asked.append(request["wanted"]) or
+                        [{"title": {"season": 1, "number": int(w[-2:])}, "video": [{"height": 1080, "codec": "AVC", "range": "SDR"}]} for w in request["wanted"]])
+    monkeypatch.setattr(web, "UPGRADE_PAUSE", 0)
+    web.scan_upgrades()
+    assert asked == [["S01E02"]]  # S01E01 is answered by its download; S01E02, an old file, is asked
+    kept = web.read_json(web.upgrades_seen_file(), {})["11"]
+    assert kept["file"] == 70 and "download" not in kept  # now the file's own answer, gone with a new file as any other
+
+    # an episode the service leaves out of its answer is kept as such, not asked at every check
+    files.append({"id": 72, "mediaInfo": {"resolution": "1920x1080", "videoCodec": "h264"}, "dateAdded": "2020-01-01T00:00:00Z"})
+    eps.append({"id": 13, "seasonNumber": 1, "episodeNumber": 3, "hasFile": True, "episodeFileId": 72})
+    monkeypatch.setattr(sync, "list_tracks", lambda show, config, request, ladder=None: asked.append(request["wanted"]) or [])
+    web.scan_upgrades()
+    assert asked[-1] == ["S01E03"] and web.read_json(web.upgrades_seen_file(), {})["13"]["absent"]
+    web.scan_upgrades()
+    assert asked[-1] == ["S01E03"] and len(asked) == 2  # kept: not asked again
+
+
+def test_a_replaced_episode_leaves_upgrades_for_good_and_a_check_asked_while_one_runs_is_refused(tmp_path, monkeypatch):
+    # by mj23au: Slow Horses' 4K finds stayed listed after their replace, once the history no longer held it
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    sync = web.sonarr_sync
+    items = [{"tvdbId": 372264, "sxxeyy": "S02E05"}, {"tvdbId": 372264, "sxxeyy": "S02E06"}]
+    web.write_atomic(web.upgrades_file("sonarr-4k"), json.dumps({"checked": "2026-10-08T00:55:36+00:00", "items": items}))
+    web.write_atomic(web.upgrades_file(""), json.dumps({"checked": "2026-10-08T00:55:36+00:00", "items": items}))
+    sync.drop_upgrade_find("sonarr-4k", 372264, "S02E05")
+    assert web.read_json(web.upgrades_file("sonarr-4k"), {})["items"] == items[1:]
+    assert web.read_json(web.upgrades_file(""), {})["items"] == items  # the main Sonarr's own finds stay
+    assert web.read_json(web.upgrades_file("sonarr-4k"), {})["checked"] == "2026-10-08T00:55:36+00:00"
+
+    run = sync.EpisodeRun.__new__(sync.EpisodeRun)  # a run's end: downloaded takes the find off, a failure doesn't
+    dropped = []
+    monkeypatch.setattr(sync, "drop_upgrade_find", lambda *a: dropped.append(a))
+    run.id, run.card = "x", {"instance": "sonarr-4k", "tvdbId": 372264, "sxxeyy": "S02E06"}
+    run.log = type("L", (), {"close": lambda self: None})()
+    monkeypatch.setattr(run, "fold_checks", lambda: None, raising=False)
+    monkeypatch.setattr(run, "save", lambda: None, raising=False)
+    monkeypatch.setattr(sync, "prune_runs", lambda: None)
+    run.finish("failed")
+    run.finish("downloaded")
+    assert dropped == [("sonarr-4k", 372264, "S02E06")]
+
+    import asyncio
+    class Req:
+        match_info, can_read_body = {"action": "check"}, False
+    monkeypatch.setitem(web.upgrade_scan, "running", True)
+    monkeypatch.setitem(web.upgrade_scan, "series", "Bake Off")
+    assert _raises(lambda: asyncio.run(web.upgrades_action(Req())), web.web.HTTPConflict)

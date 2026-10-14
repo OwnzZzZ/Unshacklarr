@@ -159,6 +159,9 @@ SETTINGS_DEFAULTS = {
     "upgrade_days": 30,          # for so many days after its download, checked once a day
     "upgrade_recheck_days": 30,  # Upgrades: an episode's last answer is kept this long before it is asked again (0: always ask)
     "upgrade_max_age_years": 0,  # Upgrades: only episodes aired in the last N years (0: all)
+    "upgrade_check_days": 7,     # Upgrades: a full check by itself every N days (0: only when Check is clicked)
+    "upgrade_recheck_spread": 25,  # Upgrades: each episode's answer kept up to this % less, so they don't all fall due at once
+    "upgrade_check_new": False,  # Upgrades: a series set up with files already on disk is checked once at its Save
     "upgrade_other_groups": False,  # Upgrades: a file from another release group than ours is replaced by the same step too
     "upgrade_mode": "redownload",  # once the preferred audio comes: download the episode again, or add_track (its audio only, added)
     "library_sonarr_root": "",   # add_track reads the library's file: its folder as Sonarr sees it (/tv)…
@@ -682,6 +685,8 @@ class EpisodeRun:
         self.card.update(ended=datetime.now(timezone.utc).isoformat(), outcome=outcome)
         if outcome in ("downloaded", "kept", "import"):  # a later try of this attempt got through: nothing left unconfirmed (#10)
             self.card.pop("unconfirmed_job", None)
+        if outcome == "downloaded":  # a new file: Upgrades' find for it is done with (by mj23au)
+            drop_upgrade_find(self.card.get("instance", ""), self.card.get("tvdbId"), self.card.get("sxxeyy"))
         self.fold_checks()
         self.save()
         # Only once its end is on disk: the page, told a run ended, reads the history at once; read between the two, a
@@ -2037,17 +2042,18 @@ def track_label(t: dict) -> str:
     return f"{eq_height(t) or '?'}p {t.get('codec') or '?'} {' + '.join(layers) if len(layers) > 1 else t.get('range') or '?'}"
 
 
-def apply_ladder(show: dict, config: dict, request: dict) -> None:
+def apply_ladder(show: dict, config: dict, request: dict) -> int | None:
     """The series' quality ladder, resolved against the episode's real tracks: the first step that has one sets
-    the quality, codec and range asked for. None does: the episode fails, nothing outside the ladder downloaded."""
+    the quality, codec and range asked for. None does: the episode fails, nothing outside the ladder downloaded.
+    The step taken, the service's best now."""
     ladder = ladder_of(show, config)
     if not ladder:
-        return
+        return None
     if request.get("remote"):
         raise ValueError(f"The quality ladder {ladder['name']} needs the episode's track list, which a --remote download does not give")
     episodes = list_tracks(show, config, request, ladder)
     if not episodes:  # ponytail: not on the service (yet): the download finds nothing either, and says so as usual
-        return
+        return None
     found = climb(ladder, episodes)
     if not found:
         have = sorted({track_label(t) for ep in episodes for t in ep.get("video") or []})
@@ -2069,6 +2075,32 @@ def apply_ladder(show: dict, config: dict, request: dict) -> None:
         request.clear()
         request.update(fixed)
         trace(f"no {', '.join(sorted(missing))} subtitles on {show['service']}: downloading {subs_what(fixed)}")
+    return number
+
+
+def drop_upgrade_find(name: str, tvdb, sxxeyy) -> None:
+    """Take an episode off Activity, Upgrades once a download has replaced its file, for good: not worked out later
+    from the history, which forgets it once pruned (by mj23au)."""
+    path = DATA / (f"upgrades_found-{name}.json" if name else "upgrades_found.json")
+    with upgrades_lock:
+        found = read_json(path, {})
+        items = found.get("items") or []
+        kept = [i for i in items if not (i.get("tvdbId") == tvdb and i.get("sxxeyy") == sxxeyy)]
+        if len(kept) != len(items):
+            write_atomic(path, json.dumps({**found, "items": kept}))
+
+
+def note_download_answer(episode_id: int, show: dict, config: dict) -> None:
+    """The service's best, just read for this download, kept as the episode's Upgrades answer: the file it brings is
+    not asked about again for upgrade_recheck_days. Taken by the first file Sonarr adds after it (by mj23au)."""
+    name = (instance() or {}).get("name", "")
+    path = DATA / (f"upgrades_seen-{name}.json" if name else "upgrades_seen.json")
+    ours = release_group_of(show, config)[0] if SETTINGS.get("upgrade_other_groups") else ""
+    with upgrades_lock:
+        seen = read_json(path, {})
+        seen[str(episode_id)] = {"checked": datetime.now(timezone.utc).isoformat(), "file": None, "item": None,
+                                 "groups": ours, "download": True}
+        write_atomic(path, json.dumps(seen))
 
 
 def first_language(order: list[str], tracks: list[dict]) -> str | None:
@@ -2784,7 +2816,8 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                         for kind, accepted in wanted_langs.items():
                             if accepted and not speaks(tracks[kind], accepted):
                                 raise Missing(kind, accepted, tracks[kind])
-                    apply_ladder(use, config, request)
+                    if apply_ladder(use, config, request) and use is show and ep.get("id"):
+                        note_download_answer(ep["id"], show, config)  # its best now: Upgrades needn't ask again soon
                     asked = {k: v for k, v in request.items() if k not in ("service", "title_id", "wanted", "output_dir", "debug")}
                     trace(f"asking for {request['service']} {request['title_id']} {wanted}, into {request['output_dir']}")
                     trace("options: " + (", ".join(f"{k}={options.HIDDEN.sub('//***@', str(v))}" for k, v in asked.items()) or "none"))  # no proxy password in the log

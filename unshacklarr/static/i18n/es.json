@@ -2183,5 +2183,17 @@
  "Series {0}, seasons listed as separate shows: {1} is not a season number.": "Serie {0}, temporadas presentadas como programas aparte: {1} no es un número de temporada.",
  "Use this show": "Usar este programa",
  "{0} lists season {1} as a separate show: {2} (1 episode).": "{0} presenta la temporada {1} como un programa aparte: {2} (1 episodio).",
- "{0} lists season {1} as a separate show: {2} ({3} episodes).": "{0} presenta la temporada {1} como un programa aparte: {2} ({3} episodios)."
+ "{0} lists season {1} as a separate show: {2} ({3} episodes).": "{0} presenta la temporada {1} como un programa aparte: {2} ({3} episodios).",
+ "A check of {0} is running{1}. Try again once it ends.": "Hay una comprobación de {0} en curso{1}. Inténtalo de nuevo cuando termine.",
+ "A series you set up with episodes already on disk is checked within the hour, without waiting for the next automatic check.": "Una serie que configuras con episodios ya en el disco se comprueba en menos de una hora, sin esperar a la próxima comprobación automática.",
+ "Check automatically": "Comprobar automáticamente",
+ "Check automatically every": "Comprobar automáticamente cada",
+ "Check automatically every {0} days is not shorter than Ask again after ({1} days): each check would ask the service about every episode again. Use fewer days.": "Comprobar automáticamente cada {0} días no es más corto que Volver a preguntar tras ({1} días): cada comprobación volvería a preguntar al servicio por todos los episodios. Usa menos días.",
+ "Check new series": "Comprobar series nuevas",
+ "Checked automatically every day": "Comprobado automáticamente cada día",
+ "Checked automatically every {0} days": "Comprobado automáticamente cada {0} días",
+ "Some answers are kept up to this much shorter, so episodes checked on the same day are not all asked again on the same day. 0: no spreading.": "Algunas respuestas se guardan hasta este porcentaje menos tiempo, para que los episodios comprobados el mismo día no se vuelvan a preguntar todos el mismo día. 0: sin repartir.",
+ "Spread the questions": "Repartir las preguntas",
+ "Checked only when you click Check": "Comprobado solo cuando haces clic en Comprobar",
+ "Each check asks the service only about episodes whose answer is older than Ask again after, so use fewer days than that. 0: only when you click Check.": "Cada comprobación solo pregunta al servicio por los episodios cuya respuesta es más antigua que Volver a preguntar tras, así que usa menos días. 0: solo cuando haces clic en Comprobar."
 }
