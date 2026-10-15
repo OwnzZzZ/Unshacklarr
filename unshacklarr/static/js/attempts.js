@@ -90,9 +90,10 @@ function openTerm() {
 }
 function streamRun(c) { streamTerm(c.id, `run=${encodeURIComponent(c.id)}`); }
 function streamJob(batch) { streamTerm(`job:${batch}`, `batch=${encodeURIComponent(batch)}`); }  // every episode's output, one after the other
+let termQuery = "";
 function streamTerm(key, query) {
   if (!openTerm()) return;
-  termFor = key;
+  termFor = key; termQuery = query;
   const filter = termFilter();
   termSocket = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/api/terminal?${query}`);
   termSocket.binaryType = "arraybuffer";

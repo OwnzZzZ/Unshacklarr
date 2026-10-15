@@ -590,6 +590,8 @@ async function applySuggestion(link) {
     $("#d-url").focus();
   }
   renderSeriesState();
+  renderMeta(current);
+  renderCheck(current, true);  // Episodes offers to ask the service at once, as a typed link does
   optionsEditor($("#d-service-opts"), await loadServiceOptions(conf.service).catch(() => []), conf.service_options);
   dirty();
   renderWall();

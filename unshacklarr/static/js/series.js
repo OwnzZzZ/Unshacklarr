@@ -405,12 +405,16 @@ function resBadge(f, why) {
   return el("span", { className: `res ${tier}${why ? " odd" : ""}`, title: why || f.resolution, textContent: f.height ? `${f.height}p` : "?" });
 }
 const flagged = (text, why) => why ? el("span", { className: "odd", title: why, textContent: text }) : text;
+/* A file's dynamic range, beside its codec: "DV + HDR10", "HDR10+"; nothing for SDR */
+const RANGE_NAMES = { DV: "DV", HDR10: "HDR10", HDR10P: "HDR10+", HLG: "HLG" };
+const fileRange = (f) => (f.track?.layers || []).map((r) => RANGE_NAMES[r]).filter(Boolean).join(" + ");
+const fileVideo = (f) => [f.video || "?", fileRange(f)].filter(Boolean).join(" ");
 /* The episode list's columns, as in Sonarr: which ones and in what order, kept in this browser. */
 const COLUMNS = [
   { id: "res", label: "Res.", file: true, on: true, cell: (f, odd) => resBadge(f, odd.height) },
   { id: "video", label: "Video", file: true, on: true, cell: (f, odd) => el("span", { className: "spec",
       title: f.videoBitrate ? "" : "The file's average bitrate: Sonarr has none for its video" },
-      f.video || "?", " ", el("small", {}, flagged(bitrate(f) ? `${f.videoBitrate ? "" : "≈"}${rate(bitrate(f))}` : "", odd.rate))) },
+      fileVideo(f), " ", el("small", {}, flagged(bitrate(f) ? `${f.videoBitrate ? "" : "≈"}${rate(bitrate(f))}` : "", odd.rate))) },
   { id: "audio", label: "Audio", file: true, on: true, cell: (f, odd) => el("span", { className: "spec" },
       [f.audio, layout(f.channels)].filter(Boolean).join(" "), " ", el("small", {}, flagged(f.audioLanguages.join(", "), odd.audio))) },
   { id: "subs", label: "Subtitles", file: true, on: true, cell: (f, odd) => el("span",
@@ -454,7 +458,7 @@ function openColumns() {
   $("#cols-dialog").showModal();
 }
 function fileLine(f, odd) {  // the same, in one line (phones)
-  const parts = [f.video, bitrate(f) ? flagged(`${f.videoBitrate ? "" : "≈"}${rate(bitrate(f))}`, odd.rate) : "",
+  const parts = [fileVideo(f), bitrate(f) ? flagged(`${f.videoBitrate ? "" : "≈"}${rate(bitrate(f))}`, odd.rate) : "",
     [f.audio, layout(f.channels)].filter(Boolean).join(" "), flagged(f.audioLanguages.join(", "), odd.audio),
     flagged(f.subtitles.length ? `subs ${f.subtitles.join(", ")}` : "no subs", odd.subs), f.size ? size(f.size) : ""].filter(Boolean);
   return el("small", {}, resBadge(f, odd.height), ...parts.flatMap((p, i) => i ? [" · ", p] : [p]));

@@ -2696,3 +2696,24 @@ def test_the_main_sonarr_down_still_syncs_the_others_and_is_told_once(tmp_path, 
     monkeypatch.setattr(sync, "sync_instance", lambda inst, config, settings: other.append(inst["name"]) or 0)
     assert [sync.main() for _ in range(3)] == [1, 1, 1]
     assert sent == ["Unshacklarr sync stopped"] and other == ["4k", "4k", "4k"]
+
+
+def test_a_mux_is_measured_in_serves_work_folder(tmp_path, monkeypatch):
+    # Slow Horses on Muts: serve's work folder as it muxes. The video that goes in is the largest other file (the DV
+    # one rebuilt beside its source), with every audio and subtitle track; the source and the DV layer don't
+    sync = load(tmp_path, monkeypatch)
+    root = tmp_path / "temp"
+    work = root / "task_ce8b2231c32c"
+    work.mkdir(parents=True)
+    sizes = {"Audio_6030ed43.mp4": 134, "Audio_a74fe037.mp4": 269, "Chapters_Slow.Horses.txt": 1, "DV.hevc": 128,
+             "HDR10-DV-1920p.hevc": 8626, "RPU.bin": 16, "Subtitle_6e6bce47.srt": 1, "Video_a8ee7221.mp4": 8610,
+             "Video_d9f06954.mp4": 129, ".lock": 0}
+    for name, n in sizes.items():
+        with open(work / name, "wb") as f:
+            f.truncate(n * 1000)
+    assert sync.mux_progress(work) is None  # not muxing yet
+    with open(work / "HDR10-DV-1920p.muxed.1.mkv", "wb") as f:
+        f.truncate(4495 * 1000)
+    assert sync.mux_progress(work) == {"done": 4_495_000, "total": (134 + 269 + 8626 + 1) * 1000}  # half way
+    monkeypatch.setitem(sync.SETTINGS, "unshackle_temp_dir", str(root))
+    assert sync.work_root() == root and sync.task_folders(root) == {work}
