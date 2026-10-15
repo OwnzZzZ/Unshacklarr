@@ -6,6 +6,10 @@ Every change worth knowing, newest first. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- The API's downloads take their own proxy: `"proxy": "nordvpn:fr"` downloads these episodes through it, the series' setup unchanged.
+
 ## [1.5.0] - 2026-10-09
 
 ### Added

@@ -744,6 +744,35 @@ def test_every_answer_refuses_frames_and_the_api_replaces_only_when_asked(tmp_pa
     assert too_many == 400
 
 
+def test_the_api_takes_a_download_s_own_proxy_and_refuses_a_malformed_one(tmp_path, monkeypatch):
+    import asyncio
+    from aiohttp.test_utils import TestClient, TestServer
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    web.write_config({**web.read_config(), "auth": {"password": web.hash_password("password1"), "secret": "s1"}})
+    started = []
+    monkeypatch.setattr(web, "run_sync", lambda ids, **kw: started.append((ids, kw)))
+
+    async def go():
+        async with TestClient(TestServer(web.app)) as client:
+            await client.post("/api/login", json={"password": "password1"}, headers={"X-Unshackle": "1"})
+            key = (await (await client.post("/api/api-key/new", json={"password": "password1"}, headers={"X-Unshackle": "1"})).json())["key"]
+            api = {"X-Api-Key": key}
+            ok = (await client.post("/api/v1/downloads", json={"episodeIds": [5], "proxy": "nordvpn:fr"}, headers=api)).status
+            region = (await client.post("/api/v1/downloads", json={"episodeIds": [6], "proxy": "protonvpn:us:ny"}, headers=api)).status
+            bad = [(await client.post("/api/v1/downloads", json={"episodeIds": [7], "proxy": p}, headers=api)).status
+                   for p in ("fr", "http://u:p@host:8080", "nordvpn:", 3, "nord vpn:fr", "x:" + "a" * 60)]
+            await client.post("/api/v1/downloads", json={"episodeIds": [8], "proxy": ""}, headers=api)
+            return ok, region, bad
+
+    ok, region, bad = asyncio.run(go())
+    assert ok == region == 200 and bad == [400] * 6
+    assert started == [([5], {"proxy": "nordvpn:fr"}), ([6], {"proxy": "protonvpn:us:ny"}), ([8], {})]  # empty: the series' own
+
+
 def test_paths_must_be_full_an_environment_key_never_follows_a_new_url_and_the_example_key_is_refused(tmp_path, monkeypatch):
     monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
     monkeypatch.setenv("SONARR_URL", "http://sonarr:8989")

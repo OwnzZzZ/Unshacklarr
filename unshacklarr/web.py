@@ -2419,8 +2419,9 @@ async def requeue(request):
         raise web.HTTPConflict(text="This episode is not cancelled any more")
     card.unlink(missing_ok=True)  # queued again: its "cancelled" card goes
     replace = cancelled.get("replace") is True  # picked with Replace anyway: it still replaces
+    proxy = cancelled.get("proxy_override") if isinstance(cancelled.get("proxy_override"), str) else ""  # and its own proxy
     if not await join_job(batch, episode_id, replace):  # its job took its last episode: it starts on its own, in that job
-        run_sync([episode_id], kind="manual", batch=batch, **({"replace": True} if replace else {}))
+        run_sync([episode_id], kind="manual", batch=batch, **({"replace": True} if replace else {}), **({"proxy": proxy} if proxy else {}))
     return web.json_response({"queued": episode_id})
 
 
@@ -2655,13 +2656,13 @@ def room_for_one_more() -> None:
 
 
 def run_sync(episode_ids: list[int] | None = None, replace: bool = False, kind: str = "manual", numbering: dict | None = None,
-             batch: str | None = None, sonarr: str = "") -> threading.Thread:
+             batch: str | None = None, sonarr: str = "", proxy: str = "") -> threading.Thread:
     """A sync in the background: every missing episode, or the ones given. Each episode has
     its own lock, so these runs never download the same one twice."""
     def work():
         global last_sync
         try:
-            sonarr_sync.main(episode_ids, replace=replace, kind=kind, numbering=numbering, batch=batch, sonarr=sonarr)
+            sonarr_sync.main(episode_ids, replace=replace, kind=kind, numbering=numbering, batch=batch, sonarr=sonarr, proxy=proxy)
         except Exception as e:  # notified already; the page shows the history
             print(f"Sync stopped: {type(e).__name__}: {e}", flush=True)
         finally:
@@ -4597,12 +4598,19 @@ def episode_ids_of(tvdb: int, episodes: list[str]) -> list[int]:
     return [known[x] for x in episodes]
 
 
+# A download's own proxy, as Unshackle's --proxy takes a provider's region: nordvpn:fr, surfshark:tw, protonvpn:us:ny
+PROXY_OVERRIDE = re.compile(r"[a-z]+:[a-z]{2}[a-z0-9:-]{0,30}", re.IGNORECASE)
+
+
 async def v1_start_download(request):
     """Episodes by Sonarr's ids, or by the series' TVDB id and S01E02: downloaded as the page's Download does,
     a file Sonarr has replaced only by a better one. "sonarr": for another Sonarr (its ids), "retry": as a retry,
-    "replace": Replace anyway, as the page's button."""
+    "replace": Replace anyway, as the page's button, "proxy": this download's own proxy (nordvpn:fr) over the series'."""
     body = await json_object(request)
     replace = body.get("replace") is True
+    proxy = body.get("proxy") or ""
+    if not isinstance(proxy, str) or (proxy and not PROXY_OVERRIDE.fullmatch(proxy)):
+        raise web.HTTPBadRequest(text='"proxy" is a proxy provider and a region, such as "nordvpn:fr"')
     ids, tvdb = body.get("episodeIds"), body.get("tvdbId")
     inst = sonarr_named(str(body.get("sonarr") or ""))  # None: the main Sonarr (by mj23au, #10)
     if body.get("sonarr") and not inst:
@@ -4626,7 +4634,7 @@ async def v1_start_download(request):
         raise web.HTTPConflict(text=why)
     room_for_one_more()
     run_sync(ids, **({"kind": "retry"} if body.get("retry") is True else {}), **({"sonarr": inst["name"]} if inst else {}),
-             **({"replace": True} if replace else {}))
+             **({"replace": True} if replace else {}), **({"proxy": proxy} if proxy else {}))
     return web.json_response({"queued": len(ids)})
 
 

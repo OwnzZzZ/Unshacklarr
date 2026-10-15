@@ -583,13 +583,14 @@ def job_episodes(episodes: list, batch: str | None):
         yield ep
 
 
-def queued_card(ep: dict, show: dict, kind: str, batch: str | None, replace: bool = False) -> dict:
+def queued_card(ep: dict, show: dict, kind: str, batch: str | None, replace: bool = False, proxy: str = "") -> dict:
     """An episode waiting its turn, as Activity shows it until its download starts."""
     return {"id": f"waiting-{ep['id']}", "series": ep["series"]["title"], "tvdbId": ep["series"]["tvdbId"],
             "sxxeyy": f"S{ep['seasonNumber']:02}E{ep['episodeNumber']:02}", "service": show["service"], "kind": kind,
             "started": datetime.now(timezone.utc).isoformat(), "ended": None, "outcome": "running", "episodeId": ep["id"],
             "step": "queued", "live": {}, "tracks": [], "waiting": True, **({"batch": batch} if batch else {}),
-            **({"replace": True} if replace else {})}  # cancelled then queued again, it keeps Replace anyway
+            **({"replace": True} if replace else {}),  # cancelled then queued again, it keeps Replace anyway
+            **({"proxy_override": proxy} if proxy else {})}  # and the proxy asked for this download
 
 
 def add_to_job(batch: str, ep: dict, show: dict, replace: bool = False) -> bool:
@@ -2485,7 +2486,7 @@ sweep_lock = threading.Lock()
 
 
 def main(episode_ids: list[int] | None = None, replace: bool = False, kind: str = "manual", numbering: dict | None = None,
-         batch: str | None = None, sonarr: str = "") -> int:
+         batch: str | None = None, sonarr: str = "", proxy: str = "") -> int:
     config = read_file()
     settings = config.get("notifications") or {}
     try:
@@ -2497,7 +2498,7 @@ def main(episode_ids: list[int] | None = None, replace: bool = False, kind: str 
                 raise RuntimeError(f"Choose a quality ladder for Sonarr {sonarr} in Settings, Sonarr first")
             with on_instance(inst):
                 return sync(instance_config(inst, config) if inst else config, settings, chosen_episodes(episode_ids),
-                            manual=True, replace=replace, kind=kind, numbering=numbering, batch=batch)
+                            manual=True, replace=replace, kind=kind, numbering=numbering, batch=batch, proxy=proxy)
         if not sweep_lock.acquire(blocking=False):  # one automatic sweep at a time
             print("A sync is already running, nothing to do.")
             return 0
@@ -2584,10 +2585,14 @@ NUMBERING = ("season_map", "season_offset", "season_offset_from", "episode_offse
 
 
 def sync(config: dict, settings: dict, episodes, manual: bool = False, replace: bool = False, kind: str = "auto",
-         numbering: dict | None = None, batch: str | None = None) -> int:
+         numbering: dict | None = None, batch: str | None = None, proxy: str = "") -> int:
     series = config.get("series") or {}
     if numbering is not None:  # this download's own, in place of the series': the file keeps its own
         series = {k: {**{o: v for o, v in show.items() if o not in NUMBERING}, **numbering} for k, show in series.items()}
+        config = {**config, "series": series}
+    if proxy:  # this download's own proxy (provider:region), over the series' and its "no proxy"; the setup is untouched
+        series = {k: {**show, "options": {**(show.get("options") or {}), "--proxy": proxy, "--no-proxy": False}}
+                  for k, show in series.items()}
         config = {**config, "series": series}
     episodes = list(episodes)
     if kind in ("auto", "burst"):  # switched off for this Sonarr: none of its new episodes
@@ -2601,7 +2606,7 @@ def sync(config: dict, settings: dict, episodes, manual: bool = False, replace: 
             show = series.get(ep["series"]["tvdbId"]) or {}
             if show.get("service") and ep["id"] not in waiting:
                 with jobs_lock:
-                    waiting[ep["id"]] = job["stubs"][ep["id"]] = queued_card(ep, show, kind, batch, replace)
+                    waiting[ep["id"]] = job["stubs"][ep["id"]] = queued_card(ep, show, kind, batch, replace, proxy)
     if batch:
         number_job(batch)  # its place for a download slot: the order it was picked in (#10)
         with jobs_lock:
