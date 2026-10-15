@@ -574,6 +574,26 @@ def test_a_download_with_its_own_numbering_leaves_the_series_as_it_is(tmp_path, 
     assert [c.get("numbering") for c in cards] == [{"episode_map": {"S02E05": "S09E01.2"}}, None]  # kept for a retry
 
 
+def test_a_download_with_its_own_proxy_uses_it_queued_episodes_too_and_leaves_the_series_proxy(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    asked, queued = [], []
+    def download(payload, run=None):
+        asked.append((payload["wanted"][0], payload.get("proxy"), payload.get("no_proxy")))
+        queued.extend(c.get("proxy_override") for c in sync.waiting.values())
+        raise sync.UnshackleError("no such title")
+    monkeypatch.setattr(sync, "run_job_retrying", download)
+    monkeypatch.setattr(sync, "notify", lambda *a, **k: None)
+    config = sync.read_file()
+    config["series"][111]["options"] = {**(config["series"][111].get("options") or {}), "--proxy": "us", "--no-proxy": True}
+    sync.sync(config, {}, [episode(111, 2, 5), episode(111, 2, 6)], manual=True, kind="manual", proxy="nordvpn:fr")
+    sync.sync(config, {}, [episode(111, 2, 7)], manual=True, kind="manual")
+    # both episodes of the request (the second queued, started later) go through nordvpn:fr, "no proxy" set aside
+    assert asked[:2] == [("S02E05", "nordvpn:fr", None), ("S02E06", "nordvpn:fr", None)]
+    assert queued == ["nordvpn:fr"]  # the queued card keeps it, for a cancel then queue again
+    assert asked[2] == ("S02E07", "us", True)  # the next download: the series' own options again
+    assert config["series"][111]["options"]["--proxy"] == "us"  # the setup is never changed
+
+
 def test_the_next_download_starts_while_the_one_before_is_imported(tmp_path, monkeypatch):
     import threading, time
     import time

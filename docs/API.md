@@ -76,6 +76,15 @@ Two optional fields: `"sonarr": "sonarr-2"` downloads for another Sonarr set up 
 episode ids and TVDB lookup, its ladder, imported into it), and `"retry": true` marks the download as a retry, as the
 page's Retry does. `409` when an earlier try of one of the episodes may still be downloading on Unshackle.
 
+`"proxy"` picks the proxy for this download only, a proxy provider and a region as Unshackle's `--proxy` takes them:
+
+```json
+{"tvdbId": 361753, "episodes": ["S02E05"], "proxy": "nordvpn:fr"}
+```
+
+It is used in place of the series' proxy (and of its No proxy), for these episodes, queued ones included; the
+series' setup does not change. `400` when it is not a provider and a region (`nordvpn:fr`, `protonvpn:us:ny`).
+
 ### `GET /api/v1/downloads?limit=50`
 
 Downloads, the queued and running ones first, then the history from newest to oldest. `limit`: 1
