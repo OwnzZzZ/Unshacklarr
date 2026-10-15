@@ -1158,7 +1158,6 @@
  "{0}: saved in unshackle.yaml": "{0}：unshackle.yaml に保存しました",
  "{0}: stopped": "{0}: 停止しました",
  "{0}: the default device": "{0}：既定のデバイス",
- "{0}: the tracks are in": "{0}：トラック取得済み",
  "{0}: {1} episode{2}": "{0}：{1} エピソード",
  "{0}: {1} of {2} parts on {3}, waiting for the rest": "{0}: {3} に {2} パート中 {1}。残りを待機中",
  "{0}: {1} within {2} min, for {3} {4}.": "{0}：{2} 分以内に{1}（{3} {4}）。",
@@ -2278,5 +2277,13 @@
  "with subtitles in {0}": "字幕は {0}",
  "without subtitles": "字幕なし",
  "{0}: looking for its programme on {1}: {2}": "{0}：{1} で番組を検索中：{2}",
- "{0}: matched to {1} on {2} (by {3})": "{0}：{2} の {1} に一致（{3} で照合）"
+ "{0}: matched to {1} on {2} (by {3})": "{0}：{2} の {1} に一致（{3} で照合）",
+ "1 track downloaded": "1 トラックをダウンロード済み",
+ "Decrypting and muxing": "復号と多重化",
+ "Mux": "多重化",
+ "Muxed": "多重化済み",
+ "Muxing {0}%": "多重化中 {0}%",
+ "{0} tracks downloaded": "{0} トラックをダウンロード済み",
+ "{0} · {1} left": "{0} · 残り {1}",
+ "· {0} left": "· 残り {0}"
 }

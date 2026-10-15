@@ -50,9 +50,11 @@ services:
       - SONARR_URL=${SONARR_URL:-http://sonarr:8989}   # starting values: the setup and Settings take over
       - SONARR_DOWNLOADS=${SONARR_DOWNLOADS:-}
       - UNSHACKLE_CONFIG_DIR=/unshackle-config  # its cookies and CDMs, managed from Settings
+      - UNSHACKLE_TEMP_DIR=/unshackle-temp       # Unshackle's work folder: how far a mux is, in Activity
     volumes:
       - ./data:/data                           # config.yaml, history, caches
       - ./unshackle:/unshackle-config          # the same folder as Unshackle's: unshackle.yaml, Cookies, WVDs, PRDs
+      - ./unshackle-data/temp:/unshackle-temp:ro  # its temp: folder (directories: temp), read only
       - ${DOWNLOADS_DIR}:/downloads
     ports:
       - 8788:8788

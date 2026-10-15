@@ -311,6 +311,11 @@ too (Settings › Sonarr › Name); a badge on each series names the libraries i
 service now has better. They are checked automatically every 7 days, each episode's answer kept 30 days, and replaced
 only when you tick them (Settings › Upgrades).
 
+**Muxing progress** (Activity): once every track is in, Unshackle decrypts them and muxes the file. Activity shows how
+far the mux is when Unshacklarr can read Unshackle's work folder (its `directories: temp`): on the same computer it
+always can; with Docker, mount that folder read only and set `UNSHACKLE_TEMP_DIR`, as `docker-compose.example.yml`
+does. Without it, the step shows how long it has been going.
+
 **Catch up** (Activity): the automatic sync only takes new episodes. The aired episodes your series still miss
 (those from before a series got its service, or that the sync gave up on) are listed there, within 7, 30 or 90
 days or all, and downloaded together.

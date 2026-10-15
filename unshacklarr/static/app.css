@@ -892,6 +892,20 @@ body.gated > :not(.gate):not(.toasts) { display: none !important; }
 .cd-tracks .tdone svg { color: var(--ok); }
 .cd-tracks .tdone svg { width: 17px; height: 17px; flex: none; }
 .cd-tracks .more { font-size: 12.5px; color: var(--muted); }
+/* The file being made, once every track is in: how far the mux is, or a light running along when it can't be read */
+.cd-mux { display: grid; gap: 8px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; }
+.cd-mux > div { display: flex; align-items: baseline; gap: 10px; } .cd-mux small { color: var(--muted); font-variant-numeric: tabular-nums; }
+.cd-mux .bar { height: 8px; }
+.bar.busy > i { background: linear-gradient(90deg, rgb(79 179 191 / .35) 0%, rgb(79 179 191 / .35) 30%, #9fe3ea 50%, rgb(79 179 191 / .35) 70%, rgb(79 179 191 / .35) 100%);
+  background-size: 200% 100%; animation: flow 1.6s linear infinite; }
+/* Every track downloaded: one line that unfolds to them */
+.cd-tracks-fold > summary { display: flex; align-items: center; gap: 8px; cursor: pointer; list-style: none; font-size: 13px; }
+.cd-tracks-fold > summary::-webkit-details-marker { display: none; }
+.cd-tracks-fold > summary::after { content: "▸"; color: var(--muted); transition: transform .15s; }
+.cd-tracks-fold[open] > summary::after { transform: rotate(90deg); }
+.cd-tracks-fold > summary small { color: var(--muted); }
+.cd-tracks-fold > summary .tdone { display: inline-flex; } .cd-tracks-fold > summary .tdone svg { width: 17px; height: 17px; color: var(--ok); }
+.cd-tracks-fold[open] > .cd-tracks { margin-top: 12px; }
 .tpart { display: grid; gap: 10px; padding: 10px 12px 12px; border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 10px; }
 .tpart.done { border-left-color: var(--ok); }
 .tpart-head { display: flex; align-items: baseline; gap: 8px; } .tpart-head b { font-size: 13.5px; }

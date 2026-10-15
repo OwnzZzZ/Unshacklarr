@@ -1159,7 +1159,6 @@
  "{0}: saved in unshackle.yaml": "{0}：已保存到 unshackle.yaml",
  "{0}: stopped": "{0}：已停止",
  "{0}: the default device": "{0}：默认设备",
- "{0}: the tracks are in": "{0}：轨道已就绪",
  "{0}: {1} episode{2}": "{0}：{1} 集",
  "{0}: {1} of {2} parts on {3}, waiting for the rest": "{0}：{3} 上已有 {1}/{2} 个部分，等待其余部分",
  "{0}: {1} within {2} min, for {3} {4}.": "{0}：请在 {2} 分钟内{1}（{3} {4}）。",
@@ -2283,5 +2282,13 @@
  "with subtitles in {0}": "字幕为 {0}",
  "without subtitles": "无字幕",
  "{0}: looking for its programme on {1}: {2}": "{0}：正在 {1} 上查找其节目：{2}",
- "{0}: matched to {1} on {2} (by {3})": "{0}：已在 {2} 上匹配到 {1}（依据 {3}）"
+ "{0}: matched to {1} on {2} (by {3})": "{0}：已在 {2} 上匹配到 {1}（依据 {3}）",
+ "1 track downloaded": "已下载 1 个轨道",
+ "Decrypting and muxing": "解密并封装",
+ "Mux": "封装",
+ "Muxed": "已封装",
+ "Muxing {0}%": "正在封装 {0}%",
+ "{0} tracks downloaded": "已下载 {0} 个轨道",
+ "{0} · {1} left": "{0} · 剩余 {1}",
+ "· {0} left": "· 剩余 {0}"
 }

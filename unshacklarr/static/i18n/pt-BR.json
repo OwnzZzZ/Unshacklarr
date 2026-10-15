@@ -1151,7 +1151,6 @@
  "{0}: saved in unshackle.yaml": "{0}: salvo no unshackle.yaml",
  "{0}: stopped": "{0}: parado",
  "{0}: the default device": "{0}: o dispositivo padrão",
- "{0}: the tracks are in": "{0}: as faixas estão prontas",
  "{0}: {1} episode{2}": "{0}: {1} episódio(s)",
  "{0}: {1} of {2} parts on {3}, waiting for the rest": "{0}: {1} de {2} partes no {3}, aguardando o resto",
  "{0}: {1} within {2} min, for {3} {4}.": "{0}: {1} em até {2} min, para {3} {4}.",
@@ -2260,5 +2259,13 @@
  "with subtitles in {0}": "com legendas em {0}",
  "without subtitles": "sem legendas",
  "{0}: looking for its programme on {1}: {2}": "{0}: procurando o programa em {1}: {2}",
- "{0}: matched to {1} on {2} (by {3})": "{0}: associado a {1} em {2} (por {3})"
+ "{0}: matched to {1} on {2} (by {3})": "{0}: associado a {1} em {2} (por {3})",
+ "1 track downloaded": "1 faixa baixada",
+ "Decrypting and muxing": "Descriptografia e multiplexação",
+ "Mux": "Multiplexação",
+ "Muxed": "Multiplexado",
+ "Muxing {0}%": "Multiplexando {0}%",
+ "{0} tracks downloaded": "{0} faixas baixadas",
+ "{0} · {1} left": "{0} · faltam {1}",
+ "· {0} left": "· faltam {0}"
 }

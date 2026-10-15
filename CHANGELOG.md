@@ -36,6 +36,8 @@ episodes matched far more reliably. Much of it came from mj23au's issues and cod
 - **Library folders picked, not typed.** Sonarr's root folders offered, both sides browsable, a real file to confirm them.
 - **Fallback service.** A second service for a series, used when the main one doesn't have the episode.
 - **Hybrid (DV + HDR10) in quality ladders.** A step can ask for both layers in one file.
+- **Muxing progress.** Activity shows how far Unshackle's mux is and the time left, and folds the tracks once they
+  are in. With Docker, mount its work folder (see the example compose).
 - **Downloads at once.** How many episodes each Unshackle server downloads together; 1 suits a small NAS. (#10)
 - **Download window.** Automatic downloads only between two times. In Settings › Automation.
 - **Auto release times.** A series learns when its episodes come out. In Settings › Automation.
@@ -56,6 +58,7 @@ episodes matched far more reliably. Much of it came from mj23au's issues and cod
 **📡 Sonarr**
 - **Season and series finales**, in the Schedule and in the notification.
 - **Season names** in Episodes, where Sonarr has them.
+- **Dynamic range in Episodes.** DV, HDR10 or HDR10+ beside each file's codec.
 - **Room in the library checked too.** Nothing downloads while the series' folder is short of space; you are told once.
 
 **✨ Everywhere**
@@ -119,6 +122,8 @@ New options are off until you turn them on, except Upgrades' automatic check (0 
 
 **✨ Everywhere**
 - **A series without a poster** shows its initials. (#22)
+- **Activity no longer freezes** when you come back to it after a while in another tab.
+- **The service check shows in Episodes** as soon as a suggested link is picked, without a reload.
 - **An unreachable Sonarr is told once**, not at every sync.
 - **A run that just ended** no longer shows "Interrupted" until a reload. (#17)
 - **The Output panel** keeps its newest line in view. (#10)

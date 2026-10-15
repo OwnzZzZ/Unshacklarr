@@ -87,6 +87,7 @@
  "1 series is back, with its options.": [],
  "1 series says otherwise, on its page.": [],
  "1 service or series picks its own": [],
+ "1 track downloaded": [],
  "1 year": [],
  "1.4 GB": [],
  "10 min": [],
@@ -339,6 +340,7 @@
  "Audio: {0}": [
   "it.audio.join(\", \")"
  ],
+ "Audio_": [],
  "Auto release times": [],
  "Automatic and release-time downloads only run from {0} to {1}.": [
   "from",
@@ -416,6 +418,7 @@
  ],
  "Change…": [],
  "Chapters": [],
+ "Chapters_": [],
  "Chat ID": [],
  "Check": [],
  "Check again": [],
@@ -613,6 +616,7 @@
  "Debug mode": [],
  "Decrypt Labs": [],
  "Decrypting": [],
+ "Decrypting and muxing": [],
  "Default": [],
  "Default device: {0}": [
   "cdmShort(d) || device"
@@ -1231,7 +1235,12 @@
  "Move {0} right": [
   "c.label"
  ],
+ "Mux": [],
+ "Muxed": [],
  "Muxing": [],
+ "Muxing {0}%": [
+  "muxPct(c)"
+ ],
  "NFD": [],
  "NFKD": [],
  "Name": [],
@@ -2166,6 +2175,7 @@
  "Stops the current download. The queued episodes don't start": [],
  "Strict": [],
  "Strong": [],
+ "Subtitle_": [],
  "Subtitles": [],
  "Subtitles, in this order": [],
  "Success": [],
@@ -2936,7 +2946,7 @@
  "for another.": [],
  "for one,": [],
  "for {0}": [
-  "epSonarr"
+  "since(c.mux_from)"
  ],
  "forced subtitles: {0}": [
   "it.forced.join(\", \")"
@@ -3846,6 +3856,9 @@
  "{0} syncs a day": [
   "hours.length"
  ],
+ "{0} tracks downloaded": [
+  "tracks.length"
+ ],
  "{0} tries in {1} min": [
   "tries",
   "minutes"
@@ -3930,6 +3943,10 @@
  "{0} · {1} episodes": [
   "first.series",
   "j.cards.length"
+ ],
+ "{0} · {1} left": [
+  "afterTracks(c)",
+  "muxLeft(c)"
  ],
  "{0} · {1} · started {2} {3}": [
   "first.service",
@@ -4080,9 +4097,6 @@
  "{0}: the default device": [
   "service"
  ],
- "{0}: the tracks are in": [
-  "afterTracks(c)"
- ],
  "{0}: type the passphrase it was sent with": [
   "e"
  ],
@@ -4157,6 +4171,9 @@
  "· {0} in {1}": [
   "saved.length",
   "S.backups.folder"
+ ],
+ "· {0} left": [
+  "muxLeft(c)"
  ],
  "· {0} managed": [
   "mine"

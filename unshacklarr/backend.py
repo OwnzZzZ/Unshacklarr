@@ -172,12 +172,13 @@ class Local:
         if getattr(self, "_paths", (None, None))[0] != command:
             python, folder = unshackle_python(command)
             ask = ("from unshackle.core.config import config, config_path; d = config.directories\n"
-                   "print(config_path or ''); print(d.cookies.resolve()); print(d.wvds.resolve()); print(d.prds.resolve())")
+                   "print(config_path or ''); print(d.cookies.resolve()); print(d.wvds.resolve()); print(d.prds.resolve());"
+                   " print(d.temp.resolve())")
             out = subprocess.run([python, "-c", ask], cwd=folder, capture_output=True, text=True, timeout=60)
-            lines = out.stdout.strip().splitlines()[-4:]
-            if out.returncode or len(lines) != 4:
+            lines = out.stdout.strip().splitlines()[-5:]
+            if out.returncode or len(lines) != 5:
                 raise UnshackleError(f"Could not ask unshackle where its files are: {out.stderr.strip()[-300:]}")
-            self._paths = (command, dict(zip(("config", "cookies", "wvds", "prds"), map(Path, lines))))
+            self._paths = (command, dict(zip(("config", "cookies", "wvds", "prds", "temp"), map(Path, lines))))
         return self._paths[1]
 
     def cookies_dir(self, command: str) -> Path:

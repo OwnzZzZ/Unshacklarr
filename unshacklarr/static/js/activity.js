@@ -31,7 +31,13 @@ async function openActivity() {
   const seq = ++runsSeq;
   let cards;
   try { cards = await api("/api/runs"); }
-  catch (e) { if (seq === runsSeq) $("#runs-live").replaceChildren(failed(`Could not load the downloads: ${e.message}`, openActivity)); return; }
+  catch (e) {
+    if (seq !== runsSeq) return;
+    $("#runs-live").replaceChildren(failed(`Could not load the downloads: ${e.message}`, openActivity));
+    clearTimeout(runsTimer);
+    runsTimer = setTimeout(activityLater, 10000);  // back from a sleep, the network may not be up yet: tried again
+    return;
+  }
   if (seq !== runsSeq) return;  // a newer call is on its way: this answer may predate a Stop
   runCards = cards;
   clearTimeout(runsTimer);
@@ -45,21 +51,42 @@ function activityLater() {  // the history asked again, not while the tab is out
   if (document.hidden) runsTimer = setTimeout(activityLater, 15000); else openActivity();
 }
 /* The downloads going on now, pushed by the server as they move; the whole list again when one starts or ends. */
-let liveFeed = null;
+let liveFeed = null, liveNext = null;
 function followLive() {
-  if (liveFeed || !window.EventSource) return;
+  if (liveFeed || !window.EventSource || document.hidden) return;
   liveFeed = new EventSource("/api/runs/live");
   liveFeed.onmessage = (e) => {
     if ($("#tab-log").hidden) { liveFeed.close(); liveFeed = null; return; }
     if (document.hidden) return;  // nothing drawn out of sight: the next message, once back, draws it
-    const live = JSON.parse(e.data), ids = new Set(live.map((c) => c.id));
-    const known = new Set(runCards.filter((c) => isLive(c) && !c.waiting).map((c) => c.id));  // the queued aren't in the feed
-    if (live.length !== known.size || live.some((c) => !known.has(c.id))) return openActivity();  // one started or ended
-    runCards = runCards.map((c) => (ids.has(c.id) ? live.find((x) => x.id === c.id) : c));
-    renderConsole(true);
+    // several messages waiting (a slow phone, a tab just back): only the last one is drawn, once per frame
+    if (liveNext === null) requestAnimationFrame(() => { const data = liveNext; liveNext = null; liveTick(data); });
+    liveNext = e.data;
   };
   liveFeed.onerror = () => { liveFeed?.close(); liveFeed = null; };  // polling takes over; the next load tries again
 }
+function liveTick(data) {
+  if (data === null || $("#tab-log").hidden) return;
+  const live = JSON.parse(data), ids = new Set(live.map((c) => c.id));
+  const known = new Set(runCards.filter((c) => isLive(c) && !c.waiting).map((c) => c.id));  // the queued aren't in the feed
+  if (live.length !== known.size || live.some((c) => !known.has(c.id))) return openActivity();  // one started or ended
+  runCards = runCards.map((c) => (ids.has(c.id) ? live.find((x) => x.id === c.id) : c));
+  renderConsole(true);
+}
+/* Out of sight, Activity stops its live feed and Unshackle's output: a hidden tab runs its timers once a minute
+   after 5 minutes, and the output piled up meanwhile froze the page when it came back. Back in sight, it starts
+   again from what is now, the output from its end. */
+let termResume = null;
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    liveFeed?.close(); liveFeed = null; liveNext = null;
+    if (termSocket) { termResume = termQuery; termSocket.onmessage = null; termSocket.close(); termSocket = null; }
+    return;
+  }
+  if ($("#tab-log").hidden) { termResume = null; return; }
+  if (termResume && termFor) streamTerm(termFor, termResume);
+  termResume = null;
+  openActivity();
+});
 /* A bar redrawn with the page keeps moving from where it was, instead of jumping. */
 const barWidths = new Map();
 function glideBars(root) {
@@ -182,11 +209,24 @@ const ICON_FILM = '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 
    muxing. "" while it still downloads. Without it, a card showed 96% and a stale time left, and seemed stuck. */
 function afterTracks(c) {
   const lv = c.live || {}, phase = String(lv.phase || "");
-  if (phase.startsWith("mux")) return "Muxing";
+  if (phase.startsWith("mux")) return muxPct(c) != null ? `Muxing ${muxPct(c)}%` : "Muxing";
   if (phase.startsWith("repack")) return "Repackaging";
   if (lv.total_tracks && Number(lv.completed_tracks) >= Number(lv.total_tracks)) return c.cdm ? "Decrypting" : "Processing the tracks";
   return "";
 }
+/* How far serve's mux is, from the file it writes in its work folder (Unshacklarr reads that folder when it is
+   mounted, UNSHACKLE_TEMP_DIR): a percentage, and the time left at the pace it goes; null when unknown. */
+const muxPct = (c) => c.mux?.total ? Math.min(99, Math.floor((c.mux.done / c.mux.total) * 100)) : null;
+const muxLog = {};  // run id -> [[time, bytes written]]
+function muxLeft(c) {
+  if (!c.mux?.total) return "";
+  const log = (muxLog[c.id] ||= []), now = Date.now();
+  if (!log.length || log[log.length - 1][1] !== c.mux.done) log.push([now, c.mux.done]);
+  while (log.length > 20) log.shift();
+  const [t0, d0] = log[0], rate = (c.mux.done - d0) / ((now - t0) / 1000);
+  return rate > 0 ? duration(((c.mux.total - c.mux.done) / rate) * 1000) : "";
+}
+const since = (iso) => iso ? duration(Date.now() - new Date(iso)) : "";
 /* The proxy a download goes through: serve's word once it has one, else what was asked; "" for none. */
 function proxyOf(c) {
   if (c.proxy) return c.proxy.provider ? [c.proxy.provider, c.proxy.region?.toUpperCase()].filter(Boolean).join(" · ") : "Custom proxy";
@@ -249,7 +289,7 @@ function renderJob(j) {
     const tone = c.waiting ? "" : live ? "now" : c.outcome === "downloaded" ? "ok" : c.outcome === "failed" ? "err" : c.outcome === "kept" || c.outcome === "import" ? "warn" : "";
     const downloading = isDownloading(c);
     const detail = downloading ? el("div", { className: "jmeta" },  // how fast, how long still: in sight, not a grey line
-        ...[...(afterTracks(c) ? [[ICON_CLOCK, `${afterTracks(c)}: the tracks are in`]] : [[ICON_SPEED, speedOf(c)], [ICON_CLOCK, timeLeft(c) && `${timeLeft(c)} left`]]), [ICON_GLOBE, proxyOf(c), "extra"], [ICON_FILM, videoOf(c), "extra"],
+        ...[...(afterTracks(c) ? [[ICON_CLOCK, muxLeft(c) ? `${afterTracks(c)} · ${muxLeft(c)} left` : `${afterTracks(c)} · ${since(c.mux_from || c.tracks_in)}`]] : [[ICON_SPEED, speedOf(c)], [ICON_CLOCK, timeLeft(c) && `${timeLeft(c)} left`]]), [ICON_GLOBE, proxyOf(c), "extra"], [ICON_FILM, videoOf(c), "extra"],
           [ICON_SWAP, c.serviceEpisode && c.serviceEpisode !== c.sxxeyy && `${c.serviceEpisode} on ${c.service}`, "extra"]]
           .filter(([, t]) => t).map(([icon, t, extra]) => { const chip = metaChip(icon, t); if (extra) chip.classList.add(extra); return chip; }))
       : el("small", { textContent: !live && c.ended ? [c.cause, `took ${duration(new Date(c.ended) - new Date(c.started))}`, c.size && size(c.size)].filter(Boolean).join(" · ") : "" });
@@ -637,14 +677,15 @@ addEventListener("scroll", () => {  // a phone: the list is the page
   if (!$("#tab-log").hidden && innerWidth <= 700 && scrollY + innerHeight > document.documentElement.scrollHeight - 400) moreRuns();
 }, { passive: true });
 
-const STEPS = ["Queued", "Downloading", "Joining parts", "Renaming", "Sonarr import"];
-const STEPS_SHORT = ["Queued", "Download", "Join", "Rename", "Import"];
+const STEPS = ["Queued", "Downloading", "Decrypting and muxing", "Joining parts", "Renaming", "Sonarr import"];
+const STEPS_SHORT = ["Queued", "Download", "Mux", "Join", "Rename", "Import"];
 function stepStates(c) {
-  const at = { queued: 0, downloading: 1, joining: 2, finishing: 2, renaming: 3, importing: 4, done: 5 }[c.step] ?? 0;
+  const at = c.step === "downloading" && afterTracks(c) ? 2  // every track in: serve makes the file
+    : { queued: 0, downloading: 1, joining: 3, finishing: 3, renaming: 4, importing: 5, done: 6 }[c.step] ?? 0;
   return STEPS.map((_, i) => {
-    if (i === 2 && c.parts === 1) return "skip";  // one file: nothing to join
+    if (i === 3 && c.parts === 1) return "skip";  // one file: nothing to join
     if (c.outcome === "downloaded") return "done";
-    if (c.outcome === "kept" || c.outcome === "import") return i < 4 ? "done" : "warn";
+    if (c.outcome === "kept" || c.outcome === "import") return i < 5 ? "done" : "warn";
     if (i < at) return "done";
     if (i === at) return { running: "now", failed: "fail", stopped: "halt", interrupted: "halt", unavailable: "halt" }[c.outcome] || "halt";
     return "";
@@ -744,6 +785,7 @@ function trackDone(t) {
   if (t.took != null) span.append(duration(t.took * 1000));
   return span;
 }
+const tracksOpen = new Set();  // attempts whose downloaded tracks were unfolded: they stay so as it moves on
 /* An attempt's steps, what waits for you, its figures or its end, and its tracks: in its own view and in a job's card. */
 function runBody(c) {
   const started = new Date(c.started), live = isLive(c);
@@ -756,10 +798,20 @@ function runBody(c) {
   if (live && c.prompt) parts.push(promptBox(c.prompt));
   if (live) {
     const lv = c.live || {};
+    const muxing = String(lv.phase || "").startsWith("mux");
     parts.push(el("div", { className: "cd-stats" },
-      ...[["Progress", `${Math.round(Number(lv.progress) || 0)}%`], ...(afterTracks(c) ? [["Now", afterTracks(c)]] : [["Speed", speedOf(c) || "–"], ["Left", timeLeft(c) || "–"]]),
-        ...partStat(c), [partStat(c).length ? "Tracks in it" : "Tracks", lv.total_tracks ? `${lv.completed_tracks || 0} of ${lv.total_tracks}` : "–"]]
+      ...[["Progress", `${Math.round(Number(lv.progress) || 0)}%`],
+        ...(muxing ? [["Now", "Muxing"], ["Muxed", c.mux?.total ? `${size(Math.min(c.mux.done, c.mux.total))} of ${size(c.mux.total)}` : since(c.mux_from)], ["Left", muxLeft(c) || "–"]]
+          : afterTracks(c) ? [["Now", afterTracks(c)], ["For", since(c.tracks_in) || "–"]] : [["Speed", speedOf(c) || "–"], ["Left", timeLeft(c) || "–"]]),
+        ...partStat(c), ...(muxing ? [] : [[partStat(c).length ? "Tracks in it" : "Tracks", lv.total_tracks ? `${lv.completed_tracks || 0} of ${lv.total_tracks}` : "–"]])]
         .map(([k, v]) => el("div", {}, el("small", { textContent: k }), el("b", { textContent: v })))));
+    if (muxing) {  // the file being made: how far, or, without its work folder in reach, that it goes on
+      const pct = muxPct(c);
+      parts.push(el("div", { className: "cd-mux" },
+        el("div", {}, el("b", { textContent: "Muxing" }), el("small", { textContent: pct != null
+          ? `${pct}%${muxLeft(c) ? ` · ${muxLeft(c)} left` : ""}` : `for ${since(c.mux_from)}` })),
+        el("span", { className: `bar${pct == null ? " busy" : ""}` }, el("i", { style: `width:${pct ?? 100}%`, dataset: { k: `mux:${c.id}` } }))));
+    }
   } else {
     const note = { downloaded: ["ok", "Downloaded"], failed: ["err", "Failed"], kept: ["warn", "Sonarr kept its own file"], import: ["warn", "Downloaded, import needed"],
       stopped: ["mut", "Stopped"], interrupted: ["mut", "Interrupted: Unshacklarr stopped during it"],
@@ -784,14 +836,23 @@ function runBody(c) {
     const byPart = Object.groupBy(tracks, (t) => /^Part (\d+)/.exec(t.label)?.[1] || "");
     const numbers = Object.keys(byPart).filter(Boolean);
     // An episode in parts (Koh-Lanta on Molotov): each part under its own head, how far it is, then its tracks
-    parts.push(numbers.length > 1 ? el("div", { className: "cd-tracks" }, ...numbers.map((n) => {
+    const list = numbers.length > 1 ? el("div", { className: "cd-tracks" }, ...numbers.map((n) => {
       const list = byPart[n], done = list.every((t) => t.progress >= 100);
       const pct = Math.round(list.reduce((sum, t) => sum + Math.min(100, t.progress), 0) / list.length);
       return el("div", { className: `tpart${done ? " done" : ""}` },
         el("div", { className: "tpart-head" }, el("b", { textContent: `Part ${n}` }), el("small", { textContent: `of ${numbers.length}` }),
           done ? (() => { const d = trackDone({ took: null }); d.append("Done"); return d; })() : el("span", { className: "now", textContent: `${pct}%` })),
         ...list.map(row));
-    })) : el("div", { className: "cd-tracks" }, ...tracks.map(row)));
+    })) : el("div", { className: "cd-tracks" }, ...tracks.map(row));
+    // every track in: folded into one line, the steps after it in sight; a click shows them again
+    if (tracks.every((t) => t.progress >= 100)) {
+      const took = c.tracks_in && duration(new Date(c.tracks_in) - started);
+      const head = el("summary", {}, trackDone({ took: null }),
+        el("b", { textContent: tracks.length === 1 ? "1 track downloaded" : `${tracks.length} tracks downloaded` }),
+        ...(took ? [el("small", { textContent: took })] : []));
+      parts.push(el("details", { className: "cd-tracks-fold", open: tracksOpen.has(c.id),
+        ontoggle: (e) => (e.target.open ? tracksOpen.add(c.id) : tracksOpen.delete(c.id)) }, head, list));
+    } else parts.push(list);
   }
   return parts;
 }

@@ -124,6 +124,7 @@ SETTINGS_DEFAULTS = {
     "unshackle_downloads": "",   # the same folder, as unshackle serve sees it (empty: the same path)
     "cookies_dir": "",           # Unshackle's Cookies folder, as Unshacklarr sees it (local: asked to unshackle)
     "unshackle_config_dir": "",  # the folder of unshackle.yaml, WVDs and PRDs, as Unshacklarr sees it (local: asked)
+    "unshackle_temp_dir": "",    # Unshackle's work folder (directories: temp), read only: how far a mux is (local: asked)
     "sonarr_name": "",           # the main Sonarr's name where libraries are named (empty: Sonarr)
     "sonarr_url": "",
     "sonarr_public_url": "",     # Sonarr in the browser, for links (empty: sonarr_url, when a browser can reach it)
@@ -181,7 +182,8 @@ SETTINGS_DEFAULTS = {
 }
 SETTINGS_FROM_ENV = {
     "unshackle_url": "UNSHACKLE_URL", "unshackle_api_key": "UNSHACKLE_API_KEY", "downloads": "DOWNLOADS",
-    "unshackle_downloads": "UNSHACKLE_DOWNLOADS", "cookies_dir": "COOKIES_DIR", "unshackle_config_dir": "UNSHACKLE_CONFIG_DIR", "sonarr_url": "SONARR_URL", "sonarr_api_key": "SONARR_API_KEY",
+    "unshackle_downloads": "UNSHACKLE_DOWNLOADS", "cookies_dir": "COOKIES_DIR", "unshackle_config_dir": "UNSHACKLE_CONFIG_DIR",
+    "unshackle_temp_dir": "UNSHACKLE_TEMP_DIR", "sonarr_url": "SONARR_URL", "sonarr_api_key": "SONARR_API_KEY",
     "sonarr_downloads": "SONARR_DOWNLOADS", "timezone": "TZ",
 }
 
@@ -929,7 +931,57 @@ def unconfirmed_still_on(run: EpisodeRun | None) -> str | None:
     return None
 
 
+def work_root() -> Path | None:
+    """Unshackle's work folder (unshackle.yaml's directories: temp) as Unshacklarr sees it, where serve muxes the
+    file: UNSHACKLE_TEMP_DIR (with Docker, that folder mounted read only), else the local Unshackle's own. None when
+    unknown: the mux is then shown without how far it is."""
+    if SETTINGS.get("unshackle_temp_dir"):
+        return Path(SETTINGS["unshackle_temp_dir"])
+    if UNSHACKLE.mode == "local":
+        try:
+            return UNSHACKLE.local.paths(str(SETTINGS.get("unshackle_command") or "")).get("temp")
+        except (UnshackleError, OSError, subprocess.SubprocessError):
+            return None
+    return None
+
+
+def task_folders(root: Path | None) -> set[Path]:
+    """serve's work folders, one per download running (task_<id>)."""
+    try:
+        return {p for p in root.iterdir() if p.name.startswith("task_") and p.is_dir()} if root else set()
+    except OSError:
+        return set()
+
+
+work_claimed: dict[Path, str] = {}  # a work folder -> the run it is the download of
+
+
+def mux_progress(folder: Path) -> dict | None:
+    """How far serve's mux is: the .muxed file it writes, against what goes in it, the video (the largest other file:
+    a DV one is rebuilt next to its source) with every audio and subtitle track. None before the mux starts."""
+    def size(p: Path) -> int:
+        try:
+            return p.stat().st_size
+        except OSError:  # gone meanwhile
+            return 0
+    try:
+        files = [p for p in folder.iterdir() if p.is_file()]
+    except OSError:
+        return None
+    muxed = [p for p in files if ".muxed." in p.name]
+    if not muxed:
+        return None
+    rest = [p for p in files if p not in muxed]
+    tracks = [p for p in rest if p.name.startswith(("Audio_", "Subtitle_"))]
+    video = max((p for p in rest if p not in tracks and not p.name.startswith("Chapters_")), key=size, default=None)
+    total = sum(map(size, tracks)) + (size(video) if video else 0)
+    done = size(max(muxed, key=lambda p: p.name))  # the one being written: the highest number
+    return {"done": done, "total": total} if total else None
+
+
 def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float, job_id: str | None = None) -> list[str]:
+    root = work_root() if run and not backend.name else None  # another server's work folder is out of reach
+    before, work = task_folders(root), None
     if job_id:
         trace(f"unshackle serve{f' {backend.name}' if backend.name else ''} still has job {job_id}: followed again")
         if run:
@@ -967,6 +1019,21 @@ def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float, job_
             time.sleep(max(poll, 5))
             continue
         status = job.get("status")
+        if run and status == "downloading":
+            done = job.get("total_tracks") and int(job.get("completed_tracks") or 0) >= int(job.get("total_tracks") or 0)
+            if done and "tracks_in" not in run.card:  # every track in: decrypting, then the mux, from now
+                run.card["tracks_in"] = datetime.now(timezone.utc).isoformat()
+            if str(job.get("phase") or "").startswith("mux"):
+                run.card.setdefault("mux_from", datetime.now(timezone.utc).isoformat())
+                if root and work is None:  # the folder that appeared with this download (or the one muxing, followed again)
+                    new = [f for f in task_folders(root) - (before if not job_id else set()) if f not in work_claimed]
+                    if job_id:
+                        new = [f for f in new if mux_progress(f)]
+                    if len(new) == 1:
+                        work = new[0]
+                        work_claimed[work] = run.id
+                if work is not None:
+                    run.card["mux"] = mux_progress(work) or run.card.get("mux")
         if job.get("track_progress") or int(job.get("log_count") or 0) != quiet_count:  # serve says something: it moves
             since, quiet_count = time.monotonic(), int(job.get("log_count") or 0)
         if run and not hinted and status not in ("queued", *TERMINAL) and time.monotonic() - since > SIGN_IN_HINT:
@@ -1027,6 +1094,8 @@ def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float, job_
                 run.raw(f"\r\x1b[2K{new[:118]}".encode())  # within the terminal's 110 columns: redrawn, not wrapped
                 line = new
         time.sleep(poll)
+    if work is not None:
+        work_claimed.pop(work, None)
     if status != "completed":
         detail = job.get("error_details") or ""
         stderr = "\n".join((job.get("worker_stderr") or "").strip().splitlines()[-15:])
