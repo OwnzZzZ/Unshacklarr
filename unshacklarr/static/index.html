@@ -203,7 +203,7 @@
         <section class="sx-card">
           <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 1 1 0 10h-2M8 12h8"/></svg></span><div><h3>Connection</h3><p>How Unshacklarr reaches Sonarr, to find the missing episodes and hand it the downloads.</p></div></div>
           <div class="sx-grid">
-            <div class="field" id="sx-name-field"><label for="sx-name">Name</label><input id="sx-name" type="text" data-set="sonarr_name" placeholder="Sonarr" spellcheck="false"><small id="sx-name-help">Shown on the series of each library when you have more than one Sonarr. Empty: Sonarr.</small></div>
+            <div class="field" id="sx-name-field"><label for="sx-name">Name</label><input id="sx-name" type="text" data-set="sonarr_name" placeholder="Sonarr" spellcheck="false"><small id="sx-name-help">The name shown on each series to tell the libraries apart when you have more than one Sonarr. Leave empty to use “Sonarr”.</small></div>
             <div class="field"><label for="sx-url">Sonarr URL</label><input id="sx-url" type="url" data-set="sonarr_url" placeholder="http://sonarr:8989"><small>The address Unshacklarr uses to reach Sonarr, e.g. http://sonarr:8989 on a shared Docker network.</small></div>
             <div class="field"><label for="sx-key">API key <span class="sx-saved" id="sx-key-saved" hidden>✓ Saved</span></label><input id="sx-key" type="password" data-set="sonarr_api_key" autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true"><small>In Sonarr: Settings, General. Leave empty to keep the saved key. A new URL needs its key too.</small></div>
           </div>
@@ -215,7 +215,7 @@
           </div>
         </section>
         <section class="sx-card" id="sn-card">
-          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/><path d="M6 6.5h.01M6 17.5h.01"/></svg></span><div><h3>Other Sonarr instances</h3><p>A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes come with the automatic sync: release times stay with the Sonarr above.</p></div>
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/><path d="M6 6.5h.01M6 17.5h.01"/></svg></span><div><h3>Other Sonarr instances</h3><p>A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes are downloaded by the automatic sync. Release-time downloads follow only the Sonarr above.</p></div>
             <button class="btn small dx-add" id="sn-add" type="button">Add a Sonarr</button></div>
           <div id="sn-list"></div>
         </section>
@@ -353,7 +353,7 @@
           </div>
           <div class="up-mode">
             <span class="sub">Audio upgrade</span>
-            <div class="ax-seg" id="dx-upmode" role="radiogroup" aria-label="Audio upgrade"><button type="button" role="radio" data-mode="redownload">Redownload episode</button><button type="button" role="radio" data-mode="add_track">Add audio track</button></div>
+            <div class="ax-seg" id="dx-upmode" role="radiogroup" aria-label="Audio upgrade"><button type="button" role="radio" data-mode="redownload">Download the whole episode again</button><button type="button" role="radio" data-mode="add_track">Add the audio track</button></div>
             <p class="rt-who" id="dx-upmode-say"></p>
             <div id="dx-library">
               <div id="dx-lib-who"></div>
@@ -385,7 +385,7 @@
       <div class="set-sec sx" data-sec="upgrades" hidden>
         <section class="sx-hero">
           <span class="sx-logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span>
-          <div class="sx-id"><h2>Upgrades</h2><p class="ax-lead">Activity, Upgrades asks each service what it has for the files your quality ladder says could be better. These settings decide which series it asks about, and how long an answer is kept.</p></div>
+          <div class="sx-id"><h2>Upgrades</h2><p class="ax-lead">The Upgrades page in Activity asks each service what it has for the files your quality ladder says could be better. These settings decide which series it asks about, and how long an answer is kept.</p></div>
           <div class="sx-state" id="ug-state"><span class="dot"></span><span><b></b><small></small></span></div>
         </section>
         <section class="sx-card">
@@ -394,7 +394,7 @@
             <div class="field"><label for="ug-recheck">Ask again after</label><div class="unit"><input id="ug-recheck" type="number" data-set="upgrade_recheck_days" data-num min="0" max="3650"><span>days</span></div><small>0: always ask.</small></div>
             <div class="field"><label for="ug-age">Only episodes from the last</label><div class="unit"><input id="ug-age" type="number" data-set="upgrade_max_age_years" data-num min="0" max="100"><span>years</span></div><small>Older episodes are not checked. 0: all of them.</small></div>
             <div class="field" id="ug-every-field"><label for="ug-every">Check automatically every</label><div class="unit"><input id="ug-every" type="number" data-set="upgrade_check_days" data-num min="0" max="365"><span>days</span></div><small>Each check asks the service only about episodes whose answer is older than Ask again after, so use fewer days than that. 0: only when you click Check.</small></div>
-            <div class="field" id="ug-spread-field"><label for="ug-spread">Spread the questions</label><div class="unit"><input id="ug-spread" type="number" data-set="upgrade_recheck_spread" data-num min="0" max="90"><span>%</span></div><small>Some answers are kept up to this much shorter, so episodes checked on the same day are not all asked again on the same day. 0: no spreading.</small></div>
+            <div class="field" id="ug-spread-field"><label for="ug-spread">Spread the questions</label><div class="unit"><input id="ug-spread" type="number" data-set="upgrade_recheck_spread" data-num min="0" max="90"><span>%</span></div><small>Each episode's answer is kept up to this percentage less than Ask again after, a different amount for each episode, so episodes checked on the same day are not all asked about again on the same day. 0: no spreading.</small></div>
           </div>
           <label class="ug-switch" id="ug-new-field"><input type="checkbox" class="switch" id="ug-new"><span><b>Check new series</b><small>A series you set up with episodes already on disk is checked within the hour, without waiting for the next automatic check.</small></span></label>
         </section>
@@ -404,8 +404,8 @@
           <div class="ug-groups" id="ug-groups"></div>
         </section>
         <section class="sx-card" id="ug-series-card">
-          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><div><h3>Series checked</h3><p>Untick a series to leave it out. Its page has the same switch, under What to get.</p></div></div>
-          <div class="ug-tools"><input type="search" id="ug-find" placeholder="Find a series" autocomplete="off"><button type="button" class="btn small" id="ug-all">Tick all</button><button type="button" class="btn small" id="ug-none">Untick all</button></div>
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><div><h3>Series to check</h3><p>Untick a series to leave it out. Its page has the same switch, under What to get.</p></div></div>
+          <div class="ug-tools"><input type="search" id="ug-find" placeholder="Find a series" autocomplete="off"><button type="button" class="btn small" id="ug-all">Select all</button><button type="button" class="btn small" id="ug-none">Select none</button></div>
           <div class="ug-list" id="ug-series"></div>
           <small class="muted" id="ug-say"></small>
         </section>
@@ -558,7 +558,7 @@
               <div class="field bo-s3"><label for="bo-bucket">Bucket</label><input id="bo-bucket" type="text" placeholder="my-bucket/unshacklarr" autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true" spellcheck="false"><small>A folder in it is allowed: my-bucket/unshacklarr.</small></div>
               <div class="field"><label for="bo-user" id="bo-user-l">User name</label><input id="bo-user" type="text" autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true" spellcheck="false"><small id="bo-user-help"></small></div>
               <div class="field"><label for="bo-secret"><span id="bo-secret-l">Password</span> <span class="sx-saved" id="bo-secret-saved" hidden>✓ Saved</span></label><input id="bo-secret" type="password" autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true" spellcheck="false"><small id="bo-secret-help"></small></div>
-              <div class="field bo-s3"><label for="bo-region">Region</label><input id="bo-region" type="text" placeholder="us-east-1" autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true" spellcheck="false"><small>Empty: us-east-1. Cloudflare R2: auto.</small></div>
+              <div class="field bo-s3"><label for="bo-region">Region</label><input id="bo-region" type="text" placeholder="us-east-1" autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true" spellcheck="false"><small>Leave empty for us-east-1. For Cloudflare R2, enter auto.</small></div>
               <div class="field"><label for="bo-pass">Passphrase <span class="sx-saved" id="bo-pass-saved" hidden>✓ Saved</span></label><input id="bo-pass" type="password" autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true" spellcheck="false"><small id="bo-pass-help">At least 12 characters. It encrypts the backups, and you need it to restore one: keep it somewhere safe, outside this server.</small></div>
             </div>
             <p class="rt-who" id="bo-say"></p>
@@ -683,7 +683,7 @@
       <div class="field" id="d-libs-field" hidden>
         <span id="d-libs-l">Libraries</span>
         <div class="d-libs" id="d-libs" role="group" aria-labelledby="d-libs-l"></div>
-        <small>New episodes are downloaded for each library switched on, with its own quality ladder (Settings › Sonarr).</small>
+        <small>New episodes are downloaded for each library switched on, with its own quality ladder (Settings, Sonarr).</small>
         <details class="d-libs-adv" id="d-libs-adv"><summary>Advanced</summary><div id="d-libs-adv-body"></div></details>
       </div>
       <div class="ds-tools">
@@ -735,7 +735,7 @@
           <div class="bc-days" id="d-bc-days" role="group" aria-label="Days of the week"></div>
           <div class="bc-cal" id="d-bc-cal"></div>
           <small class="help">Click a day to set 0, 1, 2 or 3 episodes (0: none that day). Orange: different from the usual schedule.</small>
-          <small class="help">The Schedule shows this schedule only: episodes before the first one are left out of it. They are still downloaded when they air on Sonarr's dates.</small>
+          <small class="help">The Schedule page uses these dates instead of Sonarr's, from the first day on. Earlier episodes are left out of it, but they are still downloaded when they air on Sonarr's dates.</small>
           <ol class="bc-list" id="d-bc-list"></ol>
         </div>
       </details>

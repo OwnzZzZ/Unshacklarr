@@ -688,6 +688,8 @@ class EpisodeRun:
         self.card.update(ended=datetime.now(timezone.utc).isoformat(), outcome=outcome)
         if outcome in ("downloaded", "kept", "import"):  # a later try of this attempt got through: nothing left unconfirmed (#10)
             self.card.pop("unconfirmed_job", None)
+        if outcome in ("downloaded", "import", "kept"):  # a new file: the release watch must not see it missing
+            _broadcast_episodes.clear()
         if outcome == "downloaded":  # a new file: Upgrades' find for it is done with (by mj23au)
             drop_upgrade_find(self.card.get("instance", ""), self.card.get("tvdbId"), self.card.get("sxxeyy"))
         self.fold_checks()
@@ -898,17 +900,43 @@ def release_job(job: str | None) -> None:
         slots.notify_all()
 
 
-def run_job(payload: dict, run: EpisodeRun | None = None, poll: float = 0.5) -> list[str]:
+def run_job(payload: dict, run: EpisodeRun | None = None, poll: float = 0.5, job_id: str | None = None) -> list[str]:
     """Hand the download to unshackle serve (the run's own, when another one has its service) and follow it to
-    the end, drawing its progress in the run's log (the web page's terminal). Returns the files it made."""
+    the end, drawing its progress in the run's log (the web page's terminal). Returns the files it made. With a
+    job_id: that job, already on serve, followed again instead of a new download."""
     backend = backend_named(run.card.get("backend") if run else None)
     with download_slot(backend.name or "", run):
-        return follow_job(backend, payload, run, poll)
+        return follow_job(backend, payload, run, poll, job_id)
 
 
-def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float) -> list[str]:
-    job_id = backend.download(payload)
-    trace(f"unshackle serve{f' {backend.name}' if backend.name else ''} took it as job {job_id}")
+def unconfirmed_still_on(run: EpisodeRun | None) -> str | None:
+    """Before a retry: the run's earlier job that serve never confirmed stopped (it didn't answer the cancel), when it
+    is still there, queued, downloading or completed: followed again rather than a second download into the same
+    folder. None when serve answers it has gone (no such job, failed, cancelled). Still unreachable: the UnshackleError
+    goes on, and the retry waits again (#10)."""
+    pending = (run.card.get("unconfirmed_job") if run else None) or {}
+    if not pending.get("job_id"):
+        return None
+    try:
+        status = backend_named(pending.get("backend") or None).job(pending["job_id"]).get("status")
+    except UnshackleError as e:
+        if UNREACHABLE in str(e):
+            raise
+        status = None  # serve answered (404): nothing of it runs any more
+    if status in ("queued", "downloading", "completed"):
+        return pending["job_id"]
+    run.card.pop("unconfirmed_job", None)
+    return None
+
+
+def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float, job_id: str | None = None) -> list[str]:
+    if job_id:
+        trace(f"unshackle serve{f' {backend.name}' if backend.name else ''} still has job {job_id}: followed again")
+        if run:
+            run.card.pop("unconfirmed_job", None)  # confirmed: it answers again
+    else:
+        job_id = backend.download(payload)
+        trace(f"unshackle serve{f' {backend.name}' if backend.name else ''} took it as job {job_id}")
     if run:  # what Activity's Stop button cancels
         run.card["job_id"] = job_id
         run.save()
@@ -1069,7 +1097,8 @@ def run_job_retrying(payload: dict, run: EpisodeRun | None = None, sleep=time.sl
     subs_tried, tries = False, 0
     while True:
         try:
-            return run_job(payload, run)
+            job_id = unconfirmed_still_on(run)
+            return run_job(payload, run, job_id=job_id) if job_id else run_job(payload, run)
         except (JobFailed, UnshackleError) as e:
             cause = getattr(e, "cause", str(e))
             waits = SERVE_RETRY_AFTER if UNREACHABLE in cause else RETRY_AFTER
@@ -1156,15 +1185,23 @@ def broadcast_dates(show: dict, episodes: list[dict]) -> dict[int, datetime]:
     return out
 
 
-def broadcast_plans(config: dict) -> list[tuple[dict, list[dict], dict[int, datetime]]]:
-    """Each series with its own schedule: Sonarr's series, its episodes, and the dates the schedule gives them."""
+_broadcast_episodes: dict[tuple, tuple[float, list]] = {}  # (Sonarr, series id): (fetched, its episodes)
+BROADCAST_KEEP = 300  # seconds: the release watch asks every 30 s, the Schedule per chunk
+
+
+def broadcast_plans(config: dict, fresh: bool = False) -> list[tuple[dict, list[dict], dict[int, datetime]]]:
+    """Each series with its own schedule: Sonarr's series, its episodes, and the dates the schedule gives them.
+    The episodes are kept 5 minutes; fresh (the sync, which goes by their files) asks Sonarr again."""
     shows = {tvdb: s for tvdb, s in (config.get("series") or {}).items() if s.get("service") and s.get("broadcast")}
     if not shows:
         return []
-    plans = []
+    plans, name = [], (instance() or {}).get("name", "")
     for tvdb, serie in sonarr_series(set(shows)).items():
         if tvdb in shows:
-            episodes = sonarr_get("episode", seriesId=serie["id"])
+            fetched, episodes = _broadcast_episodes.get((name, serie["id"]), (0.0, []))
+            if fresh or not fetched or time.monotonic() - fetched > BROADCAST_KEEP:
+                episodes = sonarr_get("episode", seriesId=serie["id"])
+                _broadcast_episodes[(name, serie["id"])] = (time.monotonic(), episodes)
             plans.append((serie, episodes, broadcast_dates(shows[tvdb], episodes)))
     return plans
 
@@ -1863,14 +1900,14 @@ def add_track(episode_id: int, want: str, anyway: bool = False) -> bool:
             if not got:
                 raise RuntimeError(f"No {want} audio came from {show['service']}")
             if len(got) > 1:
-                raise RuntimeError(f"The {want} audio came in {len(got)} parts: not joined")
+                raise RuntimeError(f"The {want} audio came in {len(got)} parts, so it was not added to the file")
             lengths = [duration_of(have), duration_of(got[0])]
             if all(lengths) and abs(lengths[0] - lengths[1]) > 1:  # the same source: the same length within a second
-                raise RuntimeError(f"The {want} audio lasts {lengths[1]:.0f} s, the file {lengths[0]:.0f} s: not joined")
+                raise RuntimeError(f"The {want} audio lasts {lengths[1]:.0f} s and the file {lengths[0]:.0f} s, so the audio was not added")
             joined = out / have.name
             # the downloads folder is shared: a link planted there must not make mkvmerge write through it (as finalize)
             if out.is_symlink() or joined.exists() or joined.is_symlink() or any(f.is_symlink() for f in out.rglob("*")):
-                raise RuntimeError(f"{out.name} holds a link or a file named like the library's: not joined")
+                raise RuntimeError(f"The download folder {out.name} holds a link or a file with the same name as the library's file, so the audio was not added")
             run.step("joining")
             mine, theirs = default_flags(mkv_tracks(have), mkv_tracks(got[0]), want)
             cmd = ["mkvmerge", "-q", "-o", str(joined), *mine, str(have),
@@ -2532,15 +2569,24 @@ def main(episode_ids: list[int] | None = None, replace: bool = False, kind: str 
             if not in_download_window():
                 print("Outside the download window (Settings, Automation): the sync waits for it.", flush=True)
                 return 0
-            now, plans = datetime.now(timezone.utc), broadcast_plans(config)
-            dated = broadcast_dated(plans)
-            own = lambda ep: ep["id"] in dated  # its own schedule dates it
-            wanted = [ep for ep in missing_episodes() if not own(ep)]
-            seen = {ep["id"] for ep in wanted}
-            wanted += [ep for ep in early_episodes(config, now) if ep["id"] not in seen and not own(ep)]
-            wanted += [ep for ep in broadcast_episodes(config, now - timedelta(days=AUTO_DAYS + 1), now + timedelta(days=EARLY_DAYS_MAX + 1), plans)
-                       if not ep.get("hasFile") and ep.get("monitored", True) and ep["series"].get("monitored", True)]
-            failed = sync(config, settings, wanted, kind="auto")
+            try:  # the main Sonarr down: told once per cause, and the other Sonarrs still synced
+                now, plans = datetime.now(timezone.utc), broadcast_plans(config, fresh=True)
+                dated = broadcast_dated(plans)
+                own = lambda ep: ep["id"] in dated  # its own schedule dates it
+                wanted = [ep for ep in missing_episodes() if not own(ep)]
+                seen = {ep["id"] for ep in wanted}
+                wanted += [ep for ep in early_episodes(config, now) if ep["id"] not in seen and not own(ep)]
+                wanted += [ep for ep in broadcast_episodes(config, now - timedelta(days=AUTO_DAYS + 1), now + timedelta(days=EARLY_DAYS_MAX + 1), plans)
+                           if not ep.get("hasFile") and ep.get("monitored", True) and ep["series"].get("monitored", True)]
+                failed = sync(config, settings, wanted, kind="auto")
+                instance_failed.pop("", None)
+            except Exception as e:
+                why = no_credentials(f"{type(e).__name__}: {e}")
+                if instance_failed.get("") != why:  # the same cause at the next sync: told already
+                    notify(settings, "error", "Unshacklarr sync stopped", why)
+                instance_failed[""] = why
+                print(f"Sync stopped: {why}", flush=True)
+                failed = 1
             for inst in list(SONARRS.values()):
                 failed |= sync_instance(inst, config, settings)
             return failed

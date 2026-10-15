@@ -671,16 +671,18 @@ def test_notification_tokens_and_proxy_passwords_never_reach_the_browser(tmp_pat
     web = importlib.reload(unshacklarr.web)
     hook = "https://discord.com/api/webhooks/123/SECRETTOKEN"
     web.write_config({**web.read_config(), "defaults": {"--proxy": "http://user:pw123@proxy:8080"},
-                      "series": {1: {"service": "X", "title": "t", "options": {"--proxy": "http://u:pw456@p:1"}}},
+                      "series": {1: {"service": "X", "title": "t", "options": {"--proxy": "http://u:pw456@p:1"},
+                                     "sonarrs": {"4k": {"options": {"--proxy": "http://u:pw789@p:2"}}}}},
                       "notifications": {"targets": [{"url": hook, "levels": ["error"]}, {"url": "tgram://BOTTOKEN/42", "levels": ["error"]}]}})
     shown = web.public_config(web.read_config())
     text = json.dumps(shown)
-    assert not any(secret in text for secret in ("SECRETTOKEN", "BOTTOKEN", "pw123", "pw456"))
+    assert not any(secret in text for secret in ("SECRETTOKEN", "BOTTOKEN", "pw123", "pw456", "pw789"))  # per Sonarr too
     assert shown["notifications"]["targets"][0]["url"].startswith("https://discord.com/api/webhooks/")  # the page still knows the app
     back = copy.deepcopy(shown)
     web.real_config(back, web.read_config())  # the page sends what it got: the real values come back
     assert [t["url"] for t in back["notifications"]["targets"]] == [hook, "tgram://BOTTOKEN/42"]
     assert back["defaults"]["--proxy"] == "http://user:pw123@proxy:8080" and back["series"][1]["options"]["--proxy"] == "http://u:pw456@p:1"
+    assert back["series"][1]["sonarrs"]["4k"]["options"]["--proxy"] == "http://u:pw789@p:2"
     try:
         web.real_url("tgram://•••#0000000000", [hook])
         raise AssertionError("an unknown masked address was accepted")
@@ -2025,7 +2027,7 @@ def test_upgrades_ask_the_service_for_the_episode_its_title_found():
         "501": {"service": "S02E10", "name": "A Moment of Madness", "match": "title", "same": True},     # Sonarr's S05E01
         "13": {"service": "S04E01", "name": "The Murder of Rikki Neave - Part 1", "match": "title", "same": True},  # Sonarr's S00E13
         "601": {"service": "S06E01", "name": "Sex and Corruption", "match": "title", "same": True},
-        "801": {"service": "S03E02", "name": "The Secret Network: Part One", "match": "title"}}}}  # close, not the very title
+        "801": {"service": "S03E02", "name": "The Secret Network: Part One", "match": "title"}}, "v": 2}}  # close, not the very title
     ep = lambda id_, s, n: {"id": id_, "seasonNumber": s, "episodeNumber": n}
     assert web.upgrade_number(lists, serie, show, ep(501, 5, 1)) == "S02E10"  # found by its title, under another number
     assert web.upgrade_number(lists, serie, show, ep(801, 8, 1)) == "S08E01"  # a close title only: by its number (#12)
@@ -2040,6 +2042,10 @@ def test_upgrades_ask_the_service_for_the_episode_its_title_found():
     assert web.upgrade_number(titled, serie, show, ep(301, 3, 1)) is None
     assert web.upgrade_number(titled, serie, show, ep(701, 7, 2)) == "S07E02"
     assert web.upgrade_number({"286362": {**titled["286362"], "titles": []}}, serie, show, ep(301, 3, 1)) == "S03E01"  # none listed
+    # a listing kept by 1.4.0 (no "v"): its title matches can't tell a very title, so the episode goes by its number
+    old = {"286362": {k: v for k, v in lists["286362"].items() if k != "v"}}
+    assert web.upgrade_number(old, serie, show, ep(401, 4, 1)) == "S04E01"
+    assert web.upgrade_number(old, serie, show, ep(501, 5, 1)) == "S05E01"
 
 
 def test_a_diagnostic_shows_no_address_folder_or_account(tmp_path, monkeypatch):
@@ -2049,14 +2055,18 @@ def test_a_diagnostic_shows_no_address_folder_or_account(tmp_path, monkeypatch):
     monkeypatch.setattr(web.sonarr_sync, "RUNS_DIR", tmp_path)
     (tmp_path / "r1.json").write_text(json.dumps({"tvdbId": 1, "series": "Show", "sxxeyy": "S01E01",
                                                    "setup": {"via": "nas (10.0.0.5)"}}))
-    config = {"series": {}, "settings": {"sonarrs": [{"name": "sonarr-4k", "url": "https://sonarr4k.example.org"}],
+    config = {"series": {1: {"service": "X", "options": {"--proxy": "http://***@10.0.0.9:3128"},
+                             "sonarrs": {"sonarr-4k": {"options": {"--proxy": "http://10.0.0.9:3129"}}}}},
+              "settings": {"sonarrs": [{"name": "sonarr-4k", "url": "https://sonarr4k.example.org",
+                                        "library_sonarr_root": "/PrivateNAS/TV", "library_local_root": "/library"}],
                                          "backends": [{"name": "nas", "url": "http://10.0.0.5:8786"}],
                                          "backup_remote_user": "AKIAIOSFODNN7EXAMPLE", "backup_remote_bucket": "my-bucket",
                                          "downloads": "/data/downloads", "library_4k_root": "/media/4k", "country": "GB"}}
     monkeypatch.setattr(web, "read_config", lambda: config)
     monkeypatch.setattr(web, "public_config", lambda c: c)
     text = web.diagnostic("r1")
-    for private in ("sonarr4k.example.org", "10.0.0.5", "AKIA", "my-bucket", "/data/downloads", "/media/4k"):
+    for private in ("sonarr4k.example.org", "10.0.0.5", "AKIA", "my-bucket", "/data/downloads", "/media/4k",
+                    "/PrivateNAS", "/library", "10.0.0.9"):  # another Sonarr's library folders, a proxy's host
         assert private not in text, private
     assert "sonarr-4k" in text and '"nas"' in text and "GB" in text
 
@@ -2133,7 +2143,7 @@ def test_the_library_folders_are_browsed_and_checked(tmp_path, monkeypatch):
     monkeypatch.setattr(web.sonarr_sync, "sonarr_get", lambda path, **p: [{"path": "/Syno/Séries/"}, {"path": "/Syno/Dessins Animés/"}]
                         if path == "rootfolder" else [{"path": "/data/tv/Show/S01E01.mkv"}])
     assert web.library_check("", "")["common"] == "/Syno"  # several root folders: the one holding them all
-    assert "No series" in web.library_check("/other", "/x")["why"]
+    assert "has no series with a file" in web.library_check("/other", "/x")["why"]
 
 
 def test_another_sonarr_reads_its_own_library(monkeypatch):
@@ -2444,3 +2454,43 @@ def test_a_replaced_episode_leaves_upgrades_for_good_and_a_check_asked_while_one
     monkeypatch.setitem(web.upgrade_scan, "series", "Bake Off")
     assert _raises(lambda: asyncio.run(web.upgrades_action(Req())), web.web.HTTPConflict)
 
+
+def test_an_upgrades_check_with_serve_down_keeps_its_finds_and_is_tried_again(tmp_path, monkeypatch):
+    # a check while unshackle serve is down: the episode's last find stays listed, the check isn't dated (the
+    # scheduled one tries again at the next hourly look), and a series set up since stays waiting for its own
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    sync = web.sonarr_sync
+    from datetime import datetime, timedelta, timezone
+    (tmp_path / "config.yaml").write_text("series:\n  1: {service: X, title: t, ladder: L}\n")
+    config = sync.read_file()
+    config["quality_ladders"] = [{"name": "L", "steps": [{"codec": "HEVC", "range": "SDR", "min": 1080, "max": 1080},
+                                                         {"codec": "AVC", "range": "SDR", "min": 1080, "max": 1080}]}]
+    monkeypatch.setattr(sync, "read_file", lambda: config)
+    monkeypatch.setattr(sync, "sonarr_series", lambda wanted: {1: {"id": 7, "tvdbId": 1, "title": "Show"}})
+    eps = [{"id": 1, "seasonNumber": 1, "episodeNumber": 1, "hasFile": True, "episodeFileId": 70,
+            "episodeFile": {"id": 70, "mediaInfo": {"resolution": "1920x1080", "videoCodec": "h264"}}}]
+    monkeypatch.setattr(sync, "sonarr_get", lambda path, **p: eps)
+    monkeypatch.setattr(sync, "download_request", lambda show, config, wanted, out: {"service": "X", "title_id": "t", "wanted": [wanted]})
+    monkeypatch.setattr(web, "UPGRADE_PAUSE", 0)
+    monkeypatch.setattr(sync, "list_tracks", lambda *a: [{"title": {"season": 1, "number": 1}, "video": [{"height": 1080, "codec": "HEVC", "range": "SDR"}]}])
+    assert web.scan_upgrades() is True
+    first = web.read_json(web.upgrades_file(""), {})
+    assert [i["sxxeyy"] for i in first["items"]] == ["S01E01"]
+    seen = web.read_json(web.upgrades_seen_file(""), {})
+    seen["1"]["checked"] = (datetime.now(timezone.utc) - timedelta(days=31)).isoformat()  # its answer is due again
+    web.write_atomic(web.upgrades_seen_file(""), json.dumps(seen))
+
+    def down(*a):
+        raise sync.UnshackleError("unshackle serve is unreachable at http://serve: Connection refused")
+    monkeypatch.setattr(sync, "list_tracks", down)
+    monkeypatch.setitem(sync.SETTINGS, "upgrade_check_days", 7)
+    web.upgrade_pending.add(1)
+    web.run_scheduled_upgrades(datetime.now(timezone.utc) + timedelta(days=8))
+    last = web.read_json(web.upgrades_file(""), {})
+    assert [i["sxxeyy"] for i in last["items"]] == ["S01E01"] and last["checked"] == first["checked"]
+    assert web.upgrade_pending == {1}  # not forgotten: nothing could be asked
+    web.upgrade_pending.clear()

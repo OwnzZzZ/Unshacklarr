@@ -307,6 +307,10 @@ Unshacklarr are downloaded for each instance that has them (by TVDB id), into fo
 new episodes come with the automatic sync, release times with the main Sonarr only. The main Sonarr can be named
 too (Settings › Sonarr › Name); a badge on each series names the libraries it is in.
 
+**Upgrades** (Activity): the episodes on disk in a lower quality than the series' quality ladder asks for, that the
+service now has better. They are checked automatically every 7 days, each episode's answer kept 30 days, and replaced
+only when you tick them (Settings › Upgrades).
+
 **Catch up** (Activity): the automatic sync only takes new episodes. The aired episodes your series still miss
 (those from before a series got its service, or that the sync gave up on) are listed there, within 7, 30 or 90
 days or all, and downloaded together.
@@ -481,10 +485,26 @@ Every change, version by version: **[CHANGELOG.md](CHANGELOG.md)**. Settings sho
 running.
 
 > [!TIP]
-> **Coming next, to try now:** the [`dev-AdvancedSonarr`](https://github.com/OwnzZzZ/Unshacklarr/tree/dev-AdvancedSonarr)
-> branch lets **Sonarr drive**: Unshacklarr becomes its indexer and download client (set up in one
-> click), Sonarr searches, grabs and imports. Its README says what changed and how to build it; it
-> does not have the API yet.
+> **Coming next, for Sonarr 5:** Sonarr 5 is still in beta, so what Unshacklarr does with it waits in the
+> [`dev-sonarr-v5`](https://github.com/OwnzZzZ/Unshacklarr/tree/dev-sonarr-v5) branch until Sonarr 5 is released.
+> That branch has everything in this version, plus:
+>
+> - **Languages** (Activity): your files without your audio languages, read from Sonarr 5's own tracks. Watch them
+>   for the preferred audio, or download them again.
+> - **Titles in your language:** a series whose titles Sonarr gives in English offers, on its page, to have them in
+>   yours, so that its episodes match the service's better.
+> - **Episode order:** a series Sonarr numbers in another order (DVD, Netflix…) says so in its Numbering. When that
+>   order changes after the numbering was set, new episodes wait until you confirm the numbering.
+>
+> It is made for Sonarr 5 and has no ready-made image. To try it, build one and use it in place of
+> `ghcr.io/ownzzzz/unshacklarr` in `docker-compose.yml`:
+>
+> ```bash
+> docker build -t unshacklarr:sonarr-v5 https://github.com/OwnzZzZ/Unshacklarr.git#dev-sonarr-v5
+> ```
+>
+> Without Docker: `uv tool install git+https://github.com/OwnzZzZ/Unshacklarr.git@dev-sonarr-v5`. Tell us on the
+> [Discord](https://discord.gg/5HmNgaGASy) or in an issue how it goes.
 
 <details>
 <summary><b>🛠️ Development, translations and releases</b></summary>

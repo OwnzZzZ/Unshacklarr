@@ -294,7 +294,7 @@ async function loadEpisodes(s, keep = false) {  // keep: a reload after a downlo
           el("button", { type: "button", textContent: "Missing", title: "Every missing episode of this season", onclick: () => selectSeason((e) => state(e) === "miss") }),
           el("button", { type: "button", textContent: "All", onclick: () => selectSeason(() => true) }),
           el("button", { type: "button", id: "ep-odd", hidden: true, className: "odd", title: "Episodes in orange can be downloaded again to replace Sonarr's file",
-            onclick: () => selectSeason(isOutlier) })),
+            onclick: () => { const norm = seasonNorm(epSeasons[epSeason]); selectSeason((e) => isOutlier(e, norm)); } })),
         el("div", { className: "ep-view" },
           el("label", { className: "pill" }, el("input", { type: "checkbox", checked: hideOnDisk,
             onchange: (e) => { hideOnDisk = e.target.checked; renderSeason(); } }), "Hide on disk"),
@@ -359,10 +359,11 @@ function state(e) {
   if (epBusy.has(e.id)) return "busy";
   return e.hasFile ? "disk" : e.airDateUtc && new Date(e.airDateUtc) <= Date.now() ? "miss" : "soon";
 }
-/* An episode on disk whose file is unlike most of its season (the orange ones). */
-function isOutlier(e) {
+/* An episode on disk whose file is unlike most of its season (the orange ones); norm: seasonNorm of the season,
+   worked out once for all its episodes, not once per episode. */
+function isOutlier(e, norm) {
   if (!e.file) return false;
-  const odd = oddities(e.file, seasonNorm(epSeasons[epSeason]));
+  const odd = oddities(e.file, norm);
   return Object.values(odd).some(Boolean);
 }
 function selectSeason(test) {
@@ -718,12 +719,12 @@ function renderSeason() {
   const head = el("li", { className: "ep-head", ariaHidden: "true" }, ...["", "", "Title", ...cols.map((c) => c.label), ""]
     .map((t, i) => el("span", { className: i === 0 ? "cb" : i === 2 ? "th" : i > 2 && i < cols.length + 3 ? "col" : "", style: `--c: ${i}`, textContent: t })));
   const flagged = rows.some((r) => r.querySelector(".odd"));
-  const outliers = list.filter(isOutlier).length;
+  const outliers = list.filter((e) => isOutlier(e, norm)).length;
   $("#ep-odd").hidden = !outliers;
   $("#ep-odd").textContent = `Outliers (${outliers})`;
   if ($("#ep-avail")) {
     const onService = list.filter((e) => state(e) === "miss" && epAvail?.[e.id]).length;
-    $("#ep-avail").textContent = `Missing, on ${svcName(S.config.series[current.tvdbId]?.service)} (${onService})`;
+    $("#ep-avail").textContent = `Missing, available on ${svcName(S.config.series[current.tvdbId]?.service)} (${onService})`;
     $("#ep-avail").disabled = !onService;
   }
   const named = current.seasonTitles?.[epSeason];  // its name in Sonarr, when it has one
