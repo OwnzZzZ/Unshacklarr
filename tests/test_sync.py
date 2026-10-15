@@ -1482,11 +1482,63 @@ def test_a_quality_ladder_takes_its_first_step_the_episode_has_and_nothing_outsi
     assert cards["S02E06"]["outcome"] == "failed" and "None of the quality ladder 1080p's steps" in cards["S02E06"]["cause"]
     assert "480p AVC SDR" in cards["S02E06"]["cause"]
 
+    config["series"][111]["options"] = {"--range": "HYBRID"}  # the series' own range is kept over the track's DV
+    config["series"][111]["ladder"] = "4K, then 1080p"
+    sync.sync(config, {}, [episode(111, 2, 5)], manual=True, kind="manual")
+    assert [(d["quality"], d["vcodec"], d["range"]) for d in downloads[1:]] == [([2160], ["HEVC"], ["HYBRID"])]
+    del config["series"][111]["options"]
+
+    config["quality_ladders"] = [{"name": "Hybrid", "steps": [{"codec": "", "range": "HYBRID", "min": 2160, "max": 0},
+                                                            {"codec": "", "range": "SDR", "min": 1080, "max": 1080}]}]
+    config["series"][111]["ladder"] = "Hybrid"
+    sync.sync(config, {}, [episode(111, 2, 5)], manual=True, kind="manual")  # DV alone: no hybrid, the next step
+    assert asked[-1]["range_"] == ["DV", "HDR10", "HDR10P", "SDR"]
+    video["S02E05"].append({"height": 2160, "codec": "HEVC", "range": "HDR10"})
+    sync.sync(config, {}, [episode(111, 2, 5)], manual=True, kind="manual")  # DV and HDR10: merged
+    assert [(d["quality"], d["range"]) for d in downloads[2:]] == [([1080], ["SDR"]), ([2160], ["HYBRID"])]
+    ladder = config["quality_ladders"][0]
+    assert sync.step_of(ladder, {"height": 2160, "codec": "HEVC", "range": "DV", "layers": ["DV", "HDR10"]}) == 0
+    assert sync.step_of(ladder, {"height": 2160, "codec": "HEVC", "range": "DV", "layers": ["DV"]}) == 2  # DV alone: an upgrade
+    video["S02E05"].pop()
+    del config["quality_ladders"]
+
     config["settings"] = {"quality_ladder": "1080p"}
     config["series"][111]["ladder"] = "off"  # a series can turn its service's or the settings' ladder off
     assert sync.ladder_of(config["series"][111], config) is None
     del config["series"][111]["ladder"]
     assert sync.ladder_of(config["series"][111], config)["name"] == "1080p"
+
+
+def test_a_download_with_its_own_codec_and_height_takes_them_over_the_ladder_and_leaves_the_series_as_it_is(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    config = sync.read_file()
+    config["series"][111]["ladder"] = "4K, then 1080p"
+    video = [{"height": 2160, "codec": "HEVC", "range": "DV"}, {"height": 1080, "codec": "AVC", "range": "SDR", "bitrate": 5000},
+             {"height": 1080, "codec": "HEVC", "range": "SDR", "bitrate": 4000}]
+    monkeypatch.setattr(sync.UNSHACKLE, "call", lambda method, path, json=None, **_: {"episodes": [{"video": video}]})
+    monkeypatch.setattr(sync, "no_cdm", lambda tag, config=None: "")
+    downloads, queued = [], []
+    def download(payload, run=None):
+        downloads.append(payload)
+        queued.extend(c.get("video_override") for c in sync.waiting.values())
+    monkeypatch.setattr(sync, "run_job_retrying", download)
+    sync.sync(config, {}, [episode(111, 2, 5), episode(111, 2, 6)], manual=True, kind="manual", video={"vcodec": "AVC", "quality": 1080})
+    sync.sync(config, {}, [episode(111, 2, 7)], manual=True, kind="manual")
+    picked = [(d["quality"], d["vcodec"], d["range"]) for d in downloads]
+    assert picked[:2] == [([1080], ["AVC"], ["SDR"])] * 2  # both, the queued one too: 1080p H.264, the ladder's 4K set aside
+    assert queued == [{"vcodec": "AVC", "quality": 1080}]  # the queued card keeps it, for a cancel then queue again
+    assert picked[2] == ([2160], ["HEVC"], ["DV"])  # the next download: the series' ladder again
+    assert config["series"][111]["ladder"] == "4K, then 1080p" and "asked_video" not in config["series"][111]
+    cards = [json.loads(p.read_text()) for p in (tmp_path / "runs").glob("*.json")]
+    assert sorted(str(c.get("video_override")) for c in cards).count(str({"vcodec": "AVC", "quality": 1080})) == 2
+
+    # a codec alone: the best height in it; a height the service doesn't have: nothing else downloaded
+    sync.sync(config, {}, [episode(111, 2, 8)], manual=True, kind="manual", video={"vcodec": "HEVC"})
+    assert (downloads[-1]["quality"], downloads[-1]["vcodec"]) == ([2160], ["HEVC"])
+    sync.sync(config, {}, [episode(111, 2, 9)], manual=True, kind="manual", video={"quality": 720})
+    assert len(downloads) == 4
+    card = next(c for c in (json.loads(p.read_text()) for p in (tmp_path / "runs").glob("*.json")) if c["sxxeyy"] == "S02E09")
+    assert card["outcome"] == "failed" and "asked for this download (720p any codec any range)" in card["cause"]
 
 
 @responses.activate

@@ -9,6 +9,15 @@ Every change worth knowing, newest first. The format follows
 ### Added
 
 - The API's downloads take their own proxy: `"proxy": "nordvpn:fr"` downloads these episodes through it, the series' setup unchanged.
+- The API's downloads take their own video: `"vcodec": "H.264"` and `"quality": 1080` download these episodes in it,
+  in place of the series' quality ladder (its languages kept), the series' setup unchanged. Activity shows what was asked.
+- A quality ladder step can ask for Hybrid (DV + HDR10): taken when the episode has both a Dolby Vision and an HDR10
+  track, which Unshackle merges; a file with both layers stands on it, a DV-only file is upgraded from it.
+
+### Fixed
+
+- A `--range` a series asks for itself (e.g. HYBRID) is kept when its quality ladder picks a track: it was replaced
+  by the track's range, so a 4K series set to HYBRID was downloaded in DV.
 
 ## [1.5.0] - 2026-10-09
 

@@ -771,6 +771,36 @@ def test_the_api_takes_a_download_s_own_proxy_and_refuses_a_malformed_one(tmp_pa
     assert started == [([5], {"proxy": "nordvpn:fr"}), ([6], {"proxy": "protonvpn:us:ny"}), ([8], {})]  # empty: the series' own
 
 
+def test_the_api_takes_a_download_s_own_codec_and_height_and_refuses_others(tmp_path, monkeypatch):
+    import asyncio
+    from aiohttp.test_utils import TestClient, TestServer
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    web.write_config({**web.read_config(), "auth": {"password": web.hash_password("password1"), "secret": "s1"}})
+    started = []
+    monkeypatch.setattr(web, "run_sync", lambda ids, **kw: started.append((ids, kw)))
+
+    async def go():
+        async with TestClient(TestServer(web.app)) as client:
+            await client.post("/api/login", json={"password": "password1"}, headers={"X-Unshackle": "1"})
+            key = (await (await client.post("/api/api-key/new", json={"password": "password1"}, headers={"X-Unshackle": "1"})).json())["key"]
+            api = {"X-Api-Key": key}
+            ok = [(await client.post("/api/v1/downloads", json={"episodeIds": [5], **b}, headers=api)).status
+                  for b in ({"vcodec": "H.264", "quality": 1080}, {"vcodec": "hevc"}, {"quality": 2160}, {"vcodec": "", "quality": None})]
+            bad = [(await client.post("/api/v1/downloads", json={"episodeIds": [7], **b}, headers=api)).status
+                   for b in ({"vcodec": "AV1"}, {"vcodec": 264}, {"quality": "1080"}, {"quality": 1080.0}, {"quality": 360},
+                             {"quality": 8000}, {"quality": True})]
+            return ok, bad
+
+    ok, bad = asyncio.run(go())
+    assert ok == [200] * 4 and bad == [400] * 7
+    assert [kw for _, kw in started] == [{"video": {"vcodec": "AVC", "quality": 1080}}, {"video": {"vcodec": "HEVC"}},
+                                        {"video": {"quality": 2160}}, {}]
+
+
 def test_paths_must_be_full_an_environment_key_never_follows_a_new_url_and_the_example_key_is_refused(tmp_path, monkeypatch):
     monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
     monkeypatch.setenv("SONARR_URL", "http://sonarr:8989")

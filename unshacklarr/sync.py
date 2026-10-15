@@ -583,14 +583,16 @@ def job_episodes(episodes: list, batch: str | None):
         yield ep
 
 
-def queued_card(ep: dict, show: dict, kind: str, batch: str | None, replace: bool = False, proxy: str = "") -> dict:
+def queued_card(ep: dict, show: dict, kind: str, batch: str | None, replace: bool = False, proxy: str = "",
+                video: dict | None = None) -> dict:
     """An episode waiting its turn, as Activity shows it until its download starts."""
     return {"id": f"waiting-{ep['id']}", "series": ep["series"]["title"], "tvdbId": ep["series"]["tvdbId"],
             "sxxeyy": f"S{ep['seasonNumber']:02}E{ep['episodeNumber']:02}", "service": show["service"], "kind": kind,
             "started": datetime.now(timezone.utc).isoformat(), "ended": None, "outcome": "running", "episodeId": ep["id"],
             "step": "queued", "live": {}, "tracks": [], "waiting": True, **({"batch": batch} if batch else {}),
             **({"replace": True} if replace else {}),  # cancelled then queued again, it keeps Replace anyway
-            **({"proxy_override": proxy} if proxy else {})}  # and the proxy asked for this download
+            **({"proxy_override": proxy} if proxy else {}),  # and the proxy asked for this download
+            **({"video_override": video} if video else {})}  # and its codec and height
 
 
 def add_to_job(batch: str, ep: dict, show: dict, replace: bool = False) -> bool:
@@ -1944,7 +1946,10 @@ def list_tracks(show: dict, config: dict, request: dict, ladder: dict | None = N
     if ladder:
         ranges = {step.get("range") or "" for step in ladder["steps"]}
         codecs = {step.get("codec") or "" for step in ladder["steps"]}
-        asked["range_"] = sorted(RANGES if "" in ranges else ranges)
+        listed = set(RANGES) - {"HYBRID"} if "" in ranges else ranges
+        if "HYBRID" in listed:  # not a track on the service: its DV and HDR10 tracks are
+            listed = listed - {"HYBRID"} | {"DV", *HDR_BASES}
+        asked["range_"] = sorted(listed)
         if "" not in codecs:
             asked["vcodec"] = sorted(codecs)
     try:  # list-tracks as the official serve has it: the same episode, profile, proxy and service options
@@ -1977,7 +1982,8 @@ def tracks_on_service(show: dict, config: dict, request: dict) -> dict[str, set[
 # Quality ladders: steps tried in order against the episode's video tracks; the first one a track fits is downloaded,
 # nothing outside them. A step: a codec and a range (empty: any), a height from min to max (0: no limit).
 CODECS = ("AVC", "HEVC", "AV1", "VP9", "VP8", "VC1")  # Unshackle's names: H.264, H.265…
-RANGES = ("SDR", "HDR10", "HDR10P", "DV", "HLG")
+RANGES = ("SDR", "HDR10", "HDR10P", "DV", "HLG", "HYBRID")  # HYBRID: Unshackle merges a DV track onto an HDR10 one
+HDR_BASES = ("HDR10", "HDR10P")
 BUILTIN_LADDERS = [
     {"name": "1080p", "steps": [{"codec": "AVC", "range": "SDR", "min": 1080, "max": 1080}, {"codec": "HEVC", "range": "SDR", "min": 1080, "max": 1080},
                                 {"codec": "AVC", "range": "SDR", "min": 720, "max": 720}, {"codec": "HEVC", "range": "SDR", "min": 720, "max": 720}]},
@@ -1992,7 +1998,12 @@ def ladders(config: dict) -> list[dict]:
 
 
 def ladder_of(show: dict, config: dict) -> dict | None:
-    """The series' ladder, else its service's, else the settings' one; "off" at a level: none."""
+    """The series' ladder, else its service's, else the settings' one; "off" at a level: none. A download asked
+    with its own codec and height (asked_video): one step of them, in place of the ladder's, its languages kept."""
+    if asked := show.get("asked_video"):
+        own = ladder_of({k: v for k, v in show.items() if k != "asked_video"}, config) or {}
+        step = {"codec": asked.get("vcodec") or "", "range": "", "min": asked.get("quality") or 0, "max": asked.get("quality") or 0}
+        return {**own, "name": f"asked for this download ({step_label(step)})", "steps": [step]}
     name = (show.get("ladder") or ((config.get("service_defaults") or {}).get(show["service"]) or {}).get("ladder")
             or (config.get("settings") or {}).get("quality_ladder") or "")
     return next((lad for lad in ladders(config) if lad["name"] == name), None) if name != "off" else None
@@ -2011,7 +2022,12 @@ def eq_height(track: dict) -> int:
 
 def fits(step: dict, track: dict) -> bool:
     height = eq_height(track)
-    return ((not step.get("codec") or track.get("codec") == step["codec"]) and (not step.get("range") or track.get("range") == step["range"])
+    if step.get("range") == "HYBRID":  # a listed track: DV or HDR10 (climb wants both); a file: both layers
+        layers = track.get("layers")
+        ranged = "DV" in layers and any(b in layers for b in HDR_BASES) if layers else track.get("range") in ("DV", *HDR_BASES)
+    else:
+        ranged = not step.get("range") or track.get("range") == step["range"]
+    return ((not step.get("codec") or track.get("codec") == step["codec"]) and ranged
             and height >= int(step.get("min") or 0) and (not step.get("max") or height <= int(step["max"])))
 
 
@@ -2019,6 +2035,8 @@ def climb(ladder: dict, episodes: list[dict]) -> tuple[int, dict] | None:
     """The first step every part of the episode has a track for, and its best track there (height, then bitrate)."""
     for number, step in enumerate(ladder["steps"], 1):
         found = [[t for t in ep.get("video") or [] if fits(step, t)] for ep in episodes]
+        if step.get("range") == "HYBRID":  # a part has it only with both a DV track and an HDR10 one
+            found = [f if {"DV"} & {t.get("range") for t in f} and set(HDR_BASES) & {t.get("range") for t in f} else [] for f in found]
         if found and all(found):
             return number, max(found[0], key=lambda t: (eq_height(t), int(t.get("bitrate") or 0)))
     return None
@@ -2050,6 +2068,11 @@ def apply_ladder(show: dict, config: dict, request: dict) -> int | None:
     ladder = ladder_of(show, config)
     if not ladder:
         return None
+    if asked := show.get("asked_video"):  # asked for this download: Unshackle is told even if the tracks can't be read
+        request.update(**({"quality": [asked["quality"]]} if asked.get("quality") else {}),
+                       **({"vcodec": [asked["vcodec"]]} if asked.get("vcodec") else {}))
+        if request.get("remote"):
+            return None
     if request.get("remote"):
         raise ValueError(f"The quality ladder {ladder['name']} needs the episode's track list, which a --remote download does not give")
     episodes = list_tracks(show, config, request, ladder)
@@ -2061,7 +2084,10 @@ def apply_ladder(show: dict, config: dict, request: dict) -> int | None:
         raise ValueError(f"None of the quality ladder {ladder['name']}'s steps is on {show['service']} (it has {', '.join(have) or 'no video'})")
     number, track = found
     # its own height: Unshackle's --quality takes a track by it exactly (its 16:9 class may be no exact match there)
-    request.update(quality=[int(track.get("height") or 0) or eq_height(track)], vcodec=[track["codec"]], **({"range": [track["range"]]} if track.get("range") else {}))
+    # a --range the series or its service ask for themselves (HYBRID: DV merged onto HDR10) is kept, not the track's
+    request.update(quality=[int(track.get("height") or 0) or eq_height(track)], vcodec=[track["codec"]],
+                   **({"range": [ladder["steps"][number - 1]["range"] if ladder["steps"][number - 1].get("range") == "HYBRID" else track["range"]]}
+                      if track.get("range") and not request.get("range") else {}))
     trace(f"quality ladder {ladder['name']}: step {number} ({step_label(ladder['steps'][number - 1])}), {track_label(track)}")
     # its language order picks among the episode's tracks, unless the series or its service ask for languages themselves
     for key, kind, asked in (("a_lang", "audio", ("lang", "a_lang", "require_audio")), ("s_lang", "subtitles", ("s_lang", "require_subs"))):
@@ -2472,7 +2498,7 @@ sweep_lock = threading.Lock()
 
 
 def main(episode_ids: list[int] | None = None, replace: bool = False, kind: str = "manual", numbering: dict | None = None,
-         batch: str | None = None, sonarr: str = "", proxy: str = "") -> int:
+         batch: str | None = None, sonarr: str = "", proxy: str = "", video: dict | None = None) -> int:
     config = read_file()
     settings = config.get("notifications") or {}
     try:
@@ -2484,7 +2510,7 @@ def main(episode_ids: list[int] | None = None, replace: bool = False, kind: str 
                 raise RuntimeError(f"Choose a quality ladder for Sonarr {sonarr} in Settings, Sonarr first")
             with on_instance(inst):
                 return sync(instance_config(inst, config) if inst else config, settings, chosen_episodes(episode_ids),
-                            manual=True, replace=replace, kind=kind, numbering=numbering, batch=batch, proxy=proxy)
+                            manual=True, replace=replace, kind=kind, numbering=numbering, batch=batch, proxy=proxy, video=video)
         if not sweep_lock.acquire(blocking=False):  # one automatic sweep at a time
             print("A sync is already running, nothing to do.")
             return 0
@@ -2571,7 +2597,7 @@ NUMBERING = ("season_map", "season_offset", "season_offset_from", "episode_offse
 
 
 def sync(config: dict, settings: dict, episodes, manual: bool = False, replace: bool = False, kind: str = "auto",
-         numbering: dict | None = None, batch: str | None = None, proxy: str = "") -> int:
+         numbering: dict | None = None, batch: str | None = None, proxy: str = "", video: dict | None = None) -> int:
     series = config.get("series") or {}
     if numbering is not None:  # this download's own, in place of the series': the file keeps its own
         series = {k: {**{o: v for o, v in show.items() if o not in NUMBERING}, **numbering} for k, show in series.items()}
@@ -2579,6 +2605,9 @@ def sync(config: dict, settings: dict, episodes, manual: bool = False, replace: 
     if proxy:  # this download's own proxy (provider:region), over the series' and its "no proxy"; the setup is untouched
         series = {k: {**show, "options": {**(show.get("options") or {}), "--proxy": proxy, "--no-proxy": False}}
                   for k, show in series.items()}
+        config = {**config, "series": series}
+    if video:  # this download's own codec and height ({vcodec, quality}), over the series' ladder; the setup is untouched
+        series = {k: {**show, "asked_video": video} for k, show in series.items()}
         config = {**config, "series": series}
     episodes = list(episodes)
     if kind in ("auto", "burst"):  # switched off for this Sonarr: none of its new episodes
@@ -2592,7 +2621,7 @@ def sync(config: dict, settings: dict, episodes, manual: bool = False, replace: 
             show = series.get(ep["series"]["tvdbId"]) or {}
             if show.get("service") and ep["id"] not in waiting:
                 with jobs_lock:
-                    waiting[ep["id"]] = job["stubs"][ep["id"]] = queued_card(ep, show, kind, batch, replace, proxy)
+                    waiting[ep["id"]] = job["stubs"][ep["id"]] = queued_card(ep, show, kind, batch, replace, proxy, video)
     if batch:
         number_job(batch)  # its place for a download slot: the order it was picked in (#10)
         with jobs_lock:
@@ -2821,7 +2850,9 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                         for kind, accepted in wanted_langs.items():
                             if accepted and not speaks(tracks[kind], accepted):
                                 raise Missing(kind, accepted, tracks[kind])
-                    if apply_ladder(use, config, request) and use is show and ep.get("id"):
+                    if use.get("asked_video"):
+                        run.card["video_override"] = use["asked_video"]
+                    if apply_ladder(use, config, request) and use is show and ep.get("id") and not use.get("asked_video"):
                         note_download_answer(ep["id"], show, config)  # its best now: Upgrades needn't ask again soon
                     asked = {k: v for k, v in request.items() if k not in ("service", "title_id", "wanted", "output_dir", "debug")}
                     trace(f"asking for {request['service']} {request['title_id']} {wanted}, into {request['output_dir']}")

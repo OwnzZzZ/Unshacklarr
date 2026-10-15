@@ -1,7 +1,7 @@
 /* Quality ladders (Settings, Quality), the other Unshackle servers (Settings, Unshackle) and what follows a download
    (Settings, Automation): their editors, and the pickers a service and a series show for them. */
 const CODECS = [["", "Any codec"], ["AVC", "H.264"], ["HEVC", "H.265"], ["AV1", "AV1"], ["VP9", "VP9"], ["VP8", "VP8"], ["VC1", "VC-1"]];
-const RANGES = [["", "Any range"], ["SDR", "SDR"], ["HDR10", "HDR10"], ["HDR10P", "HDR10+"], ["DV", "Dolby Vision"], ["HLG", "HLG"]];
+const RANGES = [["", "Any range"], ["SDR", "SDR"], ["HDR10", "HDR10"], ["HDR10P", "HDR10+"], ["DV", "Dolby Vision"], ["HLG", "HLG"], ["HYBRID", "Hybrid (DV + HDR10)"]];
 const ladders = () => (S.config.quality_ladders ??= []);
 const nameOf = (list, v) => (list.find(([k]) => k === v) || [v, v])[1];
 /* A series' ladder (its own, its service's, the settings'), and where a track stands on it: as sync.ladder_of,
@@ -13,7 +13,9 @@ function ladderOfSeries(conf) {
 const HEIGHTS = [4320, 2160, 1440, 1080, 720, 576, 540, 480, 360, 240];  // sync.HEIGHTS: a class within 2% counts as it
 const heightClass = (v) => HEIGHTS.find((h) => Math.abs(v - h) <= h * 0.02) ?? Math.floor(v);
 const eqHeight = (t) => Math.max(heightClass(t.height || 0), heightClass((t.width || 0) * 9 / 16));
-const fitsStep = (st, t) => (!st.codec || t.codec === st.codec) && (!st.range || (t.layers?.length ? t.layers : [t.range]).includes(st.range))
+const ranges = (t) => (t.layers?.length ? t.layers : [t.range]);
+const fitsStep = (st, t) => (!st.codec || t.codec === st.codec)
+  && (st.range === "HYBRID" ? ranges(t).includes("DV") && ranges(t).some((r) => r === "HDR10" || r === "HDR10P") : !st.range || ranges(t).includes(st.range))
   && eqHeight(t) >= (st.min || 0) && (!st.max || eqHeight(t) <= st.max);
 const stepOf = (lad, t) => { const i = lad.steps.findIndex((st) => fitsStep(st, t)); return i < 0 ? lad.steps.length : i; };
 const trackText = (t) => `${eqHeight(t) || "?"}p ${nameOf(CODECS, t.codec) || "?"} ${(t.layers?.length ? t.layers : [t.range]).map((r) => nameOf(RANGES, r) || "?").join(" + ")}`;
