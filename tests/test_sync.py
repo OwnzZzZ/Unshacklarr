@@ -1819,7 +1819,7 @@ def test_the_series_page_and_upgrades_know_the_other_sonarr(tmp_path, monkeypatc
     web.write_config({**web.read_config(), "series": {1: {"service": "X", "title": "t"}, 2: {"service": "X", "title": "u"}}})
     with_4k(web.sonarr_sync)  # after: writing the config applies its settings
     libraries = {"": {1: {"id": 10}, 2: {"id": 20}}, "sonarr-4k": {1: {"id": 77, "statistics": {"episodeCount": 6, "episodeFileCount": 1}}}}
-    monkeypatch.setattr(web.sonarr_sync, "sonarr_series", lambda wanted: libraries[(web.sonarr_sync.instance() or {}).get("name", "")])
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_series", lambda wanted, keep=3600: libraries[(web.sonarr_sync.instance() or {}).get("name", "")])
     assert web.instances_of_series() == {1: [{"name": "sonarr-4k", "id": 77, "ladder": "4K only", "download_only": None, "missing": 5}]}
     libraries["sonarr-4k"][3] = {"id": 78, "titleSlug": "tehran"}  # in sonarr-4k, not set up here yet
     libraries["sonarr-4k"][3].update(tvdbId=3, title="Tehran")
