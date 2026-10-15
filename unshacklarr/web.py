@@ -2745,6 +2745,10 @@ def ladder_track(mi: dict) -> dict:
             "layers": layers(dynamic)}  # a hybrid file sits on the earliest step any of its layers fits
 
 
+LIST_KEEP = 60  # seconds: the Series page reads the other Sonarrs as it reads the main one, a series added there shows
+# at the next load (at most one read a minute); the syncs and Upgrades keep their hour
+
+
 def instances_of_series() -> dict[int, list[dict]]:
     """Each series set up here, in the other Sonarr instances: {tvdb: [{"name", "id" (its series id there), "ladder",
     "download_only"}]}. An instance the health check finds down is skipped: the page opens without waiting for it."""
@@ -2756,7 +2760,7 @@ def instances_of_series() -> dict[int, list[dict]]:
         try:
             # its library kept an hour, as sonarrs_of_series has it: an instance lacking some series set up here
             # (a 4K one) would otherwise be asked for its whole library again at each page load
-            found = on_sonarr(inst, sonarr_sync.sonarr_series, set())
+            found = on_sonarr(inst, sonarr_sync.sonarr_series, set(), LIST_KEEP)
         except requests.RequestException:
             continue
         for tvdb in managed & set(found):
@@ -2778,7 +2782,7 @@ def sonarrs_of_series(main: set[int] = frozenset()) -> tuple[dict[int, list[dict
         if health.get("sonarrs", {}).get(inst["name"], {}).get("ok") is False:
             continue
         try:
-            found = on_sonarr(inst, sonarr_sync.sonarr_series, set())
+            found = on_sonarr(inst, sonarr_sync.sonarr_series, set(), LIST_KEEP)
         except requests.RequestException:
             continue
         for tvdb, serie in found.items():

@@ -1278,13 +1278,13 @@ def broadcast_plans(config: dict, fresh: bool = False) -> list[tuple[dict, list[
 _series_by_tvdb: dict[str, tuple[float, dict]] = {}  # by Sonarr ("" the main one): (fetched, series by TVDB id)
 
 
-def sonarr_series(wanted: set) -> dict[int, dict]:
-    """Sonarr's series by TVDB id, kept an hour: the whole library is one big answer, asked again sooner
-    only for a series it did not have (added since), at most once a minute."""
+def sonarr_series(wanted: set, keep: float = 3600) -> dict[int, dict]:
+    """Sonarr's series by TVDB id, kept an hour (or `keep` seconds): the whole library is one big answer, asked again
+    sooner only for a series it did not have (added since), at most once a minute."""
     key = (instance() or {}).get("name", "")  # each Sonarr its own library: ids differ between them
     fetched, known = _series_by_tvdb.get(key, (0.0, {}))
     age = time.monotonic() - fetched
-    if not fetched or age > 3600 or (age > 60 and not wanted <= set(known)):
+    if not fetched or age > keep or (age > 60 and not wanted <= set(known)):
         known = {s["tvdbId"]: s for s in sonarr_get("series") if s.get("tvdbId")}
         _series_by_tvdb[key] = (time.monotonic(), known)
     return known
