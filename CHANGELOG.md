@@ -8,128 +8,112 @@ Every change worth knowing, newest first. The format follows
 
 ## [1.5.0] - 2026-10-15
 
+Several Sonarr at once, the audio of your language added to the files you have, Upgrades that run by themselves, and
+episodes matched far more reliably. Much of it came from mj23au's issues and code: thank you.
+
 ### Added
 
-**More than one Sonarr**
-- **Other Sonarr instances.** A second Sonarr with its own library, its own quality ladder and After the download.
-  In Settings › Sonarr. (#10, with mj23au)
-- **Libraries per series.** In Source, each Sonarr that has the series, switched on or off, with what it misses. (#10)
-- **Series from every Sonarr.** A series only in another Sonarr is listed too; a badge names its libraries, and the
-  Series list filters by them. (#10)
-- **Sonarr name.** The main Sonarr can be named, like the others.
-- **Episodes, Catch up and Upgrades per Sonarr.** Pick the library, download for it.
+**📚 More than one Sonarr**
+- **Other Sonarr instances.** A second Sonarr, a 4K one say, with its own library, quality ladder and After the
+  download; its series are listed too. In Settings › Sonarr. (#10)
+- **Sonarr name.** Each Sonarr named; a badge on each series says which libraries have it, and Series filters by them. (#10)
+- **Libraries per series.** In Source, each Sonarr switched on or off for the series, with what it misses. (#10)
+- **Episodes, Catch up and Upgrades per Sonarr.** Pick the library, download for it. (#10)
 
-**Downloads**
-- **Add audio track.** Get only the new audio, not the whole episode again: it becomes the default audio, and that
-  language's subtitles show only their forced lines. A file not from the series' service is asked about in the bell
-  first (or added anyway). In Settings › Download options.
-- **Library folders picked, not typed:** Sonarr's root folders offered, both sides browsable, one pair per Sonarr, and
-  a real episode file looked for to say the pair is right.
+**⬇️ Downloads**
+- **Add audio track.** When your language's audio comes out, only that track is downloaded and added to your file, as
+  its default audio, with its forced subtitles. In Settings › Download options.
+- **Library folders picked, not typed.** Sonarr's root folders offered, both sides browsable, a real file to confirm them.
 - **Fallback service.** A second service for a series, used when the main one doesn't have the episode.
-- **Separate programmes.** For documentary strands like BBC Documentaries: each episode is found on the service by its
-  title, so the series needs no URL. In a series' Numbering. (#17, by mj23au)
-- **Seasons listed as separate shows.** When the service lists a season as a show of its own, that season downloads
-  from the show's page. Checking the episodes finds such a show and offers it. In a series' Numbering. (#21, by mj23au)
-- **Download window.** Automatic downloads run only between two times. In Settings › Automation.
-- **Auto release times.** A series gets the time its episodes usually come out. In Settings › Automation.
-- **Downloads at once.** How many episodes each Unshackle server downloads together, 1 for a small NAS. Picks run
-  whole, in the order they were made. (#10, with mj23au)
-- **Hybrid (DV + HDR10) in quality ladders.** A step can ask for both layers, which Unshackle merges into one file.
+- **Hybrid (DV + HDR10) in quality ladders.** A step can ask for both layers in one file.
+- **Downloads at once.** How many episodes each Unshackle server downloads together; 1 suits a small NAS. (#10)
+- **Download window.** Automatic downloads only between two times. In Settings › Automation.
+- **Auto release times.** A series learns when its episodes come out. In Settings › Automation.
 
-**Upgrades**
-- **Upgrades you choose.** Which series are checked, how long an answer is kept, how far back. (#10, by mj23au)
-- **Other release groups.** A file from another group is replaced by the same quality too. (#10, by mj23au)
-- **Check automatically.** Upgrades checks by itself every 7 days, asking only about answers that are too old, spread over
-  several checks. In Settings › Upgrades. (#23, by mj23au)
-- **Check new series.** A series set up with episodes on disk is checked within the hour. Off by default. (#23)
-- **Fewer questions.** A download counts as an answer, and episodes the service no longer has are not asked about at
-  every check. (#23)
+**🔎 Finding the right episode**
+- **Separate programmes.** For strands like BBC Documentaries: each episode is found by its title, no series URL
+  needed. (#17)
+- **Seasons listed as separate shows.** A season the service lists as a show of its own downloads from that show's
+  page, which Episodes offers when it finds one. (#21)
 
-**Sonarr**
-- **Season and series finales** in the Schedule and in the download's notification.
-- **Season names** in Episodes, where Sonarr has them (documentary strands, anime arcs).
-- **The library folder's room too:** nothing is downloaded for a series while the folder Sonarr moves it into has
-  less free space than the room kept free; you are told once.
+**⬆️ Upgrades**
+- **Upgrades you choose.** Which series are checked, how long an answer is kept, how far back. (#10)
+- **Check automatically.** Every 7 days, asking only about answers grown old, spread over several checks. In
+  Settings › Upgrades. (#23)
+- **Check new series.** A series set up with episodes already on disk is checked within the hour. (#23)
+- **Other release groups.** A file from another group can be replaced by the same quality too. (#10)
 
-**Everywhere**
-- **What's new.** Click the version in the header to see what changed.
+**📡 Sonarr**
+- **Season and series finales**, in the Schedule and in the notification.
+- **Season names** in Episodes, where Sonarr has them.
+- **Room in the library checked too.** Nothing downloads while the series' folder is short of space; you are told once.
+
+**✨ Everywhere**
+- **What's new.** Click the version in the header.
 - **No spoilers.** Episode titles stay blurred until you click them. In Settings › Interface.
-- **Notifications per series.** All, failures only, or none. The bell keeps everything.
+- **Notifications per series.** All, failures only, or none; the bell keeps everything.
 - **Remote backup.** Your backups, encrypted, on WebDAV or S3. In Settings › Account.
-- **A diagnostic to attach to an issue**, without passwords, keys or tokens. In Activity.
-- **A health check.** `/health` for Docker and Uptime Kuma.
-- **Sign-in codes.** A service that goes quiet may be waiting for you to sign in: you are told. With Unshackle run
-  by Unshacklarr, a popup gives the link and the code.
+- **A diagnostic for issues.** One click in Activity, without passwords, keys, addresses or folders.
+- **A health check** at `/health`, for Docker and Uptime Kuma.
+- **Sign-in codes.** When a service waits for you to sign in, you are told, with the link and the code when
+  Unshacklarr runs Unshackle.
 
-The new options are off until you turn them on, except Upgrades' automatic check (every 7 days, for the series
-Upgrades checks; 0 turns it off).
+New options are off until you turn them on, except Upgrades' automatic check (0 days turns it off).
 
 ### Changed
 
-- **One import at a time per Sonarr:** big files no longer reach Sonarr together. (#10, by mj23au)
-- **One call per series** for its episodes and their files (Episodes, Upgrades); H.266 (VVC) files named as such.
-- **Faster on long series:** matching episodes by their title is about three times faster, and a series with its own
-  schedule asks Sonarr for its episodes every 5 minutes, not every 30 seconds.
-- **Updating Unshacklarr alone:** the README and the example compose now use `--no-deps`, so Unshackle and its
-  downloads keep running.
-- **A slow Unshackle server is waited for** 1, 3 then 10 minutes before a download fails. (#10, by mj23au)
-- **Clearer selection in Series:** a check on each poster, the others dimmed.
-- **Upgrades, one card per series:** nothing ticked at first, one series checked on its own (its card says when), and what is being replaced
-  shown live. (#18, by mj23au)
-- **One schedule per series:** a series with its own broadcast schedule shows only that one in the Schedule.
-- **An import Sonarr didn't do is not a failed download:** it shows *Import needed*, with Import instead of Retry. (#10, by mj23au)
-- **The API downloads for another Sonarr**, as a retry, or replacing a file: `sonarr`, `retry` and `replace` in
-  `/api/v1/downloads`. (#10, by mj23au)
-- **The API picks a download's proxy and video:** `proxy` (`nordvpn:fr`), `vcodec` and `quality` in `/api/v1/downloads`,
-  for that download only, the series' setup unchanged.
+- **Faster.** One call per series for its episodes and files, title matching about three times quicker, and fewer
+  calls to Sonarr for series with their own schedule.
+- **One import at a time per Sonarr**, so big files don't reach it together. (#10)
+- **A busy Unshackle server is waited for** 1, 3 then 10 minutes before a download fails. (#10)
+- **Import needed**, with an Import button, instead of a failure when Sonarr didn't import. (#10)
+- **Upgrades, one card per series.** Nothing ticked at first, each series checkable on its own, replacements shown
+  live. (#18)
+- **Clearer selection in Series.** A check on each poster, the others dimmed.
+- **One schedule per series.** A series with its own broadcast schedule shows only that one.
+- **More from the API.** A download for another Sonarr, as a retry or a replacement, through its own proxy, in the
+  codec and height you name. (#10)
+- **Updating Unshacklarr alone** (`--no-deps`, in the README and the example compose) leaves Unshackle and its
+  downloads running.
 
 ### Fixed
 
-- **Missing subtitles no longer stop a download:** it comes with the languages it has. (#16, by mj23au)
-- **An import Sonarr confirms late, or refuses while busy** ("database is locked"), is asked again. (#10, by mj23au)
-- **An import Sonarr says it did but moved nothing** (its database locked midway) is asked once more. (#10, by mj23au)
-- **The Output panel** shows its newest line inside the box, with a scrollbar that stays. (#10, by mj23au)
-- **No second download** of an episode Unshackle may still be fetching, its automatic retry included: the job still
-  there is followed again. (#10, by mj23au)
-- **Retry works for another Sonarr's copy.** (#10, by mj23au)
-- **An empty episode folder** no longer stops the episode from downloading again. (#10, by mj23au)
-- **Replace anyway holds** when the episode is retried, or queued again after a stop.
-- **Hybrid Dolby Vision files** are no longer listed as upgrades. (#10, by mj23au)
-- **A series' link found by its title** when the service only links an episode (HBO Max). (#12, by mj23au)
-- **No more "may be an episode" warning** for a series that is simply new. (#12, reported by mj23au)
-- **Upgrades ask for the right episode** when the service numbers it apart, found by its title. (#12, by mj23au)
-- **A run that just ended** no longer reads "Interrupted" until the page is reloaded. (#17, by mj23au)
-- **A programme of the same title but from other years** (a remake) is no longer taken for the episode. (#17, by mj23au)
-- **Episodes offers only the upgrades Upgrades found** on the service, once it has checked the series. (#18, by mj23au)
-- **A title only close to the episode's** no longer moves it to another number. (#12, by mj23au)
-- **A separate programme the search only finds as its series** (iPlayer's Stacey Dooley) is found inside that series' episodes. (#17, by mj23au)
-- **A flat brand page without dates** (iPlayer): titles ending in another number are other episodes, no season map is
-  offered against the titles, and the Source checks find episodes by title too. (#20, by mj23au)
-- **Episodes under a slightly different title** are found too: of two close titles, the one the service doesn't have
-  under its own name; a short title at the end of a longer one ("Brazil" in "Investigates: Sex in Strange Places:
-  Brazil"). (#20, by mj23au)
-- **Pausing a job waiting for its download slot** no longer blocks every download after it until a restart.
-- **The diagnostic** leaves out your other Sonarrs' and servers' addresses, your folders and your backup account.
-- **Lighter on the server and the phone:** a single series checked alone, a server that is down, and the pages
-  left open in the background no longer cost repeated waits and requests.
-- **Specials the service numbers in its own seasons** are found by their title and part ("(2)" = "Part 2"). (#12, by mj23au)
-- **A new season not translated on TVDB yet** is no longer taken for other episodes on a service in another language.
-- **Episode titles in your language again:** TheTVDB's website stopped giving translations; they now come as
-  Sonarr reads them.
-- **A service in another language** is no longer taken for one in Sonarr's because a few titles are words alike in
-  both (Jimmy, Danger): episodes under the same number are no longer said not to be on it (Shifting Gears).
-- **A season map is no longer offered** when Sonarr announces a season the service doesn't have yet (Silo, The Lowdown):
-  the latest seasons were paired in order, every one shifted by one.
-- **A season the numbering gives another one** is no longer asked by number for Sonarr's season of the same number
-  (Koh-Lanta's 2023 episodes against MyTF1's All Stars).
-- **Save shows** as soon as a pasted link picks the series' service.
-- **A series without a poster** shows its initials instead of a broken image (Schedule, Activity, the series page). (#22, by mj23au)
-- **A replaced episode** leaves Upgrades for good, even once the history has forgotten its download. (#23, by mj23au)
-- **Check while a check runs** says why it doesn't start, instead of doing nothing. (#23)
-- **Release group** in Settings › Upgrades no longer runs two lines together. (#23)
+**🔎 Finding the right episode**
+- **Titles that differ a little are matched:** a typo, a two-part title, a short title at the end of a long one,
+  specials the service numbers in its own seasons. (#12, #20)
+- **Only the very title moves an episode** to another number: never a close one, a remake from other years, or
+  another part. (#12, #17, #20)
+- **No wrong season map offered** for a season the service doesn't have yet, or on a page without dates. (#20)
+- **A season the numbering gives to another one** is left to it (Koh-Lanta).
+- **A service in another language** is no longer taken for yours because a few words are alike.
+- **Episode titles in your language again**, now read through Sonarr; a new season not translated yet is no longer
+  mistaken for other episodes.
+- **A separate programme** is found inside its series when the search only finds the series. (#17)
+- **A series' link is found by its title** when the service only links an episode (HBO Max). (#12)
+- **No "may be an episode" warning** for a series that is simply new. (#12)
+
+**⬇️ Downloads and imports**
+- **Missing subtitles no longer stop a download.** (#16)
+- **No second download** of an episode Unshackle may still be fetching, retries included. (#10)
+- **Imports are asked again** when Sonarr confirms late, refuses while busy, or says it imported without moving
+  anything. (#10)
+- **Retry works for another Sonarr's copy**, and Replace anyway holds through a retry or a stop. (#10)
+- **An empty episode folder** no longer blocks the episode. (#10)
+- **Pausing a waiting job** no longer blocks the downloads after it.
+- **A series' own `--range`** (HYBRID) is kept when its quality ladder picks a track.
+
+**⬆️ Upgrades**
+- **Only real upgrades.** Episodes offers what Upgrades found, Hybrid DV files aren't listed, and the right episode
+  is asked when the service numbers it apart. (#10, #12, #18)
+- **A replaced episode leaves the list** for good. (#23)
+
+**✨ Everywhere**
+- **A series without a poster** shows its initials. (#22)
 - **An unreachable Sonarr is told once**, not at every sync.
-- **A series' own `--range`** (HYBRID) is kept when its quality ladder picks a track: a 4K series set to HYBRID was
-  downloaded in DV.
+- **A run that just ended** no longer shows "Interrupted" until a reload. (#17)
+- **The Output panel** keeps its newest line in view. (#10)
+- **Lighter on the server and the phone** when a server is down or pages stay open in the background.
+- **H.266 (VVC) files** are named as such.
 
 ## [1.4.0] - 2026-10-07
 
