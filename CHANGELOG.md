@@ -6,20 +6,7 @@ Every change worth knowing, newest first. The format follows
 
 ## [Unreleased]
 
-### Added
-
-- The API's downloads take their own proxy: `"proxy": "nordvpn:fr"` downloads these episodes through it, the series' setup unchanged.
-- The API's downloads take their own video: `"vcodec": "H.264"` and `"quality": 1080` download these episodes in it,
-  in place of the series' quality ladder (its languages kept), the series' setup unchanged. Activity shows what was asked.
-- A quality ladder step can ask for Hybrid (DV + HDR10): taken when the episode has both a Dolby Vision and an HDR10
-  track, which Unshackle merges; a file with both layers stands on it, a DV-only file is upgraded from it.
-
-### Fixed
-
-- A `--range` a series asks for itself (e.g. HYBRID) is kept when its quality ladder picks a track: it was replaced
-  by the track's range, so a 4K series set to HYBRID was downloaded in DV.
-
-## [1.5.0] - 2026-10-09
+## [1.5.0] - 2026-10-15
 
 ### Added
 
@@ -47,6 +34,7 @@ Every change worth knowing, newest first. The format follows
 - **Auto release times.** A series gets the time its episodes usually come out. In Settings › Automation.
 - **Downloads at once.** How many episodes each Unshackle server downloads together, 1 for a small NAS. Picks run
   whole, in the order they were made. (#10, with mj23au)
+- **Hybrid (DV + HDR10) in quality ladders.** A step can ask for both layers, which Unshackle merges into one file.
 
 **Upgrades**
 - **Upgrades you choose.** Which series are checked, how long an answer is kept, how far back. (#10, by mj23au)
@@ -73,7 +61,8 @@ Every change worth knowing, newest first. The format follows
 - **Sign-in codes.** A service that goes quiet may be waiting for you to sign in: you are told. With Unshackle run
   by Unshacklarr, a popup gives the link and the code.
 
-The new options are off until you turn them on.
+The new options are off until you turn them on, except Upgrades' automatic check (every 7 days, for the series
+Upgrades checks; 0 turns it off).
 
 ### Changed
 
@@ -89,6 +78,8 @@ The new options are off until you turn them on.
 - **An import Sonarr didn't do is not a failed download:** it shows *Import needed*, with Import instead of Retry. (#10, by mj23au)
 - **The API downloads for another Sonarr**, as a retry, or replacing a file: `sonarr`, `retry` and `replace` in
   `/api/v1/downloads`. (#10, by mj23au)
+- **The API picks a download's proxy and video:** `proxy` (`nordvpn:fr`), `vcodec` and `quality` in `/api/v1/downloads`,
+  for that download only, the series' setup unchanged.
 
 ### Fixed
 
@@ -133,6 +124,8 @@ The new options are off until you turn them on.
 - **A replaced episode** leaves Upgrades for good, even once the history has forgotten its download. (#23, by mj23au)
 - **Check while a check runs** says why it doesn't start, instead of doing nothing. (#23)
 - **Release group** in Settings › Upgrades no longer runs two lines together. (#23)
+- **A series' own `--range`** (HYBRID) is kept when its quality ladder picks a track: a 4K series set to HYBRID was
+  downloaded in DV.
 
 ## [1.4.0] - 2026-10-07
 
