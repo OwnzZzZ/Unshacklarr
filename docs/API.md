@@ -85,6 +85,22 @@ page's Retry does. `409` when an earlier try of one of the episodes may still be
 It is used in place of the series' proxy (and of its No proxy), for these episodes, queued ones included; the
 series' setup does not change. `400` when it is not a provider and a region (`nordvpn:fr`, `protonvpn:us:ny`).
 
+`"vcodec"` (`"H.264"` or `"H.265"`, `"avc"` and `"hevc"` too) and `"quality"` (a height, `480` to `4320`) pick the video
+for this download only, one or both:
+
+```json
+{"tvdbId": 361753, "episodes": ["S02E05"], "vcodec": "H.264", "quality": 1080}
+```
+
+They take the place of the series' quality ladder (of the series, its service or Settings) for these episodes, queued
+ones included: a ladder of one step, that codec at that height in any range, is checked against the episode's tracks as
+a ladder is, its best track there downloaded (the best range and bitrate). The ladder's audio and subtitle order still
+applies, and a series without a ladder is checked the same way. When the service has no
+such track, nothing else is downloaded: the download fails and says what the service has. A codec alone takes its
+best height, a height alone any codec. Through a `--remote` server, where the tracks can't be listed, Unshackle gets
+them as they are. The series' setup does not change, and Activity shows what was asked. `400` for another codec, or
+a height that is not a whole number from 480 to 4320.
+
 ### `GET /api/v1/downloads?limit=50`
 
 Downloads, the queued and running ones first, then the history from newest to oldest. `limit`: 1

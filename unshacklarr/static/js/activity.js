@@ -177,6 +177,7 @@ let justOpened = null;  // the card unfolding now: it alone fades in
 let following = null;  // a card unfolded by hand while downloading: once done, the next download unfolds in its place
 const ICON_SPEED = '<path d="M13 3 4 14h7l-1 7 9-11h-7z"/>', ICON_CLOCK = '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>';
 const ICON_GLOBE = '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>', ICON_SWAP = '<path d="M4 8h13l-3-3M20 16H7l3 3"/>';
+const ICON_FILM = '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 12h4M17 12h4"/>';
 /* What serve does once every track is in, before the file is made: decrypting them (a DRM title), repackaging,
    muxing. "" while it still downloads. Without it, a card showed 96% and a stale time left, and seemed stuck. */
 function afterTracks(c) {
@@ -191,6 +192,12 @@ function proxyOf(c) {
   if (c.proxy) return c.proxy.provider ? [c.proxy.provider, c.proxy.region?.toUpperCase()].filter(Boolean).join(" · ") : "Custom proxy";
   const asked = c.setup?.proxy;
   return !asked || asked === "none" || "proxy" in c ? "" : asked.includes("//") ? "Custom proxy" : asked.toUpperCase();
+}
+/* The video asked for this download over the series' ladder: "1080p H.264"; "" when none was. */
+function videoOf(c) {
+  const v = c.video_override;
+  if (!v) return "";
+  return [v.quality && `${v.quality}p`, { AVC: "H.264", HEVC: "H.265" }[v.vcodec] || v.vcodec].filter(Boolean).join(" ");
 }
 /* The CDM a download decrypts with: its device, its DRM and level (L3, SL2000), or the server's. */
 function cdmOf(c) {
@@ -242,7 +249,7 @@ function renderJob(j) {
     const tone = c.waiting ? "" : live ? "now" : c.outcome === "downloaded" ? "ok" : c.outcome === "failed" ? "err" : c.outcome === "kept" || c.outcome === "import" ? "warn" : "";
     const downloading = isDownloading(c);
     const detail = downloading ? el("div", { className: "jmeta" },  // how fast, how long still: in sight, not a grey line
-        ...[...(afterTracks(c) ? [[ICON_CLOCK, `${afterTracks(c)}: the tracks are in`]] : [[ICON_SPEED, speedOf(c)], [ICON_CLOCK, timeLeft(c) && `${timeLeft(c)} left`]]), [ICON_GLOBE, proxyOf(c), "extra"],
+        ...[...(afterTracks(c) ? [[ICON_CLOCK, `${afterTracks(c)}: the tracks are in`]] : [[ICON_SPEED, speedOf(c)], [ICON_CLOCK, timeLeft(c) && `${timeLeft(c)} left`]]), [ICON_GLOBE, proxyOf(c), "extra"], [ICON_FILM, videoOf(c), "extra"],
           [ICON_SWAP, c.serviceEpisode && c.serviceEpisode !== c.sxxeyy && `${c.serviceEpisode} on ${c.service}`, "extra"]]
           .filter(([, t]) => t).map(([icon, t, extra]) => { const chip = metaChip(icon, t); if (extra) chip.classList.add(extra); return chip; }))
       : el("small", { textContent: !live && c.ended ? [c.cause, `took ${duration(new Date(c.ended) - new Date(c.started))}`, c.size && size(c.size)].filter(Boolean).join(" · ") : "" });
@@ -816,7 +823,7 @@ function openSetup(c, at) {
 function setupBox(c) {
   const known = "proxy" in c || c.setup.proxy === "none";
   const rows = [["Runs on", c.setup.via], ["On the service", c.serviceEpisode !== c.sxxeyy && c.serviceEpisode],
-    ["Proxy", proxyOf(c) || (known ? "None" : "")], ["CDM", cdmOf(c)], ["Attempt", c.attempts > 1 && String(c.attempts)]].filter(([, v]) => v);
+    ["Proxy", proxyOf(c) || (known ? "None" : "")], ["Video asked", videoOf(c)], ["CDM", cdmOf(c)], ["Attempt", c.attempts > 1 && String(c.attempts)]].filter(([, v]) => v);
   const copy = el("button", { type: "button", className: "jact", ariaLabel: "Copy the command",
     onclick: () => navigator.clipboard.writeText(c.setup.command).then(() => toast("Command copied"), () => toast("The browser refused to copy", true)) });
   copy.innerHTML = ICON_COPY;
