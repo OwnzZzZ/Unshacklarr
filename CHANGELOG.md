@@ -68,6 +68,8 @@ Upgrades checks; 0 turns it off).
 
 - **One import at a time per Sonarr:** big files no longer reach Sonarr together. (#10, by mj23au)
 - **One call per series** for its episodes and their files (Episodes, Upgrades); H.266 (VVC) files named as such.
+- **Faster on long series:** matching episodes by their title is about three times faster, and a series with its own
+  schedule asks Sonarr for its episodes every 5 minutes, not every 30 seconds.
 - **Updating Unshacklarr alone:** the README and the example compose now use `--no-deps`, so Unshackle and its
   downloads keep running.
 - **A slow Unshackle server is waited for** 1, 3 then 10 minutes before a download fails. (#10, by mj23au)
@@ -87,7 +89,8 @@ Upgrades checks; 0 turns it off).
 - **An import Sonarr confirms late, or refuses while busy** ("database is locked"), is asked again. (#10, by mj23au)
 - **An import Sonarr says it did but moved nothing** (its database locked midway) is asked once more. (#10, by mj23au)
 - **The Output panel** shows its newest line inside the box, with a scrollbar that stays. (#10, by mj23au)
-- **No second download** of an episode Unshackle may still be fetching. (#10, by mj23au)
+- **No second download** of an episode Unshackle may still be fetching, its automatic retry included: the job still
+  there is followed again. (#10, by mj23au)
 - **Retry works for another Sonarr's copy.** (#10, by mj23au)
 - **An empty episode folder** no longer stops the episode from downloading again. (#10, by mj23au)
 - **Replace anyway holds** when the episode is retried, or queued again after a stop.
@@ -124,6 +127,7 @@ Upgrades checks; 0 turns it off).
 - **A replaced episode** leaves Upgrades for good, even once the history has forgotten its download. (#23, by mj23au)
 - **Check while a check runs** says why it doesn't start, instead of doing nothing. (#23)
 - **Release group** in Settings › Upgrades no longer runs two lines together. (#23)
+- **An unreachable Sonarr is told once**, not at every sync.
 - **A series' own `--range`** (HYBRID) is kept when its quality ladder picks a track: a 4K series set to HYBRID was
   downloaded in DV.
 

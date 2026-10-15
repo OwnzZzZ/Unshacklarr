@@ -19,10 +19,6 @@ const fitsStep = (st, t) => (!st.codec || t.codec === st.codec)
   && eqHeight(t) >= (st.min || 0) && (!st.max || eqHeight(t) <= st.max);
 const stepOf = (lad, t) => { const i = lad.steps.findIndex((st) => fitsStep(st, t)); return i < 0 ? lad.steps.length : i; };
 const trackText = (t) => `${eqHeight(t) || "?"}p ${nameOf(CODECS, t.codec) || "?"} ${(t.layers?.length ? t.layers : [t.range]).map((r) => nameOf(RANGES, r) || "?").join(" + ")}`;
-function stepText(st) {
-  const height = st.max && st.max !== st.min ? `${st.min || 0}–${st.max}p` : st.max ? `${st.max}p` : st.min ? `${st.min}p and up` : "Any height";
-  return [height, st.codec ? nameOf(CODECS, st.codec) : "", st.range ? nameOf(RANGES, st.range) : ""].filter(Boolean).join(" ");
-}
 
 /* Every place a ladder (or a server) is picked by name: a rename follows, a removal falls back to the level before. */
 function renameRefs(key, from, to) {
@@ -288,7 +284,7 @@ function sonarrBlock(i) {
     if (!why) i[key] = v;
     dirty();
   } });
-  const name = text("name", {}, "It names this library on series and starts the folders of its downloads: sonarr-2.", (v) => !v ? "Give it a name"
+  const name = text("name", {}, "Shown on its series, and used at the start of its download folder names. Example: sonarr-2.", (v) => !v ? "Give it a name"
     : list.some((o) => o !== i && o.name === v) || v === S.config.settings.sonarr_name ? "Another Sonarr has this name" : !/^[A-Za-z][A-Za-z0-9-]{0,23}$/.test(v) ? "A letter, then letters, digits or dashes" : "");
   const url = text("url", { type: "url", placeholder: "http://sonarr-2:8989" }, "Where Unshacklarr reaches it.",
     (v) => !URL_OK.test(v) ? "An address starting with http:// or https://, without a user name"
@@ -512,8 +508,8 @@ function renderLibrary() {
   $("#dx-lib-sonarr").value = lib.library_sonarr_root || "";
   $("#dx-lib-local").value = lib.library_local_root || "";
   // another Sonarr with none of its own reads the main one's library
-  $("#dx-lib-sonarr").placeholder = own && main.library_sonarr_root ? `Empty: ${main.library_sonarr_root}, as ${mainSonarr()}` : "Example: /tv";
-  $("#dx-lib-local").placeholder = own && main.library_local_root ? `Empty: ${main.library_local_root}, as ${mainSonarr()}` : "Example: /mnt/tv";
+  $("#dx-lib-sonarr").placeholder = own && main.library_sonarr_root ? `Leave empty to use ${main.library_sonarr_root}, as set for ${mainSonarr()}` : "Example: /tv";
+  $("#dx-lib-local").placeholder = own && main.library_local_root ? `Leave empty to use ${main.library_local_root}, as set for ${mainSonarr()}` : "Example: /mnt/tv";
   renderLibraryPicks();
   checkLibrary();
 }

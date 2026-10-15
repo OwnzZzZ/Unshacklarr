@@ -27,9 +27,9 @@ An error has an HTTP status and a plain-text message saying why:
 
 | Status | Meaning |
 |---|---|
-| `400` | The request is wrong (the message says what to send) |
+| `400` | The request is wrong (the message says what to send), or can't be done as set up: no CDM device for the service, no Sonarr of that name |
 | `401` | No key, or a wrong one |
-| `404` | Sonarr has no such series or episode |
+| `404` | Sonarr has no such series or episode, or the series isn't set up in Unshacklarr |
 | `409` | Not possible now (a sync already runs, the download is over) |
 | `429` | Too many at once: downloads asked, or wrong passwords |
 | `502` | Sonarr or Unshackle didn't answer |

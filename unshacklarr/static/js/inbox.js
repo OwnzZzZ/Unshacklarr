@@ -148,6 +148,6 @@ function audioBox(a) {
   return el("div", { className: "act-box", role: "status" }, el("b", { textContent: `Audio to add: ${a.label}` }),
     el("span", { className: "q", textContent: a.text }),
     el("div", { className: "act-row" },
-      el("button", { className: "btn primary", type: "button", textContent: "Add the audio", onclick: choose("add") }),
-      el("button", { className: "btn", type: "button", textContent: "Download the whole episode", onclick: choose("whole") })));
+      el("button", { className: "btn primary", type: "button", textContent: "Add the audio track", onclick: choose("add") }),
+      el("button", { className: "btn", type: "button", textContent: "Download the whole episode again", onclick: choose("whole") })));
 }

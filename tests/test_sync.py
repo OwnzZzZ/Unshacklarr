@@ -2643,3 +2643,56 @@ def test_an_import_sonarr_said_it_did_but_moved_nothing_is_asked_once_more(tmp_p
         pass
     assert len(posts) == 1
 
+
+
+def test_a_retry_follows_the_job_serve_never_confirmed_stopped_instead_of_downloading_again(tmp_path, monkeypatch):
+    # serve too slow to answer: the first job's statuses and its cancel time out. The retry asks serve about that job
+    # first: still there, it is followed again, not started a second time into the same folder (#10)
+    import contextlib
+    sync = load(tmp_path, monkeypatch)
+    started, asked = [], {"job1": 0}
+    slow = sync.UnshackleError("unshackle serve is unreachable at http://serve:8786: Read timed out. (read timeout=60)")
+
+    class Serve:
+        name = ""
+        def download(self, payload):
+            started.append(payload["output_dir"])
+            return f"job{len(started)}"
+        def job(self, job_id):
+            asked[job_id] = asked.get(job_id, 0) + 1
+            if asked[job_id] <= sync.POLL_MISSES:
+                raise slow
+            return {"status": "completed", "output_files": ["/downloads/x/S01E01.mkv"]}
+        def cancel(self, job_id):
+            raise slow
+    monkeypatch.setattr(sync, "backend_named", lambda name: Serve())
+    monkeypatch.setattr(sync, "download_slot", lambda name, run: contextlib.nullcontext())
+    monkeypatch.setattr(sync.time, "sleep", lambda s: None)
+
+    class Run:
+        card = {"step": "queued"}
+        def save(self): pass
+        def say(self, text): pass
+        def raw(self, data): pass
+    run = Run()
+    files = sync.run_job_retrying({"output_dir": "/downloads/x"}, run, sleep=lambda s: None)
+    assert started == ["/downloads/x"] and files == ["/downloads/x/S01E01.mkv"]
+    assert "unconfirmed_job" not in run.card
+
+
+def test_the_main_sonarr_down_still_syncs_the_others_and_is_told_once(tmp_path, monkeypatch):
+    # three hourly syncs with the main Sonarr unreachable: one notification, and the 4K Sonarr synced each time
+    import requests
+    sync = load(tmp_path, monkeypatch)
+    sent, other = [], []
+    monkeypatch.setattr(sync, "notify", lambda settings, level, title, message, **k: sent.append(title))
+    monkeypatch.setattr(sync, "in_download_window", lambda now=None: True)
+    monkeypatch.setattr(sync, "broadcast_plans", lambda config: {})
+
+    def down():
+        raise requests.ConnectionError("main Sonarr down")
+    monkeypatch.setattr(sync, "missing_episodes", down)
+    monkeypatch.setitem(sync.SONARRS, "4k", {"name": "4k", "url": "http://x", "api_key": "", "quality_ladder": "L"})
+    monkeypatch.setattr(sync, "sync_instance", lambda inst, config, settings: other.append(inst["name"]) or 0)
+    assert [sync.main() for _ in range(3)] == [1, 1, 1]
+    assert sent == ["Unshacklarr sync stopped"] and other == ["4k", "4k", "4k"]

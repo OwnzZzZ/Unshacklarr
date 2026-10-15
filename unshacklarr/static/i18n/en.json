@@ -1,4 +1,7 @@
 {
+ "\"proxy\" is a proxy provider and a region, such as \"nordvpn:fr\"": [],
+ "\"quality\" is a height from 480 to 4320, such as 1080 or 2160": [],
+ "\"vcodec\" is \"H.264\" or \"H.265\"": [],
  "(changed)": [],
  "(display-mode: standalone)": [],
  "(on disk already)": [],
@@ -147,7 +150,7 @@
  "A remote CDM's name: letters, digits, _ . - @": [],
  "A remote unshackle serve is restarted where it runs": [],
  "A remote unshackle serve keeps its log where it runs": [],
- "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes come with the automatic sync: release times stay with the Sonarr above.": [],
+ "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes are downloaded by the automatic sync. Release-time downloads follow only the Sonarr above.": [],
  "A series you set up with episodes already on disk is checked within the hour, without waiting for the next automatic check.": [],
  "A service is waiting for you to sign in before Unshackle can go on. Open this link on any device and enter the code.": [],
  "A service that logs in with a username and password (set in unshackle.yaml) needs no cookies.": [],
@@ -182,7 +185,6 @@
  ],
  "Activity": [],
  "Activity history": [],
- "Activity, Upgrades asks each service what it has for the files your quality ladder says could be better. These settings decide which series it asks about, and how long an answer is kept.": [],
  "Add": [],
  "Add REPACK tag to the output filename.": [],
  "Add a .wvd or .prd file": [],
@@ -198,8 +200,8 @@
  "Add audio track": [],
  "Add cookies": [],
  "Add options for a service": [],
- "Add the audio": [],
  "Add the audio anyway": [],
+ "Add the audio track": [],
  "Add {0} series": [
   "n"
  ],
@@ -272,7 +274,6 @@
   "days"
  ],
  "Any codec": [],
- "Any height": [],
  "Any of Apprise's 100+ services. Find its address format in Apprise's list (linked at the top of the page).": [],
  "Any other number of downloads": [],
  "Any other, in days": [],
@@ -656,7 +657,7 @@
  "Download options for {0}": [
   "o.name"
  ],
- "Download the whole episode": [],
+ "Download the whole episode again": [],
  "Download the {0}": [
   "r.items.length"
  ],
@@ -721,6 +722,7 @@
  "Each check asks the service only about episodes whose answer is older than Ask again after, so use fewer days than that. 0: only when you click Check.": [],
  "Each download's output shows much more: Unshackle's debug log, every call to Sonarr, and the job as unshackle serve reports it.": [],
  "Each episode stays in Activity, Waiting in downloads, until you import or delete it. It is never deleted automatically.": [],
+ "Each episode's answer is kept up to this percentage less than Ask again after, a different amount for each episode, so episodes checked on the same day are not all asked about again on the same day. 0: no spreading.": [],
  "Each series' own": [],
  "Earlier releases": [],
  "Earlier versions": [],
@@ -732,12 +734,7 @@
  "Empty: keyxtractor.decryptlabs.com": [],
  "Empty: the URL above, if your browser can open it.": [],
  "Empty: unshackle from the PATH. Otherwise its full path, e.g. the .venv/bin/unshackle of a git clone.": [],
- "Empty: us-east-1. Cloudflare R2: auto.": [],
  "Empty: uses": [],
- "Empty: {0}, as {1}": [
-  "main.library_local_root",
-  "mainSonarr()"
- ],
  "Endpoint URL": [],
  "Ends in /playready (pyplayready adds its own paths to it)": [],
  "English": [],
@@ -916,6 +913,7 @@
  "HDR10P": [],
  "HEVC": [],
  "HLG": [],
+ "HYBRID": [],
  "Header with the user's name": [],
  "Here, a remote CDM can be Widevine (pywidevine serve), PlayReady or Decrypt Labs. Add other kinds in unshackle.yaml": [],
  "Hidden": [],
@@ -940,6 +938,7 @@
  "How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.": [],
  "How often": [],
  "How the page looks: its language, and episode titles hidden or not.": [],
+ "Hybrid (DV + HDR10)": [],
  "If the service refuses the login, the download is tried again with these profiles, in order. Useful for a second account while the first one's cookies are renewed.": [],
  "If this service numbers episodes differently, set its numbering in config.yaml.": [],
  "Import": [],
@@ -996,7 +995,6 @@
   "when"
  ],
  "It is looked for again once a day.": [],
- "It names this library on series and starts the folders of its downloads: sonarr-2.": [],
  "It only opens the /api/v1 routes: never the password, the cookies or the settings.": [],
  "Italiano": [],
  "Its address, API key, and TMDB": [],
@@ -1094,8 +1092,13 @@
  "Latest": [],
  "Leave default unless you use Unshackle's --profile": [],
  "Leave empty for no limit.": [],
+ "Leave empty for us-east-1. For Cloudflare R2, enter auto.": [],
  "Leave empty if the folder needs no login.": [],
  "Leave empty to keep the saved one.": [],
+ "Leave empty to use {0}, as set for {1}": [
+  "main.library_local_root",
+  "mainSonarr()"
+ ],
  "Leave it without a service": [],
  "Leave unshackle.yaml without saving your changes?": [],
  "Left": [],
@@ -1165,7 +1168,7 @@
  "Missing": [],
  "Missing X-Unshackle header": [],
  "Missing episodes": [],
- "Missing, on {0} ({1})": [
+ "Missing, available on {0} ({1})": [
   "svcName(S.config.series[current.tvdbId]?.service)",
   "onService"
  ],
@@ -1216,7 +1219,7 @@
  "New episodes airing from {0} are downloaded automatically. For older ones, tick them in Episodes.": [
   "new Date(conf.since).toLocaleDateString(LOCALE, { day: \"numeric\", month: \"long\", year: \"numeric\" })"
  ],
- "New episodes are downloaded for each library switched on, with its own quality ladder (Settings › Sonarr).": [],
+ "New episodes are downloaded for each library switched on, with its own quality ladder (Settings, Sonarr).": [],
  "New keys, from its group key": [],
  "New ladder": [],
  "New password": [],
@@ -1291,9 +1294,6 @@
  "No series is downloaded by Unshackle yet.": [],
  "No series match these filters.": [],
  "No series matches.": [],
- "No series of Sonarr's has a file in {0}": [
-  "root"
- ],
  "No series set up yet.": [],
  "No series uses it": [],
  "No service has options of its own yet.": [],
@@ -1656,7 +1656,6 @@
  "Reading the notifications…": [],
  "Rebuilding an install?": [],
  "Recently sent": [],
- "Redownload episode": [],
  "Refresh": [],
  "Refresh what's on {0}": [
   "svc"
@@ -1840,11 +1839,11 @@
  "Series": [],
  "Series URL on that service": [],
  "Series URL on the service": [],
- "Series checked": [],
  "Series finale": [],
  "Series hidden from the Schedule": [],
  "Series links from": [],
  "Series settings": [],
+ "Series to check": [],
  "Series whose last 3 downloads failed": [],
  "Series {0}, seasons listed as separate shows: season {1} needs one URL or ID, without spaces.": [
   "key",
@@ -1912,7 +1911,7 @@
  ],
  "Shown": [],
  "Shown in Unshacklarr's log when it starts (docker logs unshacklarr), or the SETUP_TOKEN you set.": [],
- "Shown on the series of each library when you have more than one Sonarr. Empty: Sonarr.": [],
+ "Shown on its series, and used at the start of its download folder names. Example: sonarr-2.": [],
  "Sign in": [],
  "Sign in through a reverse proxy": [],
  "Signal": [],
@@ -1925,7 +1924,6 @@
  "Skip upgrades": [],
  "Skipped: the episode offset puts it before the service's first episode.": [],
  "Slack": [],
- "Some answers are kept up to this much shorter, so episodes checked on the same day are not all asked again on the same day. 0: no spreading.": [],
  "Sonarr": [],
  "Sonarr GET {0} {1} → {2}, {3} bytes": [
   "path",
@@ -1963,6 +1961,9 @@
  "Sonarr has no episode file to try": [],
  "Sonarr has no series with TVDB id {0}": [
   "tvdb"
+ ],
+ "Sonarr has no series with a file in {0}": [
+  "root"
  ],
  "Sonarr has no {0} for this series": [
   "', '.join(missing)"
@@ -2170,8 +2171,8 @@
  "The Activity tab keeps a card for each download, with its full output.": [],
  "The S3 bucket does not exist": [],
  "The S3 service refused the access key or secret key, or the bucket is not theirs": [],
+ "The Schedule page uses these dates instead of Sonarr's, from the first day on. Earlier episodes are left out of it, but they are still downloaded when they air on Sonarr's dates.": [],
  "The Schedule shows its streaming services.": [],
- "The Schedule shows this schedule only: episodes before the first one are left out of it. They are still downloaded when they air on Sonarr's dates.": [],
  "The Series": [],
  "The Sonarr named {0} is no longer in Settings, Sonarr": [
   "sonarr"
@@ -2182,6 +2183,7 @@
  "The URL of {0} cannot start with '-'": [
   "key"
  ],
+ "The Upgrades page in Activity asks each service what it has for the files your quality ladder says could be better. These settings decide which series it asks about, and how long an answer is kept.": [],
  "The WebDAV server refused the user name or password": [],
  "The address Unshacklarr uses to reach Sonarr, e.g. http://sonarr:8989 on a shared Docker network.": [],
  "The address has a space in it": [],
@@ -2215,6 +2217,9 @@
  "The device's name on the server": [],
  "The devices in use are tested once a day. You are told when one is revoked or refused": [],
  "The devices in use work": [],
+ "The download folder {0} holds a link or a file with the same name as the library's file, so the audio was not added": [
+  "out.name"
+ ],
  "The download waits in {0}": [
   "seen_by('sonarr_downloads', out)"
  ],
@@ -2266,6 +2271,7 @@
   "svc"
  ],
  "The name Per service shows, e.g. vpn, home.": [],
+ "The name shown on each series to tell the libraries apart when you have more than one Sonarr. Leave empty to use “Sonarr”.": [],
  "The new address of {0} needs its API key too": [
   "name"
  ],
@@ -2367,7 +2373,7 @@
  "The {0} URL must start with http:// or https://": [
   "what"
  ],
- "The {0} audio came in {1} parts: not joined": [
+ "The {0} audio came in {1} parts, so it was not added to the file": [
   "want",
   "len(got)"
  ],
@@ -2377,7 +2383,7 @@
   "name",
   "show['service']"
  ],
- "The {0} audio lasts {1} s, the file {2} s: not joined": [
+ "The {0} audio lasts {1} s and the file {2} s, so the audio was not added": [
   "want",
   "lengths[1]",
   "lengths[0]"
@@ -2416,7 +2422,6 @@
   "label"
  ],
  "Thu": [],
- "Tick all": [],
  "Time zone": [],
  "TimeoutError": [],
  "Title": [],
@@ -2570,7 +2575,6 @@
   "data.unshackle_error"
  ],
  "Untick a series to leave it out. Its page has the same switch, under What to get.": [],
- "Untick all": [],
  "Up": [],
  "Update {0}": [
   "data.update.version"
@@ -2619,6 +2623,7 @@
  "Video Bitrate to download (in kbps), defaults to highest available.": [],
  "Video Codec(s) to download, defaults to any codec.": [],
  "Video Color Range(s) to download, defaults to SDR.": [],
+ "Video asked": [],
  "Video languages that must exist. The title fails even with --best-available.": [],
  "View": [],
  "View log": [],
@@ -2753,6 +2758,9 @@
  "any range": [],
  "as {0}": [
   "service_sxxeyy"
+ ],
+ "asked for this download ({0})": [
+  "step_label(step)"
  ],
  "asking for {0} {1} {2}, into {3}": [
   "request['service']",
@@ -3098,6 +3106,10 @@
  "unshackle serve: {0}": [
   "message.strip()[:500]"
  ],
+ "unshackle serve{0} still has job {1}: followed again": [
+  "f' {backend.name}' if backend.name else ''",
+  "job_id"
+ ],
  "unshackle serve{0} took it as job {1}": [
   "f' {backend.name}' if backend.name else ''",
   "job_id"
@@ -3413,9 +3425,6 @@
  ],
  "{0} hidden from the schedule": [
   "d.series"
- ],
- "{0} holds a link or a file named like the library's: not joined": [
-  "out.name"
  ],
  "{0} hours": [
   "S.config?.settings?.sync_every_hours ?? 2"
@@ -3995,7 +4004,7 @@
   "e"
  ],
  "{0}p and up": [
-  "st.min"
+  "step['min']"
  ],
  "{0}p here, {1}p asked of {2}": [
   "e.file.height",

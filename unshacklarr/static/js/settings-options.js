@@ -155,7 +155,7 @@ $("#sx-name").addEventListener("input", (e) => {
     : !/^[A-Za-z][A-Za-z0-9-]{0,23}$/.test(v) ? "A letter, then letters, digits or dashes" : "";
   e.target.classList.toggle("bad", !!why);
   help.classList.toggle("bad", !!why);
-  help.textContent = why || "Shown on the series of each library when you have more than one Sonarr. Empty: Sonarr.";
+  help.textContent = why || "The name shown on each series to tell the libraries apart when you have more than one Sonarr. Leave empty to use “Sonarr”.";
 });
 function showMode() {
   $(".set-sec[data-sec=unshackle]").dataset.mode = $("#mode-select").value;

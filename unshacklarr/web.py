@@ -7,8 +7,10 @@ for by a login page.
 
 import asyncio
 import base64
+import collections
 import copy
 import difflib
+import functools
 import hashlib
 import hmac
 import ipaddress
@@ -368,6 +370,9 @@ def real_config(body: dict, saved: dict) -> None:
             show[level] = real_options(show.get(level), (before or {}).get(level))
         if isinstance(show.get("fallback"), dict):
             show["fallback"]["service_options"] = real_options(show["fallback"].get("service_options"), ((before or {}).get("fallback") or {}).get("service_options"))
+        for name, per in (show.get("sonarrs") or {}).items() if isinstance(show.get("sonarrs"), dict) else ():
+            if isinstance(per, dict) and "options" in per:  # the options this series adds for another Sonarr's copies
+                per["options"] = real_options(per.get("options"), (((before or {}).get("sonarrs") or {}).get(name) or {}).get("options"))
     notifications = body.get("notifications") or {}
     urls = [t["url"] for t in sonarr_sync.notification_targets(saved["notifications"])]
     for target in notifications.get("targets") or []:
@@ -388,7 +393,9 @@ def public_config(config: dict) -> dict:
     # a proxy's credentials in options stay on the server too
     service_defaults = {svc: {**lv, **{level: masked_options(lv.get(level)) for level in OPTION_LEVELS}} for svc, lv in config["service_defaults"].items()}
     series = {key: {**show, **{level: masked_options(show.get(level)) for level in OPTION_LEVELS if level in show},
-                    **({"fallback": {**show["fallback"], "service_options": masked_options(show["fallback"].get("service_options"))}} if show.get("fallback") else {})}
+                    **({"fallback": {**show["fallback"], "service_options": masked_options(show["fallback"].get("service_options"))}} if show.get("fallback") else {}),
+                    **({"sonarrs": {name: {**per, "options": masked_options(per.get("options"))} if isinstance(per, dict) and "options" in per else per
+                                    for name, per in show["sonarrs"].items()}} if isinstance(show.get("sonarrs"), dict) else {})}
               for key, show in config["series"].items()}
     return {**{k: v for k, v in config.items() if k not in ("auth", "settings")}, "settings": shown, "notifications": notifications,
             "defaults": masked_options(config["defaults"]), "service_defaults": service_defaults, "series": series}
@@ -2946,23 +2953,41 @@ TITLE_PART = re.compile(r"\bpart (\d+)$")
 TITLE_NUMBER = re.compile(r"(?:^|\D)(\d+)$")  # a plain title's last number: "… part 2", "… episode 2", "… 2"
 
 
+@functools.lru_cache(maxsize=1 << 16)  # the same pairs again at the "enough" count, each probe
 def same_title(a: str, b: str) -> bool:
     """Two plain titles naming the same episode: a longer one when close (accents, a typo) or one holds the
     other; a short one (a country, under 8 letters) when the same, or spelt alike from the same start (Serbie,
     Serbia) but never merely close (Mali, Malibu; Chili, Chine)."""
-    numbers = [int(m[1]) if (m := TITLE_NUMBER.search(t)) else None for t in (a, b)]
+    numbers = [last_number(a), last_number(b)]
     if None not in numbers and numbers[0] != numbers[1]:
         # "the ambush part 1" is never "the ambush part 2", nor "rape on trial episode 1" "… episode 2" (0.96
         # alike: each fitted both Sonarr episodes, so neither was matched), however close the rest (by mj23au)
         return False
     if a == b:
         return True
-    # compared for every pair of the service's and Sonarr's episodes: the cheap upper bounds of ratio() first
-    m = difflib.SequenceMatcher(None, a, b)
-    close = lambda at: m.real_quick_ratio() >= at and m.quick_ratio() >= at and m.ratio() >= at
-    if min(len(a), len(b)) < 8:
-        return a[:4] == b[:4] and close(0.82)
-    return a in b or b in a or close(0.85)
+    # compared for every pair of the service's and Sonarr's episodes: the cheap bounds first, before building a
+    # matcher (its constructor indexes b, the cost of a long series: 1000 episodes asked a million pairs)
+    short = min(len(a), len(b)) < 8
+    if short and a[:4] != b[:4]:
+        return False
+    if not short and (a in b or b in a):
+        return True
+    at = 0.82 if short else 0.85
+    if 2 * min(len(a), len(b)) / (len(a) + len(b)) < at:  # real_quick_ratio(): the lengths alone rule it out
+        return False
+    if 2 * sum((letters(a) & letters(b)).values()) / (len(a) + len(b)) < at:  # quick_ratio(): the letters they share
+        return False
+    return difflib.SequenceMatcher(None, a, b).ratio() >= at
+
+
+@functools.lru_cache(maxsize=1 << 14)
+def letters(title: str) -> collections.Counter:
+    return collections.Counter(title)
+
+
+@functools.lru_cache(maxsize=1 << 14)
+def last_number(title: str) -> int | None:
+    return int(m[1]) if (m := TITLE_NUMBER.search(title)) else None
 
 
 def titles_of(sonarr_eps: list[dict], tmdb_eps: list[dict], own: bool = True) -> dict[int, set]:
@@ -3299,11 +3324,17 @@ SERVICE_LISTS = sonarr_sync.DATA / "service_lists.json"  # the last "What's on <
 SERVICE_LIST_HOURS = 12
 
 
+SERVICE_LIST_FORMAT = 2  # 2: title matches say whether they are the episode's very title ("same", 1.5.0)
+service_lists_lock = threading.Lock()  # the sync's threads and the page's checks write it at once
+
+
 def keep_service_list(tvdb: int, show: dict, found: dict) -> None:
-    lists = read_json(SERVICE_LISTS, {})
-    lists[str(tvdb)] = {"checked": datetime.now(timezone.utc).isoformat(), "service": show["service"], "title": str(show["title"]),
-                        "available": found["available"], "titles": found["titles"], "local_titles": found.get("local_titles") or {}}
-    write_atomic(SERVICE_LISTS, json.dumps(lists))
+    with service_lists_lock:
+        lists = read_json(SERVICE_LISTS, {})
+        lists[str(tvdb)] = {"checked": datetime.now(timezone.utc).isoformat(), "service": show["service"], "title": str(show["title"]),
+                            "available": found["available"], "titles": found["titles"], "local_titles": found.get("local_titles") or {},
+                            "v": SERVICE_LIST_FORMAT}
+        write_atomic(SERVICE_LISTS, json.dumps(lists))
 
 
 def title_matches(show: dict, ep: dict) -> dict:
@@ -3602,13 +3633,13 @@ def upgrade_candidates(config: dict, only: set | None = None) -> list[tuple]:
     return work
 
 
-def scan_upgrades(name: str = "", only: set | None = None) -> None:
+def scan_upgrades(name: str = "", only: set | None = None) -> bool:
     """Ask each candidate's service which step it has; keep those it has on an earlier step than the file. For
     another Sonarr (name), its files, placed on its own ladder. only: just those series (tvdb ids), asked afresh,
     the other series' finds left as they were."""
     inst = sonarr_sync.SONARRS.get(name) if name else None
     with sonarr_sync.on_instance(inst):
-        scan_upgrades_in(inst, name, only)
+        return scan_upgrades_in(inst, name, only)
 
 
 UPGRADE_BATCH = 10  # episodes of one series asked in one list-tracks: one login for them
@@ -3642,7 +3673,8 @@ def upgrade_number(lists: dict, serie: dict, show: dict, e: dict) -> str | None:
     another episode's title (Channel 4's S04E01 is another episode); else the series' numbering, as before."""
     own = sonarr_sync.service_episode(show, e["seasonNumber"], e["episodeNumber"])
     hit = lists.get(str(serie["tvdbId"]))
-    if not hit or hit.get("service") != show.get("service") or hit.get("title") != str(show.get("title")):
+    if not hit or hit.get("service") != show.get("service") or hit.get("title") != str(show.get("title")) \
+            or hit.get("v") != SERVICE_LIST_FORMAT:  # a 1.4.0 listing can't tell a very title from a close one
         return own  # no listing, or one of another service or URL: nothing to go by
     available = hit.get("available") or {}
     found = available.get(str(e["id"]))
@@ -3656,10 +3688,11 @@ def upgrade_number(lists: dict, serie: dict, show: dict, e: dict) -> str | None:
     return own
 
 
-def scan_upgrades_in(inst: dict | None, name: str, only: set | None = None) -> None:
+def scan_upgrades_in(inst: dict | None, name: str, only: set | None = None) -> bool:
     """an answer younger than upgrade_recheck_days is reused for the same file; the rest is asked
-    per series, UPGRADE_BATCH episodes in one list-tracks (each answer names its season and number)."""
-    config, found = sonarr_sync.read_file(), []
+    per series, UPGRADE_BATCH episodes in one list-tracks (each answer names its season and number). False when
+    Sonarr or a service could not be asked: the check is then tried again at the next hourly look."""
+    config, found, failed = sonarr_sync.read_file(), [], set()
     config = sonarr_sync.instance_config(inst, config) if inst else config
     upgrade_scan.update(running=True, done=0, total=0, series="", errors=0, stop=False, sonarr=name)
     now = datetime.now(timezone.utc)
@@ -3709,6 +3742,7 @@ def scan_upgrades_in(inst: dict | None, name: str, only: set | None = None) -> N
                     listed = sonarr_sync.list_tracks(show, config, request, ladder) or []
                 except (UnshackleError, ValueError) as err:
                     upgrade_scan["errors"] += 1
+                    failed.update(w[3]["id"] for w in wanted.values())  # their last finds stay until they are asked
                     print(f"Upgrades: {serie['title']} {', '.join(wanted)}: {err}", flush=True)
                     continue
                 finally:
@@ -3737,19 +3771,28 @@ def scan_upgrades_in(inst: dict | None, name: str, only: set | None = None) -> N
                 if v.get("download") and v.get("checked", "") > (seen.get(k) or {}).get("checked", ""):
                     seen[k] = v
             write_atomic(upgrades_seen_file(name), json.dumps(seen))
-        before = read_json(upgrades_file(name), {}) if only else {}
-        if only:  # the checked series replace their own finds; the rest, and when it was checked, stay
-            found = [i for i in before.get("items") or [] if i.get("tvdbId") not in only] + found
-        # a series checked on its own keeps its own date, shown on its card; a full check starts them afresh
-        alone = {**(before.get("series_checked") or {}), **{str(t): now.isoformat() for t in only}} if only else {}
-        # the series checked (those with a file the ladder could better): Episodes then goes by what was found for them
-        scanned = sorted({w[0]["tvdbId"] for w in work} | (set(before.get("scanned") or []) if only else set()))
-        write_atomic(upgrades_file(name), json.dumps({"checked": before.get("checked") or datetime.now(timezone.utc).isoformat(),
-                                                "items": found, "stopped": upgrade_scan["stop"] or bool(before.get("stopped")),
-                                                "series_checked": alone, "scanned": scanned}))
+        with sonarr_sync.upgrades_lock:  # with drop_upgrade_find: a replace that ended during the check stays done
+            last = read_json(upgrades_file(name), {})
+            before = last if only else {}
+            if only:  # the checked series replace their own finds; the rest, and when it was checked, stay
+                found = [i for i in before.get("items") or [] if i.get("tvdbId") not in only] + found
+            got = {i.get("episodeId") for i in found}
+            found += [i for i in last.get("items") or [] if i.get("episodeId") in failed and i.get("episodeId") not in got]
+            # a series checked on its own keeps its own date, shown on its card; a full check starts them afresh
+            alone = {**(before.get("series_checked") or {}), **{str(t): now.isoformat() for t in only}} if only else {}
+            # the series checked (those with a file the ladder could better): Episodes then goes by what was found for them
+            scanned = sorted({w[0]["tvdbId"] for w in work} | (set(before.get("scanned") or []) if only else set()))
+            # a full check is dated from its start: a replace that ended during it is hidden as done. One a service
+            # failed keeps the last date, so the scheduled check tries again at the next hourly look
+            checked = before.get("checked") if only else last.get("checked") if failed else now.isoformat()
+            write_atomic(upgrades_file(name), json.dumps({"checked": checked or (now.isoformat() if only else None),
+                                                    "items": found, "stopped": upgrade_scan["stop"] or bool(before.get("stopped")),
+                                                    "series_checked": alone, "scanned": scanned}))
+        return not failed
     except requests.RequestException as err:
         upgrade_scan["errors"] += 1
         print(f"Upgrades: Sonarr is unreachable: {no_credentials(err)}", flush=True)
+        return False
     finally:
         upgrade_scan.update(running=False, series="")
 
@@ -3848,7 +3891,7 @@ def library_check(root: str, local: str) -> dict:
         serie = next((s for s in sonarr_sync.sonarr_series(set()).values()
                       if (s.get("statistics") or {}).get("episodeFileCount") and under(str(s.get("path") or ""))), None)
         if not serie:
-            out["why"] = f"No series of Sonarr's has a file in {root}" if root else "Sonarr has no episode file to try"
+            out["why"] = f"Sonarr has no series with a file in {root}" if root else "Sonarr has no episode file to try"
             return out
         files = sonarr_sync.sonarr_get("episodefile", seriesId=serie["id"])
     except requests.RequestException as e:
@@ -3937,16 +3980,17 @@ def upgrade_check_due(now: datetime) -> list[tuple[str, set]]:
 
 
 def run_scheduled_upgrades(now: datetime) -> None:
-    pending = set(upgrade_pending)
+    pending, ok = set(upgrade_pending), True
     for name, only in upgrade_check_due(now):
         if upgrade_scan["running"]:  # one clicked meanwhile: the rest next hour
             return
         upgrade_scan["running"] = True
         print(f"Upgrades: a scheduled check of {name or 'Sonarr'}" + (f", {len(only)} series just set up" if only else ""), flush=True)
-        scan_upgrades(name, only or None)
+        ok = scan_upgrades(name, only or None) is not False and ok
         if upgrade_scan["stop"]:  # Stop clicked: no other Sonarr after it, the series set up still waiting
             return
-    upgrade_pending.difference_update(pending)  # a full check covered them, or their own did
+    if ok:  # a full check covered them, or their own did; a failed one leaves them for the next hourly look
+        upgrade_pending.difference_update(pending)
 
 
 async def watch_upgrade_checks():
@@ -3987,6 +4031,14 @@ def scrubbed(text: str) -> str:
     return text
 
 
+def no_proxy_host(value):
+    """A proxy given as an address (http://host:3128) shows as "…" at any depth (the series' options, per service,
+    per Sonarr, its fallback); a provider and region (nordvpn:fr) stays: it names no machine of the user's."""
+    if isinstance(value, dict):
+        return {k: "…" if k == "--proxy" and isinstance(v, str) and "://" in v else no_proxy_host(v) for k, v in value.items()}
+    return value
+
+
 def diagnostic(run_id: str) -> str:
     """One attempt, as an issue needs it: versions, the series' settings and the settings (secrets masked, as the
     page gets them), what was up, then the attempt's card and the end of its log, scrubbed of tokens and keys."""
@@ -4000,8 +4052,9 @@ def diagnostic(run_id: str) -> str:
     settings = {k: v for k, v in config["settings"].items() if not private.fullmatch(k)}
     for key in ("sonarrs", "backends"):
         if isinstance(settings.get(key), list):
-            settings[key] = [{k: v for k, v in i.items() if k not in ("url", "public_url", "downloads", "api_key")}
+            settings[key] = [{k: v for k, v in i.items() if k not in ("url", "public_url", "downloads", "api_key") and not private.fullmatch(k)}
                              for i in settings[key] if isinstance(i, dict)]
+    show = no_proxy_host(show)
     via = str((card.get("setup") or {}).get("via") or "")
     if via and via != "this computer" and not via.startswith("remote server"):  # another serve's host: its name only
         card = {**card, "setup": {**card["setup"], "via": via.split(" (")[0] if " (" in via else "another computer"}}
