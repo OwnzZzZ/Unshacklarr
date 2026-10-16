@@ -349,7 +349,9 @@ days or all, and downloaded together.
 Options are Unshackle's own, written as on its command line (`--quality 1080`, `--a-lang fr`).
 They stack in three levels, each overriding the one before: **defaults** for every series, **per
 service** (`--proxy ca` for one service), then **per series**. The Schedule shows each download as
-the `unshackle dl` command it amounts to.
+the `unshackle dl` command it amounts to. Every option `unshackle serve` takes is offered; those Unshackle 6
+added (`--cdm`, `--proxy-download`, `--forced-subs-only`, `--require-audio`…) say so, as an older Unshackle
+ignores them without a word.
 
 **Quality ladders** (Settings › Quality) go further than a fixed `--quality`: an ordered list of steps
 (a codec, a range, a height from… to…), tried against the episode's real tracks just before the
@@ -374,6 +376,14 @@ download. Unshacklarr must see those files:
 
 Describing, testing and reprovisioning devices goes through `unshackle serve`, which has the DRM
 libraries.
+
+**One device for a series or a service** (Unshackle 6): the `--cdm` option, its value picked among the devices
+above, overrides the `cdm:` section for those downloads. Unshackle takes it only once `unshackle.yaml` allows it:
+
+```yaml
+serve:
+  cdm_overrides: true   # or a list of the devices allowed
+```
 
 ### 📁 Where things are kept
 
