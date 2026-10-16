@@ -88,6 +88,9 @@ New options are off until you turn them on, except Upgrades' automatic check (0 
   codec and height you name. (#10)
 - **Updating Unshacklarr alone** (`--no-deps`, in the README and the example compose) leaves Unshackle and its
   downloads running.
+- **Ready for Unshackle 6**, and still working with 5.4 and later. Its proxies are allowed to Unshacklarr's key in
+  one click in Settings › Unshackle (on its own when Unshacklarr runs Unshackle), a service waiting for an
+  approval says so in Activity, and a limit of requests set on the key is waited for.
 
 ### Fixed
 

@@ -2267,5 +2267,19 @@
  "{0} tracks downloaded": "{0} faixas baixadas",
  "{0} · {1} left": "{0} · faltam {1}",
  "· {0} left": "· faltam {0}",
- "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes are downloaded at their release time and by the automatic sync, as for the Sonarr above.": "Um segundo Sonarr, com sua própria biblioteca. As séries configuradas aqui também são baixadas para ele quando ele as tem, com sua própria escada de qualidade. Seus novos episódios são baixados no horário de lançamento e pela sincronização automática, como no Sonarr acima."
+ "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes are downloaded at their release time and by the automatic sync, as for the Sonarr above.": "Um segundo Sonarr, com sua própria biblioteca. As séries configuradas aqui também são baixadas para ele quando ele as tem, com sua própria escada de qualidade. Seus novos episódios são baixados no horário de lançamento e pela sincronização automática, como no Sonarr acima.",
+ "Allow Unshacklarr's key": "Autorizar a chave do Unshacklarr",
+ "Allowed in unshackle.yaml": "Autorizado no unshackle.yaml",
+ "Allowed in unshackle.yaml. Restart Unshackle when nothing is downloading, so that it reads it.": "Autorizado no unshackle.yaml. Reinicie o Unshackle quando nada estiver sendo baixado, para que ele leia.",
+ "Restart Unshackle when nothing is downloading, so that it reads it.": "Reinicie o Unshackle quando nada estiver sendo baixado, para que ele leia.",
+ "Since Unshackle 6, an API key may use the proxies set in unshackle.yaml (a country code such as au, or a provider) only once it is allowed. Downloads that ask for one fail until then.": "Desde o Unshackle 6, uma chave de API só pode usar os proxies do unshackle.yaml (um código de país como au, ou um provedor) depois de autorizada. Até lá, os downloads que pedem um falham.",
+ "The service": "O serviço",
+ "Unshacklarr gives its own Unshackle that right when it starts it": "O Unshacklarr dá esse direito ao próprio Unshackle quando o inicia",
+ "Unshackle 6 doesn't let Unshacklarr use its proxies (a country code such as au, or a provider): allow it in Settings, Unshackle": "O Unshackle 6 não deixa o Unshacklarr usar seus proxies (um código de país como au, ou um provedor): autorize em Configurações, Unshackle",
+ "Unshackle doesn't let Unshacklarr use its proxies": "O Unshackle não deixa o Unshacklarr usar seus proxies",
+ "unshackle serve is busy: its limit of requests for this key is reached": "unshackle serve está ocupado: o limite de requisições desta chave foi atingido",
+ "unshackle.yaml's serve: is not a section: change it by hand": "serve: do unshackle.yaml não é uma seção: altere à mão",
+ "unshackle.yaml's serve: users: is not a section: change it by hand": "serve: users: do unshackle.yaml não é uma seção: altere à mão",
+ "{0} is waiting for you": "{0} está esperando por você",
+ "To do it by hand, the README shows the lines to add to unshackle.yaml.": "Para fazer à mão, o README mostra as linhas a adicionar ao unshackle.yaml."
 }

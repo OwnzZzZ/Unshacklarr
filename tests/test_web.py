@@ -2530,3 +2530,21 @@ def test_another_sonarr_gets_its_copy_at_the_release_time_too(tmp_path, monkeypa
          "started": datetime.now(timezone.utc).isoformat(), "ended": datetime.now(timezone.utc).isoformat()}))
     web.cards_read = (0, [])
     assert web.burst_failed(9501, "4k") and not web.burst_failed(9501)  # the 4K copy's failure is its own
+
+
+def test_unshacklarrs_key_is_allowed_unshackle_6s_proxies_in_its_yaml(tmp_path):
+    # Unshackle 6: serve.users.<key>.server_proxy; a key serve listed by itself gets what serve gives it (its devices);
+    # the rest of the file stays as it was, and Unshackle 5 reads it as before (users with devices, an extra field)
+    from unshacklarr import cdm
+    import yaml
+    text = "# my config\ncdm:\n  default: l3  # a comment kept\nserve:\n  api_secret: abc\n  host: 0.0.0.0\ndl:\n  sub_format: srt\n"
+    new = cdm.allow_proxies(text, "abc", ["l3"], ["sl2000"])
+    after = yaml.safe_load(new)
+    assert after["serve"]["users"]["abc"] == {"devices": ["l3"], "playready_devices": ["sl2000"], "username": "api_user", "admin": True,
+                                              "server_cdm": True, "server_vault": True, "server_accounts": True, "server_proxy": True}
+    assert after["serve"]["api_secret"] == "abc" and after["dl"] == {"sub_format": "srt"}
+    assert new.startswith("# my config\ncdm:\n  default: l3  # a comment kept\n")  # the other lines as they were
+    again = cdm.allow_proxies(new, "abc", ["l3", "new"], [])
+    assert yaml.safe_load(again) == after  # an entry already there keeps its devices, only server_proxy set
+    mine = "serve:\n  users:\n    abc:\n      devices: [l1]\n      username: me\n"
+    assert yaml.safe_load(cdm.allow_proxies(mine, "abc", ["l3"], []))["serve"]["users"]["abc"] == {"devices": ["l1"], "username": "me", "server_proxy": True}

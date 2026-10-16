@@ -796,6 +796,8 @@ function runBody(c) {
   const parts = [steps];
   if (live && c.action) parts.push(actionBox(c));
   if (live && c.prompt) parts.push(promptBox(c.prompt));
+  if (live && c.notice) parts.push(el("div", { className: "cd-note warn" },  // Unshackle 6: waits for an approval, nothing to type
+    el("b", { textContent: `${c.service || "The service"} is waiting for you` }), el("span", { textContent: c.notice })));
   if (live) {
     const lv = c.live || {};
     const muxing = String(lv.phase || "").startsWith("mux");

@@ -2290,5 +2290,19 @@
  "{0} tracks downloaded": "已下载 {0} 个轨道",
  "{0} · {1} left": "{0} · 剩余 {1}",
  "· {0} left": "· 剩余 {0}",
- "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes are downloaded at their release time and by the automatic sync, as for the Sonarr above.": "第二个 Sonarr，拥有自己的媒体库。此处设置的剧集如果它也有，也会按它自己的质量阶梯下载。它的新剧集会在发布时间和自动同步时下载，与上面的 Sonarr 相同。"
+ "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes are downloaded at their release time and by the automatic sync, as for the Sonarr above.": "第二个 Sonarr，拥有自己的媒体库。此处设置的剧集如果它也有，也会按它自己的质量阶梯下载。它的新剧集会在发布时间和自动同步时下载，与上面的 Sonarr 相同。",
+ "Allow Unshacklarr's key": "允许 Unshacklarr 的密钥",
+ "Allowed in unshackle.yaml": "已在 unshackle.yaml 中允许",
+ "Allowed in unshackle.yaml. Restart Unshackle when nothing is downloading, so that it reads it.": "已在 unshackle.yaml 中允许。请在没有下载时重启 Unshackle，让它读取该设置。",
+ "Restart Unshackle when nothing is downloading, so that it reads it.": "请在没有下载时重启 Unshackle，让它读取该设置。",
+ "Since Unshackle 6, an API key may use the proxies set in unshackle.yaml (a country code such as au, or a provider) only once it is allowed. Downloads that ask for one fail until then.": "自 Unshackle 6 起，API 密钥只有在获得允许后才能使用 unshackle.yaml 中的代理（如 au 这样的国家代码或代理提供商）。在此之前，需要代理的下载会失败。",
+ "The service": "该服务",
+ "Unshacklarr gives its own Unshackle that right when it starts it": "Unshacklarr 启动自己的 Unshackle 时会给予此权限",
+ "Unshackle 6 doesn't let Unshacklarr use its proxies (a country code such as au, or a provider): allow it in Settings, Unshackle": "Unshackle 6 不允许 Unshacklarr 使用它的代理（如 au 这样的国家代码或代理提供商）：请在 设置，Unshackle 中允许",
+ "Unshackle doesn't let Unshacklarr use its proxies": "Unshackle 不允许 Unshacklarr 使用它的代理",
+ "unshackle serve is busy: its limit of requests for this key is reached": "unshackle serve 正忙：此密钥的请求次数已达上限",
+ "unshackle.yaml's serve: is not a section: change it by hand": "unshackle.yaml 的 serve: 不是一个分区：请手动修改",
+ "unshackle.yaml's serve: users: is not a section: change it by hand": "unshackle.yaml 的 serve: users: 不是一个分区：请手动修改",
+ "{0} is waiting for you": "{0} 正在等你",
+ "To do it by hand, the README shows the lines to add to unshackle.yaml.": "如需手动操作，README 中给出了要添加到 unshackle.yaml 的内容。"
 }
