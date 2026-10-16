@@ -2260,5 +2260,13 @@
  "unshackle.yaml's serve: is not a section: change it by hand": "unshackle.yaml の serve: がセクションではありません：手動で変更してください",
  "unshackle.yaml's serve: users: is not a section: change it by hand": "unshackle.yaml の serve: users: がセクションではありません：手動で変更してください",
  "{0} is waiting for you": "{0} があなたを待っています",
- "To do it by hand, the README shows the lines to add to unshackle.yaml.": "手動で行う場合は、README に unshackle.yaml に追加する行があります。"
+ "To do it by hand, the README shows the lines to add to unshackle.yaml.": "手動で行う場合は、README に unshackle.yaml に追加する行があります。",
+ "A subtitle track that fails to download is left out instead of failing the download. Taken by unshackle serve, not by the command line.": "ダウンロードに失敗した字幕トラックは、ダウンロード全体を失敗させずに除外します。unshackle serve が受け付けますが、コマンドラインにはありません。",
+ "Download audio description tracks and no standard audio tracks.": "音声解説トラックだけをダウンロードし、通常の音声トラックはダウンロードしません。",
+ "Download forced subtitle tracks and no other subtitle tracks.": "強制字幕だけをダウンロードし、ほかの字幕はダウンロードしません。",
+ "License each track with both Widevine and PlayReady. Needs a CDM for each DRM system.": "各トラックを Widevine と PlayReady の両方でライセンスします。DRM ごとに CDM が必要です。",
+ "The DRM to license with, for a service that takes both: its device of that kind in the cdm: section.": "両方を受け付けるサービスで使う DRM：cdm: セクションにあるその種類のデバイス。",
+ "Unshackle refuses to pick the CDM device named in --cdm: allow it in unshackle.yaml with serve: cdm_overrides: true (or a list of devices), then restart Unshackle": "Unshackle は --cdm で指定した CDM デバイスを拒否しました：unshackle.yaml で serve: cdm_overrides: true（またはデバイスの一覧）を設定し、Unshackle を再起動してください",
+ "Use this CDM device (its name) for the download, over unshackle.yaml's cdm: section. Unshackle refuses it unless unshackle.yaml allows it with serve: cdm_overrides (true, or a list of devices).": "unshackle.yaml の cdm: セクションの代わりに、この CDM デバイス（名前）でダウンロードします。unshackle.yaml が serve: cdm_overrides（true またはデバイスの一覧）で許可していない場合、Unshackle は拒否します。",
+ "{0} Unshackle 6.0 or later.": "{0} Unshackle 6.0 以降。"
 }

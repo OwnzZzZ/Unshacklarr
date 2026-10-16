@@ -2478,3 +2478,21 @@ def test_unshacklarrs_key_is_allowed_unshackle_6s_proxies_in_its_yaml(tmp_path):
     assert yaml.safe_load(again) == after  # an entry already there keeps its devices, only server_proxy set
     mine = "serve:\n  users:\n    abc:\n      devices: [l1]\n      username: me\n"
     assert yaml.safe_load(cdm.allow_proxies(mine, "abc", ["l3"], []))["serve"]["users"]["abc"] == {"devices": ["l1"], "username": "me", "server_proxy": True}
+
+
+def test_the_cdm_option_offers_the_devices_unshackle_has(tmp_path, monkeypatch):
+    # --cdm (Unshackle 6) names a device: the page offers those Unshackle has, its files and its remote CDMs; the
+    # options serve alone takes stay out of the command shown
+    from unshacklarr import web, options
+    (tmp_path / "WVDs").mkdir()
+    (tmp_path / "PRDs").mkdir()
+    (tmp_path / "WVDs" / "my_l3.wvd").write_bytes(b"x")
+    (tmp_path / "PRDs" / "my_sl2000.prd").write_bytes(b"x")
+    (tmp_path / "unshackle.yaml").write_text("remote_cdm:\n  - name: decrypt_labs\n    host: https://x\n")
+    monkeypatch.setattr(web, "cdm_paths", lambda: (tmp_path / "unshackle.yaml", tmp_path / "WVDs", tmp_path / "PRDs"))
+    cdm_spec = next(s for s in web.dl_options() if s["flag"] == "--cdm")
+    assert cdm_spec["choices"] == ["my_l3", "my_sl2000", "decrypt_labs"]
+    monkeypatch.setattr(web, "cdm_paths", lambda: (_ for _ in ()).throw(web.UnshackleError("not mounted")))
+    assert next(s for s in web.dl_options() if s["flag"] == "--cdm")["choices"] == []  # unseen: typed by hand
+    line = options.command_line({"service": "NF", "title_id": "1", "wanted": ["S01E01"], "skip_subtitle_errors": True, "cdm": "my_l3"})
+    assert line == "unshackle dl --cdm my_l3 NF 1 -w S01E01"

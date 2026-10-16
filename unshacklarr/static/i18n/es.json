@@ -2232,5 +2232,13 @@
  "unshackle.yaml's serve: is not a section: change it by hand": "serve: de unshackle.yaml no es una sección: cámbialo a mano",
  "unshackle.yaml's serve: users: is not a section: change it by hand": "serve: users: de unshackle.yaml no es una sección: cámbialo a mano",
  "{0} is waiting for you": "{0} te está esperando",
- "To do it by hand, the README shows the lines to add to unshackle.yaml.": "Para hacerlo a mano, el README muestra las líneas que hay que añadir a unshackle.yaml."
+ "To do it by hand, the README shows the lines to add to unshackle.yaml.": "Para hacerlo a mano, el README muestra las líneas que hay que añadir a unshackle.yaml.",
+ "A subtitle track that fails to download is left out instead of failing the download. Taken by unshackle serve, not by the command line.": "Una pista de subtítulos que falla se deja fuera en lugar de hacer fallar la descarga. La acepta unshackle serve, no la línea de comandos.",
+ "Download audio description tracks and no standard audio tracks.": "Descargar las pistas de audiodescripción y ninguna pista de audio estándar.",
+ "Download forced subtitle tracks and no other subtitle tracks.": "Descargar los subtítulos forzados y ningún otro subtítulo.",
+ "License each track with both Widevine and PlayReady. Needs a CDM for each DRM system.": "Licenciar cada pista con Widevine y PlayReady. Necesita un CDM para cada sistema DRM.",
+ "The DRM to license with, for a service that takes both: its device of that kind in the cdm: section.": "El DRM con el que licenciar, para un servicio que acepta ambos: su dispositivo de ese tipo en la sección cdm:.",
+ "Unshackle refuses to pick the CDM device named in --cdm: allow it in unshackle.yaml with serve: cdm_overrides: true (or a list of devices), then restart Unshackle": "Unshackle se niega a usar el dispositivo CDM indicado en --cdm: permítelo en unshackle.yaml con serve: cdm_overrides: true (o una lista de dispositivos) y reinicia Unshackle",
+ "Use this CDM device (its name) for the download, over unshackle.yaml's cdm: section. Unshackle refuses it unless unshackle.yaml allows it with serve: cdm_overrides (true, or a list of devices).": "Usar este dispositivo CDM (su nombre) para la descarga, en lugar de la sección cdm: de unshackle.yaml. Unshackle lo rechaza si unshackle.yaml no lo permite con serve: cdm_overrides (true, o una lista de dispositivos).",
+ "{0} Unshackle 6.0 or later.": "{0} Unshackle 6.0 o posterior."
 }

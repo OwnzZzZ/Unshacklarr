@@ -299,3 +299,21 @@ def test_unshackle_6s_refused_proxy_and_its_limit_of_requests_are_said_plainly(t
         raise AssertionError("limited")
     except UnshackleError as e:
         assert e.retry_after == 42
+
+
+@responses.activate
+def test_a_cdm_named_for_the_download_is_sent_and_its_refusal_said(tmp_path):
+    # Unshackle 6's --cdm (API: cdm) is taken only when unshackle.yaml allows it (serve: cdm_overrides); the options
+    # 5.4 doesn't know say they need 6.0, since 5.4 drops them without a word
+    from unshacklarr import options
+    assert options.to_params({"--cdm": "my_l3", "--forced-subs-only": True}, options.dl_specs()) == {"cdm": "my_l3", "forced_subs_only": True}
+    helps = {s["flag"]: s["help"] for s in options.dl_specs()}
+    assert helps["--cdm"].endswith("Unshackle 6.0 or later.") and not helps["--quality"].endswith("6.0 or later.")
+    backend = Unshackle(tmp_path)
+    backend.configure({"unshackle_url": "http://backend:8786", "unshackle_api_key": "test-api-secret"})
+    responses.post("http://backend:8786/api/download", status=403, json={"status": 403, "message": "The requested CDM is not permitted for API downloads."})
+    try:
+        backend.call("POST", "/api/download", json={"cdm": "my_l3"})
+        raise AssertionError("refused")
+    except UnshackleError as e:
+        assert "cdm_overrides" in str(e)

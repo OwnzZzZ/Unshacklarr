@@ -540,7 +540,7 @@ async def state(_):
         "version": __version__,
         "build": BUILD,
         "update": update_info(),
-        "dl_options": options.dl_specs(),
+        "dl_options": await asyncio.to_thread(dl_options),
         "cdm": {str(k): v for k, v in cdm.items()},
         "service_domains": domains,
         "builtin_ladders": sonarr_sync.BUILTIN_LADDERS,
@@ -1495,7 +1495,7 @@ def precheck(now: datetime) -> list[str]:
     told = []
     for tvdb, eps in coming.items():
         show = series[tvdb]
-        problem = sonarr_sync.no_cdm(show["service"])
+        problem = "" if sonarr_sync.stacked(show, config)[0].get("--cdm") else sonarr_sync.no_cdm(show["service"])  # its own device
         if not problem:
             try:
                 if not any(t.get("type") == "episode" for t in list_titles(show)):
@@ -1942,6 +1942,18 @@ async def delete_cookies(request):
 
 
 # ---- CDMs: Unshackle's Widevine and PlayReady devices, and which one each service uses ----
+
+def dl_options() -> list[dict]:
+    """The dl options the page offers; --cdm's choices are the CDM devices Unshackle has (its .wvd and .prd files and
+    the remote CDMs of unshackle.yaml), when Unshacklarr can see them."""
+    try:
+        path, wvds, prds = cdm_paths()
+        names = [p.stem for p in sorted(wvds.glob("*.wvd"))] + [p.stem for p in sorted(prds.glob("*.prd"))]
+        names += [str(r["name"]) for r in cdm.read(path).get("remote_cdm") or [] if isinstance(r, dict) and r.get("name")]
+    except (UnshackleError, cdm.CdmError, OSError, yaml.YAMLError):
+        names = []
+    return [{**spec, "choices": list(dict.fromkeys(names))} if spec["flag"] == "--cdm" and names else spec for spec in options.dl_specs()]
+
 
 def cdm_paths() -> tuple[Path, Path, Path]:
     """unshackle.yaml, and the WVDs and PRDs folders, as Unshacklarr sees them."""
@@ -3559,7 +3571,7 @@ def cdm_refusal(ids: list[int]) -> str:
     """Why these episodes can't be downloaded: a service among theirs has no CDM at all. Sonarr is asked
     which series they belong to only when a series' service lacks one."""
     config = read_config()
-    shows = {tvdb: s for tvdb, s in config["series"].items() if s.get("service")}
+    shows = {tvdb: s for tvdb, s in config["series"].items() if s.get("service") and not sonarr_sync.stacked(s, config)[0].get("--cdm")}
     lacking = {svc: why for svc in {s["service"] for s in shows.values()} if (why := sonarr_sync.no_cdm(svc, config))}
     if not lacking:
         return ""

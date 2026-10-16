@@ -80,7 +80,8 @@ New options are off until you turn them on, except Upgrades' automatic check (0 
   downloads running.
 - **Ready for Unshackle 6**, and still working with 5.4 and later. Its proxies are allowed to Unshacklarr's key in
   one click in Settings › Unshackle (on its own when Unshacklarr runs Unshackle), a service waiting for an
-  approval says so in Activity, and a limit of requests set on the key is waited for.
+  approval says so in Activity, and a limit of requests set on the key is waited for. Its new download options are
+  offered, each saying it needs 6.0, `--cdm` with the CDM devices you have.
 
 ### Fixed
 
