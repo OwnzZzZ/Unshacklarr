@@ -1,4 +1,4 @@
-"""Real series, as Muts' Sonarr and their services had them on 2026-10-13: the service's listing, Sonarr's episodes and
+"""Real series, as a real Sonarr and their services had them on 2026-10-13: the service's listing, Sonarr's episodes and
 the titles TMDB and TheTVDB (SkyHook) gave, with how each Sonarr episode is found on the service. Every title-matching
 rule meets them all: a new rule that breaks one of them fails here first. US series mostly, Koh-Lanta and a French one.
 To add one: capture its inputs the same way (tools/corpus-capture.py, inside a running Unshacklarr) and check the result by hand."""

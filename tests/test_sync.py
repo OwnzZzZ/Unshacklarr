@@ -2699,7 +2699,7 @@ def test_the_main_sonarr_down_still_syncs_the_others_and_is_told_once(tmp_path, 
 
 
 def test_a_mux_is_measured_in_serves_work_folder(tmp_path, monkeypatch):
-    # Slow Horses on Muts: serve's work folder as it muxes. The video that goes in is the largest other file (the DV
+    # Slow Horses on a real server: serve's work folder as it muxes. The video that goes in is the largest other file (the DV
     # one rebuilt beside its source), with every audio and subtitle track; the source and the DV layer don't
     sync = load(tmp_path, monkeypatch)
     root = tmp_path / "temp"
