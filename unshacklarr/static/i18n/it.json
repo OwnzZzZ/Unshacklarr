@@ -2196,7 +2196,6 @@
  "Spread the questions": "Distribuisci le richieste",
  "Checked only when you click Check": "Controllato solo quando fai clic su Verifica",
  "Each check asks the service only about episodes whose answer is older than Ask again after, so use fewer days than that. 0: only when you click Check.": "Ogni controllo chiede al servizio solo gli episodi la cui risposta è più vecchia di Richiedi dopo, quindi usa meno giorni. 0: solo quando fai clic su Verifica.",
- "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes are downloaded by the automatic sync. Release-time downloads follow only the Sonarr above.": "Un secondo Sonarr, con la sua libreria. Le serie configurate qui vengono scaricate anche per lui quando le ha, con la sua scala di qualità. I suoi nuovi episodi vengono scaricati dalla sincronizzazione automatica. I download all'orario di uscita seguono solo il Sonarr qui sopra.",
  "Add the audio track": "Aggiungi la traccia audio",
  "Download the whole episode again": "Scarica di nuovo l'episodio intero",
  "Downloaded: {0}{1}": "Scaricato: {0}{1}",
@@ -2240,5 +2239,6 @@
  "Muxing {0}%": "Unione delle tracce {0}%",
  "{0} tracks downloaded": "{0} tracce scaricate",
  "{0} · {1} left": "{0} · {1} rimanenti",
- "· {0} left": "· {0} rimanenti"
+ "· {0} left": "· {0} rimanenti",
+ "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes are downloaded at their release time and by the automatic sync, as for the Sonarr above.": "Un secondo Sonarr, con la sua libreria. Le serie configurate qui vengono scaricate anche per lui quando le ha, con la sua scala di qualità. I suoi nuovi episodi vengono scaricati all'orario di uscita e dalla sincronizzazione automatica, come per il Sonarr qui sopra."
 }

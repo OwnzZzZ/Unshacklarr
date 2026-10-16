@@ -2199,7 +2199,6 @@
  "Spread the questions": "Распределять запросы",
  "Checked only when you click Check": "Проверяется только по нажатию «Проверить»",
  "Each check asks the service only about episodes whose answer is older than Ask again after, so use fewer days than that. 0: only when you click Check.": "Каждая проверка спрашивает сервис только об эпизодах, чей ответ старше, чем «Спросить снова через», поэтому укажите меньше дней. 0: только по нажатию «Проверить».",
- "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes are downloaded by the automatic sync. Release-time downloads follow only the Sonarr above.": "Второй Sonarr со своей библиотекой. Настроенные здесь сериалы скачиваются и для него, если они в нём есть, по его собственной лестнице качества. Его новые эпизоды скачивает автосинхронизация. Загрузки во время выхода следуют только за Sonarr выше.",
  "Add the audio track": "Добавить звуковую дорожку",
  "Download the whole episode again": "Скачать эпизод целиком заново",
  "Downloaded: {0}{1}": "Скачано: {0}{1}",
@@ -2243,5 +2242,6 @@
  "Muxing {0}%": "Мультиплексирование {0}%",
  "{0} tracks downloaded": "Скачано дорожек: {0}",
  "{0} · {1} left": "{0} · осталось {1}",
- "· {0} left": "· осталось {0}"
+ "· {0} left": "· осталось {0}",
+ "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes are downloaded at their release time and by the automatic sync, as for the Sonarr above.": "Второй Sonarr со своей библиотекой. Настроенные здесь сериалы скачиваются и для него, если они у него есть, со своей лестницей качества. Его новые эпизоды скачиваются во время выхода и автоматической синхронизацией, как и для Sonarr выше."
 }

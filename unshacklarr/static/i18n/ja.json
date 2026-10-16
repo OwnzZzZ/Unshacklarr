@@ -2202,7 +2202,6 @@
  "Spread the questions": "問い合わせを分散",
  "Checked only when you click Check": "「確認」をクリックしたときのみ確認",
  "Each check asks the service only about episodes whose answer is older than Ask again after, so use fewer days than that. 0: only when you click Check.": "各確認では、回答が「再確認までの期間」より古いエピソードだけをサービスに問い合わせます。そのため日数はそれより短くしてください。0：「確認」をクリックしたときのみ。",
- "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes are downloaded by the automatic sync. Release-time downloads follow only the Sonarr above.": "独自のライブラリを持つ 2 台目の Sonarr です。ここで設定したシリーズは、この Sonarr にもある場合、その画質ラダーでダウンロードされます。新しいエピソードは自動同期でダウンロードされます。公開時刻のダウンロードは上の Sonarr にのみ従います。",
  "Add the audio track": "音声トラックを追加",
  "Download the whole episode again": "エピソード全体を再ダウンロード",
  "Downloaded: {0}{1}": "ダウンロード完了: {0}{1}",
@@ -2246,5 +2245,6 @@
  "Muxing {0}%": "多重化中 {0}%",
  "{0} tracks downloaded": "{0} トラックをダウンロード済み",
  "{0} · {1} left": "{0} · 残り {1}",
- "· {0} left": "· 残り {0}"
+ "· {0} left": "· 残り {0}",
+ "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes are downloaded at their release time and by the automatic sync, as for the Sonarr above.": "独自のライブラリを持つ2台目のSonarr。ここで設定したシリーズは、そのSonarrにもある場合、独自の品質ラダーでダウンロードされます。新しいエピソードは配信時刻と自動同期でダウンロードされ、上のSonarrと同じです。"
 }

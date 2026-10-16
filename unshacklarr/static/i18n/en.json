@@ -151,7 +151,7 @@
  "A remote CDM's name: letters, digits, _ . - @": [],
  "A remote unshackle serve is restarted where it runs": [],
  "A remote unshackle serve keeps its log where it runs": [],
- "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes are downloaded by the automatic sync. Release-time downloads follow only the Sonarr above.": [],
+ "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes are downloaded at their release time and by the automatic sync, as for the Sonarr above.": [],
  "A series you set up with episodes already on disk is checked within the hour, without waiting for the next automatic check.": [],
  "A service is waiting for you to sign in before Unshackle can go on. Open this link on any device and enter the code.": [],
  "A service that logs in with a username and password (set in unshackle.yaml) needs no cookies.": [],

@@ -2424,3 +2424,39 @@ def test_an_upgrades_check_with_serve_down_keeps_its_finds_and_is_tried_again(tm
     assert [i["sxxeyy"] for i in last["items"]] == ["S01E01"] and last["checked"] == first["checked"]
     assert web.upgrade_pending == {1}  # not forgotten: nothing could be asked
     web.upgrade_pending.clear()
+
+
+def test_another_sonarr_gets_its_copy_at_the_release_time_too(tmp_path, monkeypatch):
+    # By mj23au's #10 list ("release-time bursts ... main Sonarr only"): at a series' release time, a 4K Sonarr that
+    # has the series and misses the episode gets its own try, with its own episode id, not at the next sync. A Sonarr
+    # with no ladder chosen, or a library switched off for the series, gets nothing; a failed 4K try leaves the main's
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    sync = web.sonarr_sync
+    from datetime import datetime, timedelta, timezone
+    now = datetime(2026, 10, 16, 21, 5, tzinfo=timezone.utc)
+    four_k = {"name": "4k", "url": "http://4k", "api_key": "", "quality_ladder": "4K"}
+    monkeypatch.setitem(sync.SONARRS, "4k", four_k)
+    show = {"service": "X", "title": "t", "release_time": "21:00"}
+    monkeypatch.setattr(web, "read_config", lambda: {"series": {7: show}})
+    ids = {"": 501, "4k": 9501}  # the same episode, each Sonarr its own id
+
+    def calendar(config, start, end):
+        name = (sync.instance() or {}).get("name", "")
+        return [{"id": ids[name], "series": {"tvdbId": 7, "title": "S"}, "seasonNumber": 1, "episodeNumber": 1,
+                 "hasFile": False, "airDateUtc": "2026-10-16T21:00:00Z"}]
+    monkeypatch.setattr(web, "calendar_episodes", calendar)
+    monkeypatch.setattr(sync, "release_slot", lambda show, ep: now - timedelta(minutes=2))
+    assert web.due_releases(now) == [501] and web.due_releases(now, four_k) == [9501]
+    assert web.due_releases(now, {**four_k, "quality_ladder": ""}) == []  # no ladder chosen: nothing for it
+    show["sonarrs"] = {"4k": {"off": True}}
+    assert web.due_releases(now, four_k) == []  # that library switched off for the series
+    sync.RUNS_DIR.mkdir(parents=True)
+    (sync.RUNS_DIR / "20261016-210100-000001-7-S01E01.json").write_text(json.dumps(
+        {"id": "20261016-210100-000001-7-S01E01", "episodeId": 9501, "instance": "4k", "kind": "burst", "outcome": "failed",
+         "started": datetime.now(timezone.utc).isoformat(), "ended": datetime.now(timezone.utc).isoformat()}))
+    web.cards_read = (0, [])
+    assert web.burst_failed(9501, "4k") and not web.burst_failed(9501)  # the 4K copy's failure is its own

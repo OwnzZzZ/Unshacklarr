@@ -15,7 +15,7 @@ episodes matched far more reliably. Much of it came from mj23au's issues and cod
 
 **📚 More than one Sonarr**
 - **Other Sonarr instances.** A second Sonarr, a 4K one say, with its own library, quality ladder and After the
-  download; its series are listed too. In Settings › Sonarr. (#10)
+  download; its series are listed too, and its copy comes at the release time as well. In Settings › Sonarr. (#10)
 - **Sonarr name.** Each Sonarr named; a badge on each series says which libraries have it, and Series filters by them. (#10)
 - **Libraries per series.** In Source, each Sonarr switched on or off for the series, with what it misses. (#10)
 - **Episodes, Catch up and Upgrades per Sonarr.** Pick the library, download for it. (#10)
