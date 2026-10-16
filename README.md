@@ -14,7 +14,7 @@
   <img alt="License GPL-3.0" src="https://img.shields.io/badge/license-GPL--3.0-blue">
   <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-3776ab">
   <img alt="Sonarr v3 and v4" src="https://img.shields.io/badge/sonarr-v3%20%7C%20v4-35c5f4">
-  <img alt="Unshackle 5.4+" src="https://img.shields.io/badge/unshackle-5.4%2B-e0559b">
+  <img alt="Unshackle 5.4 to 6" src="https://img.shields.io/badge/unshackle-5.4%20%7C%206-e0559b">
   <img alt="9 languages" src="https://img.shields.io/badge/languages-9-8a63d2">
 </p>
 
@@ -82,6 +82,10 @@ flowchart LR
     <td valign="top">💚 <b>Health</b><br>Lights for Unshackle and Sonarr, and a message when one goes down, comes back, or when cookies or a device are about to fail.</td>
   </tr>
   <tr>
+    <td valign="top">📚 <b>More than one Sonarr</b><br>A 4K library beside the 1080p one: each Sonarr with its own quality ladder, its copy downloaded at the same release time and imported into it.</td>
+    <td valign="top">⬆️ <b>Upgrades</b><br>The files your quality ladder says could be better, checked against the service by themselves every week, and replaced when you tick them.</td>
+  </tr>
+  <tr>
     <td valign="top">📱 <b>On a phone</b><br>An installable app with a tab bar, live progress and push notifications, once the page is served over HTTPS.</td>
     <td valign="top">🌍 <b>Your language</b><br>English, French, Spanish, German, Brazilian Portuguese, Italian, Russian, Simplified Chinese and Japanese, notifications included.</td>
   </tr>
@@ -101,7 +105,7 @@ flowchart LR
     <td width="50%" valign="top"><img src="docs/screenshots/schedule.webp" alt="The Schedule: the coming episodes by day and the time each is tried"><br>📅 <b>Schedule</b>: the coming episodes by day, when each is tried, the late ones in one banner.</td>
   </tr>
   <tr>
-    <td valign="top"><img src="docs/screenshots/activity.webp" alt="Activity: a finished job, its time, size and episodes"><br>📈 <b>Activity</b>: downloads live, track by track, then their history and stats per week and per service.</td>
+    <td valign="top"><img src="docs/screenshots/activity.webp" alt="Activity: a finished job, its time, size and episodes"><br>📈 <b>Activity</b>: downloads live, track by track and through the mux, then their history and stats per week and per service.</td>
     <td valign="top" align="center"><img src="docs/screenshots/mobile-series.webp" width="31%" alt="The Series page on a phone"> <img src="docs/screenshots/mobile-schedule.webp" width="31%" alt="The Schedule on a phone"> <img src="docs/screenshots/mobile-settings.webp" width="31%" alt="Settings on a phone, as a list of sections"><br>📱 <b>On a phone</b>: the same app, with a tab bar.</td>
   </tr>
 </table>
@@ -112,7 +116,7 @@ flowchart LR
 
 You need:
 
-- ⬇️ **Unshackle** 5.4.0 or later, set up with its services, cookies and CDMs;
+- ⬇️ **Unshackle** 5.4.0 or later, 6.0 included, set up with its services, cookies and CDMs;
 - 📡 **Sonarr** v4, or v3;
 - 🎞️ **MKVToolNix** (`mkvmerge`, `mkvpropedit`), which Unshackle needs too; the Docker image has it.
 

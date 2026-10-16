@@ -155,6 +155,7 @@
  "A series you set up with episodes already on disk is checked within the hour, without waiting for the next automatic check.": [],
  "A service is waiting for you to sign in before Unshackle can go on. Open this link on any device and enter the code.": [],
  "A service that logs in with a username and password (set in unshackle.yaml) needs no cookies.": [],
+ "A subtitle track that fails to download is left out instead of failing the download. Taken by unshackle serve, not by the command line.": [],
  "A sync is already running": [],
  "A sync is running.": [],
  "A topic: letters, digits, - and _": [],
@@ -660,7 +661,9 @@
  "Download": [],
  "Download Resolution(s), defaults to the best available resolution.": [],
  "Download a backup": [],
+ "Download audio description tracks and no standard audio tracks.": [],
  "Download audio description tracks.": [],
+ "Download forced subtitle tracks and no other subtitle tracks.": [],
  "Download it": [],
  "Download it again": [],
  "Download now": [],
@@ -1151,6 +1154,7 @@
  "Library": [],
  "Library folder, as Sonarr sees it": [],
  "Library folder, as Unshacklarr sees it": [],
+ "License each track with both Widevine and PlayReady. Needs a CDM for each DRM system.": [],
  "Line {0}, column {1}{2}": [
   "line.number",
   "head - line.from + 1",
@@ -2266,6 +2270,7 @@
  "The .wvd and .prd files in the CDM folder. Click one for its details; a test asks the DRM's test server for a license.": [],
  "The API key of unshackle serve is still the example one: put a long random one in UNSHACKLE_API_KEY and in serve: api_secret (openssl rand -hex 32)": [],
  "The Activity tab keeps a card for each download, with its full output.": [],
+ "The DRM to license with, for a service that takes both: its device of that kind in the cdm: section.": [],
  "The S3 bucket does not exist": [],
  "The S3 service refused the access key or secret key, or the bucket is not theirs": [],
  "The Schedule page uses these dates instead of Sonarr's, from the first day on. Earlier episodes are left out of it, but they are still downloaded when they air on Sonarr's dates.": [],
@@ -2673,6 +2678,7 @@
  ],
  "Unshackle options": [],
  "Unshackle or Sonarr is unreachable": [],
+ "Unshackle refuses to pick the CDM device named in --cdm: allow it in unshackle.yaml with serve: cdm_overrides: true (or a list of devices), then restart Unshackle": [],
  "Unshackle runs": [],
  "Unshackle server": [],
  "Unshackle tries at that time, then every 30 s for 10 min. Empty: only the regular syncs (every 2 h).": [],
@@ -2698,6 +2704,7 @@
  "Use its own schedule": [],
  "Use these folders": [],
  "Use this AniList ID for tagging instead of an automatic search, or a MyAnimeList ID as mal:12345. Add --enrich to also take its title, year and original language. Combines with one of --tmdb, --imdb or --tvdb, which AniList does not know.": [],
+ "Use this CDM device (its name) for the download, over unshackle.yaml's cdm: section. Unshackle refuses it unless unshackle.yaml allows it with serve: cdm_overrides (true, or a list of devices).": [],
  "Use this IMDB ID (e.g. tt1375666) for tagging instead of an automatic search. Add --enrich to also take its title, year and original language.": [],
  "Use this TMDB ID for tagging instead of an automatic search. Add --enrich to also take its title, year and original language.": [],
  "Use this TVDB ID for --tvdb-order and tagging instead of looking the series up automatically. Add --enrich to also take its title, year and original language.": [],
@@ -3123,6 +3130,7 @@
   "rest"
  ],
  "replaceState": [],
+ "requested CDM is not permitted": [],
  "resume": [],
  "retried by hand": [],
  "revoked": [],
@@ -3331,6 +3339,9 @@
   "ep['series']['title']",
   "ep['seasonNumber']",
   "ep['episodeNumber']"
+ ],
+ "{0} Unshackle 6.0 or later.": [
+  "h"
  ],
  "{0} added": [
   "file.name"

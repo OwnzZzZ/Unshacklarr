@@ -2728,3 +2728,19 @@ def test_a_mux_is_measured_in_serves_work_folder(tmp_path, monkeypatch):
     assert sync.mux_progress(work) == {"done": 4_495_000, "total": (134 + 269 + 8626 + 1) * 1000}  # half way
     monkeypatch.setitem(sync.SETTINGS, "unshackle_temp_dir", str(root))
     assert sync.work_root() == root and sync.task_folders(root) == {work}
+
+
+def test_a_series_that_names_its_cdm_is_not_refused_for_want_of_one(tmp_path, monkeypatch):
+    # unshackle.yaml maps no device to the service: refused before Unshackle's first license, unless the series names
+    # its own device (--cdm, Unshackle 6), which needs no mapping
+    sync = load(tmp_path, monkeypatch)
+    monkeypatch.setattr(sync, "no_cdm", lambda tag, config=None: "No CDM for X")
+    config = sync.read_file()
+    show = {"service": "X", "title": "t"}
+    try:
+        sync.download_request(show, config, "S01E01", tmp_path)
+        raise AssertionError("refused")
+    except ValueError as e:
+        assert "No CDM" in str(e)
+    request = sync.download_request({**show, "options": {"--cdm": "my_l3"}}, config, "S01E01", tmp_path)
+    assert request["cdm"] == "my_l3"

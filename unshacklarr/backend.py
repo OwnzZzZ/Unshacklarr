@@ -290,6 +290,9 @@ class Unshackle:
                 message = r.json().get("message") or r.text
             except ValueError:
                 message = r.text
+            if "requested CDM is not permitted" in message:  # --cdm, Unshackle 6: the operator's opt-in
+                raise UnshackleError("Unshackle refuses to pick the CDM device named in --cdm: allow it in unshackle.yaml "
+                                     "with serve: cdm_overrides: true (or a list of devices), then restart Unshackle")
             if PROXY_REFUSED.search(message):
                 self.proxy_refused = datetime.now(timezone.utc).isoformat()
                 raise UnshackleError(PROXY_HINT)

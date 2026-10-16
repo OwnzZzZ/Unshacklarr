@@ -2304,5 +2304,13 @@
  "unshackle.yaml's serve: is not a section: change it by hand": "unshackle.yaml 的 serve: 不是一个分区：请手动修改",
  "unshackle.yaml's serve: users: is not a section: change it by hand": "unshackle.yaml 的 serve: users: 不是一个分区：请手动修改",
  "{0} is waiting for you": "{0} 正在等你",
- "To do it by hand, the README shows the lines to add to unshackle.yaml.": "如需手动操作，README 中给出了要添加到 unshackle.yaml 的内容。"
+ "To do it by hand, the README shows the lines to add to unshackle.yaml.": "如需手动操作，README 中给出了要添加到 unshackle.yaml 的内容。",
+ "A subtitle track that fails to download is left out instead of failing the download. Taken by unshackle serve, not by the command line.": "下载失败的字幕轨道会被略过，而不会让整个下载失败。由 unshackle serve 接受，命令行没有此选项。",
+ "Download audio description tracks and no standard audio tracks.": "只下载口述影像音轨，不下载标准音轨。",
+ "Download forced subtitle tracks and no other subtitle tracks.": "只下载强制字幕，不下载其他字幕。",
+ "License each track with both Widevine and PlayReady. Needs a CDM for each DRM system.": "每个轨道同时用 Widevine 和 PlayReady 获取许可证。每种 DRM 都需要一个 CDM。",
+ "The DRM to license with, for a service that takes both: its device of that kind in the cdm: section.": "对于两种都支持的服务，用于许可证的 DRM：cdm: 部分中该类型的设备。",
+ "Unshackle refuses to pick the CDM device named in --cdm: allow it in unshackle.yaml with serve: cdm_overrides: true (or a list of devices), then restart Unshackle": "Unshackle 拒绝使用 --cdm 中指定的 CDM 设备：请在 unshackle.yaml 中设置 serve: cdm_overrides: true（或设备列表），然后重启 Unshackle",
+ "Use this CDM device (its name) for the download, over unshackle.yaml's cdm: section. Unshackle refuses it unless unshackle.yaml allows it with serve: cdm_overrides (true, or a list of devices).": "下载时使用此 CDM 设备（其名称），代替 unshackle.yaml 的 cdm: 部分。如果 unshackle.yaml 没有通过 serve: cdm_overrides（true 或设备列表）允许，Unshackle 会拒绝。",
+ "{0} Unshackle 6.0 or later.": "{0} 需要 Unshackle 6.0 或更高版本。"
 }

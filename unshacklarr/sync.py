@@ -1650,9 +1650,9 @@ def find_programme(show: dict, ep: dict, config: dict, key: str, sxxeyy: str, pa
 
 def download_request(show: dict, config: dict, service_sxxeyy: str, out: Path) -> dict:
     """The same download, as unshackle serve's /api/download takes it."""
-    if why := no_cdm(show["service"], config):
-        raise ValueError(why)
     dl, own = stacked(show, config)
+    if not dl.get("--cdm") and (why := no_cdm(show["service"], config)):  # a device named for the run needs no mapping
+        raise ValueError(why)
     backend = backend_for(show["service"], config)
     return {
         # unshackle.yaml's dl: section first, as on the command line: serve does not apply it
