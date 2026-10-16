@@ -13,6 +13,7 @@ function renderSel() {
   $("#sel-toggle").setAttribute("aria-pressed", String(SEL.on));
   $("#sel-toggle").textContent = SEL.on ? "Done" : "Select";
   selBar.hidden = !SEL.on;
+  $("#wall").classList.toggle("selecting", SEL.on);
   $("#sel-count").textContent = `${SEL.ids.size} picked`;
   $("#sel-edit").disabled = !SEL.ids.size;
 }

@@ -11,11 +11,11 @@ async function importKept(c, button) {
   const worded = !button.classList.contains("jact");  // a card's icon button keeps its icon
   button.disabled = true;
   if (worded) button.textContent = "Importing…";
-  try {
-    await api("/api/leftovers/import", { method: "POST", signal: AbortSignal.timeout(360000), body: JSON.stringify({ folder: `unshackle-${c.tvdbId}-${c.sxxeyy}` }) });
+  try {  // another Sonarr's copy waits in a folder named after it
+    await api("/api/leftovers/import", { method: "POST", signal: AbortSignal.timeout(360000), body: JSON.stringify({ folder: `unshackle-${c.instance ? `${c.instance}-` : ""}${c.tvdbId}-${c.sxxeyy}` }) });
     toast(`${c.series} ${c.sxxeyy}: imported by Sonarr`);
     openActivity();
-  } catch (e) { button.disabled = false; if (worded) button.textContent = "Import anyway"; toast(e.message, true); }
+  } catch (e) { button.disabled = false; if (worded) button.textContent = c.outcome === "kept" ? "Import anyway" : "Import"; toast(e.message, true); }
 }
 async function deleteRun(c, button) {
   button.disabled = true;
@@ -49,10 +49,12 @@ $("#hist-clear").onclick = () => {
   }, { once: true });
 };
 /* A job's failed episodes, again, in one go: in the same job. */
+// Another Sonarr's copy goes again for that Sonarr: its episode ids are its own (a job is one Sonarr's)
+const forSonarr = (cards) => (cards[0]?.instance ? { sonarr: cards[0].instance } : {});
 async function retryJob(j, cards, button) {
   button.disabled = true;
   try {
-    await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: cards.map((c) => c.episodeId), retry: true, batch: j.job }) });
+    await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: cards.map((c) => c.episodeId), retry: true, batch: j.job, ...forSonarr(cards) }) });
     toast(`${cards.length} episode${cards.length > 1 ? "s" : ""} downloading again`);
     picked_run = `job:${j.job}`;
     setTimeout(openActivity, 1500);
@@ -61,7 +63,7 @@ async function retryJob(j, cards, button) {
 async function retryRun(c, button) {
   button.disabled = true;
   try {
-    await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: [c.episodeId], retry: true, ...(c.batch ? { batch: c.batch } : {}) }) });
+    await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: [c.episodeId], retry: true, ...(c.batch ? { batch: c.batch } : {}), ...forSonarr([c]) }) });
     toast(`${c.series} ${c.sxxeyy}: downloading again`);
     picked_run = c.batch ? `job:${c.batch}` : null;  // a job's episode: the job stays in view
     setTimeout(openActivity, 1500);
@@ -88,9 +90,10 @@ function openTerm() {
 }
 function streamRun(c) { streamTerm(c.id, `run=${encodeURIComponent(c.id)}`); }
 function streamJob(batch) { streamTerm(`job:${batch}`, `batch=${encodeURIComponent(batch)}`); }  // every episode's output, one after the other
+let termQuery = "";
 function streamTerm(key, query) {
   if (!openTerm()) return;
-  termFor = key;
+  termFor = key; termQuery = query;
   const filter = termFilter();
   termSocket = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/api/terminal?${query}`);
   termSocket.binaryType = "arraybuffer";

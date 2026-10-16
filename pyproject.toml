@@ -1,6 +1,6 @@
 [project]
 name = "unshacklarr"
-version = "1.4.0"
+version = "1.5.0"
 description = "Downloads the episodes Sonarr is missing with unshackle, then has Sonarr import them."
 readme = "README.md"
 license = "GPL-3.0-only"
@@ -28,3 +28,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["unshacklarr"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"CHANGELOG.md" = "unshacklarr/CHANGELOG.md"  # the release notes, in What's new

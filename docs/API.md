@@ -27,9 +27,9 @@ An error has an HTTP status and a plain-text message saying why:
 
 | Status | Meaning |
 |---|---|
-| `400` | The request is wrong (the message says what to send) |
+| `400` | The request is wrong (the message says what to send), or can't be done as set up: no CDM device for the service, no Sonarr of that name |
 | `401` | No key, or a wrong one |
-| `404` | Sonarr has no such series or episode |
+| `404` | Sonarr has no such series or episode, or the series isn't set up in Unshacklarr |
 | `409` | Not possible now (a sync already runs, the download is over) |
 | `429` | Too many at once: downloads asked, or wrong passwords |
 | `502` | Sonarr or Unshackle didn't answer |
@@ -42,7 +42,7 @@ Whether everything works, and what is going on.
 
 ```json
 {
-  "version": "1.4.0",
+  "version": "1.5.0",
   "sonarr": {"ok": true, "error": null},
   "unshackle": {"ok": false, "error": "Unshackle is unreachable: …"},
   "sync": {"running": false, "last": "2026-10-01T18:00:04+00:00"},
@@ -68,9 +68,38 @@ Downloads episodes, as the page's Download button does. Name them by the series'
 ```
 
 or by Sonarr's episode ids: `{"episodeIds": [1234, 1235]}`, 100 at most. A file Sonarr already has is
-replaced only by a better one, as the series' quality profile ranks them: the API cannot force a
-replacement (the page can). Answers `{"queued": 2}`, or `429` while too many downloads asked are still
+replaced only by a better one, as the series' quality profile ranks them; `"replace": true` replaces it
+anyway, as the page's Replace anyway. Answers `{"queued": 2}`, or `429` while too many downloads asked are still
 going.
+
+Two optional fields: `"sonarr": "sonarr-2"` downloads for another Sonarr set up in Settings › Sonarr (its own
+episode ids and TVDB lookup, its ladder, imported into it), and `"retry": true` marks the download as a retry, as the
+page's Retry does. `409` when an earlier try of one of the episodes may still be downloading on Unshackle.
+
+`"proxy"` picks the proxy for this download only, a proxy provider and a region as Unshackle's `--proxy` takes them:
+
+```json
+{"tvdbId": 361753, "episodes": ["S02E05"], "proxy": "nordvpn:fr"}
+```
+
+It is used in place of the series' proxy (and of its No proxy), for these episodes, queued ones included; the
+series' setup does not change. `400` when it is not a provider and a region (`nordvpn:fr`, `protonvpn:us:ny`).
+
+`"vcodec"` (`"H.264"` or `"H.265"`, `"avc"` and `"hevc"` too) and `"quality"` (a height, `480` to `4320`) pick the video
+for this download only, one or both:
+
+```json
+{"tvdbId": 361753, "episodes": ["S02E05"], "vcodec": "H.264", "quality": 1080}
+```
+
+They take the place of the series' quality ladder (of the series, its service or Settings) for these episodes, queued
+ones included: a ladder of one step, that codec at that height in any range, is checked against the episode's tracks as
+a ladder is, its best track there downloaded (the best range and bitrate). The ladder's audio and subtitle order still
+applies, and a series without a ladder is checked the same way. When the service has no
+such track, nothing else is downloaded: the download fails and says what the service has. A codec alone takes its
+best height, a height alone any codec. Through a `--remote` server, where the tracks can't be listed, Unshackle gets
+them as they are. The series' setup does not change, and Activity shows what was asked. `400` for another codec, or
+a height that is not a whole number from 480 to 4320.
 
 ### `GET /api/v1/downloads?limit=50`
 
@@ -98,10 +127,10 @@ to 500, 50 by default.
 
 | Field | |
 |---|---|
-| `state` | `queued`, `running`, `downloaded`, `failed`, `kept` (the file Sonarr has is not worse), `unavailable` (not on the service yet), `stopped`, `cancelled`, `interrupted` (Unshacklarr restarted during it) |
+| `state` | `queued`, `running`, `downloaded`, `failed`, `kept` (the file Sonarr has is not worse), `import` (downloaded, Sonarr did not import it: to import by hand), `unavailable` (not on the service yet), `stopped`, `cancelled`, `interrupted` (Unshacklarr restarted during it) |
 | `step` | While running: `queued`, `downloading`, `joining` (parts), `renaming`, `importing`, `done` |
 | `question` | While running: what the service asks (a code sent by e-mail, a PIN), to answer below |
-| `error` | Why it failed, was kept or is unavailable |
+| `error` | Why it failed, was kept, needs an import or is unavailable |
 
 A queued download's `id` is `waiting-<episodeId>` until it starts.
 

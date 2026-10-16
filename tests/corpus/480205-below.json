@@ -1,0 +1,261 @@
+{
+ "title": "Below",
+ "tvdb": 480205,
+ "show": {
+  "service": "NF",
+  "title": "https://www.netflix.com/title/81652677"
+ },
+ "tmdb_key": true,
+ "country": "FR",
+ "inputs": {
+  "service": [
+   {
+    "type": "episode",
+    "name": "Le Retour au Pays",
+    "id": "81652677",
+    "language": null,
+    "description": "Calvin Penney accueille sa famille chez lui pour des retrouvailles très attendues lorsqu'une arrivée imprévue fait des vagues dans sa petite ville côtière de Snooks Arm.",
+    "date": null,
+    "cover_url": null,
+    "year": 2026,
+    "series_title": "Below",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "La Roue de la Fortune",
+    "id": "81652677",
+    "language": null,
+    "description": "Calvin fait équipe avec la Dre Fonda Howander, biologiste marine, pour enquêter sur des événements étranges. De son côté, son fils Wade cherche un sens à des rêves inquiétants.",
+    "date": null,
+    "cover_url": null,
+    "year": 2026,
+    "series_title": "Below",
+    "season": 1,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Sir John Franklin",
+    "id": "81652677",
+    "language": null,
+    "description": "Wade et Calvin tombent sur de mystérieux nouveaux venus. Fonda met en garde les habitants de la ville contre une menace venant de la mer, et l'inquiétude gagne la communauté.",
+    "date": null,
+    "cover_url": null,
+    "year": 2026,
+    "series_title": "Below",
+    "season": 1,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "L’océan nous engloutira tous",
+    "id": "81652677",
+    "language": null,
+    "description": "Alors que des inconnus entraînent Calvin dans une traque périlleuse de la créature, un mal insoupçonnable met sa famille et tous les habitants de la ville en danger.",
+    "date": null,
+    "cover_url": null,
+    "year": 2026,
+    "series_title": "Below",
+    "season": 1,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Little Pot Rock",
+    "id": "81652677",
+    "language": null,
+    "description": "Calvin apprend des vérités choquantes sur son passé. Fonda fait une découverte surprenante alors qu'un visiteur inattendu s'invite sur l'île.",
+    "date": null,
+    "cover_url": null,
+    "year": 2026,
+    "series_title": "Below",
+    "season": 1,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Les impitoyables profondeurs",
+    "id": "81652677",
+    "language": null,
+    "description": "Alors que la véritable nature de la crise se dévoile et que l'évacuation commence, Fonda, Calvin et sa famille échafaudent un plan périlleux pour sauver leur ville.",
+    "date": null,
+    "cover_url": null,
+    "year": 2026,
+    "series_title": "Below",
+    "season": 1,
+    "number": 6
+   }
+  ],
+  "episodes": [
+   {
+    "id": 85536,
+    "seasonNumber": 1,
+    "episodeNumber": 1,
+    "title": "Come Home Year",
+    "airDate": "2026-10-08",
+    "airDateUtc": "2026-10-08T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85537,
+    "seasonNumber": 1,
+    "episodeNumber": 2,
+    "title": "Crown and Anchor",
+    "airDate": "2026-10-08",
+    "airDateUtc": "2026-10-08T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85538,
+    "seasonNumber": 1,
+    "episodeNumber": 3,
+    "title": "Sir John Franklin",
+    "airDate": "2026-10-08",
+    "airDateUtc": "2026-10-08T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85539,
+    "seasonNumber": 1,
+    "episodeNumber": 4,
+    "title": "The Ocean Will Have Us All",
+    "airDate": "2026-10-08",
+    "airDateUtc": "2026-10-08T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85540,
+    "seasonNumber": 1,
+    "episodeNumber": 5,
+    "title": "Little Pot Rock",
+    "airDate": "2026-10-08",
+    "airDateUtc": "2026-10-08T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85541,
+    "seasonNumber": 1,
+    "episodeNumber": 6,
+    "title": "The Unfathering Deep",
+    "airDate": "2026-10-08",
+    "airDateUtc": "2026-10-08T04:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   }
+  ],
+  "series": {
+   "tvdbId": 480205,
+   "tmdbId": 285322,
+   "title": "Below"
+  },
+  "tmdb": [
+   {
+    "names": [
+     "Come Home Year",
+     "Le Retour au pays"
+    ],
+    "air_date": "2026-10-08",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "names": [
+     "Crown and Anchor",
+     "La Roue de la fortune"
+    ],
+    "air_date": "2026-10-08",
+    "season": 1,
+    "number": 2
+   },
+   {
+    "names": [
+     "Sir John Franklin"
+    ],
+    "air_date": "2026-10-08",
+    "season": 1,
+    "number": 3
+   },
+   {
+    "names": [
+     "The Ocean Will Have Us All",
+     "L’Océan nous engloutira tous"
+    ],
+    "air_date": "2026-10-08",
+    "season": 1,
+    "number": 4
+   },
+   {
+    "names": [
+     "Little Pot Rock"
+    ],
+    "air_date": "2026-10-08",
+    "season": 1,
+    "number": 5
+   },
+   {
+    "names": [
+     "The Unfathering Deep",
+     "Les Impitoyables Profondeurs"
+    ],
+    "air_date": "2026-10-08",
+    "season": 1,
+    "number": 6
+   }
+  ],
+  "tvdb": {
+   "S01E01": "Le retour au pays",
+   "S01E02": "La roue de la fortune",
+   "S01E04": "L’océan nous engloutira tous",
+   "S01E06": "Les impitoyables profondeurs"
+  }
+ },
+ "expect": {
+  "available": {
+   "85536": {
+    "service": "S01E01",
+    "name": "Le Retour au Pays",
+    "match": "title",
+    "same": true
+   },
+   "85537": {
+    "service": "S01E02",
+    "name": "La Roue de la Fortune",
+    "match": "title",
+    "same": true
+   },
+   "85538": {
+    "service": "S01E03",
+    "name": "Sir John Franklin",
+    "match": "title",
+    "same": true
+   },
+   "85539": {
+    "service": "S01E04",
+    "name": "L’océan nous engloutira tous",
+    "match": "title",
+    "same": true
+   },
+   "85540": {
+    "service": "S01E05",
+    "name": "Little Pot Rock",
+    "match": "title",
+    "same": true
+   },
+   "85541": {
+    "service": "S01E06",
+    "name": "Les impitoyables profondeurs",
+    "match": "title",
+    "same": true
+   }
+  },
+  "titlesAgree": false,
+  "season_map": {}
+ }
+}

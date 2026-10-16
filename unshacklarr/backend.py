@@ -29,7 +29,21 @@ from unshacklarr.files import no_credentials
 LAUNCHER = """
 import os
 from unshackle.core.config import config
-config.serve["api_secret"] = os.environ.pop("UNSHACKLARR_SERVE_KEY")
+config.serve["api_secret"] = key = os.environ.pop("UNSHACKLARR_SERVE_KEY")
+# Unshackle 6 lets a key use the server's proxies (a country code, nordvpn:fr) only with server_proxy. A key listed in
+# serve.users is no longer the admin one (unlisted: every right), so this run's key gets every right the admin key has,
+# and the devices serve would give it; 5.4 reads server_cdm and the devices among them, and serves as before
+from pathlib import Path
+def device_names(folder, pattern):
+    try:
+        return [p.stem for p in Path(getattr(config.directories, folder)).glob(pattern)]
+    except (AttributeError, TypeError, OSError):
+        return []
+users = config.serve.get("users") if isinstance(config.serve.get("users"), dict) else {}
+users[key] = {"devices": device_names("wvds", "*.wvd"), "playready_devices": device_names("prds", "*.prd"),
+              "username": "api_user", "admin": True, "server_cdm": True, "server_vault": True, "server_accounts": True,
+              "server_proxy": True}
+config.serve["users"] = users
 port, fd = os.environ.pop("UNSHACKLARR_SERVE_PORT"), os.environ.pop("UNSHACKLARR_SERVE_FD", "")
 if fd:
     import socket
@@ -45,6 +59,13 @@ TERMINAL = {"completed", "failed", "cancelled"}
 
 class UnshackleError(Exception):
     """unshackle cannot be reached or refused a request; the message says why."""
+    retry_after = 0  # serve's own limit on requests reached (Unshackle 6): seconds before it answers again
+
+
+# Unshackle 6 serves its proxies (a country code, a provider) only to a key allowed to (server_proxy)
+PROXY_REFUSED = re.compile(r"does not resolve country codes into proxies|in a different region from yours", re.IGNORECASE)
+PROXY_HINT = ("Unshackle 6 doesn't let Unshacklarr use its proxies (a country code such as au, or a provider): "
+              "allow it in Settings, Unshackle")
 
 
 def unshackle_python(command: str) -> tuple[str, Path]:
@@ -73,6 +94,12 @@ def unshackle_python(command: str) -> tuple[str, Path]:
 EXAMPLE_KEYS = {"change-me-to-a-long-random-string", "the-UNSHACKLE_API_KEY-of-.env"}
 
 
+# A service signing in by a code on another device (MAX's device linking) only writes it to its log
+SIGN_IN = re.compile(r"Go to:\s*(https?://\S+).{0,600}?(?:Enter|Use)(?: the)? code:\s*([A-Za-z0-9-]{4,16})", re.S)
+SIGNED_IN = re.compile(r"linked successfully|linking timed out|signed in|logged in", re.I)
+SIGN_IN_WAIT = 600  # seconds a code stays worth showing (MAX waits 10 minutes)
+
+
 class Local:
     """A serve of our own, started on demand and restarted if it dies."""
 
@@ -83,6 +110,7 @@ class Local:
         self.url = self.key = ""
         self.command = None
         self.lock = threading.Lock()
+        self.codes_seen: dict[str, float] = {}  # a sign-in code and when it was first read
 
     def endpoint(self, command: str) -> tuple[str, str]:
         with self.lock:
@@ -133,6 +161,24 @@ class Local:
         self.stop()
         raise UnshackleError(f"unshackle serve did not answer within 90 s: {self.tail()}")
 
+    def sign_in(self) -> dict | None:
+        """The code a service waits for you to enter to sign in, read from our serve's log: {"url", "code"} while it
+        waits, None once signed in, timed out, or with no serve of our own. Only a serve we started has its log here."""
+        if not (self.process and self.process.poll() is None):
+            return None
+        try:
+            with self.log_file.open("rb") as f:
+                f.seek(max(0, f.seek(0, os.SEEK_END) - 40_000))
+                text = f.read().decode(errors="replace")
+        except OSError:
+            return None
+        found = list(SIGN_IN.finditer(text))
+        if not found or SIGNED_IN.search(text, found[-1].end()):
+            return None
+        url, code = found[-1].group(1), found[-1].group(2)
+        first = self.codes_seen.setdefault(code, time.monotonic())
+        return {"url": url, "code": code} if time.monotonic() - first < SIGN_IN_WAIT else None
+
     def tail(self, lines: int = 3, sep: str = " / ") -> str:
         try:
             with self.log_file.open("rb") as f:  # its end only: the log grows for as long as serve runs
@@ -147,12 +193,13 @@ class Local:
         if getattr(self, "_paths", (None, None))[0] != command:
             python, folder = unshackle_python(command)
             ask = ("from unshackle.core.config import config, config_path; d = config.directories\n"
-                   "print(config_path or ''); print(d.cookies.resolve()); print(d.wvds.resolve()); print(d.prds.resolve())")
+                   "print(config_path or ''); print(d.cookies.resolve()); print(d.wvds.resolve()); print(d.prds.resolve());"
+                   " print(d.temp.resolve())")
             out = subprocess.run([python, "-c", ask], cwd=folder, capture_output=True, text=True, timeout=60)
-            lines = out.stdout.strip().splitlines()[-4:]
-            if out.returncode or len(lines) != 4:
+            lines = out.stdout.strip().splitlines()[-5:]
+            if out.returncode or len(lines) != 5:
                 raise UnshackleError(f"Could not ask unshackle where its files are: {out.stderr.strip()[-300:]}")
-            self._paths = (command, dict(zip(("config", "cookies", "wvds", "prds"), map(Path, lines))))
+            self._paths = (command, dict(zip(("config", "cookies", "wvds", "prds", "temp"), map(Path, lines))))
         return self._paths[1]
 
     def cookies_dir(self, command: str) -> Path:
@@ -183,12 +230,32 @@ class Unshackle:
         self._services: tuple[float, list] = (0.0, [])
         self._remote: tuple[float, list] = (0.0, [])
         self._config: tuple[float, dict] = (0.0, {})
+        self._down: tuple[float, UnshackleError | None] = (0.0, None)
+        self.proxy_refused = ""  # when serve last refused its proxies to this key (Unshackle 6, no server_proxy)
 
     def configure(self, settings: dict) -> None:
         self.settings = settings
         self._services = (0.0, [])
         self._remote = (0.0, [])
         self._config = (0.0, {})
+        self._down = (0.0, None)
+
+    def cached_get(self, path: str) -> dict:
+        """A GET whose answer is kept: an unreachable serve is said at once for a minute, instead of each call (the
+        page's state asks for the services three times) waiting for the connection to time out (5 s) again."""
+        at, error = self._down
+        if error and time.monotonic() - at < 60:
+            raise error
+        try:
+            return self.call("GET", path)
+        except UnshackleError as e:
+            if "unreachable" in str(e):
+                self._down = (time.monotonic(), e)
+            raise
+
+    def sign_in(self) -> dict | None:
+        """A sign-in code a service waits for, when serve runs here (local): see Local.sign_in."""
+        return self.local.sign_in() if self.mode == "local" else None
 
     @property
     def mode(self) -> str:
@@ -209,16 +276,26 @@ class Unshackle:
     def call(self, method: str, path: str, **kwargs):
         url, key = self.endpoint()
         try:
-            r = requests.request(method, f"{url}{path}", headers={"X-Secret-Key": key}, timeout=60, **kwargs)
+            r = requests.request(method, f"{url}{path}", headers={"X-Secret-Key": key}, timeout=(5, 60), **kwargs)  # a server down: 5 s, not 60
         except requests.RequestException as e:
             raise UnshackleError(no_credentials(f"unshackle serve is unreachable at {url}: {e}")) from e
         if r.status_code == 401:
             raise UnshackleError("unshackle serve refused the API key")
+        if r.status_code == 429:  # a limit set on the key (Unshackle 6): waited for, not a lost job
+            err = UnshackleError("unshackle serve is busy: its limit of requests for this key is reached")
+            err.retry_after = int(r.headers.get("Retry-After") or 60) if str(r.headers.get("Retry-After") or "60").isdigit() else 60
+            raise err
         if not r.ok:
             try:
                 message = r.json().get("message") or r.text
             except ValueError:
                 message = r.text
+            if "requested CDM is not permitted" in message:  # --cdm, Unshackle 6: the operator's opt-in
+                raise UnshackleError("Unshackle refuses to pick the CDM device named in --cdm: allow it in unshackle.yaml "
+                                     "with serve: cdm_overrides: true (or a list of devices), then restart Unshackle")
+            if PROXY_REFUSED.search(message):
+                self.proxy_refused = datetime.now(timezone.utc).isoformat()
+                raise UnshackleError(PROXY_HINT)
             raise UnshackleError(f"unshackle serve: {message.strip()[:500]}")
         try:
             return r.json()
@@ -229,7 +306,7 @@ class Unshackle:
         """Tag, URL and help of each service, kept 10 minutes."""
         fetched, services = self._services
         if not services or time.monotonic() - fetched > 600:
-            services = self.call("GET", "/api/services")["services"]
+            services = self.cached_get("/api/services")["services"]
             self._services = (time.monotonic(), services)
         return services
 
@@ -273,7 +350,7 @@ class Unshackle:
         """Its unshackle.yaml (secrets redacted), kept 10 minutes."""
         fetched, config = self._config
         if not fetched or time.monotonic() - fetched > 600:
-            config = self.call("GET", "/api/config")["config"] or {}
+            config = self.cached_get("/api/config")["config"] or {}
             self._config = (time.monotonic(), config)
         return config
 

@@ -14,10 +14,11 @@
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2064%2064%22%3E%3Ccircle%20cx=%2232%22%20cy=%2232%22%20r=%2231%22%20fill=%22#26a69a%22/%3E%3Ccircle%20cx=%2232%22%20cy=%2232%22%20r=%2227.6%22%20fill=%22none%22%20stroke=%22#fff%22%20stroke-opacity=%22.18%22%20stroke-width=%221.4%22/%3E%3Cpath%20d=%22M25%2025.5v-5a7%207%200%200%201%2014%200%22%20fill=%22none%22%20stroke=%22#fff%22%20stroke-width=%224.4%22%20stroke-linecap=%22round%22/%3E%3Crect%20x=%2213%22%20y=%2225%22%20width=%2238%22%20height=%2224%22%20rx=%225%22%20fill=%22#fff%22/%3E%3Cpath%20d=%22M32%2029.5v10M27.3%2035%2032%2039.7l4.7-4.7%22%20fill=%22none%22%20stroke=%22#1b7a71%22%20stroke-width=%223.6%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%3Cpath%20d=%22M25%2053.5h14%22%20stroke=%22#fff%22%20stroke-width=%223.6%22%20stroke-linecap=%22round%22/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/xterm.css?v=5.5.0">
-<script src="/xterm.js?v=5.5.0"></script>
-<script src="/xterm-fit.js?v=0.10.0"></script>
+<script src="/xterm.js?v=5.5.0" defer></script>
+<script src="/xterm-fit.js?v=0.10.0" defer></script>
 <link rel="stylesheet" href="/app.css">
 </head>
 <body>
@@ -35,6 +36,7 @@
   <h1 class="brand"><a href="#/series" id="home" aria-label="Unshacklarr, back to the series"><svg class="logo" width="30" height="30" viewBox="0 0 64 64" aria-hidden="true">
   <circle cx="32" cy="32" r="31" fill="#26a69a"/><circle cx="32" cy="32" r="27.6" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="1.4"/><path d="M25 25.5v-5a7 7 0 0 1 14 0" fill="none" stroke="#fff" stroke-width="4.4" stroke-linecap="round"/><rect x="13" y="25" width="38" height="24" rx="5" fill="#fff"/><path d="M32 29.5v10M27.3 35 32 39.7l4.7-4.7" fill="none" stroke="#1b7a71" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M25 53.5h14" stroke="#fff" stroke-width="3.6" stroke-linecap="round"/>
 </svg><span>Unshacklarr</span></a></h1>
+  <button class="version-chip" id="version" type="button" title="What's new in each version" hidden></button>
   <nav role="tablist">
     <button role="tab" data-tab="schedule" aria-selected="true"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span>Schedule</span></button>
     <button role="tab" data-tab="series"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 21h10"/><rect x="2" y="3" width="20" height="14" rx="2"/></svg><span>Series</span></button>
@@ -65,6 +67,9 @@
       <input type="search" id="search" placeholder="Search series" aria-label="Search series">
       <select id="f-service" aria-label="Filter by service">
         <option value="">All services</option>
+      </select>
+      <select id="f-library" aria-label="Filter by Sonarr library" hidden>
+        <option value="">All libraries</option>
       </select>
       <select id="f-sort" aria-label="Sort">
         <option value="title">Sort by title</option>
@@ -132,6 +137,7 @@
         <div class="set-group" role="group" aria-label="Downloading"><p>Downloading</p>
         <button data-sec="downloads"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span>Download options</span><small>Options for every series</small></button>
         <button data-sec="quality"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20v-5M10 20V10M16 20V6M22 20V3"/></svg><span>Quality</span><small>Ladders of resolutions and codecs</small></button>
+        <button data-sec="upgrades"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg><span>Upgrades</span><small>Which series, how often</small></button>
         <button data-sec="automation"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Automation</span><small>Syncs, release times, retries</small></button>
         </div>
         <div class="set-group" role="group" aria-label="Service access"><p>Service access</p>
@@ -139,12 +145,13 @@
         <button data-sec="cdm"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4M12 15v2"/></svg><span>CDM</span><small>Widevine and PlayReady devices</small></button>
         </div>
         <div class="set-group" role="group" aria-label="General"><p>General</p>
-        <button data-sec="region"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg><span>Language and region</span><small>Language, country, time zone</small></button>
+        <button data-sec="interface"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg><span>Interface</span><small>Language, no spoilers</small></button>
+        <button data-sec="region"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg><span>Region</span><small>Country, time zone</small></button>
         <button data-sec="notifications"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg><span>Notifications</span><small>Discord, this device and more</small></button>
         <button data-sec="history"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg><span>Activity history</span><small>What Activity keeps</small></button>
         <button data-sec="account"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Account</span><small>Password, sessions, API key</small></button>
         </div>
-        <p class="set-version" id="set-version"></p>
+        <button class="set-version" id="set-version" type="button"></button>
       </div>
       <div class="set-body">
       <button class="set-back" id="set-back" type="button">Settings</button>
@@ -167,13 +174,14 @@
             <div class="field only-local"><label for="ux-cmd">Unshackle command</label><input id="ux-cmd" type="text" data-set="unshackle_command" placeholder="unshackle" spellcheck="false"><small>Empty: uses <code>unshackle</code> from the PATH. Otherwise, its full path, e.g. <code>.venv/bin/unshackle</code> in a git clone.</small></div>
             <div class="field only-remote"><label for="ux-url">Address of <code>unshackle serve</code></label><input id="ux-url" type="url" data-set="unshackle_url" placeholder="http://unshackle:8786"><small>For example http://unshackle:8786 on a shared Docker network.</small></div>
             <div class="field only-remote"><label for="ux-key">API key <span class="sx-saved" id="ux-key-saved" hidden>✓ Saved</span></label><input id="ux-key" type="password" data-set="unshackle_api_key" autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true"><small>The <code>serve: api_secret</code> value of its unshackle.yaml. Leave empty to keep the saved key.</small></div>
+            <div class="field" id="ux-at-once-field"><label for="ux-at-once">Downloads at once</label><div class="unit-input"><input id="ux-at-once" type="number" data-set="downloads_at_once" data-num min="0" max="10" step="1" inputmode="numeric"><span>per server</span></div><small>How many episodes each Unshackle server downloads together. 1 is gentler on a small NAS. 0: as many as Unshackle allows, 2 by default.</small></div>
           </div>
         </section>
         <section class="sx-card">
           <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span><div><h3>Folders</h3><p>The paths where Unshacklarr itself finds the downloads, the cookies and unshackle.yaml.</p></div></div>
           <div class="sx-grid">
             <div class="field"><label for="downloads-input">Downloads folder</label><input type="text" data-set="downloads" id="downloads-input" spellcheck="false"><small>Where the episodes land before Sonarr imports them.</small></div>
-            <div class="field"><label for="ux-free">Room kept free</label><div class="unit-input"><input id="ux-free" type="number" data-set="min_free_gb" data-num min="0" max="100000" step="1" inputmode="numeric"><span>GB</span></div><small>Nothing is downloaded while the downloads folder has less free space than this, and you get a notification. 0: not checked.</small></div>
+            <div class="field"><label for="ux-free">Room kept free</label><div class="unit-input"><input id="ux-free" type="number" data-set="min_free_gb" data-num min="0" max="100000" step="1" inputmode="numeric"><span>GB</span></div><small>Nothing is downloaded while the downloads folder, or the library folder Sonarr moves a series into, has less free space than this, and you get a notification. 0: not checked.</small></div>
             <div class="field only-remote"><label for="ux-udl">Downloads folder, as Unshackle sees it</label><input id="ux-udl" type="text" data-set="unshackle_downloads" placeholder="Same path" spellcheck="false"><small>Its path on the machine where unshackle serve runs. Empty: the same path as above.</small></div>
             <div class="field"><label for="ux-cookies">Cookies folder</label><input id="ux-cookies" type="text" data-set="cookies_dir" placeholder="Asked to Unshackle" spellcheck="false"><small>Needed to manage them in Settings, Cookies. Empty: Unshacklarr asks Unshackle, which works when both run on this computer.</small></div>
             <div class="field"><label for="ux-cfg">Unshackle config folder</label><input id="ux-cfg" type="text" data-set="unshackle_config_dir" placeholder="Asked to Unshackle" spellcheck="false"><small>The folder with unshackle.yaml and the WVD and PRD files, for Settings, CDM. Empty: Unshacklarr asks Unshackle, which works when both run on this computer.</small></div>
@@ -195,6 +203,7 @@
         <section class="sx-card">
           <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 1 1 0 10h-2M8 12h8"/></svg></span><div><h3>Connection</h3><p>How Unshacklarr reaches Sonarr, to find the missing episodes and hand it the downloads.</p></div></div>
           <div class="sx-grid">
+            <div class="field" id="sx-name-field"><label for="sx-name">Name</label><input id="sx-name" type="text" data-set="sonarr_name" placeholder="Sonarr" spellcheck="false"><small id="sx-name-help">The name shown on each series to tell the libraries apart when you have more than one Sonarr. Leave empty to use “Sonarr”.</small></div>
             <div class="field"><label for="sx-url">Sonarr URL</label><input id="sx-url" type="url" data-set="sonarr_url" placeholder="http://sonarr:8989"><small>The address Unshacklarr uses to reach Sonarr, e.g. http://sonarr:8989 on a shared Docker network.</small></div>
             <div class="field"><label for="sx-key">API key <span class="sx-saved" id="sx-key-saved" hidden>✓ Saved</span></label><input id="sx-key" type="password" data-set="sonarr_api_key" autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true"><small>In Sonarr: Settings, General. Leave empty to keep the saved key. A new URL needs its key too.</small></div>
           </div>
@@ -204,6 +213,11 @@
           <div class="sx-grid">
             <div class="field"><label for="sx-dl">Downloads folder, as Sonarr sees it</label><input id="sx-dl" type="text" data-set="sonarr_downloads" placeholder="Same path" spellcheck="false"><small>Its path on Sonarr's side, e.g. inside Sonarr's container. Empty: the same path as for Unshacklarr.</small></div>
           </div>
+        </section>
+        <section class="sx-card" id="sn-card">
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/><path d="M6 6.5h.01M6 17.5h.01"/></svg></span><div><h3>Other Sonarr instances</h3><p>A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes are downloaded at their release time and by the automatic sync, as for the Sonarr above.</p></div>
+            <button class="btn small dx-add" id="sn-add" type="button">Add a Sonarr</button></div>
+          <div id="sn-list"></div>
         </section>
         <section class="sx-card">
           <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></span><div><h3>In your browser</h3><p>Used for the links from a series to its page in Sonarr.</p></div></div>
@@ -257,6 +271,20 @@
           <div class="ax-seg" id="ax-import" role="radiogroup" aria-label="After the download"><button type="button" role="radio" data-only="false">Sonarr imports it</button><button type="button" role="radio" data-only="true">Download only</button></div>
           <p class="rt-who" id="ax-import-say"></p>
         </section>
+        <section class="sx-card" id="ax-learn-card">
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/><path d="M17 3l3 3"/></svg></span><div><h3>Auto release times</h3><p>When 3 episodes of a series come out at the same time, that time becomes its release time. Only for series without one. You get a notification and can change it on the series page.</p></div>
+            <input type="checkbox" class="switch" id="ax-learn" aria-label="Auto release times"></div>
+          <p class="rt-who" id="ax-learn-say"></p>
+        </section>
+        <section class="sx-card" id="ax-window-card">
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span><div><h3>Download window</h3><p>Automatic downloads only run between these times, at night for example. Episodes you start by hand are not affected.</p></div></div>
+          <div class="sx-grid ax-grid">
+            <div class="field"><label for="ax-from">From</label><input id="ax-from" type="time" data-set="download_from"><small>Leave empty for no limit.</small></div>
+            <div class="field"><label for="ax-to">To</label><input id="ax-to" type="time" data-set="download_to"><small>It can span midnight, for example 23:00 to 06:00.</small></div>
+          </div>
+          <label class="check ax-bursts"><input type="checkbox" id="ax-window-bursts"> Also apply to release-time downloads</label>
+          <p class="rt-who" id="ax-window-say"></p>
+        </section>
         <section class="sx-card">
           <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></span><div><h3>Downloads left waiting</h3><p>When Sonarr keeps its own file or an import fails, the download stays in the downloads folder. You find it in Activity, Waiting in downloads.</p></div></div>
           <div class="sx-grid ax-grid">
@@ -264,15 +292,26 @@
           </div>
         </section>
       </div>
-      <div class="set-sec sx" data-sec="region" hidden>
+      <div class="set-sec sx" data-sec="interface" hidden>
         <section class="sx-hero">
-          <span class="sx-logo" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></span>
-          <div class="sx-id"><h2>Language and region</h2><p class="rg-purpose">Your language, where you watch, and the time zone that release times and syncs follow.</p></div>
-          <div class="sx-state ok" id="rg-state"><span class="dot"></span><span><b></b><small></small></span></div>
+          <span class="sx-logo" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg></span>
+          <div class="sx-id"><h2>Interface</h2><p class="rg-purpose">How the page looks: its language, and episode titles hidden or not.</p></div>
+          <div class="sx-state ok" id="if-state"><span class="dot"></span><span><b></b><small></small></span></div>
         </section>
         <section class="sx-card">
           <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/></svg></span><div><h3>Language</h3><p>For this browser only. The page reloads in the new language.</p></div></div>
           <div class="rg-langs" id="lang-row" role="radiogroup" aria-label="Language" translate="no"></div>
+        </section>
+        <section class="sx-card" id="rg-spoiler-card">
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h11M4 17h7"/><path d="m15 15 6 6M21 15l-6 6"/></svg></span><div><h3>No spoilers</h3><p>Episode titles are blurred in the Schedule, on series pages and in Catch up. Click or tap a title to show it. A series can change this in its Settings tab.</p></div>
+            <input type="checkbox" class="switch" id="rg-spoiler" aria-label="No spoilers"></div>
+        </section>
+      </div>
+      <div class="set-sec sx" data-sec="region" hidden>
+        <section class="sx-hero">
+          <span class="sx-logo" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></span>
+          <div class="sx-id"><h2>Region</h2><p class="rg-purpose">Where you watch, and the time zone that release times and syncs follow.</p></div>
+          <div class="sx-state ok" id="rg-state"><span class="dot"></span><span><b></b><small></small></span></div>
         </section>
         <section class="sx-card">
           <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></span><div><h3>Where you watch</h3><p>Which streaming services the Schedule shows, and where a series' links are looked for.</p></div></div>
@@ -312,6 +351,22 @@
             <div class="field"><label for="dx-upgrade-days">Wait for it</label><div class="unit-input"><input id="dx-upgrade-days" type="number" data-set="upgrade_days" data-num min="1" max="365" step="1" inputmode="numeric"><span>days</span></div><small>After the download, the service is checked once a day for this many days. Nothing is downloaded until that language is there. After that, the episode keeps the audio it has.</small></div>
             <div class="field"><label for="dx-subs">Required subtitle languages</label><input id="dx-subs" type="text" data-set="subs_accept" placeholder="Example: fr" spellcheck="false"><small>The episode must have full subtitles in at least one of them. Forced subtitles (only a few lines) do not count. Empty: not checked. A series can set its own.</small></div>
           </div>
+          <div class="up-mode">
+            <span class="sub">Audio upgrade</span>
+            <div class="ax-seg" id="dx-upmode" role="radiogroup" aria-label="Audio upgrade"><button type="button" role="radio" data-mode="redownload">Download the whole episode again</button><button type="button" role="radio" data-mode="add_track">Add the audio track</button></div>
+            <p class="rt-who" id="dx-upmode-say"></p>
+            <div id="dx-library">
+              <div id="dx-lib-who"></div>
+              <div class="sx-grid">
+                <div class="field"><label for="dx-lib-sonarr">Library folder, as Sonarr sees it</label><input id="dx-lib-sonarr" type="text" placeholder="Example: /tv" spellcheck="false"><div class="fb-known" id="dx-lib-sonarr-pick"></div><small>The path Sonarr uses for your library.</small></div>
+                <div class="field"><label for="dx-lib-local">Library folder, as Unshacklarr sees it</label><input id="dx-lib-local" type="text" placeholder="Example: /mnt/tv" spellcheck="false"><div class="fb-known" id="dx-lib-local-pick"></div><small>The same folder as Unshacklarr sees it. Leave both empty if the paths are the same.</small></div>
+              </div>
+              <p class="lib-check" id="dx-lib-check" aria-live="polite"></p>
+              <div class="field"><span>A file from another source</span>
+                <div class="ax-seg" id="dx-lib-other" role="radiogroup" aria-label="A file from another source"><button type="button" role="radio" data-other="ask">Ask me</button><button type="button" role="radio" data-other="add">Add the audio anyway</button></div>
+                <small>When Sonarr's file doesn't say it comes from the series' service, its source may differ and the added audio may be a few seconds out of step. Another team's release of the same stream is fine. Ask me: the bell asks each time, nothing is downloaded until you answer.</small></div>
+            </div>
+          </div>
         </section>
       </div>
       <div class="set-sec sx" data-sec="quality" hidden>
@@ -326,6 +381,34 @@
           <div class="ax-seg" id="ql-default" role="radiogroup" aria-label="Every series downloads by"></div>
         </section>
         <div id="ql-list" class="ql-list"></div>
+      </div>
+      <div class="set-sec sx" data-sec="upgrades" hidden>
+        <section class="sx-hero">
+          <span class="sx-logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span>
+          <div class="sx-id"><h2>Upgrades</h2><p class="ax-lead">The Upgrades page in Activity asks each service what it has for the files your quality ladder says could be better. These settings decide which series it asks about, and how long an answer is kept.</p></div>
+          <div class="sx-state" id="ug-state"><span class="dot"></span><span><b></b><small></small></span></div>
+        </section>
+        <section class="sx-card">
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span><div><h3>How often</h3><p>An answer is reused until it is older than this, unless the file changed.</p></div></div>
+          <div class="sx-grid">
+            <div class="field"><label for="ug-recheck">Ask again after</label><div class="unit"><input id="ug-recheck" type="number" data-set="upgrade_recheck_days" data-num min="0" max="3650"><span>days</span></div><small>0: always ask.</small></div>
+            <div class="field"><label for="ug-age">Only episodes from the last</label><div class="unit"><input id="ug-age" type="number" data-set="upgrade_max_age_years" data-num min="0" max="100"><span>years</span></div><small>Older episodes are not checked. 0: all of them.</small></div>
+            <div class="field" id="ug-every-field"><label for="ug-every">Check automatically every</label><div class="unit"><input id="ug-every" type="number" data-set="upgrade_check_days" data-num min="0" max="365"><span>days</span></div><small>Each check asks the service only about episodes whose answer is older than Ask again after, so use fewer days than that. 0: only when you click Check.</small></div>
+            <div class="field" id="ug-spread-field"><label for="ug-spread">Spread the questions</label><div class="unit"><input id="ug-spread" type="number" data-set="upgrade_recheck_spread" data-num min="0" max="90"><span>%</span></div><small>Each episode's answer is kept up to this percentage less than Ask again after, a different amount for each episode, so episodes checked on the same day are not all asked about again on the same day. 0: no spreading.</small></div>
+          </div>
+          <label class="ug-switch" id="ug-new-field"><input type="checkbox" class="switch" id="ug-new"><span><b>Check new series</b><small>A series you set up with episodes already on disk is checked within the hour, without waiting for the next automatic check.</small></span></label>
+        </section>
+        <section class="sx-card" id="ug-other-card">
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><path d="M7.5 7.5h.01"/></svg></span><div><h3>Release group</h3><p>The group your downloads carry at the end of their file names (-unshackle), which Sonarr reads as the release group. Set it in Download options, Group Tag: Unshacklarr then knows it, and every download carries it.</p></div></div>
+          <label class="ug-switch"><input type="checkbox" class="switch" id="ug-other"><span><b>Replace files from other release groups</b><small>A file from another group (a torrent, an older tool) is listed when the service has the episode on the same step, not only a better one.</small></span></label>
+          <div class="ug-groups" id="ug-groups"></div>
+        </section>
+        <section class="sx-card" id="ug-series-card">
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><div><h3>Series to check</h3><p>Untick a series to leave it out. Its page has the same switch, under What to get.</p></div></div>
+          <div class="ug-tools"><input type="search" id="ug-find" placeholder="Find a series" autocomplete="off"><button type="button" class="btn small" id="ug-all">Select all</button><button type="button" class="btn small" id="ug-none">Select none</button></div>
+          <div class="ug-list" id="ug-series"></div>
+          <small class="muted" id="ug-say"></small>
+        </section>
       </div>
       <div class="set-sec sx" data-sec="cookies" hidden>
         <section class="sx-hero">
@@ -456,14 +539,32 @@
           <div class="cmd ac-cmd"><code id="ac-reset" translate="no">docker exec -it unshacklarr unshacklarr reset-password</code></div>
         </section>
         <section class="sx-card">
-          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></span><div><h3>Back up the settings</h3><p>Everything but the password: the series, their options, the notifications, the keys.<br>The file holds your API keys and notification addresses: keep it private.</p></div></div>
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></span><div><h3>Backups</h3><p>Everything but the password: the series, their options, the notifications, the keys.<br>The file holds your API keys and notification addresses: keep it private.</p></div></div>
           <div class="sx-grid ax-grid">
             <div class="field"><label for="bk-every">Back up automatically every</label><div class="unit"><input id="bk-every" type="number" data-set="backup_every_days" data-num min="0" max="30"><span>days</span></div><small>0 turns it off. Each backup is saved in the data folder's backups folder, without the password.</small></div>
             <div class="field"><label for="bk-keep">Keep the last</label><div class="unit"><input id="bk-keep" type="number" data-set="backup_keep" data-num min="1" max="365"><span>backups</span></div><small>Older ones are deleted. To restore one, download it, then use Restore from a file.</small></div>
           </div>
-          <div class="sx-grid bk-pass-row"><div class="field"><label for="bk-pass">Your password</label><input type="password" id="bk-pass" autocomplete="current-password"><small class="pw-match" id="bk-say">Asked again: the file holds secrets.</small></div></div>
-          <div class="ac-go"><button class="btn primary" id="bk-save" type="button">Download a backup</button><button class="btn" id="bk-load" type="button">Restore from a file…</button><input type="file" id="bk-file" accept=".yaml,.yml,text/yaml" hidden></div>
+          <div class="sx-grid bk-pass-row"><div class="field"><label for="bk-pass">Your password</label><input type="password" id="bk-pass" autocomplete="current-password"><small class="pw-match" id="bk-say">Asked again: the file holds secrets.</small></div>
+            <div class="field" id="bk-phrase-row" hidden><label for="bk-phrase">Passphrase of the backup</label><input type="password" id="bk-phrase" autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true"><small>The backup is encrypted: type the passphrase it was sent with.</small></div></div>
+          <div class="ac-go"><button class="btn primary" id="bk-save" type="button">Download a backup</button><button class="btn" id="bk-load" type="button">Restore from a file…</button><input type="file" id="bk-file" accept=".yaml,.yml,.enc,text/yaml" hidden></div>
           <div class="bk-saved" id="bk-saved" hidden><b id="bk-saved-head">Saved backups</b><div id="bk-list"></div></div>
+        </section>
+        <section class="sx-card" id="bo-card">
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M17.5 19H7a5 5 0 1 1 .9-9.9A6 6 0 0 1 19.5 11 4 4 0 0 1 17.5 19z"/><path d="M12 16v-5M9.5 13.5 12 11l2.5 2.5"/></svg></span><div><h3>Remote backup</h3><p>Each automatic backup is also sent, encrypted, to a WebDAV folder or an S3 bucket. If this server's disk fails, your settings are still safe.</p></div></div>
+          <div class="ax-seg" id="bo-kind" role="radiogroup" aria-label="Send backups to"></div>
+          <div id="bo-fields" hidden>
+            <div class="sx-grid">
+              <div class="field"><label for="bo-url" id="bo-url-l">Folder URL</label><input id="bo-url" type="url" autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true" spellcheck="false"><small id="bo-url-help"></small></div>
+              <div class="field bo-s3"><label for="bo-bucket">Bucket</label><input id="bo-bucket" type="text" placeholder="my-bucket/unshacklarr" autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true" spellcheck="false"><small>A folder in it is allowed: my-bucket/unshacklarr.</small></div>
+              <div class="field"><label for="bo-user" id="bo-user-l">User name</label><input id="bo-user" type="text" autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true" spellcheck="false"><small id="bo-user-help"></small></div>
+              <div class="field"><label for="bo-secret"><span id="bo-secret-l">Password</span> <span class="sx-saved" id="bo-secret-saved" hidden>✓ Saved</span></label><input id="bo-secret" type="password" autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true" spellcheck="false"><small id="bo-secret-help"></small></div>
+              <div class="field bo-s3"><label for="bo-region">Region</label><input id="bo-region" type="text" placeholder="us-east-1" autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true" spellcheck="false"><small>Leave empty for us-east-1. For Cloudflare R2, enter auto.</small></div>
+              <div class="field"><label for="bo-pass">Passphrase <span class="sx-saved" id="bo-pass-saved" hidden>✓ Saved</span></label><input id="bo-pass" type="password" autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true" spellcheck="false"><small id="bo-pass-help">At least 12 characters. It encrypts the backups, and you need it to restore one: keep it somewhere safe, outside this server.</small></div>
+            </div>
+            <p class="rt-who" id="bo-say"></p>
+            <div class="sx-grid"><div class="field"><label for="bo-pw">Your password</label><input type="password" id="bo-pw" autocomplete="current-password"><small class="pw-match" id="bo-pw-say">Asked again: the backups contain every key and password.</small></div></div>
+            <div class="ac-go"><button class="btn primary" id="bo-send" type="button">Save and test</button></div>
+          </div>
         </section>
         <section class="sx-card">
           <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5l-8-3z"/><path d="m9 12 2 2 4-4"/></svg></span><div><h3>Sign in through a reverse proxy</h3><p>For when Authelia, Authentik or another proxy already logs you in. The proxy passes your name in a header, and Unshacklarr opens without asking for its own password.<br>Your password is still asked before the most sensitive changes.</p></div></div>
@@ -577,6 +678,12 @@
           <input type="text" id="d-url" placeholder="URL or ID of the series">
         </div>
       </div>
+      <div class="field" id="d-libs-field" hidden>
+        <span id="d-libs-l">Libraries</span>
+        <div class="d-libs" id="d-libs" role="group" aria-labelledby="d-libs-l"></div>
+        <small>New episodes are downloaded for each library switched on, with its own quality ladder (Settings, Sonarr).</small>
+        <details class="d-libs-adv" id="d-libs-adv"><summary>Advanced</summary><div id="d-libs-adv-body"></div></details>
+      </div>
       <div class="ds-tools">
         <button class="btn small" id="d-find-open" type="button" hidden></button>
         <button class="btn small" id="d-probe">Test this series</button><span class="muted" id="d-probe-state">Asks the service which episodes it has. Nothing is downloaded.</span>
@@ -586,6 +693,13 @@
         <div class="url-find-out" id="d-find-out"></div>
       </div>
       <div id="d-probe-out"></div>
+      <details class="ds-sub" id="d-fb">
+        <summary><b>Fallback service</b><small>Used when the main service doesn't have the episode yet, or not in an accepted language.</small></summary>
+        <div class="sx-grid ds-svc">
+          <div class="field"><label for="d-fb-service">Service</label><select id="d-fb-service"></select></div>
+          <div class="field"><label for="d-fb-url">Series URL on that service</label><input type="text" id="d-fb-url" placeholder="URL or ID of the series" spellcheck="false"><small id="d-fb-say">If this service numbers episodes differently, set its numbering in config.yaml.</small></div>
+        </div>
+      </details>
       <div class="card-foot"><button class="btn danger" id="d-stop" hidden>Stop downloading this series</button></div>
     </section>
 
@@ -619,6 +733,7 @@
           <div class="bc-days" id="d-bc-days" role="group" aria-label="Days of the week"></div>
           <div class="bc-cal" id="d-bc-cal"></div>
           <small class="help">Click a day to set 0, 1, 2 or 3 episodes (0: none that day). Orange: different from the usual schedule.</small>
+          <small class="help">The Schedule page uses these dates instead of Sonarr's, from the first day on. Earlier episodes are left out of it, but they are still downloaded when they air on Sonarr's dates.</small>
           <ol class="bc-list" id="d-bc-list"></ol>
         </div>
       </details>
@@ -628,15 +743,25 @@
       <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></svg></span><div><h3>What to get</h3><p>The quality and languages an episode needs, and what happens after the download. Default follows the service, then Settings. An empty language field uses Settings, Download options.</p></div></div>
       <div class="sx-grid">
         <div class="field">
-          <label for="d-ladder">Quality ladder</label>
+          <label for="d-ladder" id="d-ladder-l">Quality ladder</label>
           <select id="d-ladder"></select>
           <small>Its steps are tried in order against the tracks the service has for the episode (Settings, Quality).</small>
+          <label class="ug-line"><input type="checkbox" id="d-skip-upgrades"> Skip upgrades</label>
         </div>
         <div class="field">
           <span id="d-import-l">After the download</span>
           <div class="ax-seg" id="d-import-seg" role="radiogroup" aria-labelledby="d-import-l"></div>
-          <select id="d-import" hidden><option value="">Default</option><option value="import">Sonarr imports it</option><option value="only">Download only</option></select>
           <small>Download only: the file stays in Activity, Waiting in downloads, until you import it.</small>
+        </div>
+        <div class="field">
+          <span id="d-spoiler-l">Episode titles</span>
+          <div class="ax-seg" id="d-spoiler-seg" role="radiogroup" aria-labelledby="d-spoiler-l"></div>
+          <small>Hidden titles are blurred until you click or tap them. Default follows Settings, Interface, No spoilers.</small>
+        </div>
+        <div class="field">
+          <span id="d-notify-l">Notifications</span>
+          <div class="ax-seg" id="d-notify-seg" role="radiogroup" aria-labelledby="d-notify-l"></div>
+          <small>What is sent for this series' episodes. The bell in the page always keeps everything.</small>
         </div>
         <div class="field">
           <label for="d-audio">Accepted audio languages</label>
@@ -679,6 +804,15 @@
 
     <details class="card sx-card adv" id="d-adv" data-nav="numbering">
       <summary class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></svg></span><div><h3>Numbering and file names</h3><p>When the service numbers or names episodes differently from Sonarr.</p></div></summary>
+      <div class="field ds-programmes" id="d-programmes-field">
+        <label class="check"><input type="checkbox" id="d-programmes"> Separate programmes</label>
+        <small>For a series like BBC Documentaries, where each episode is its own programme on the service: each one is found by its title, so the series needs no URL.</small>
+      </div>
+      <div class="field" id="d-progmap-field" hidden>
+        <label for="d-progmap">Programme URLs</label>
+        <textarea id="d-progmap" rows="3" spellcheck="false" placeholder="S2026E14 https://www.bbc.co.uk/iplayer/episode/m0031c4c"></textarea>
+        <small>One episode per line, for those its title doesn't find: the episode as Sonarr numbers it, then the programme's URL or ID.</small>
+      </div>
       <div class="sx-grid">
         <div class="field">
           <label for="d-filename">Show name in file names</label>
@@ -697,6 +831,11 @@
           <label for="d-seasons">Seasons on the service</label>
           <input type="text" id="d-seasons" placeholder="Example: 34=29" inputmode="numeric">
           <small>Sonarr's season = the service's season, comma-separated.</small>
+        </div>
+        <div class="field" id="d-pages-field">
+          <label for="d-pages">Seasons listed as separate shows</label>
+          <textarea id="d-pages" rows="2" spellcheck="false" placeholder="S02 https://www.sbs.com.au/ondemand/tv-series/apollo-has-fallen"></textarea>
+          <small>For a season the service lists as a separate show. One line per season: Sonarr's season, then the show's URL. If the episodes are not in season 1 of that show, add its season number at the end.</small>
         </div>
         <div class="field">
           <label for="d-offset">Episode offset</label>
@@ -745,6 +884,15 @@
   </div>
 </aside>
 <div class="toasts" id="toasts" aria-live="polite"></div>
+<dialog class="modal" id="signin-dlg" aria-labelledby="signin-title">
+  <form method="dialog">
+    <h2 id="signin-title">Sign in</h2>
+    <p>A service is waiting for you to sign in before Unshackle can go on. Open this link on any device and enter the code.</p>
+    <a class="signin-url" id="signin-url" target="_blank" rel="noopener"></a>
+    <div class="signin-code" id="signin-code"></div>
+    <div class="modal-actions"><button class="btn" id="signin-copy" type="button">Copy the code</button><button class="btn primary" value="close" autofocus>Close</button></div>
+  </form>
+</dialog>
 <dialog class="modal wide" id="inbox-dialog" aria-labelledby="inbox-title">
   <div class="inbox-head"><div><h2 id="inbox-title" tabindex="-1" autofocus>Notifications</h2><small id="inbox-summary"></small></div>
     <button class="inbox-clear" id="inbox-clear" type="button" title="Clear the notifications already seen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg>Clear</button>
@@ -752,6 +900,13 @@
     <button class="inbox-x" id="inbox-close" type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   <div class="inbox-filters" id="inbox-filters" role="group" aria-label="Show"></div>
   <div id="inbox-list"></div>
+</dialog>
+<dialog class="modal" id="news-dlg" aria-labelledby="news-title">
+  <div class="modal-head"><div><h2 id="news-title" tabindex="-1" autofocus>What's new</h2><p id="news-version"></p></div>
+    <button class="inbox-x" id="news-x" type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="news-rels" id="news-list"></div>
+  <div class="modal-actions news-foot"><a href="https://github.com/OwnzZzZ/Unshacklarr/releases" target="_blank" rel="noopener">All releases on GitHub ↗</a>
+    <button class="btn" id="news-close" type="button">Close</button></div>
 </dialog>
 <dialog class="modal" id="clear-dialog" aria-labelledby="clear-title">
   <form method="dialog">
@@ -815,6 +970,15 @@
     </div>
     <div class="field"><span>Download options</span><div class="opts" id="sel-options"></div><small>Added to each series' own options. An option a series already has is replaced.</small></div>
     <div class="modal-actions"><button class="btn" value="cancel" formnovalidate>Cancel</button><button class="btn primary" value="apply" id="sel-apply">Apply</button></div>
+  </form>
+</dialog>
+<dialog class="modal" id="folder-dialog" aria-labelledby="folder-title">
+  <form method="dialog" class="folder-form">
+    <h2 id="folder-title">Choose a folder</h2>
+    <p class="folder-path" id="folder-path"></p>
+    <div class="url-find-out folder-list" id="folder-list"></div>
+    <p class="status-err" id="folder-err"></p>
+    <div class="modal-actions"><button class="btn" value="cancel" formnovalidate>Cancel</button><button class="btn primary" value="use" id="folder-use">Use this folder</button></div>
   </form>
 </dialog>
 <dialog class="modal" id="unsaved-dialog" aria-labelledby="unsaved-title">
@@ -899,6 +1063,7 @@
 <script src="/js/bulk.js"></script>
 <script src="/js/settings-options.js"></script>
 <script src="/js/quality.js"></script>
+<script src="/js/news.js"></script>
 <script src="/js/activity.js"></script>
 <script src="/js/yaml-editor.js"></script>
 <script src="/js/inbox.js"></script>

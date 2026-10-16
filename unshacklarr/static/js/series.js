@@ -74,7 +74,7 @@ function renderBroadcast() {
   if (!plan) return;
   const eps = Object.values(epSeasons || {}).flat().filter((e) => e.seasonNumber > 0).sort((a, b) => a.seasonNumber - b.seasonNumber || a.episodeNumber - b.episodeNumber);
   $("#d-bc-from").replaceChildren(...eps.map((e) => { const k = `S${pad2(e.seasonNumber)}E${pad2(e.episodeNumber)}`;
-    return el("option", { value: k, textContent: `${k}${e.title && e.title !== "TBA" ? ` · ${e.title}` : ""}` }); }));
+    return el("option", { value: k, textContent: `${k}${e.title && e.title !== "TBA" && !titleHidden(current.tvdbId, k, e.title) ? ` · ${e.title}` : ""}` }); }));
   if (!eps.length) $("#d-bc-from").append(el("option", { value: plan.from, textContent: plan.from }));
   $("#d-bc-from").value = plan.from;
   $("#d-bc-start").value = plan.start;
@@ -179,6 +179,7 @@ $("#d-seasons").oninput = (e) => {
 $("#close").onclick = () => closeDrawer();  // not closeDrawer itself: it would get the click event as fromRoute
 function showDrawerTab(name, fromRoute = false) {
   if (!["episodes", "settings"].includes(name)) name = "episodes";
+  if (drawerTab === "settings" && name !== "settings") leaveNews((n) => n.series);  // a series' settings left
   drawerTab = name;
   if (!fromRoute) navigate(false);
   document.querySelectorAll(".d-tabs button").forEach((b) => b.setAttribute("aria-selected", b.dataset.dtab === name));
@@ -193,28 +194,77 @@ $("#d-save").onclick = () => saveHere($("#d-save"));
 /* Sonarr-like episode list: tick episodes or whole seasons, then download them now. */
 const picked = new Set();
 let epSeasons = {}, epSeason = null, hideOnDisk = false;
+/* Another Sonarr's episodes of the series (a 4K one): its own ids and files. What the service has was listed with the
+   main Sonarr's ids: matched by SxxEyy. */
+let epSonarr = "", epSonarrOf = null, mainKeys = null, epAvailRaw = null;
+const sxxOf = (e) => `S${pad2(e.seasonNumber)}E${pad2(e.episodeNumber)}`;
+function viewAvail(raw) {
+  epAvailRaw = raw;
+  if (!raw || !epSonarr || !current?.id) return raw;  // a series in no main Sonarr: listed by its own Sonarr's ids
+  if (!mainKeys) return null;  // until the main Sonarr's numbers are known
+  const byKey = {};
+  for (const list of Object.values(epSeasons)) for (const e of list) byKey[sxxOf(e)] = e.id;
+  return Object.fromEntries(Object.entries(raw).map(([id, m]) => [byKey[mainKeys[id]], m]).filter(([k]) => k));
+}
+/* Which library's episodes: each Sonarr with the ladder it downloads by and how many episodes it misses. From #10,
+   by mj23au. */
+function sonarrSwitch(s) {
+  const insts = Object.fromEntries((S.config.settings?.sonarrs || []).map((i) => [i.name, i]));
+  const others = (S.sonarrsOf?.[s.tvdbId] || []).map((o) => ({ ...o, ladder: insts[o.name]?.quality_ladder }));
+  if (!others.length || (!s.id && others.length < 2)) return "";  // one library: nothing to switch
+  const conf = S.config.series[s.tvdbId] || {};
+  const own = conf.ladder || S.config.service_defaults?.[conf.service]?.ladder || S.config.settings?.quality_ladder || "";
+  const shown = (l) => !l || l === "off" ? "" : l === "series" ? (own && own !== "off" ? own : "") : l;  // "series": the series' own
+  const opts = [...(s.id ? [{ name: "", label: mainSonarr(), ladder: shown(own), missing: S.series.find((x) => x.tvdbId === s.tvdbId)?.missing }] : []),
+    ...others.map((i) => ({ name: i.name, label: i.name, ladder: i.ladder ? shown(i.ladder) : "no ladder chosen", missing: i.missing }))];
+  return el("div", { className: "ep-sonarr", role: "radiogroup", ariaLabel: "Which Sonarr's episodes" },
+    el("span", { className: "ep-sonarr-label", textContent: "Library" }),
+    ...opts.map((o) => el("button", { type: "button", role: "radio", ariaChecked: String(epSonarr === o.name),
+      onclick: () => { if (epSonarr !== o.name) { epSonarr = o.name; loadEpisodes(s); } } },
+      el("span", { textContent: o.label }),
+      ...(o.ladder ? [el("small", { textContent: o.ladder })] : []),
+      ...(o.missing ? [el("em", { textContent: `${o.missing} missing` })] : []))));
+}
 async function loadEpisodes(s, keep = false) {  // keep: a reload after a download ended, same season and selection
   const box = $("#d-episodes");
+  const libs = S.sonarrsOf?.[s.tvdbId] || [];
+  if (epSonarrOf !== s.tvdbId) { epSonarr = s.id ? "" : libs[0]?.name || ""; epSonarrOf = s.tvdbId; }  // the main Sonarr's first
+  const inst = libs.find((i) => i.name === epSonarr);
+  if (!inst) epSonarr = "";
   if (!keep) {
-    epAvail = epTitles = null;
+    epAvail = epTitles = epAvailRaw = null;
+    epPages = {};
     epSeasons = {}; epSeason = null; epBusy = new Map();  // nothing of the series open before
     picked.clear();
     updateEpBar();
     box.replaceChildren(loading("Loading episodes from Sonarr…"));
     refreshEpBusy(s);
     epChecked = null;
+    epUp = null;
+    // What Upgrades found the service has better, once it checked the series: the page alone only knows the ladder,
+    // not the service's tracks (ALL4 has 1080p H.264 only: a step-2 file there is as good as it gets). By mj23au
+    // its finds only, and only once a check covered it: a series set up since keeps the ladder's guess
+    api(`/api/upgrades?tvdb=${s.tvdbId}${epSonarr ? `&sonarr=${encodeURIComponent(epSonarr)}` : ""}`).then((u) => {
+      if (current !== s || !u.scanned) return;
+      epUp = new Set((u.items || []).map((i) => i.episodeId));
+      if ($("#ep-list")) renderSeason();
+    }).catch(() => {});
     api(`/api/probe/${s.tvdbId}`).then((hit) => {  // the last check of the service, kept 12 h: no need to ask again
       if (!hit || current !== s || epAvail) return;
-      epAvail = hit.available; epTitles = hit.titles; epChecked = hit.checked; localTitles(hit.local_titles);
+      epAvail = viewAvail(hit.available); epTitles = hit.titles; epChecked = hit.checked; localTitles(hit.local_titles);
       if ($("#ep-list")) { $("#ep-avail").hidden = false; renderSeason(); checkLabel(`Refresh what's on ${svcName(S.config.series[s.tvdbId]?.service)}`); }
     }).catch(() => {});
   }
   let eps;
-  try { eps = await api(`/api/series/${s.id}/episodes`); }
+  try {
+    eps = await api(inst ? `/api/series/${inst.id}/episodes?sonarr=${encodeURIComponent(inst.name)}` : `/api/series/${s.id}/episodes`);
+    mainKeys = inst && s.id ? Object.fromEntries((await api(`/api/series/${s.id}/episodes`)).map((e) => [e.id, sxxOf(e)])) : null;
+  }
   catch (e) { if (current === s) box.replaceChildren(failed(`Could not load the episodes: ${e.message}`, () => loadEpisodes(s))); return; }
   if (current !== s) return;
   epSeasons = {};
   for (const e of eps) { e.sonarrAir = e.airDateUtc; (epSeasons[e.seasonNumber] ??= []).push(e); }
+  if (epAvailRaw && epSonarr) epAvail = viewAvail(epAvailRaw);  // what the service has, by this Sonarr's ids
   applyBroadcast(S.config.series[s.tvdbId]);  // a series with its own schedule: its dates, not Sonarr's
   renderReleaseNext();  // Timing says when the next one is tried
   renderBroadcast();
@@ -222,9 +272,10 @@ async function loadEpisodes(s, keep = false) {  // keep: a reload after a downlo
   if (!numbers.length) return box.replaceChildren(el("p", { className: "muted", textContent: "Sonarr lists no episode for this series." }));
   if (!(keep && numbers.includes(epSeason))) epSeason = numbers[0];  // the newest; seasons with gaps stand out in the strip
   box.replaceChildren(
+    sonarrSwitch(s),
     el("div", { className: "seasons", role: "group", ariaLabel: "Seasons" }, ...numbers.map((n) => {
       const list = epSeasons[n], disk = list.filter((e) => e.hasFile).length, miss = list.filter((e) => state(e) === "miss").length;
-      const b = el("button", { onclick: () => { epSeason = n; renderSeason(); } },
+      const b = el("button", { onclick: () => { epSeason = n; renderSeason(); }, title: s.seasonTitles?.[n] || "" },
         el("b", { textContent: n === 0 ? "Specials" : `S${String(n).padStart(2, "0")}` }),
         el("small", { className: miss ? "gap" : "", textContent: miss ? `${miss} missing` : `${disk}/${list.length}` }));
       b.dataset.season = n;
@@ -241,7 +292,7 @@ async function loadEpisodes(s, keep = false) {  // keep: a reload after a downlo
           el("button", { type: "button", textContent: "Missing", title: "Every missing episode of this season", onclick: () => selectSeason((e) => state(e) === "miss") }),
           el("button", { type: "button", textContent: "All", onclick: () => selectSeason(() => true) }),
           el("button", { type: "button", id: "ep-odd", hidden: true, className: "odd", title: "Episodes in orange can be downloaded again to replace Sonarr's file",
-            onclick: () => selectSeason(isOutlier) })),
+            onclick: () => { const norm = seasonNorm(epSeasons[epSeason]); selectSeason((e) => isOutlier(e, norm)); } })),
         el("div", { className: "ep-view" },
           el("label", { className: "pill" }, el("input", { type: "checkbox", checked: hideOnDisk,
             onchange: (e) => { hideOnDisk = e.target.checked; renderSeason(); } }), "Hide on disk"),
@@ -268,6 +319,8 @@ function renderCheck(s, changed = false) {
   checkLabel(epAvail ? `Refresh what's on ${svc}` : `What's on ${svc}?`);
   $("#ep-odd").before(pick);
 }
+let epUp = null;  // episode ids Upgrades found better on the service; null: Upgrades hasn't checked the series
+let epPages = {};  // Sonarr season -> a show of its own the service has for it, as the last check found (by mj23au)
 let epAvail = null;  // episode id -> what the service calls it, once "What's on <service>?" asked it
 let epTitles = null;  // everything the service lists then: [{key: "S26E11", part, name}]
 let epChecked = null;  // when that was
@@ -283,7 +336,8 @@ const svcName = (tag) => S.serviceNames?.[tag] || tag;  // "RMC+" for RMCP
 let epBusy = new Map(), epBusyTimer = null;
 async function refreshEpBusy(s) {
   let cards;
-  try { cards = await api("/api/runs"); } catch { cards = null; }
+  if (document.hidden) { clearTimeout(epBusyTimer); epBusyTimer = setTimeout(() => refreshEpBusy(s), 20000); return; }  // out of sight
+  try { cards = await api("/api/runs?live=1"); } catch { cards = null; }
   if (current !== s) return;
   if (cards) {
     const was = epBusy;
@@ -293,7 +347,7 @@ async function refreshEpBusy(s) {
     else if ($("#ep-list")) renderSeason();
     updateEpBar();
   }
-  // ponytail: polls /api/runs while the series is open; Activity's live feed if this gets heavy
+  // ponytail: polls the live cards while the series is open; Activity's live feed if this gets heavy
   clearTimeout(epBusyTimer);  // after the await: one loop, however many calls overlapped
   epBusyTimer = setTimeout(() => refreshEpBusy(s), epBusy.size ? 3000 : 20000);
 }
@@ -301,10 +355,11 @@ function state(e) {
   if (epBusy.has(e.id)) return "busy";
   return e.hasFile ? "disk" : e.airDateUtc && new Date(e.airDateUtc) <= Date.now() ? "miss" : "soon";
 }
-/* An episode on disk whose file is unlike most of its season (the orange ones). */
-function isOutlier(e) {
+/* An episode on disk whose file is unlike most of its season (the orange ones); norm: seasonNorm of the season,
+   worked out once for all its episodes, not once per episode. */
+function isOutlier(e, norm) {
   if (!e.file) return false;
-  const odd = oddities(e.file, seasonNorm(epSeasons[epSeason]));
+  const odd = oddities(e.file, norm);
   return Object.values(odd).some(Boolean);
 }
 function selectSeason(test) {
@@ -350,12 +405,16 @@ function resBadge(f, why) {
   return el("span", { className: `res ${tier}${why ? " odd" : ""}`, title: why || f.resolution, textContent: f.height ? `${f.height}p` : "?" });
 }
 const flagged = (text, why) => why ? el("span", { className: "odd", title: why, textContent: text }) : text;
+/* A file's dynamic range, beside its codec: "DV + HDR10", "HDR10+"; nothing for SDR */
+const RANGE_NAMES = { DV: "DV", HDR10: "HDR10", HDR10P: "HDR10+", HLG: "HLG" };
+const fileRange = (f) => (f.track?.layers || []).map((r) => RANGE_NAMES[r]).filter(Boolean).join(" + ");
+const fileVideo = (f) => [f.video || "?", fileRange(f)].filter(Boolean).join(" ");
 /* The episode list's columns, as in Sonarr: which ones and in what order, kept in this browser. */
 const COLUMNS = [
   { id: "res", label: "Res.", file: true, on: true, cell: (f, odd) => resBadge(f, odd.height) },
   { id: "video", label: "Video", file: true, on: true, cell: (f, odd) => el("span", { className: "spec",
       title: f.videoBitrate ? "" : "The file's average bitrate: Sonarr has none for its video" },
-      f.video || "?", " ", el("small", {}, flagged(bitrate(f) ? `${f.videoBitrate ? "" : "≈"}${rate(bitrate(f))}` : "", odd.rate))) },
+      fileVideo(f), " ", el("small", {}, flagged(bitrate(f) ? `${f.videoBitrate ? "" : "≈"}${rate(bitrate(f))}` : "", odd.rate))) },
   { id: "audio", label: "Audio", file: true, on: true, cell: (f, odd) => el("span", { className: "spec" },
       [f.audio, layout(f.channels)].filter(Boolean).join(" "), " ", el("small", {}, flagged(f.audioLanguages.join(", "), odd.audio))) },
   { id: "subs", label: "Subtitles", file: true, on: true, cell: (f, odd) => el("span",
@@ -399,15 +458,15 @@ function openColumns() {
   $("#cols-dialog").showModal();
 }
 function fileLine(f, odd) {  // the same, in one line (phones)
-  const parts = [f.video, bitrate(f) ? flagged(`${f.videoBitrate ? "" : "≈"}${rate(bitrate(f))}`, odd.rate) : "",
+  const parts = [fileVideo(f), bitrate(f) ? flagged(`${f.videoBitrate ? "" : "≈"}${rate(bitrate(f))}`, odd.rate) : "",
     [f.audio, layout(f.channels)].filter(Boolean).join(" "), flagged(f.audioLanguages.join(", "), odd.audio),
     flagged(f.subtitles.length ? `subs ${f.subtitles.join(", ")}` : "no subs", odd.subs), f.size ? size(f.size) : ""].filter(Boolean);
   return el("small", {}, resBadge(f, odd.height), ...parts.flatMap((p, i) => i ? [" · ", p] : [p]));
 }
 function fileTooltip(e) {
-  const f = e.file;
-  if (!f) return e.title || "";
-  return [e.title, `${f.quality}${f.releaseGroup ? ` · ${f.releaseGroup}` : ""}`, `${f.resolution}${f.runTime ? ` · ${f.runTime}` : ""}`].filter(Boolean).join("\n");
+  const f = e.file, title = titleHidden(current.tvdbId, `S${pad2(e.seasonNumber)}E${pad2(e.episodeNumber)}`, e.title) ? "" : e.title;
+  if (!f) return title || "";
+  return [title, `${f.quality}${f.releaseGroup ? ` · ${f.releaseGroup}` : ""}`, `${f.resolution}${f.runTime ? ` · ${f.runTime}` : ""}`].filter(Boolean).join("\n");
 }
 const STATE_ICONS = {
   disk: '<circle cx="12" cy="12" r="10" fill="currentColor"/><path d="m7.5 12.5 3 3 6-6.5" fill="none" stroke="#10151d" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
@@ -496,6 +555,7 @@ function askedHeight() {
 }
 // With a quality ladder: a file not on its first step. Without: under --quality (1072 or 1040 lines are 1080p all the same)
 const belowAsked = (e) => {
+  if (epUp) return epUp.has(e.id);  // Upgrades asked the service: what it found, not the ladder's guess
   const lad = ladderOfSeries(S.config.series[current.tvdbId]);
   return lad ? !!e.file?.track && stepOf(lad, e.file.track) > 0 : e.file?.height && e.file.height < askedHeight() * 0.9;
 };
@@ -526,7 +586,7 @@ function onBadge(e) {
   const sxxeyy = `S${String(e.seasonNumber).padStart(2, "0")}E${String(e.episodeNumber).padStart(2, "0")}`;
   const other = found.service !== sxxeyy;  // under another number there: Download asks for it as found
   return hoverTip(el("em", { className: "ep-on" + (other ? " other" : ""), textContent: other ? `on ${svc} as ${found.service}` : `on ${svc}` }), () => [
-    el("b", { textContent: found.name || `On ${svc}` }),
+    el("b", { textContent: (!titleHidden(current.tvdbId, sxxeyy, found.name) && found.name) || `On ${svc}` }),
     el("small", {}, `${svc} lists it as `, el("code", { textContent: found.service })),
     ...(found.match === "title" ? [el("small", { className: "diff", textContent: `Found by its title, under another number: Download asks the service for ${found.service}` })]
       : found.match === "absolute" ? [el("small", { className: "diff", textContent: `The service numbers episodes from the series' start, like Sonarr's absolute number: Download asks it for ${found.service}` })]
@@ -562,8 +622,20 @@ function renderCatchUp() {
     el("div", {}, el("b", { textContent: !missing.length ? `${upgrades.length} episode${upgrades.length > 1 ? "s" : ""} may be better on ${svc}`
       : there.length ? `${svc} has ${there.length} of your ${missing.length} missing episode${missing.length > 1 ? "s" : ""}` : `${svc} has none of your ${missing.length} missing episode${missing.length > 1 ? "s" : ""}` }),
       ...(bySeason.length ? [el("small", { textContent: bySeason.map(([n, list]) => `${Number(n) === 0 ? "Specials" : `S${pad2(n)}`} (${list.length})`).join(" · ") })] : []),
-      ...(upgrades.length && missing.length ? [el("small", { className: "renum", textContent: `${upgrades.length} on disk in a lower resolution than asked: ${svc} may have better` })] : []),
-      ...(renumbered ? [el("small", { className: "renum", textContent: renumbered > 1 ? `${renumbered} episodes have another number on ${svc}: Download takes care of them` : `1 episode has another number on ${svc}: Download takes care of it` })] : []),),
+      ...(upgrades.length && missing.length ? [el("small", { className: "renum", textContent: epUp ? `${upgrades.length} on disk ${svc} has in better quality (Activity, Upgrades)` : `${upgrades.length} on disk in a lower resolution than asked: ${svc} may have better` })] : []),
+      ...(renumbered ? [el("small", { className: "renum", textContent: renumbered > 1 ? `${renumbered} episodes have another number on ${svc}: Download takes care of them` : `1 episode has another number on ${svc}: Download takes care of it` })] : []),
+      // a whole season on a show of its own there (SBS: Has Fallen's S02 is "Apollo Has Fallen"): offered, saved with the series
+      ...Object.entries(epPages).map(([season, p]) => el("small", { className: "renum" },
+        p.count === 1 ? `${svc} lists season ${season} as a separate show: ${p.name} (1 episode). ` : `${svc} lists season ${season} as a separate show: ${p.name} (${p.count} episodes). `,
+        el("button", { className: "btn small", type: "button", textContent: "Use this show", title: p.url, onclick: () => {
+          const conf = S.config.series[current.tvdbId];
+          conf.season_pages = { ...(conf.season_pages || {}), [season]: { url: p.url, ...(p.season ? { season: p.season } : {}) } };
+          delete epPages[season];
+          fillPages(conf);
+          dirty();
+          toast(`Season ${season} will be downloaded from ${p.name}. Click Save, then check ${svc} again.`);
+          renderCatchUp();
+        } })))),
     el("div", { className: "catchup-acts" },
       ...(upgrades.length ? [el("button", { className: "btn small", type: "button", textContent: `Select ${upgrades.length} upgrade${upgrades.length > 1 ? "s" : ""}`,
         title: `On disk in a lower resolution than asked of ${svc}, and available on ${svc}`, onclick: () => { upgrades.forEach((e) => picked.add(e.id)); renderSeason(); updateEpBar(); } })] : []),
@@ -575,10 +647,13 @@ async function askService(s) {
   const conf = S.config.series[s.tvdbId], svc = svcName(conf.service), check = $(".ep-check");
   if (check) { check.disabled = true; check.replaceChildren(el("span", { className: "spinner", ariaHidden: "true" }), ` Asking ${svc}…`); }
   let r = null;
+  const slow = slowHint(svc);
   try {
-    r = await api("/api/probe", { method: "POST", signal: AbortSignal.timeout(120000), body: JSON.stringify({ show: conf, seriesId: s.id, tvdbId: s.tvdbId, title: s.title }) });
-    if (current === s) { epAvail = r.available; epTitles = r.titles || []; epChecked = r.checked; localTitles(r.local_titles); $("#ep-avail").hidden = false; renderSeason(); renderPreview(); }
+    r = await api("/api/probe", { method: "POST", signal: AbortSignal.timeout(120000), body: JSON.stringify({ show: conf, seriesId: s.id ?? S.sonarrsOf?.[s.tvdbId]?.[0]?.id, tvdbId: s.tvdbId, title: s.title,
+      ...(s.id ? {} : { sonarr: S.sonarrsOf?.[s.tvdbId]?.[0]?.name }) }) });  // in no main Sonarr: its own Sonarr's episodes
+    if (current === s) { epPages = r.page_suggest || {}; epAvail = viewAvail(r.available); epTitles = r.titles || []; epChecked = r.checked; localTitles(r.local_titles); $("#ep-avail").hidden = false; renderSeason(); renderPreview(); }
   } catch (e) { toast(e.message, true); }
+  clearTimeout(slow);
   if (current === s && $(".ep-check")) { $(".ep-check").disabled = false; checkLabel(epAvail ? `Refresh what's on ${svc}` : `What's on ${svc}?`); }
   return r;
 }
@@ -610,7 +685,7 @@ function renderSeason() {
     return el("li", {}, el("label", { className: "ep" },
       box,
       el("span", { className: "num", textContent: `E${String(e.episodeNumber).padStart(2, "0")}` }),
-      el("span", { className: "t", title: fileTooltip(e) }, el("span", { className: "tt", textContent: e.title || "TBA" }),  // the title gives way, its badge doesn't
+      el("span", { className: "t", title: fileTooltip(e) }, e.title ? episodeTitle(current.tvdbId, `S${pad2(e.seasonNumber)}E${pad2(e.episodeNumber)}`, e.title, "tt") : el("span", { className: "tt", textContent: "TBA" }),  // the title gives way, its badge doesn't
         ...(run ? [el("em", { className: "ep-busy", textContent: isQueued(run) ? "Queued" : afterTracks(run) || `Downloading ${Math.round(Number(run.live?.progress) || 0)}%` })] : []),
         ...(!run && epAvail ? serviceBadge(e) : []),
         ...(e.file ? [fileLine(e.file, odd)] : [])),
@@ -620,15 +695,16 @@ function renderSeason() {
   const head = el("li", { className: "ep-head", ariaHidden: "true" }, ...["", "", "Title", ...cols.map((c) => c.label), ""]
     .map((t, i) => el("span", { className: i === 0 ? "cb" : i === 2 ? "th" : i > 2 && i < cols.length + 3 ? "col" : "", style: `--c: ${i}`, textContent: t })));
   const flagged = rows.some((r) => r.querySelector(".odd"));
-  const outliers = list.filter(isOutlier).length;
+  const outliers = list.filter((e) => isOutlier(e, norm)).length;
   $("#ep-odd").hidden = !outliers;
   $("#ep-odd").textContent = `Outliers (${outliers})`;
   if ($("#ep-avail")) {
     const onService = list.filter((e) => state(e) === "miss" && epAvail?.[e.id]).length;
-    $("#ep-avail").textContent = `On ${svcName(S.config.series[current.tvdbId]?.service)} (${onService})`;
+    $("#ep-avail").textContent = `Missing, available on ${svcName(S.config.series[current.tvdbId]?.service)} (${onService})`;
     $("#ep-avail").disabled = !onService;
   }
-  $("#ep-title").replaceChildren(el("span", { textContent: epSeason === 0 ? "Specials" : `Season ${epSeason}` }),
+  const named = current.seasonTitles?.[epSeason];  // its name in Sonarr, when it has one
+  $("#ep-title").replaceChildren(el("span", { textContent: epSeason === 0 ? "Specials" : named ? `Season ${epSeason}: ${named}` : `Season ${epSeason}` }),
     el("small", { textContent: `${list.filter((e) => e.hasFile).length} of ${list.length} on disk` }),
     ...(flagged ? [el("small", { className: "odd-legend", textContent: "Orange: different from most of this season (hover for details)" })] : []));
   $("#ep-list").replaceChildren(...(rows.length ? [head, ...rows] : [el("li", { className: "none", textContent: "Every episode of this season is on disk." })]));
@@ -789,7 +865,7 @@ $("#oneoff-dialog").addEventListener("close", () => { if (!$("#oneoff-dialog").o
 $("#ep-go").onclick = () => startDownload();
 async function startDownload(numbering = null) {
   const conf = S.config.series[current.tvdbId];
-  if (!conf.service || !conf.title) return toast("Pick a service and the series URL first, then save.", true);
+  if (!conf.service || !(conf.title || conf.programmes)) return toast("Pick a service and the series URL first, then save.", true);
   if (!$("#savebar").hidden) return toast("Save your changes first: the download reads the saved settings.", true);
   let replace = false;
   const onDisk = Object.values(epSeasons).flat().filter((e) => picked.has(e.id) && e.hasFile).length;
@@ -811,8 +887,9 @@ async function startDownload(numbering = null) {
     }
   }
   try {
-    await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: [...picked], replace, ...(numbering ? { numbering } : {}) }) });
-    toast(`Downloading ${picked.size} episode${picked.size > 1 ? "s" : ""}: follow it in Activity`);
+    await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: [...picked], replace, ...(numbering ? { numbering } : {}),
+      ...(epSonarr ? { sonarr: epSonarr } : {}) }) });  // picked in another Sonarr's episodes: its ids, its ladder
+    toast(`Downloading ${picked.size} episode${picked.size > 1 ? "s" : ""}${epSonarr ? ` for ${epSonarr}` : ""}: follow it in Activity`);
     $("#ep-clear").click();
     const s = current;
     setTimeout(() => { if (s && current === s) refreshEpBusy(s); }, 1500);

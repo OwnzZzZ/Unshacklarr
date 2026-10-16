@@ -1,0 +1,3900 @@
+{
+ "title": "J'irai dormir chez vous",
+ "tvdb": 82577,
+ "show": {
+  "service": "RMCP",
+  "title": "https://www.rmcplus.fr/s-programme/j-irai-dormir-chez-vous"
+ },
+ "tmdb_key": true,
+ "country": "FR",
+ "inputs": {
+  "service": [
+   {
+    "type": "episode",
+    "name": "Japon",
+    "id": "957458580527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Australie",
+    "id": "957458604527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 1,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Inde",
+    "id": "957458612527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 1,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Émirats arabes unis",
+    "id": "957459772527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 2,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Cambodge",
+    "id": "957459804527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 2,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Éthiopie",
+    "id": "957459828527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 2,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "Cuba",
+    "id": "968921600527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 3,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Grèce",
+    "id": "968921608527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 3,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Nouvelle-Zélande",
+    "id": "968921632527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 3,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Israël",
+    "id": "968921648527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 3,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "Finlande",
+    "id": "968921656527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 3,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "Hawaï",
+    "id": "973836639527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 4,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Albanie",
+    "id": "973836658527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 4,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Corée du Sud",
+    "id": "973836664527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 4,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Ghana",
+    "id": "973836676527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 4,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Mongolie",
+    "id": "973836685527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 4,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Namibie",
+    "id": "975121176527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 5,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Californie",
+    "id": "975121186527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 5,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Espagne",
+    "id": "975132762527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 6,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Kirghizistan",
+    "id": "975133282527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 6,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Cap-Vert",
+    "id": "975133292527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 6,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Irlande",
+    "id": "975133302527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 6,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Bosnie",
+    "id": "973652537527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 8,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Thaïlande",
+    "id": "973652555527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 8,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Kiribati",
+    "id": "1021132184581",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 9,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Costa Rica",
+    "id": "995752754527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 11,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Kazakhstan",
+    "id": "995754103527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 12,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Vanuatu",
+    "id": "737971019527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 17,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Mali",
+    "id": "737975667527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 17,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Québec",
+    "id": "737975675527",
+    "language": "fr",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": null,
+    "series_title": "J'irai dormir chez vous",
+    "season": 17,
+    "number": 3
+   }
+  ],
+  "episodes": [
+   {
+    "id": 15472,
+    "seasonNumber": 0,
+    "episodeNumber": 1,
+    "title": "J'irai dormir à Hollywood",
+    "airDate": "2008-11-19",
+    "airDateUtc": "2008-11-19T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15473,
+    "seasonNumber": 0,
+    "episodeNumber": 2,
+    "title": "J'irai dormir à Bollywood",
+    "airDate": "2011-12-18",
+    "airDateUtc": "2011-12-18T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15474,
+    "seasonNumber": 0,
+    "episodeNumber": 3,
+    "title": "J'irai dormir en Amérique (1)",
+    "airDate": "2011-12-19",
+    "airDateUtc": "2011-12-19T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15475,
+    "seasonNumber": 0,
+    "episodeNumber": 4,
+    "title": "J'irai dormir en Amérique (2)",
+    "airDate": "2011-12-19",
+    "airDateUtc": "2011-12-19T21:02:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15476,
+    "seasonNumber": 0,
+    "episodeNumber": 5,
+    "title": "J'irai dormir en Amérique (3)",
+    "airDate": "2011-12-19",
+    "airDateUtc": "2011-12-19T22:04:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15477,
+    "seasonNumber": 0,
+    "episodeNumber": 6,
+    "title": "J'irai dormir en Amérique (4)",
+    "airDate": "2011-12-19",
+    "airDateUtc": "2011-12-19T23:06:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15478,
+    "seasonNumber": 0,
+    "episodeNumber": 7,
+    "title": "J'irai dormir en Amérique (5)",
+    "airDate": "2011-12-26",
+    "airDateUtc": "2011-12-26T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15479,
+    "seasonNumber": 0,
+    "episodeNumber": 8,
+    "title": "J'irai dormir en Amérique (6)",
+    "airDate": "2011-12-26",
+    "airDateUtc": "2011-12-26T21:02:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15480,
+    "seasonNumber": 0,
+    "episodeNumber": 9,
+    "title": "J'irai dormir en Amérique (7)",
+    "airDate": "2011-12-26",
+    "airDateUtc": "2011-12-26T22:04:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15481,
+    "seasonNumber": 0,
+    "episodeNumber": 10,
+    "title": "J'irai dormir en Amérique (8)",
+    "airDate": "2011-12-26",
+    "airDateUtc": "2011-12-26T23:06:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15482,
+    "seasonNumber": 0,
+    "episodeNumber": 11,
+    "title": "Chez les Maharadjahs (1)",
+    "airDate": "2012-02-27",
+    "airDateUtc": "2012-02-27T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15483,
+    "seasonNumber": 0,
+    "episodeNumber": 12,
+    "title": "Chez les Maharadjahs (2)",
+    "airDate": "2012-02-27",
+    "airDateUtc": "2012-02-27T21:02:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15484,
+    "seasonNumber": 0,
+    "episodeNumber": 13,
+    "title": "Chez les Maharadjahs (3)",
+    "airDate": "2012-02-27",
+    "airDateUtc": "2012-02-27T22:04:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15485,
+    "seasonNumber": 0,
+    "episodeNumber": 14,
+    "title": "Chez les Maharadjahs (4)",
+    "airDate": "2012-02-27",
+    "airDateUtc": "2012-02-27T23:06:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15486,
+    "seasonNumber": 0,
+    "episodeNumber": 15,
+    "title": "Chez les Maharadjahs (5)",
+    "airDate": "2012-03-05",
+    "airDateUtc": "2012-03-05T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15487,
+    "seasonNumber": 0,
+    "episodeNumber": 16,
+    "title": "Chez les Maharadjahs (6)",
+    "airDate": "2012-03-05",
+    "airDateUtc": "2012-03-05T21:02:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15488,
+    "seasonNumber": 0,
+    "episodeNumber": 17,
+    "title": "Chez les Maharadjahs (7)",
+    "airDate": "2012-03-05",
+    "airDateUtc": "2012-03-05T22:04:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15489,
+    "seasonNumber": 0,
+    "episodeNumber": 18,
+    "title": "Chez les Maharadjahs (8)",
+    "airDate": "2012-03-05",
+    "airDateUtc": "2012-03-05T23:06:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15490,
+    "seasonNumber": 0,
+    "episodeNumber": 19,
+    "title": "Chez les Maharadjahs (9)",
+    "airDate": "2012-03-12",
+    "airDateUtc": "2012-03-12T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15491,
+    "seasonNumber": 0,
+    "episodeNumber": 20,
+    "title": "Chez les Maharadjahs (10)",
+    "airDate": "2012-03-12",
+    "airDateUtc": "2012-03-12T21:02:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15492,
+    "seasonNumber": 0,
+    "episodeNumber": 21,
+    "title": "J'irai dormir chez l'homme qui brûle",
+    "airDate": "2014-01-03",
+    "airDateUtc": "2014-01-03T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15493,
+    "seasonNumber": 0,
+    "episodeNumber": 22,
+    "title": "Bonus 1 : Les origines",
+    "airDate": null,
+    "airDateUtc": null,
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15494,
+    "seasonNumber": 0,
+    "episodeNumber": 23,
+    "title": "Bonus 2 : Les Caméras",
+    "airDate": null,
+    "airDateUtc": null,
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15495,
+    "seasonNumber": 0,
+    "episodeNumber": 24,
+    "title": "Bonus 3 : Le Premier Tournage",
+    "airDate": null,
+    "airDateUtc": null,
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15496,
+    "seasonNumber": 0,
+    "episodeNumber": 25,
+    "title": "Bonus 4 : Le Ton de la série",
+    "airDate": null,
+    "airDateUtc": null,
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15497,
+    "seasonNumber": 0,
+    "episodeNumber": 26,
+    "title": "Bonus 5 : La préparation des voyages",
+    "airDate": null,
+    "airDateUtc": null,
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15498,
+    "seasonNumber": 0,
+    "episodeNumber": 27,
+    "title": "Bonus 6 : Les plateaux",
+    "airDate": null,
+    "airDateUtc": null,
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15499,
+    "seasonNumber": 0,
+    "episodeNumber": 28,
+    "title": "Bonus 7 : Speak English",
+    "airDate": null,
+    "airDateUtc": null,
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15500,
+    "seasonNumber": 0,
+    "episodeNumber": 29,
+    "title": "Bonus 8 : Dur Dur",
+    "airDate": null,
+    "airDateUtc": null,
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15501,
+    "seasonNumber": 0,
+    "episodeNumber": 30,
+    "title": "Bonus 9 : Rencontre avec Chromo",
+    "airDate": null,
+    "airDateUtc": null,
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15502,
+    "seasonNumber": 0,
+    "episodeNumber": 31,
+    "title": "Le direct à Arras",
+    "airDate": "2015-04-04",
+    "airDateUtc": "2015-04-04T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15503,
+    "seasonNumber": 0,
+    "episodeNumber": 32,
+    "title": "Le direct à Sète",
+    "airDate": "2015-09-26",
+    "airDateUtc": "2015-09-26T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15504,
+    "seasonNumber": 0,
+    "episodeNumber": 33,
+    "title": "Le direct à Epinal",
+    "airDate": "2015-10-03",
+    "airDateUtc": "2015-10-03T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15505,
+    "seasonNumber": 0,
+    "episodeNumber": 34,
+    "title": "Le direct à Namur",
+    "airDate": "2015-10-10",
+    "airDateUtc": "2015-10-10T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15506,
+    "seasonNumber": 0,
+    "episodeNumber": 35,
+    "title": "J'irai dormir à Hollywood - les coulisses",
+    "airDate": "2008-11-15",
+    "airDateUtc": "2008-11-15T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15507,
+    "seasonNumber": 0,
+    "episodeNumber": 36,
+    "title": "Un Péquin à Pékin - Episode 1",
+    "airDate": "2008-08-09",
+    "airDateUtc": "2008-08-09T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15508,
+    "seasonNumber": 0,
+    "episodeNumber": 37,
+    "title": "Un Péquin à Pékin - Episode 2",
+    "airDate": "2008-08-10",
+    "airDateUtc": "2008-08-10T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15509,
+    "seasonNumber": 0,
+    "episodeNumber": 38,
+    "title": "Un Péquin à Pékin - Episode 3",
+    "airDate": "2008-08-11",
+    "airDateUtc": "2008-08-11T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15510,
+    "seasonNumber": 0,
+    "episodeNumber": 39,
+    "title": "Un Péquin à Pékin - Episode 4",
+    "airDate": "2008-08-12",
+    "airDateUtc": "2008-08-12T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15511,
+    "seasonNumber": 0,
+    "episodeNumber": 40,
+    "title": "Un Péquin à Pékin - Episode 5",
+    "airDate": "2008-08-13",
+    "airDateUtc": "2008-08-13T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15512,
+    "seasonNumber": 0,
+    "episodeNumber": 41,
+    "title": "Un Péquin à Pékin - Episode 6",
+    "airDate": "2008-08-14",
+    "airDateUtc": "2008-08-14T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15513,
+    "seasonNumber": 0,
+    "episodeNumber": 42,
+    "title": "Un Péquin à Pékin - Episode 7",
+    "airDate": "2008-08-15",
+    "airDateUtc": "2008-08-15T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15514,
+    "seasonNumber": 0,
+    "episodeNumber": 43,
+    "title": "Un Péquin à Pékin - Episode 8",
+    "airDate": "2008-08-16",
+    "airDateUtc": "2008-08-16T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15515,
+    "seasonNumber": 0,
+    "episodeNumber": 44,
+    "title": "Un Péquin à Pékin - Episode 9",
+    "airDate": "2008-08-17",
+    "airDateUtc": "2008-08-17T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15516,
+    "seasonNumber": 0,
+    "episodeNumber": 45,
+    "title": "Un Péquin à Pékin - Episode 10",
+    "airDate": "2008-08-18",
+    "airDateUtc": "2008-08-18T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15517,
+    "seasonNumber": 0,
+    "episodeNumber": 46,
+    "title": "Un Péquin à Pékin - Episode 11",
+    "airDate": "2008-08-19",
+    "airDateUtc": "2008-08-19T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15518,
+    "seasonNumber": 0,
+    "episodeNumber": 47,
+    "title": "Un Péquin à Pékin - Episode 12",
+    "airDate": "2008-08-20",
+    "airDateUtc": "2008-08-20T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15519,
+    "seasonNumber": 0,
+    "episodeNumber": 48,
+    "title": "Un Péquin à Pékin - Episode 13",
+    "airDate": "2008-08-21",
+    "airDateUtc": "2008-08-21T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15520,
+    "seasonNumber": 0,
+    "episodeNumber": 49,
+    "title": "Un Péquin à Pékin - Episode 14",
+    "airDate": "2008-08-22",
+    "airDateUtc": "2008-08-22T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15521,
+    "seasonNumber": 0,
+    "episodeNumber": 50,
+    "title": "Un Péquin à Pékin - Episode 15",
+    "airDate": "2008-08-23",
+    "airDateUtc": "2008-08-23T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15522,
+    "seasonNumber": 0,
+    "episodeNumber": 51,
+    "title": "Un Péquin à Pékin - Episode 16",
+    "airDate": "2008-08-24",
+    "airDateUtc": "2008-08-24T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15523,
+    "seasonNumber": 0,
+    "episodeNumber": 52,
+    "title": "Givré à Vancouver - Episode 1",
+    "airDate": "2010-02-15",
+    "airDateUtc": "2010-02-15T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15524,
+    "seasonNumber": 0,
+    "episodeNumber": 53,
+    "title": "Givré à Vancouver - Episode 2",
+    "airDate": "2010-02-16",
+    "airDateUtc": "2010-02-16T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15525,
+    "seasonNumber": 0,
+    "episodeNumber": 54,
+    "title": "Givré à Vancouver - Episode 3",
+    "airDate": "2010-02-17",
+    "airDateUtc": "2010-02-17T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15526,
+    "seasonNumber": 0,
+    "episodeNumber": 55,
+    "title": "Givré à Vancouver - Episode 4",
+    "airDate": "2010-02-18",
+    "airDateUtc": "2010-02-18T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15527,
+    "seasonNumber": 0,
+    "episodeNumber": 56,
+    "title": "Givré à Vancouver - Episode 5",
+    "airDate": "2010-02-19",
+    "airDateUtc": "2010-02-19T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15528,
+    "seasonNumber": 0,
+    "episodeNumber": 57,
+    "title": "Givré à Vancouver - Episode 6",
+    "airDate": "2010-02-20",
+    "airDateUtc": "2010-02-20T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15529,
+    "seasonNumber": 0,
+    "episodeNumber": 58,
+    "title": "Givré à Vancouver - Episode 7",
+    "airDate": "2010-02-21",
+    "airDateUtc": "2010-02-21T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15530,
+    "seasonNumber": 0,
+    "episodeNumber": 59,
+    "title": "Givré à Vancouver - Episode 8",
+    "airDate": "2010-02-22",
+    "airDateUtc": "2010-02-22T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15531,
+    "seasonNumber": 0,
+    "episodeNumber": 60,
+    "title": "Givré à Vancouver - Episode 9",
+    "airDate": "2010-02-23",
+    "airDateUtc": "2010-02-23T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15532,
+    "seasonNumber": 0,
+    "episodeNumber": 61,
+    "title": "Givré à Vancouver - Episode 10",
+    "airDate": "2010-02-24",
+    "airDateUtc": "2010-02-24T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15533,
+    "seasonNumber": 0,
+    "episodeNumber": 62,
+    "title": "Givré à Vancouver - Episode 11",
+    "airDate": "2010-02-25",
+    "airDateUtc": "2010-02-25T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15534,
+    "seasonNumber": 0,
+    "episodeNumber": 63,
+    "title": "J'irai dormir dans le web (Paris)",
+    "airDate": "2014-10-08",
+    "airDateUtc": "2014-10-08T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15535,
+    "seasonNumber": 0,
+    "episodeNumber": 64,
+    "title": "J'irai dormir (et plus !) chez l'homme qui brûle",
+    "airDate": "2014-12-31",
+    "airDateUtc": "2014-12-31T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15536,
+    "seasonNumber": 0,
+    "episodeNumber": 65,
+    "title": "Spéciale - Espagne",
+    "airDate": "2019-06-27",
+    "airDateUtc": "2019-06-27T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15537,
+    "seasonNumber": 0,
+    "episodeNumber": 66,
+    "title": "Spéciale - Uruguay",
+    "airDate": "2019-07-04",
+    "airDateUtc": "2019-07-04T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15538,
+    "seasonNumber": 0,
+    "episodeNumber": 67,
+    "title": "Spéciale - Cap-Vert",
+    "airDate": "2019-07-11",
+    "airDateUtc": "2019-07-11T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15539,
+    "seasonNumber": 0,
+    "episodeNumber": 68,
+    "title": "Spéciale - Malawi",
+    "airDate": "2018-06-14",
+    "airDateUtc": "2018-06-14T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15540,
+    "seasonNumber": 0,
+    "episodeNumber": 69,
+    "title": "J'irai dormir au Groland",
+    "airDate": "2012-11-24",
+    "airDateUtc": "2012-11-24T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15541,
+    "seasonNumber": 0,
+    "episodeNumber": 70,
+    "title": "J'irai dormir dans le WEB",
+    "airDate": "2014-10-08",
+    "airDateUtc": "2014-10-08T20:02:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15542,
+    "seasonNumber": 0,
+    "episodeNumber": 71,
+    "title": "J'irai dormir chez vous Live Facebook 1",
+    "airDate": "2019-05-22",
+    "airDateUtc": "2019-05-22T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15543,
+    "seasonNumber": 0,
+    "episodeNumber": 72,
+    "title": "J'irai dormir chez vous Live Facebook 2",
+    "airDate": "2019-04-06",
+    "airDateUtc": "2019-04-06T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15544,
+    "seasonNumber": 0,
+    "episodeNumber": 73,
+    "title": "J'irai dormir chez vous Live Facebook 3",
+    "airDate": "2019-06-05",
+    "airDateUtc": "2019-06-05T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15545,
+    "seasonNumber": 0,
+    "episodeNumber": 74,
+    "title": "J'irai dormir chez vous Live Facebook 4",
+    "airDate": "2019-06-08",
+    "airDateUtc": "2019-06-08T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15546,
+    "seasonNumber": 0,
+    "episodeNumber": 75,
+    "title": "J'irai dormir chez vous Live Facebook 5",
+    "airDate": "2019-06-11",
+    "airDateUtc": "2019-06-11T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15547,
+    "seasonNumber": 0,
+    "episodeNumber": 76,
+    "title": "J'irai dormir chez vous Live Facebook 6",
+    "airDate": "2019-07-07",
+    "airDateUtc": "2019-07-07T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15548,
+    "seasonNumber": 0,
+    "episodeNumber": 77,
+    "title": "J'irai dormir chez vous Live Facebook 7",
+    "airDate": "2019-07-07",
+    "airDateUtc": "2019-07-07T20:02:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15549,
+    "seasonNumber": 0,
+    "episodeNumber": 78,
+    "title": "J'irai dormir chez vous Live Facebook - Marseille",
+    "airDate": "2019-06-13",
+    "airDateUtc": "2019-06-13T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15550,
+    "seasonNumber": 0,
+    "episodeNumber": 79,
+    "title": "J'irai dormir chez vous Live Facebook - avec un auto-stoppeur",
+    "airDate": "2019-06-17",
+    "airDateUtc": "2019-06-17T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15551,
+    "seasonNumber": 0,
+    "episodeNumber": 80,
+    "title": "J'irai dormir chez vous Live Facebook - Tours",
+    "airDate": "2019-06-21",
+    "airDateUtc": "2019-06-21T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15552,
+    "seasonNumber": 0,
+    "episodeNumber": 81,
+    "title": "J'irai dormir chez vous Live Facebook - Soirée chez lui",
+    "airDate": "2019-07-05",
+    "airDateUtc": "2019-07-05T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15553,
+    "seasonNumber": 0,
+    "episodeNumber": 82,
+    "title": "J'irai faire le Tour chez vous - Saint Fargeau",
+    "airDate": "2009-07-15",
+    "airDateUtc": "2009-07-15T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15554,
+    "seasonNumber": 0,
+    "episodeNumber": 83,
+    "title": "J'irai faire le Tour chez vous - Col de Romme",
+    "airDate": "2009-07-22",
+    "airDateUtc": "2009-07-22T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15555,
+    "seasonNumber": 0,
+    "episodeNumber": 84,
+    "title": "J'irai faire le Tour chez vous - Draguignan",
+    "airDate": "2020-07-23",
+    "airDateUtc": "2020-07-23T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15556,
+    "seasonNumber": 0,
+    "episodeNumber": 85,
+    "title": "J'irai dormir chez l'homme qui brûle - Bonus : Space Cake",
+    "airDate": "2014-01-03",
+    "airDateUtc": "2014-01-03T21:02:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15557,
+    "seasonNumber": 1,
+    "episodeNumber": 1,
+    "title": "Japon",
+    "airDate": "2005-07-01",
+    "airDateUtc": "2005-07-01T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15558,
+    "seasonNumber": 1,
+    "episodeNumber": 2,
+    "title": "Maroc",
+    "airDate": "2005-07-08",
+    "airDateUtc": "2005-07-08T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15559,
+    "seasonNumber": 1,
+    "episodeNumber": 3,
+    "title": "Mali",
+    "airDate": "2005-07-15",
+    "airDateUtc": "2005-07-15T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15560,
+    "seasonNumber": 1,
+    "episodeNumber": 4,
+    "title": "Québec",
+    "airDate": "2005-07-22",
+    "airDateUtc": "2005-07-22T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15561,
+    "seasonNumber": 1,
+    "episodeNumber": 5,
+    "title": "Vanuatu",
+    "airDate": "2005-07-29",
+    "airDateUtc": "2005-07-29T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15562,
+    "seasonNumber": 1,
+    "episodeNumber": 6,
+    "title": "Inde",
+    "airDate": "2005-08-05",
+    "airDateUtc": "2005-08-05T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15563,
+    "seasonNumber": 1,
+    "episodeNumber": 7,
+    "title": "Suisse",
+    "airDate": "2005-08-12",
+    "airDateUtc": "2005-08-12T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15564,
+    "seasonNumber": 1,
+    "episodeNumber": 8,
+    "title": "Chili",
+    "airDate": "2005-08-19",
+    "airDateUtc": "2005-08-19T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15565,
+    "seasonNumber": 1,
+    "episodeNumber": 9,
+    "title": "Australie",
+    "airDate": "2005-08-26",
+    "airDateUtc": "2005-08-26T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15566,
+    "seasonNumber": 1,
+    "episodeNumber": 10,
+    "title": "France",
+    "airDate": "2005-09-02",
+    "airDateUtc": "2005-09-02T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15567,
+    "seasonNumber": 1,
+    "episodeNumber": 11,
+    "title": "Chine",
+    "airDate": "2006-06-29",
+    "airDateUtc": "2006-06-29T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15568,
+    "seasonNumber": 1,
+    "episodeNumber": 12,
+    "title": "Éthiopie",
+    "airDate": "2006-07-06",
+    "airDateUtc": "2006-07-06T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15569,
+    "seasonNumber": 1,
+    "episodeNumber": 13,
+    "title": "Cambodge",
+    "airDate": "2006-08-03",
+    "airDateUtc": "2006-08-03T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15570,
+    "seasonNumber": 1,
+    "episodeNumber": 14,
+    "title": "Émirats Arabes Unis",
+    "airDate": "2006-08-24",
+    "airDateUtc": "2006-08-24T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15571,
+    "seasonNumber": 1,
+    "episodeNumber": 15,
+    "title": "Roumanie",
+    "airDate": "2006-12-02",
+    "airDateUtc": "2006-12-02T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15572,
+    "seasonNumber": 1,
+    "episodeNumber": 16,
+    "title": "Belgique",
+    "airDate": "2006-12-09",
+    "airDateUtc": "2006-12-09T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15573,
+    "seasonNumber": 1,
+    "episodeNumber": 17,
+    "title": "Sud de la France",
+    "airDate": "2006-12-16",
+    "airDateUtc": "2006-12-16T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15574,
+    "seasonNumber": 1,
+    "episodeNumber": 18,
+    "title": "Madagascar",
+    "airDate": "2006-12-23",
+    "airDateUtc": "2006-12-23T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15575,
+    "seasonNumber": 1,
+    "episodeNumber": 19,
+    "title": "Bolivie - Pérou",
+    "airDate": "2006-12-30",
+    "airDateUtc": "2006-12-30T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15576,
+    "seasonNumber": 1,
+    "episodeNumber": 20,
+    "title": "Royaume-Uni",
+    "airDate": "2007-01-06",
+    "airDateUtc": "2007-01-06T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15577,
+    "seasonNumber": 2,
+    "episodeNumber": 1,
+    "title": "Israël",
+    "airDate": "2007-09-07",
+    "airDateUtc": "2007-09-07T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15578,
+    "seasonNumber": 2,
+    "episodeNumber": 2,
+    "title": "Polynésie Française",
+    "airDate": "2007-09-16",
+    "airDateUtc": "2007-09-16T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15579,
+    "seasonNumber": 2,
+    "episodeNumber": 3,
+    "title": "Portugal",
+    "airDate": "2007-09-23",
+    "airDateUtc": "2007-09-23T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15580,
+    "seasonNumber": 2,
+    "episodeNumber": 4,
+    "title": "Finlande",
+    "airDate": "2007-09-30",
+    "airDateUtc": "2007-09-30T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15581,
+    "seasonNumber": 3,
+    "episodeNumber": 1,
+    "title": "Cuba",
+    "airDate": "2009-04-25",
+    "airDateUtc": "2009-04-25T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15582,
+    "seasonNumber": 3,
+    "episodeNumber": 2,
+    "title": "Nouvelle-Zélande",
+    "airDate": "2009-05-09",
+    "airDateUtc": "2009-05-09T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15583,
+    "seasonNumber": 3,
+    "episodeNumber": 3,
+    "title": "Indonésie",
+    "airDate": "2009-05-16",
+    "airDateUtc": "2009-05-16T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15584,
+    "seasonNumber": 3,
+    "episodeNumber": 4,
+    "title": "Iran",
+    "airDate": "2009-05-23",
+    "airDateUtc": "2009-05-23T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15585,
+    "seasonNumber": 3,
+    "episodeNumber": 5,
+    "title": "Grèce",
+    "airDate": "2009-05-30",
+    "airDateUtc": "2009-05-30T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15586,
+    "seasonNumber": 3,
+    "episodeNumber": 6,
+    "title": "Mexique",
+    "airDate": "2009-06-20",
+    "airDateUtc": "2009-06-20T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15587,
+    "seasonNumber": 4,
+    "episodeNumber": 1,
+    "title": "Corée du Sud",
+    "airDate": "2011-10-01",
+    "airDateUtc": "2011-10-01T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15588,
+    "seasonNumber": 4,
+    "episodeNumber": 2,
+    "title": "Ghana",
+    "airDate": "2011-10-08",
+    "airDateUtc": "2011-10-08T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15589,
+    "seasonNumber": 4,
+    "episodeNumber": 3,
+    "title": "Mongolie",
+    "airDate": "2011-10-15",
+    "airDateUtc": "2011-10-15T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15590,
+    "seasonNumber": 4,
+    "episodeNumber": 4,
+    "title": "Hawaï",
+    "airDate": "2011-10-22",
+    "airDateUtc": "2011-10-22T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15591,
+    "seasonNumber": 4,
+    "episodeNumber": 5,
+    "title": "Albanie",
+    "airDate": "2011-10-29",
+    "airDateUtc": "2011-10-29T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15592,
+    "seasonNumber": 5,
+    "episodeNumber": 1,
+    "title": "Californie",
+    "airDate": "2013-12-23",
+    "airDateUtc": "2013-12-23T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15593,
+    "seasonNumber": 5,
+    "episodeNumber": 2,
+    "title": "Namibie",
+    "airDate": "2014-10-11",
+    "airDateUtc": "2014-10-11T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15594,
+    "seasonNumber": 5,
+    "episodeNumber": 3,
+    "title": "Argentine",
+    "airDate": "2014-10-18",
+    "airDateUtc": "2014-10-18T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15595,
+    "seasonNumber": 5,
+    "episodeNumber": 4,
+    "title": "Allemagne",
+    "airDate": "2014-10-25",
+    "airDateUtc": "2014-10-25T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15596,
+    "seasonNumber": 5,
+    "episodeNumber": 5,
+    "title": "Birmanie",
+    "airDate": "2014-11-01",
+    "airDateUtc": "2014-11-01T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15597,
+    "seasonNumber": 5,
+    "episodeNumber": 6,
+    "title": "Cap-Vert",
+    "airDate": "2014-11-08",
+    "airDateUtc": "2014-11-08T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15598,
+    "seasonNumber": 5,
+    "episodeNumber": 7,
+    "title": "Espagne",
+    "airDate": "2014-11-15",
+    "airDateUtc": "2014-11-15T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15599,
+    "seasonNumber": 6,
+    "episodeNumber": 1,
+    "title": "Irlande",
+    "airDate": "2015-07-02",
+    "airDateUtc": "2015-07-02T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 43
+   },
+   {
+    "id": 15600,
+    "seasonNumber": 6,
+    "episodeNumber": 2,
+    "title": "Uruguay",
+    "airDate": "2015-07-09",
+    "airDateUtc": "2015-07-09T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 44
+   },
+   {
+    "id": 15601,
+    "seasonNumber": 6,
+    "episodeNumber": 3,
+    "title": "Caraïbes",
+    "airDate": "2015-07-16",
+    "airDateUtc": "2015-07-16T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 45
+   },
+   {
+    "id": 15602,
+    "seasonNumber": 6,
+    "episodeNumber": 4,
+    "title": "Italie",
+    "airDate": "2015-09-12",
+    "airDateUtc": "2015-09-12T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 46
+   },
+   {
+    "id": 15603,
+    "seasonNumber": 6,
+    "episodeNumber": 5,
+    "title": "Kirghizistan",
+    "airDate": "2015-09-19",
+    "airDateUtc": "2015-09-19T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 47
+   },
+   {
+    "id": 15604,
+    "seasonNumber": 7,
+    "episodeNumber": 1,
+    "title": "Bhoutan",
+    "airDate": "2016-07-14",
+    "airDateUtc": "2016-07-14T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 48
+   },
+   {
+    "id": 15605,
+    "seasonNumber": 7,
+    "episodeNumber": 2,
+    "title": "Croatie",
+    "airDate": "2016-07-14",
+    "airDateUtc": "2016-07-14T20:02:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 49
+   },
+   {
+    "id": 15606,
+    "seasonNumber": 7,
+    "episodeNumber": 3,
+    "title": "Colombie",
+    "airDate": "2016-07-21",
+    "airDateUtc": "2016-07-21T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 50
+   },
+   {
+    "id": 15607,
+    "seasonNumber": 7,
+    "episodeNumber": 4,
+    "title": "Malte",
+    "airDate": "2016-07-21",
+    "airDateUtc": "2016-07-21T20:02:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 51
+   },
+   {
+    "id": 15608,
+    "seasonNumber": 7,
+    "episodeNumber": 5,
+    "title": "Malawi",
+    "airDate": "2016-08-27",
+    "airDateUtc": "2016-08-27T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 52
+   },
+   {
+    "id": 15609,
+    "seasonNumber": 8,
+    "episodeNumber": 1,
+    "title": "Nicaragua",
+    "airDate": "2017-06-15",
+    "airDateUtc": "2017-06-15T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15610,
+    "seasonNumber": 8,
+    "episodeNumber": 2,
+    "title": "Bosnie-Herzégovine",
+    "airDate": "2017-06-22",
+    "airDateUtc": "2017-06-22T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15611,
+    "seasonNumber": 8,
+    "episodeNumber": 3,
+    "title": "Thaïlande",
+    "airDate": "2017-06-29",
+    "airDateUtc": "2017-06-29T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15612,
+    "seasonNumber": 8,
+    "episodeNumber": 4,
+    "title": "Tanzanie",
+    "airDate": "2017-07-06",
+    "airDateUtc": "2017-07-06T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15613,
+    "seasonNumber": 8,
+    "episodeNumber": 5,
+    "title": "Pays-Bas",
+    "airDate": "2017-07-13",
+    "airDateUtc": "2017-07-13T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15614,
+    "seasonNumber": 9,
+    "episodeNumber": 1,
+    "title": "Arménie",
+    "airDate": "2018-07-05",
+    "airDateUtc": "2018-07-05T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15615,
+    "seasonNumber": 9,
+    "episodeNumber": 2,
+    "title": "Philippines",
+    "airDate": "2018-07-05",
+    "airDateUtc": "2018-07-05T20:02:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15616,
+    "seasonNumber": 9,
+    "episodeNumber": 3,
+    "title": "Les îles Kiribati",
+    "airDate": "2018-07-12",
+    "airDateUtc": "2018-07-12T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 15617,
+    "seasonNumber": 10,
+    "episodeNumber": 1,
+    "title": "Chypre",
+    "airDate": "2019-06-20",
+    "airDateUtc": "2019-06-20T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 24178,
+    "seasonNumber": 0,
+    "episodeNumber": 86,
+    "title": "J'irai dormir à Burning Man (1)",
+    "airDate": "2015-07-01",
+    "airDateUtc": "2015-07-01T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 24179,
+    "seasonNumber": 0,
+    "episodeNumber": 87,
+    "title": "J'irai dormir à Burning Man (2)",
+    "airDate": "2015-07-01",
+    "airDateUtc": "2015-07-01T20:02:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 24180,
+    "seasonNumber": 0,
+    "episodeNumber": 88,
+    "title": "J'irai dormir à Burning Man (3)",
+    "airDate": "2015-07-01",
+    "airDateUtc": "2015-07-01T21:04:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 24181,
+    "seasonNumber": 0,
+    "episodeNumber": 89,
+    "title": "J'irai dormir à Burning Man (4)",
+    "airDate": "2015-07-01",
+    "airDateUtc": "2015-07-01T22:06:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 24182,
+    "seasonNumber": 0,
+    "episodeNumber": 90,
+    "title": "J'irai dormir à Burning Man (5)",
+    "airDate": "2015-07-01",
+    "airDateUtc": "2015-07-01T23:08:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 24183,
+    "seasonNumber": 0,
+    "episodeNumber": 91,
+    "title": "J'irai Rajeunir chez vous - épisode 1- Mes débuts à l'armée",
+    "airDate": "2020-04-23",
+    "airDateUtc": "2020-04-23T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 24184,
+    "seasonNumber": 0,
+    "episodeNumber": 92,
+    "title": "J'irai Rajeunir chez vous - épisode 2 - Les carnets de l'aventure - La Cordillère des Andes",
+    "airDate": "2020-04-24",
+    "airDateUtc": "2020-04-24T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 24185,
+    "seasonNumber": 0,
+    "episodeNumber": 93,
+    "title": "J'irai Rajeunir chez vous - épisode 3  - Amazonie",
+    "airDate": "2020-04-25",
+    "airDateUtc": "2020-04-25T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 24186,
+    "seasonNumber": 0,
+    "episodeNumber": 94,
+    "title": "J'irai Rajeunir chez vous - épisode 4 - Chomo, le sculpteur",
+    "airDate": "2020-04-26",
+    "airDateUtc": "2020-04-26T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 24187,
+    "seasonNumber": 0,
+    "episodeNumber": 95,
+    "title": "J'irai Rajeunir chez vous - épisode 5 - Circum-navigateurs",
+    "airDate": "2020-04-27",
+    "airDateUtc": "2020-04-27T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 24188,
+    "seasonNumber": 0,
+    "episodeNumber": 96,
+    "title": "J'irai Rajeunir chez vous - épisode 6 - Le Peuple Singe en Gambie",
+    "airDate": "2020-04-28",
+    "airDateUtc": "2020-04-28T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 24189,
+    "seasonNumber": 0,
+    "episodeNumber": 97,
+    "title": "J'irai Rajeunir chez vous - épisode 7 - Le Peuple Singe en Amazonie",
+    "airDate": "2020-04-29",
+    "airDateUtc": "2020-04-29T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 24190,
+    "seasonNumber": 0,
+    "episodeNumber": 98,
+    "title": "J'irai Rajeunir chez vous - épisode 8 - Le radeau des Cimes",
+    "airDate": "2020-04-30",
+    "airDateUtc": "2020-04-30T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 24191,
+    "seasonNumber": 0,
+    "episodeNumber": 99,
+    "title": "J'irai Rajeunir chez vous - épisode 9 - Plongée à 5000 mètres",
+    "airDate": "2020-05-02",
+    "airDateUtc": "2020-05-02T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 24192,
+    "seasonNumber": 0,
+    "episodeNumber": 100,
+    "title": "J'irai Rajeunir chez vous - épisode 10 - Les babouins d'Ethiopie et la Cinébulle",
+    "airDate": "2020-05-03",
+    "airDateUtc": "2020-05-03T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 24193,
+    "seasonNumber": 0,
+    "episodeNumber": 101,
+    "title": "J'irai Rajeunir chez vous - épisode 11 - Le gaz mortel du lac Nyos",
+    "airDate": "2020-05-05",
+    "airDateUtc": "2020-05-05T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 24194,
+    "seasonNumber": 0,
+    "episodeNumber": 102,
+    "title": "J'irai Rajeunir chez vous - épisode 12 -Expédition au Groenland",
+    "airDate": "2020-05-06",
+    "airDateUtc": "2020-05-06T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 24195,
+    "seasonNumber": 0,
+    "episodeNumber": 103,
+    "title": "J'irai Rajeunir chez vous - épisode 13 - Les volcans sous-marins des Antilles",
+    "airDate": "2020-05-07",
+    "airDateUtc": "2020-05-07T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 24196,
+    "seasonNumber": 0,
+    "episodeNumber": 104,
+    "title": "J'irai Rajeunir chez vous - épisode 14 - La civilisation perdue du Rio la Venta",
+    "airDate": "2020-05-08",
+    "airDateUtc": "2020-05-08T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 24197,
+    "seasonNumber": 0,
+    "episodeNumber": 105,
+    "title": "J'irai Rajeunir chez vous - épisode 15 - Pas simple de devenir présentateur",
+    "airDate": "2020-05-09",
+    "airDateUtc": "2020-05-09T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 24198,
+    "seasonNumber": 0,
+    "episodeNumber": 106,
+    "title": "J'irai Rajeunir chez vous - épisode 16 - Dans un volcan, au dessus du lac de lave",
+    "airDate": "2020-05-10",
+    "airDateUtc": "2020-05-10T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 28488,
+    "seasonNumber": 11,
+    "episodeNumber": 1,
+    "title": "Costa Rica",
+    "airDate": "2021-10-08",
+    "airDateUtc": "2021-10-08T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 31250,
+    "seasonNumber": 0,
+    "episodeNumber": 107,
+    "title": "Tournée JDCV - Le Projet (chez lui)",
+    "airDate": "2019-05-22",
+    "airDateUtc": "2019-05-22T20:02:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 31251,
+    "seasonNumber": 0,
+    "episodeNumber": 108,
+    "title": "Tournée JDCV - Conflans-en-Jarnisy (54800)",
+    "airDate": "2019-06-03",
+    "airDateUtc": "2019-06-03T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 31252,
+    "seasonNumber": 0,
+    "episodeNumber": 109,
+    "title": "Tournée JDCV - Delle (90100) (1)",
+    "airDate": "2019-06-04",
+    "airDateUtc": "2019-06-04T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 31253,
+    "seasonNumber": 0,
+    "episodeNumber": 110,
+    "title": "Tournée JDCV - Delle (90100) (2)",
+    "airDate": "2019-06-04",
+    "airDateUtc": "2019-06-04T20:02:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 31254,
+    "seasonNumber": 0,
+    "episodeNumber": 111,
+    "title": "Tournée JDCV - Delle (90100) (3)",
+    "airDate": "2019-06-05",
+    "airDateUtc": "2019-06-05T20:02:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 31255,
+    "seasonNumber": 0,
+    "episodeNumber": 112,
+    "title": "Tournée JDCV - Saint-Sernin-du-Bois (71200)",
+    "airDate": "2019-06-05",
+    "airDateUtc": "2019-06-05T21:04:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 31256,
+    "seasonNumber": 0,
+    "episodeNumber": 113,
+    "title": "Tournée JDCV - Saint-Vincent-de-Boisset (42120)",
+    "airDate": "2019-06-07",
+    "airDateUtc": "2019-06-07T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 31257,
+    "seasonNumber": 0,
+    "episodeNumber": 114,
+    "title": "Tournée JDCV - Lyon",
+    "airDate": "2019-06-07",
+    "airDateUtc": "2019-06-07T20:02:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 31258,
+    "seasonNumber": 0,
+    "episodeNumber": 115,
+    "title": "Tournée JDCV - Monaco",
+    "airDate": "2019-05-22",
+    "airDateUtc": "2019-05-22T21:04:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 31259,
+    "seasonNumber": 0,
+    "episodeNumber": 116,
+    "title": "Tournée JDCV - Marseille (1)",
+    "airDate": "2019-06-11",
+    "airDateUtc": "2019-06-11T20:02:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 31260,
+    "seasonNumber": 0,
+    "episodeNumber": 117,
+    "title": "Tournée JDCV - Marseille (2)",
+    "airDate": "2019-06-11",
+    "airDateUtc": "2019-06-11T21:04:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 31261,
+    "seasonNumber": 0,
+    "episodeNumber": 118,
+    "title": "Tournée JDCV - Marseille (3)",
+    "airDate": "2019-06-13",
+    "airDateUtc": "2019-06-13T20:02:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 31262,
+    "seasonNumber": 0,
+    "episodeNumber": 119,
+    "title": "Tournée JDCV - Agen / Bordeaux",
+    "airDate": "2019-06-17",
+    "airDateUtc": "2019-06-17T20:02:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 31263,
+    "seasonNumber": 0,
+    "episodeNumber": 120,
+    "title": "Tournée JDCV - Nantes (1)",
+    "airDate": "2019-06-20",
+    "airDateUtc": "2019-06-20T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 31264,
+    "seasonNumber": 0,
+    "episodeNumber": 121,
+    "title": "Tournée JDCV - Nantes (2)",
+    "airDate": "2019-06-20",
+    "airDateUtc": "2019-06-20T20:02:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 31265,
+    "seasonNumber": 0,
+    "episodeNumber": 122,
+    "title": "Tournée JDCV - Tours",
+    "airDate": "2019-06-21",
+    "airDateUtc": "2019-06-21T20:02:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 31266,
+    "seasonNumber": 0,
+    "episodeNumber": 123,
+    "title": "Tournée JDCV - Argentan (61200)",
+    "airDate": "2019-06-22",
+    "airDateUtc": "2019-06-22T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 31267,
+    "seasonNumber": 0,
+    "episodeNumber": 124,
+    "title": "Tournée JDCV - Soirée Des Contributeurs (chez lui)",
+    "airDate": "2019-07-05",
+    "airDateUtc": "2019-07-05T20:02:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 31268,
+    "seasonNumber": 0,
+    "episodeNumber": 125,
+    "title": "Tournée JDCV - Paris (1)",
+    "airDate": "2019-07-07",
+    "airDateUtc": "2019-07-07T21:04:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 31269,
+    "seasonNumber": 0,
+    "episodeNumber": 126,
+    "title": "Tournée JDCV - Paris (2)",
+    "airDate": "2019-07-07",
+    "airDateUtc": "2019-07-07T22:06:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 31327,
+    "seasonNumber": 0,
+    "episodeNumber": 127,
+    "title": "J'irai dormir à Burning Man (intégrale)",
+    "airDate": "2016-12-27",
+    "airDateUtc": "2016-12-27T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 31435,
+    "seasonNumber": 0,
+    "episodeNumber": 128,
+    "title": "Liberté, Chemins de Traverse et Combativité (TEDxMarseille)",
+    "airDate": "2017-11-20",
+    "airDateUtc": "2017-11-20T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 43702,
+    "seasonNumber": 0,
+    "episodeNumber": 129,
+    "title": "L'Intégrale - Mali",
+    "airDate": "2021-11-12",
+    "airDateUtc": "2021-11-12T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 43703,
+    "seasonNumber": 0,
+    "episodeNumber": 130,
+    "title": "L'Intégrale - Québec",
+    "airDate": "2021-11-19",
+    "airDateUtc": "2021-11-19T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 43704,
+    "seasonNumber": 0,
+    "episodeNumber": 131,
+    "title": "L'Intégrale - Vanuatu",
+    "airDate": "2021-11-26",
+    "airDateUtc": "2021-11-26T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 50621,
+    "seasonNumber": 12,
+    "episodeNumber": 2,
+    "title": "Kazakhstan",
+    "airDate": "2022-10-28",
+    "airDateUtc": "2022-10-28T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59609,
+    "seasonNumber": 13,
+    "episodeNumber": 1,
+    "title": "Serbie",
+    "airDate": "2023-04-21",
+    "airDateUtc": "2023-04-21T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59610,
+    "seasonNumber": 13,
+    "episodeNumber": 2,
+    "title": "Viêt Nam",
+    "airDate": "2023-04-28",
+    "airDateUtc": "2023-04-28T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59611,
+    "seasonNumber": 13,
+    "episodeNumber": 3,
+    "title": "Paraguay",
+    "airDate": "2023-11-03",
+    "airDateUtc": "2023-11-03T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59612,
+    "seasonNumber": 14,
+    "episodeNumber": 1,
+    "title": "Algérie",
+    "airDate": "2024-03-08",
+    "airDateUtc": "2024-03-08T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59892,
+    "seasonNumber": 14,
+    "episodeNumber": 2,
+    "title": "Taïwan",
+    "airDate": "2024-05-10",
+    "airDateUtc": "2024-05-10T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 63375,
+    "seasonNumber": 12,
+    "episodeNumber": 1,
+    "title": "Côte d'Ivoire",
+    "airDate": "2022-06-17",
+    "airDateUtc": "2022-06-17T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 66788,
+    "seasonNumber": 14,
+    "episodeNumber": 3,
+    "title": "Les pays baltes",
+    "airDate": "2024-11-29",
+    "airDateUtc": "2024-11-29T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 78815,
+    "seasonNumber": 15,
+    "episodeNumber": 1,
+    "title": "Géorgie",
+    "airDate": "2025-02-28",
+    "airDateUtc": "2025-02-28T20:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 78816,
+    "seasonNumber": 15,
+    "episodeNumber": 2,
+    "title": "Oman",
+    "airDate": "2025-06-20",
+    "airDateUtc": "2025-06-20T19:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 78817,
+    "seasonNumber": 15,
+    "episodeNumber": 3,
+    "title": "Salvador",
+    "airDate": "2025-09-05",
+    "airDateUtc": "2025-09-05T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 81913,
+    "seasonNumber": 16,
+    "episodeNumber": 1,
+    "title": "Alaska",
+    "airDate": "2026-03-27",
+    "airDateUtc": "2026-03-27T20:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 83771,
+    "seasonNumber": 16,
+    "episodeNumber": 2,
+    "title": "Île Maurice",
+    "airDate": "2026-05-29",
+    "airDateUtc": "2026-05-29T19:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   }
+  ],
+  "series": {
+   "tvdbId": 82577,
+   "tmdbId": 64981,
+   "title": "J'irai dormir chez vous"
+  },
+  "tmdb": [
+   {
+    "names": [
+     "J'irai dormir à Burning Man (chez l'homme qui brûle)",
+     "Episode 1"
+    ],
+    "air_date": "2014-01-03",
+    "season": 0,
+    "number": 1
+   },
+   {
+    "names": [
+     "J'irai dormir dans le web (Paris)",
+     "Episode 2"
+    ],
+    "air_date": "2014-10-08",
+    "season": 0,
+    "number": 2
+   },
+   {
+    "names": [
+     "J'irai dormir chez vous en direct d'Arras",
+     "Episode 3"
+    ],
+    "air_date": "2015-04-04",
+    "season": 0,
+    "number": 3
+   },
+   {
+    "names": [
+     "J'irai dormir chez vous en direct de Sète",
+     "Episode 4"
+    ],
+    "air_date": "2015-09-26",
+    "season": 0,
+    "number": 4
+   },
+   {
+    "names": [
+     "J'irai dormir chez vous en direct d'Epinal",
+     "Episode 5"
+    ],
+    "air_date": "2015-10-03",
+    "season": 0,
+    "number": 5
+   },
+   {
+    "names": [
+     "J'irai dormir chez vous en direct de Namur",
+     "Episode 6"
+    ],
+    "air_date": "2015-10-10",
+    "season": 0,
+    "number": 6
+   },
+   {
+    "names": [
+     "Spéciale Malawi",
+     "Episode 7"
+    ],
+    "air_date": "2018-06-14",
+    "season": 0,
+    "number": 7
+   },
+   {
+    "names": [
+     "Spéciale Espagne",
+     "Episode 8"
+    ],
+    "air_date": "2019-06-27",
+    "season": 0,
+    "number": 8
+   },
+   {
+    "names": [
+     "Spéciale Uruguay",
+     "Episode 9"
+    ],
+    "air_date": "2019-07-04",
+    "season": 0,
+    "number": 9
+   },
+   {
+    "names": [
+     "Spéciale Cap Vert",
+     "Episode 10"
+    ],
+    "air_date": "2019-07-11",
+    "season": 0,
+    "number": 10
+   },
+   {
+    "names": [
+     "J'irai dormir chez vous Live Facebook 1",
+     "Episode 11"
+    ],
+    "air_date": "2019-07-12",
+    "season": 0,
+    "number": 11
+   },
+   {
+    "names": [
+     "J'irai dormir chez vous Live Facebook 2",
+     "Episode 12"
+    ],
+    "air_date": "2019-07-13",
+    "season": 0,
+    "number": 12
+   },
+   {
+    "names": [
+     "J'irai dormir chez vous Live Facebook 3",
+     "Episode 13"
+    ],
+    "air_date": "2019-07-17",
+    "season": 0,
+    "number": 13
+   },
+   {
+    "names": [
+     "J'irai dormir chez vous Live Facebook 4",
+     "Episode 14"
+    ],
+    "air_date": "2019-07-18",
+    "season": 0,
+    "number": 14
+   },
+   {
+    "names": [
+     "J'irai dormir chez vous Live Facebook 5",
+     "Episode 15"
+    ],
+    "air_date": "2019-07-19",
+    "season": 0,
+    "number": 15
+   },
+   {
+    "names": [
+     "J'irai dormir chez vous Live Facebook 6",
+     "Episode 16"
+    ],
+    "air_date": "2019-07-20",
+    "season": 0,
+    "number": 16
+   },
+   {
+    "names": [
+     "J'irai dormir chez vous Live Facebook 7",
+     "Episode 17"
+    ],
+    "air_date": "2019-07-24",
+    "season": 0,
+    "number": 17
+   },
+   {
+    "names": [
+     "J'irai dormir chez vous Live Facebook 8  - Marseille",
+     "Episode 18"
+    ],
+    "air_date": "2019-07-25",
+    "season": 0,
+    "number": 18
+   },
+   {
+    "names": [
+     "J'irai dormir chez vous Live Facebook 9 - avec un auto-stoppeur",
+     "Episode 19"
+    ],
+    "air_date": "2019-07-26",
+    "season": 0,
+    "number": 19
+   },
+   {
+    "names": [
+     "J'irai dormir chez vous Live Facebook 10 - Soirée chez lui",
+     "Episode 20"
+    ],
+    "air_date": "2019-07-27",
+    "season": 0,
+    "number": 20
+   },
+   {
+    "names": [
+     "Bonus 1 - Les origines",
+     "Episode 21"
+    ],
+    "air_date": "2019-07-31",
+    "season": 0,
+    "number": 21
+   },
+   {
+    "names": [
+     "Givré à Vancouver - Episode 1",
+     "Episode 22"
+    ],
+    "air_date": "2010-02-15",
+    "season": 0,
+    "number": 22
+   },
+   {
+    "names": [
+     "J'irai dormir au Groland",
+     "Episode 23"
+    ],
+    "air_date": "2019-08-02",
+    "season": 0,
+    "number": 23
+   },
+   {
+    "names": [
+     "J'irai faire le Tour chez vous - Col de Romme",
+     "Episode 24"
+    ],
+    "air_date": "2019-08-03",
+    "season": 0,
+    "number": 24
+   },
+   {
+    "names": [
+     "Un Péquin à Pékin - Episode 1",
+     "Episode 25"
+    ],
+    "air_date": "2008-08-07",
+    "season": 0,
+    "number": 25
+   },
+   {
+    "names": [
+     "J'irai dormir chez vous Live Facebook 11 - Tours (fête de la musique)",
+     "Episode 26"
+    ],
+    "air_date": "2019-06-21",
+    "season": 0,
+    "number": 26
+   },
+   {
+    "names": [
+     "J'irai faire le Tour chez vous - Saint Fargeau",
+     "Episode 27"
+    ],
+    "air_date": "2019-06-22",
+    "season": 0,
+    "number": 27
+   },
+   {
+    "names": [
+     "J'irai faire le Tour chez vous - Draguignan",
+     "Episode 28"
+    ],
+    "air_date": "2019-06-26",
+    "season": 0,
+    "number": 28
+   },
+   {
+    "names": [
+     "Bonus 2 : Les Caméras",
+     "Episode 29"
+    ],
+    "air_date": "2019-06-27",
+    "season": 0,
+    "number": 29
+   },
+   {
+    "names": [
+     "Bonus 3 : Le premier tournage",
+     "Episode 30"
+    ],
+    "air_date": "2019-06-28",
+    "season": 0,
+    "number": 30
+   },
+   {
+    "names": [
+     "Bonus 4 : Le ton de la série",
+     "Episode 31"
+    ],
+    "air_date": "2019-06-29",
+    "season": 0,
+    "number": 31
+   },
+   {
+    "names": [
+     "Bonus 5 : La préparation des voyages",
+     "Episode 32"
+    ],
+    "air_date": "2019-07-03",
+    "season": 0,
+    "number": 32
+   },
+   {
+    "names": [
+     "Bonus 6 : Les plateaux",
+     "Episode 33"
+    ],
+    "air_date": "2019-07-04",
+    "season": 0,
+    "number": 33
+   },
+   {
+    "names": [
+     "Bonus 7 : Speak English",
+     "Episode 34"
+    ],
+    "air_date": "2019-07-05",
+    "season": 0,
+    "number": 34
+   },
+   {
+    "names": [
+     "Bonus 8 : Dur dur",
+     "Episode 35"
+    ],
+    "air_date": "2019-07-06",
+    "season": 0,
+    "number": 35
+   },
+   {
+    "names": [
+     "Bonus 9 : Rencontre avec Chromo",
+     "Episode 36"
+    ],
+    "air_date": "2019-07-10",
+    "season": 0,
+    "number": 36
+   },
+   {
+    "names": [
+     "Un Péquin à Pékin - Episode 2",
+     "Episode 37"
+    ],
+    "air_date": "2008-08-11",
+    "season": 0,
+    "number": 37
+   },
+   {
+    "names": [
+     "Un Péquin à Pékin - Episode 3",
+     "Episode 38"
+    ],
+    "air_date": "2008-08-12",
+    "season": 0,
+    "number": 38
+   },
+   {
+    "names": [
+     "Un Péquin à Pékin - Episode 4",
+     "Episode 39"
+    ],
+    "air_date": "2008-08-13",
+    "season": 0,
+    "number": 39
+   },
+   {
+    "names": [
+     "Un Péquin à Pékin - Episode 5",
+     "Episode 40"
+    ],
+    "air_date": "2008-08-14",
+    "season": 0,
+    "number": 40
+   },
+   {
+    "names": [
+     "Un Péquin à Pékin - Episode 6",
+     "Episode 41"
+    ],
+    "air_date": "2008-08-15",
+    "season": 0,
+    "number": 41
+   },
+   {
+    "names": [
+     "Un Péquin à Pékin - Episode 7",
+     "Episode 42"
+    ],
+    "air_date": "2008-08-16",
+    "season": 0,
+    "number": 42
+   },
+   {
+    "names": [
+     "Un Péquin à Pékin - Episode 8",
+     "Episode 43"
+    ],
+    "air_date": "2008-08-17",
+    "season": 0,
+    "number": 43
+   },
+   {
+    "names": [
+     "Un Péquin à Pékin - Episode 9",
+     "Episode 44"
+    ],
+    "air_date": "2008-08-18",
+    "season": 0,
+    "number": 44
+   },
+   {
+    "names": [
+     "Un Péquin à Pékin - Episode 10",
+     "Episode 45"
+    ],
+    "air_date": "2008-08-19",
+    "season": 0,
+    "number": 45
+   },
+   {
+    "names": [
+     "Un Péquin à Pékin - Episode 11",
+     "Episode 46"
+    ],
+    "air_date": "2008-08-20",
+    "season": 0,
+    "number": 46
+   },
+   {
+    "names": [
+     "Un Péquin à Pékin - Episode 12",
+     "Episode 47"
+    ],
+    "air_date": "2008-08-21",
+    "season": 0,
+    "number": 47
+   },
+   {
+    "names": [
+     "Un Péquin à Pékin - Episode 13",
+     "Episode 48"
+    ],
+    "air_date": "2008-08-22",
+    "season": 0,
+    "number": 48
+   },
+   {
+    "names": [
+     "Un Péquin à Pékin - Episode 14",
+     "Episode 49"
+    ],
+    "air_date": "2008-08-23",
+    "season": 0,
+    "number": 49
+   },
+   {
+    "names": [
+     "Un Péquin à Pékin - Episode 15",
+     "Episode 50"
+    ],
+    "air_date": "2008-08-24",
+    "season": 0,
+    "number": 50
+   },
+   {
+    "names": [
+     "Un Péquin à Pékin - Episode 16",
+     "Episode 51"
+    ],
+    "air_date": "2008-08-25",
+    "season": 0,
+    "number": 51
+   },
+   {
+    "names": [
+     "Givré à Vancouver - Episode 2",
+     "Episode 52"
+    ],
+    "air_date": "2010-02-16",
+    "season": 0,
+    "number": 52
+   },
+   {
+    "names": [
+     "Givré à Vancouver - Episode 3",
+     "Episode 53"
+    ],
+    "air_date": "2010-02-17",
+    "season": 0,
+    "number": 53
+   },
+   {
+    "names": [
+     "Givré à Vancouver - Episode 4",
+     "Episode 54"
+    ],
+    "air_date": "2010-02-18",
+    "season": 0,
+    "number": 54
+   },
+   {
+    "names": [
+     "Givré à Vancouver - Episode 5",
+     "Episode 55"
+    ],
+    "air_date": "2010-02-19",
+    "season": 0,
+    "number": 55
+   },
+   {
+    "names": [
+     "Givré à Vancouver - Episode 6",
+     "Episode 56"
+    ],
+    "air_date": "2010-02-20",
+    "season": 0,
+    "number": 56
+   },
+   {
+    "names": [
+     "Givré à Vancouver - Episode 7",
+     "Episode 57"
+    ],
+    "air_date": "2010-02-22",
+    "season": 0,
+    "number": 57
+   },
+   {
+    "names": [
+     "Givré à Vancouver - Episode 8",
+     "Episode 58"
+    ],
+    "air_date": "2010-02-23",
+    "season": 0,
+    "number": 58
+   },
+   {
+    "names": [
+     "Givré à Vancouver - Episode 9",
+     "Episode 59"
+    ],
+    "air_date": "2010-02-24",
+    "season": 0,
+    "number": 59
+   },
+   {
+    "names": [
+     "Givré à Vancouver - Episode 10",
+     "Episode 60"
+    ],
+    "air_date": "2010-02-25",
+    "season": 0,
+    "number": 60
+   },
+   {
+    "names": [
+     "Givré à Vancouver - Episode 11",
+     "Episode 61"
+    ],
+    "air_date": "2010-02-26",
+    "season": 0,
+    "number": 61
+   },
+   {
+    "names": [
+     "Japon",
+     "Episode 1"
+    ],
+    "air_date": "2005-07-01",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "names": [
+     "Maroc",
+     "Episode 2"
+    ],
+    "air_date": "2005-06-08",
+    "season": 1,
+    "number": 2
+   },
+   {
+    "names": [
+     "Mali",
+     "Episode 3"
+    ],
+    "air_date": "2005-07-15",
+    "season": 1,
+    "number": 3
+   },
+   {
+    "names": [
+     "Québec",
+     "Episode 4"
+    ],
+    "air_date": "2005-07-22",
+    "season": 1,
+    "number": 4
+   },
+   {
+    "names": [
+     "Vanuatu",
+     "Episode 5"
+    ],
+    "air_date": "2005-07-29",
+    "season": 1,
+    "number": 5
+   },
+   {
+    "names": [
+     "Inde",
+     "Episode 6"
+    ],
+    "air_date": "2005-08-05",
+    "season": 1,
+    "number": 6
+   },
+   {
+    "names": [
+     "Suisse",
+     "Episode 7"
+    ],
+    "air_date": "2005-08-12",
+    "season": 1,
+    "number": 7
+   },
+   {
+    "names": [
+     "Chili",
+     "Episode 8"
+    ],
+    "air_date": "2005-08-19",
+    "season": 1,
+    "number": 8
+   },
+   {
+    "names": [
+     "Australie",
+     "Episode 9"
+    ],
+    "air_date": "2005-08-26",
+    "season": 1,
+    "number": 9
+   },
+   {
+    "names": [
+     "France",
+     "Episode 10"
+    ],
+    "air_date": "2005-09-02",
+    "season": 1,
+    "number": 10
+   },
+   {
+    "names": [
+     "Chine",
+     "Episode 11"
+    ],
+    "air_date": "2006-06-29",
+    "season": 1,
+    "number": 11
+   },
+   {
+    "names": [
+     "Éthiopie",
+     "Episode 12"
+    ],
+    "air_date": "2006-07-06",
+    "season": 1,
+    "number": 12
+   },
+   {
+    "names": [
+     "Cambodge",
+     "Episode 13"
+    ],
+    "air_date": "2006-08-03",
+    "season": 1,
+    "number": 13
+   },
+   {
+    "names": [
+     "Émirats Arabes Unis",
+     "Episode 14"
+    ],
+    "air_date": "2006-08-24",
+    "season": 1,
+    "number": 14
+   },
+   {
+    "names": [
+     "Roumanie",
+     "Episode 15"
+    ],
+    "air_date": "2006-12-02",
+    "season": 1,
+    "number": 15
+   },
+   {
+    "names": [
+     "Belgique",
+     "Episode 16"
+    ],
+    "air_date": "2006-12-09",
+    "season": 1,
+    "number": 16
+   },
+   {
+    "names": [
+     "Sud de la France",
+     "Episode 17"
+    ],
+    "air_date": "2006-12-16",
+    "season": 1,
+    "number": 17
+   },
+   {
+    "names": [
+     "Madagascar",
+     "Episode 18"
+    ],
+    "air_date": "2006-12-23",
+    "season": 1,
+    "number": 18
+   },
+   {
+    "names": [
+     "Bolivie, Pérou",
+     "Episode 19"
+    ],
+    "air_date": "2006-12-30",
+    "season": 1,
+    "number": 19
+   },
+   {
+    "names": [
+     "Royaume-Uni",
+     "Episode 20"
+    ],
+    "air_date": "2007-01-06",
+    "season": 1,
+    "number": 20
+   },
+   {
+    "names": [
+     "Israël",
+     "Episode 1"
+    ],
+    "air_date": "2007-09-09",
+    "season": 2,
+    "number": 1
+   },
+   {
+    "names": [
+     "Polynésie Française",
+     "Episode 2"
+    ],
+    "air_date": "2007-09-16",
+    "season": 2,
+    "number": 2
+   },
+   {
+    "names": [
+     "Portugal",
+     "Episode 3"
+    ],
+    "air_date": "2007-09-23",
+    "season": 2,
+    "number": 3
+   },
+   {
+    "names": [
+     "Finlande",
+     "Episode 4"
+    ],
+    "air_date": "2007-09-30",
+    "season": 2,
+    "number": 4
+   },
+   {
+    "names": [
+     "Cuba",
+     "Episode 1"
+    ],
+    "air_date": "2009-04-25",
+    "season": 3,
+    "number": 1
+   },
+   {
+    "names": [
+     "Nouvelle-Zélande",
+     "Episode 2"
+    ],
+    "air_date": "2009-05-09",
+    "season": 3,
+    "number": 2
+   },
+   {
+    "names": [
+     "Indonésie",
+     "Episode 3"
+    ],
+    "air_date": "2009-05-16",
+    "season": 3,
+    "number": 3
+   },
+   {
+    "names": [
+     "Iran",
+     "Episode 4"
+    ],
+    "air_date": "2009-05-23",
+    "season": 3,
+    "number": 4
+   },
+   {
+    "names": [
+     "Grèce",
+     "Episode 5"
+    ],
+    "air_date": "2009-05-30",
+    "season": 3,
+    "number": 5
+   },
+   {
+    "names": [
+     "Mexique",
+     "Episode 6"
+    ],
+    "air_date": "2009-06-20",
+    "season": 3,
+    "number": 6
+   },
+   {
+    "names": [
+     "Corée du Sud",
+     "Episode 1"
+    ],
+    "air_date": "2011-10-01",
+    "season": 4,
+    "number": 1
+   },
+   {
+    "names": [
+     "Ghana",
+     "Episode 2"
+    ],
+    "air_date": "2011-10-08",
+    "season": 4,
+    "number": 2
+   },
+   {
+    "names": [
+     "Mongolie",
+     "Episode 3"
+    ],
+    "air_date": "2011-10-15",
+    "season": 4,
+    "number": 3
+   },
+   {
+    "names": [
+     "Hawaï",
+     "Episode 4"
+    ],
+    "air_date": "2011-10-22",
+    "season": 4,
+    "number": 4
+   },
+   {
+    "names": [
+     "Albanie",
+     "Episode 5"
+    ],
+    "air_date": "2011-10-29",
+    "season": 4,
+    "number": 5
+   },
+   {
+    "names": [
+     "Groland",
+     "Episode 6"
+    ],
+    "air_date": "2012-11-24",
+    "season": 4,
+    "number": 6
+   },
+   {
+    "names": [
+     "Californie",
+     "Episode 1"
+    ],
+    "air_date": "2013-12-23",
+    "season": 5,
+    "number": 1
+   },
+   {
+    "names": [
+     "Namibie",
+     "Episode 2"
+    ],
+    "air_date": "2014-10-11",
+    "season": 5,
+    "number": 2
+   },
+   {
+    "names": [
+     "Argentine",
+     "Episode 3"
+    ],
+    "air_date": "2014-10-18",
+    "season": 5,
+    "number": 3
+   },
+   {
+    "names": [
+     "Allemagne",
+     "Episode 4"
+    ],
+    "air_date": "2014-10-25",
+    "season": 5,
+    "number": 4
+   },
+   {
+    "names": [
+     "Birmanie",
+     "Episode 5"
+    ],
+    "air_date": "2014-11-01",
+    "season": 5,
+    "number": 5
+   },
+   {
+    "names": [
+     "Cap-Vert",
+     "Episode 6"
+    ],
+    "air_date": "2014-11-08",
+    "season": 5,
+    "number": 6
+   },
+   {
+    "names": [
+     "Espagne",
+     "Episode 7"
+    ],
+    "air_date": "2014-11-15",
+    "season": 5,
+    "number": 7
+   },
+   {
+    "names": [
+     "Irlande",
+     "Episode 1"
+    ],
+    "air_date": "2015-07-02",
+    "season": 6,
+    "number": 1
+   },
+   {
+    "names": [
+     "Uruguay",
+     "Episode 2"
+    ],
+    "air_date": "2015-07-09",
+    "season": 6,
+    "number": 2
+   },
+   {
+    "names": [
+     "Caraïbes (Sainte-Lucie et la Barbade)",
+     "Episode 3"
+    ],
+    "air_date": "2015-07-16",
+    "season": 6,
+    "number": 3
+   },
+   {
+    "names": [
+     "Italie",
+     "Episode 4"
+    ],
+    "air_date": "2015-09-12",
+    "season": 6,
+    "number": 4
+   },
+   {
+    "names": [
+     "Kirghizistan",
+     "Episode 5"
+    ],
+    "air_date": "2015-09-19",
+    "season": 6,
+    "number": 5
+   },
+   {
+    "names": [
+     "Bhoutan",
+     "Episode 1"
+    ],
+    "air_date": "2016-07-14",
+    "season": 7,
+    "number": 1
+   },
+   {
+    "names": [
+     "Croatie",
+     "Episode 2"
+    ],
+    "air_date": "2016-07-14",
+    "season": 7,
+    "number": 2
+   },
+   {
+    "names": [
+     "Colombie",
+     "Episode 3"
+    ],
+    "air_date": "2016-07-21",
+    "season": 7,
+    "number": 3
+   },
+   {
+    "names": [
+     "Malte",
+     "Episode 4"
+    ],
+    "air_date": "2016-07-21",
+    "season": 7,
+    "number": 4
+   },
+   {
+    "names": [
+     "Malawi",
+     "Episode 5"
+    ],
+    "air_date": "2016-08-27",
+    "season": 7,
+    "number": 5
+   },
+   {
+    "names": [
+     "Nicaragua",
+     "Episode 1"
+    ],
+    "air_date": "2017-06-16",
+    "season": 8,
+    "number": 1
+   },
+   {
+    "names": [
+     "Bosnie-Herzégovine",
+     "Episode 2"
+    ],
+    "air_date": "2017-06-22",
+    "season": 8,
+    "number": 2
+   },
+   {
+    "names": [
+     "Thaïlande",
+     "Episode 3"
+    ],
+    "air_date": "2017-06-29",
+    "season": 8,
+    "number": 3
+   },
+   {
+    "names": [
+     "Tanzanie",
+     "Episode 4"
+    ],
+    "air_date": "2017-07-06",
+    "season": 8,
+    "number": 4
+   },
+   {
+    "names": [
+     "Pays-Bas",
+     "Episode 5"
+    ],
+    "air_date": "2017-07-13",
+    "season": 8,
+    "number": 5
+   },
+   {
+    "names": [
+     "Arménie",
+     "Episode 1"
+    ],
+    "air_date": "2018-07-05",
+    "season": 9,
+    "number": 1
+   },
+   {
+    "names": [
+     "Philippines",
+     "Episode 2"
+    ],
+    "air_date": "2018-07-05",
+    "season": 9,
+    "number": 2
+   },
+   {
+    "names": [
+     "Les îles Kiribati",
+     "Episode 3"
+    ],
+    "air_date": "2018-07-12",
+    "season": 9,
+    "number": 3
+   },
+   {
+    "names": [
+     "Chypre",
+     "Episode 1"
+    ],
+    "air_date": "2019-06-20",
+    "season": 10,
+    "number": 1
+   },
+   {
+    "names": [
+     "Costa Rica",
+     "Episode 1"
+    ],
+    "air_date": "2021-10-08",
+    "season": 11,
+    "number": 1
+   },
+   {
+    "names": [
+     "Côte d'Ivoire",
+     "Ivory Coast"
+    ],
+    "air_date": "2022-06-17",
+    "season": 12,
+    "number": 1
+   },
+   {
+    "names": [
+     "Kazakhstan"
+    ],
+    "air_date": "2022-10-28",
+    "season": 12,
+    "number": 2
+   },
+   {
+    "names": [
+     "Serbie",
+     "Serbia"
+    ],
+    "air_date": "2023-04-21",
+    "season": 13,
+    "number": 1
+   },
+   {
+    "names": [
+     "Viêt Nam",
+     "Vietnam"
+    ],
+    "air_date": "2023-04-28",
+    "season": 13,
+    "number": 2
+   },
+   {
+    "names": [
+     "Paraguay"
+    ],
+    "air_date": "2023-11-03",
+    "season": 13,
+    "number": 3
+   },
+   {
+    "names": [
+     "Algérie",
+     "Algeria"
+    ],
+    "air_date": "2024-03-08",
+    "season": 14,
+    "number": 1
+   },
+   {
+    "names": [
+     "Taïwan",
+     "Taiwan"
+    ],
+    "air_date": "2024-05-10",
+    "season": 14,
+    "number": 2
+   },
+   {
+    "names": [
+     "Les pays baltes",
+     "Baltic countries"
+    ],
+    "air_date": "2024-11-29",
+    "season": 14,
+    "number": 3
+   },
+   {
+    "names": [
+     "Géorgie",
+     "Georgia"
+    ],
+    "air_date": "2025-02-28",
+    "season": 14,
+    "number": 4
+   },
+   {
+    "names": [
+     "Oman"
+    ],
+    "air_date": "2025-06-20",
+    "season": 15,
+    "number": 1
+   },
+   {
+    "names": [
+     "Salvador"
+    ],
+    "air_date": "2025-09-05",
+    "season": 15,
+    "number": 2
+   },
+   {
+    "names": [
+     "Alaska"
+    ],
+    "air_date": "2026-03-27",
+    "season": 16,
+    "number": 1
+   },
+   {
+    "names": [
+     "Ile Maurice",
+     "Mauritius"
+    ],
+    "air_date": "2026-05-29",
+    "season": 16,
+    "number": 2
+   }
+  ],
+  "tvdb": {
+   "S00E22": "Bonus 1 : Les origines",
+   "S00E103": "J'irai Rajeunir chez vous - épisode 13 - Les volcans sous-marins des Antilles",
+   "S00E129": "L'Intégrale - Mali",
+   "S00E130": "L'Intégrale - Québec",
+   "S00E131": "L'Intégrale - Vanuatu",
+   "S01E17": "Sud de la France",
+   "S04E04": "Hawaï",
+   "S06E01": "Irlande",
+   "S06E03": "Caraïbes",
+   "S06E04": "Italie",
+   "S06E05": "Kirghizistan",
+   "S07E01": "Bhoutan",
+   "S07E02": "Croatie",
+   "S07E03": "Colombie",
+   "S07E04": "Malte",
+   "S08E02": "Bosnie-Herzégovine",
+   "S08E03": "Thaïlande",
+   "S08E04": "Tanzanie",
+   "S08E05": "Pays-Bas",
+   "S09E01": "Arménie",
+   "S09E03": "Les îles Kiribati",
+   "S12E01": "Côte d'Ivoire",
+   "S13E01": "Serbie",
+   "S13E02": "Viêt Nam",
+   "S14E01": "Algérie",
+   "S14E02": "Taïwan",
+   "S14E03": "Les pays baltes",
+   "S15E01": "Géorgie",
+   "S16E01": "Alaska",
+   "S16E02": "Île Maurice"
+  }
+ },
+ "expect": {
+  "available": {
+   "15557": {
+    "service": "S01E01",
+    "name": "Japon",
+    "match": "title",
+    "same": true
+   },
+   "15559": {
+    "service": "S17E02",
+    "name": "Mali",
+    "match": "title",
+    "same": true
+   },
+   "15560": {
+    "service": "S17E03",
+    "name": "Québec",
+    "match": "title",
+    "same": true
+   },
+   "15561": {
+    "service": "S17E01",
+    "name": "Vanuatu",
+    "match": "title",
+    "same": true
+   },
+   "15562": {
+    "service": "S01E05",
+    "name": "Inde",
+    "match": "title",
+    "same": true
+   },
+   "15565": {
+    "service": "S01E04",
+    "name": "Australie",
+    "match": "title",
+    "same": true
+   },
+   "15569": {
+    "service": "S02E05",
+    "name": "Cambodge",
+    "match": "title",
+    "same": true
+   },
+   "15570": {
+    "service": "S02E01",
+    "name": "Émirats arabes unis",
+    "match": "title",
+    "same": true
+   },
+   "15577": {
+    "service": "S03E07",
+    "name": "Israël",
+    "match": "title",
+    "same": true
+   },
+   "15580": {
+    "service": "S03E08",
+    "name": "Finlande",
+    "match": "title",
+    "same": true
+   },
+   "15581": {
+    "service": "S03E01",
+    "name": "Cuba",
+    "match": "title",
+    "same": true
+   },
+   "15582": {
+    "service": "S03E05",
+    "name": "Nouvelle-Zélande",
+    "match": "title",
+    "same": true
+   },
+   "15585": {
+    "service": "S03E02",
+    "name": "Grèce",
+    "match": "title",
+    "same": true
+   },
+   "15587": {
+    "service": "S04E03",
+    "name": "Corée du Sud",
+    "match": "title",
+    "same": true
+   },
+   "15588": {
+    "service": "S04E04",
+    "name": "Ghana",
+    "match": "title",
+    "same": true
+   },
+   "15589": {
+    "service": "S04E05",
+    "name": "Mongolie",
+    "match": "title",
+    "same": true
+   },
+   "15590": {
+    "service": "S04E01",
+    "name": "Hawaï",
+    "match": "title",
+    "same": true
+   },
+   "15591": {
+    "service": "S04E02",
+    "name": "Albanie",
+    "match": "title",
+    "same": true
+   },
+   "15592": {
+    "service": "S05E05",
+    "name": "Californie",
+    "match": "title",
+    "same": true
+   },
+   "15593": {
+    "service": "S05E04",
+    "name": "Namibie",
+    "match": "title",
+    "same": true
+   },
+   "15598": {
+    "service": "S06E01",
+    "name": "Espagne",
+    "match": "title",
+    "same": true
+   },
+   "15599": {
+    "service": "S06E05",
+    "name": "Irlande",
+    "match": "title",
+    "same": true
+   },
+   "15603": {
+    "service": "S06E03",
+    "name": "Kirghizistan",
+    "match": "title",
+    "same": true
+   },
+   "15611": {
+    "service": "S08E03",
+    "name": "Thaïlande",
+    "match": "title",
+    "same": true
+   },
+   "15616": {
+    "service": "S09E03",
+    "name": "Kiribati",
+    "match": "title"
+   },
+   "28488": {
+    "service": "S11E01",
+    "name": "Costa Rica",
+    "match": "title",
+    "same": true
+   },
+   "50621": {
+    "service": "S12E02",
+    "name": "Kazakhstan",
+    "match": "title",
+    "same": true
+   }
+  },
+  "titlesAgree": true,
+  "season_map": {}
+ }
+}

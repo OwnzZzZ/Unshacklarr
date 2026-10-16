@@ -1,6 +1,24 @@
 const $ = (s) => document.querySelector(s);
 /* A help text, one sentence a line: easier to read than a block. */
 const breakSentences = (text) => text.replace(/([.!?]) (?=\p{Lu})/gu, "$1\n").replace(/([。！？])(?=\S)/gu, "$1\n");
+/* A series' poster, or one made of its initials when Sonarr has none or it doesn't load: never the browser's broken
+   image ("The Search for Leah Croucher: A Parent's Nightmare", banner only on TheTVDB, is SL). An image all the same,
+   so every place sizes it as before. By mj23au */
+function initialsOf(name) {
+  const words = String(name || "").replace(/\([^)]*\)/g, " ").split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  const small = /^(the|a|an|and|of|for|in|on|at|to|with|from|by|le|la|les|de|du|des|et|der|die|das|el|los)$/i;
+  const kept = words.filter((w) => !small.test(w));
+  return (kept.length ? kept : words).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
+}
+function posterSrc(src, name) {
+  if (src) return src;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 300"><rect width="200" height="300" fill="#1c2430"/>`
+    + `<text x="100" y="150" dy=".35em" text-anchor="middle" font-family="system-ui,-apple-system,Segoe UI,sans-serif" `
+    + `font-size="84" font-weight="700" fill="#8c97a8">${initialsOf(name)}</text></svg>`;
+  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+}
+const posterFail = (name) => (e) => { const s = posterSrc("", name); if (e.target.getAttribute("src") !== s) e.target.src = s; };
+
 function lineBySentence(node) {
   const walk = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
   while (walk.nextNode()) walk.currentNode.nodeValue = breakSentences(walk.currentNode.nodeValue);
@@ -45,16 +63,28 @@ function langCorner() {
 }
 let T = null, TP = [];  // exact texts; patterns, the most specific first
 const translated = new Set();  // texts already in the language: not taken for English again
+const trSeen = new Map();  // key -> its translation, or null: a series' title is tried against the patterns once
 function tr(text, depth = 0) {
   const key = text.replace(/\s+/g, " ").trim();
   if (!T || !key) return text;
   let out = T[key];
-  if (out === undefined && key.includes(" · ")) {  // pieces joined by " · ": each its own text
+  if (out === undefined && depth === 0 && trSeen.has(key)) out = trSeen.get(key) ?? undefined;
+  else if (out === undefined && depth === 0) {
+    out = trFind(key, depth);
+    if (trSeen.size > 5000) trSeen.clear();  // "3 min ago" changes all day: bounded
+    trSeen.set(key, out ?? null);
+  }
+  else if (out === undefined) out = trFind(key, depth);
+  return out === undefined ? text : text.match(/^\s*/)[0] + out + text.match(/\s*$/)[0];
+}
+function trFind(key, depth) {
+  let out;
+  if (key.includes(" · ")) {  // pieces joined by " · ": each its own text
     const parts = key.split(" · "), done = parts.map((x) => tr(x, depth + 1));
     if (done.some((x, i) => x !== parts[i])) out = done.join(" · ");
   }
-  if (out === undefined && depth < 3) {
-    for (const p of TP) {
+  if (out === undefined && depth < 3 && key.length <= 300) {  // a long text (a log line) is no template: their lazy groups
+    for (const p of TP) {                                       // backtrack for seconds on it
       if (!key.includes(p.anchor)) continue;
       const m = p.re.exec(key);
       // a template with little text of its own ("{0} ago", "{0} of {1}") takes short fillers only, not a whole sentence
@@ -63,7 +93,7 @@ function tr(text, depth = 0) {
       if (m) { out = p.to.replace(/\{(\d+)\}/g, (_, i) => tr(m[+i + 1] ?? "", depth + 1)); break; }
     }
   }
-  return out === undefined ? text : text.match(/^\s*/)[0] + out + text.match(/\s*$/)[0];
+  return out;
 }
 const I18N_SKIP = ".term, .cm-editor, pre, code, textarea, script, style, [translate=no]", I18N_ATTRS = ["placeholder", "title", "aria-label", "data-tip"];
 function trText(node) {
@@ -72,6 +102,7 @@ function trText(node) {
   const t = tr(v);
   if (t === v) return;
   const out = node.parentElement?.closest(".field > small") ? breakSentences(t) : t;
+  if (translated.size > 5000) translated.clear();  // live texts ("43%", "3 min ago") would fill it over days
   translated.add(out);
   node.nodeValue = out;
 }
@@ -133,6 +164,8 @@ async function api(path, opts = {}) {
   return r.json();
 }
 
+/* Asking a service that is slow to answer: after 20 s, it may be waiting for a sign-in only Unshackle's log shows. */
+const slowHint = (svc) => setTimeout(() => toast(`${svc} is slow to answer. It may be waiting for you to sign in: look at Unshackle's log.`, false, ["OK", () => {}]), 20000);
 function toast(msg, err = false, action = null) {  // action: [label, onclick], e.g. ["Undo", …]
   const t = document.createElement("div");
   t.className = "toast" + (err ? " err" : "") + (action ? " act" : "");
@@ -156,6 +189,25 @@ function dirty() {  // a change put back as it was hides the bar again
   $("#savebar").hidden = !unsaved;
   $("#d-save").hidden = !unsaved;
   if (current) renderInherited(S.config.series[current.tvdbId]);  // a series option may now hide an inherited one
+}
+
+/* Spoiler-free: an episode's title blurred until clicked, for a series that asks (else the settings). What was shown
+   is remembered in this browser. */
+let revealed;
+try { revealed = new Set(JSON.parse(localStorage.getItem("unshacklarr.revealed") || "[]")); } catch { revealed = new Set(); }
+const spoilerFree = (tvdbId) => S.config?.series?.[tvdbId]?.spoiler_free ?? S.config?.settings?.spoiler_free === true;
+const titleHidden = (tvdbId, sxxeyy, title) => !!title && !/^(TBA|Episode \d+)$/i.test(title) && spoilerFree(tvdbId) && !revealed.has(`${tvdbId}-${sxxeyy}`);
+function episodeTitle(tvdbId, sxxeyy, title, className = "") {
+  if (!titleHidden(tvdbId, sxxeyy, title)) return el("span", { className, textContent: title || "" });
+  const show = (ev) => {
+    ev.preventDefault(); ev.stopPropagation();
+    revealed.add(`${tvdbId}-${sxxeyy}`);
+    try { localStorage.setItem("unshacklarr.revealed", JSON.stringify([...revealed].slice(-2000))); } catch { /* shown for now */ }
+    ev.currentTarget.replaceWith(el("span", { className, textContent: title }));
+  };
+  return el("span", { className: `${className} spoiler`.trim(), textContent: title, role: "button", tabIndex: 0,
+    ariaLabel: "Hidden episode title. Press to show it.", title: "Show the title", onclick: show,
+    onkeydown: (ev) => { if (ev.key === "Enter" || ev.key === " ") show(ev); } });
 }
 
 function el(tag, { dataset, ...props } = {}, ...children) {
@@ -252,10 +304,12 @@ function optionPicker(free, onPick) {
   return el("div", { className: "picker" }, input, list);
 }
 
+const mainSonarr = () => S.config?.settings?.sonarr_name || "Sonarr";  // the main Sonarr where libraries are named
 const SEL = { on: false, ids: new Set() };  // the series picked to change together (js/bulk.js)
 function renderWall() {
   const q = $("#search").value.trim().toLowerCase();
-  const svc = $("#f-service").value;
+  const svc = $("#f-service").value, lib = $("#f-library").value;
+  const libsOf = (s) => S.sonarrsOf?.[s.tvdbId] || [];
   const on = (s) => Boolean(S.config.series[s.tvdbId]?.service);
   const failing = (s) => Boolean(S.health[s.tvdbId]) && on(s);
   const counts = { "": S.series.length, "*": S.series.filter(on).length, h: S.config.hidden_series.length, f: S.series.filter(failing).length };
@@ -282,6 +336,7 @@ function renderWall() {
       return (!q || s.title.toLowerCase().includes(q))
         && (!managed || (managed === "f" ? failing(s) : managed === "h" ? S.config.hidden_series.includes(s.tvdbId) : managed === "*" ? on : !on))
         && (!svc || on === svc)
+        && (!lib || (lib === "-" ? !!s.id : libsOf(s).some((o) => o.name === lib)))
         && (!$("#f-missing").checked || s.missing > 0)
         && (!$("#f-monitored").checked || s.monitored);
     })
@@ -292,6 +347,12 @@ function renderWall() {
       const art = el("span", { className: "art" });
       if (s.poster) art.append(el("img", { src: s.poster, alt: "", loading: "lazy", decoding: "async" }));
       if (conf?.service) art.append(el("span", { className: "svc", textContent: conf.service }));
+      if (libsOf(s).length) {  // the Sonarr libraries it is in, by their names; one switched off for it dimmed (by mj23au, #10)
+        const off = (name, main) => Boolean(conf?.service) && Boolean(main ? conf.main_off : conf.sonarrs?.[name]?.off);
+        art.append(el("span", { className: "lib" }, ...[...(s.id ? [[mainSonarr(), true]] : []), ...libsOf(s).map((o) => [o.name, false])]
+          .flatMap(([n, main], i) => [...(i ? [" · "] : []),
+            el("span", { textContent: n, ...(off(n, main) ? { className: "lib-off", title: "Switched off" } : {}) })])));
+      }
       const sick = conf?.service && S.health[s.tvdbId];
       if (sick) art.append(el("span", { className: "sick", title: `Its last ${sick.failing} downloads failed${sick.cause ? `: ${sick.cause}` : ""}`, textContent: "!" }));
       if (S.config.hidden_series.includes(s.tvdbId)) {
@@ -340,13 +401,15 @@ async function openDrawer(s, tab, fromRoute = false) {
   const conf = (S.config.series[s.tvdbId] ??= { service: "", title: "", options: {}, service_options: {} });
   conf.options ??= {}; conf.service_options ??= {};  // before the snapshot: filling them in is no change
   drawerSnapshot = { id: s.tvdbId, existed, conf: JSON.stringify(conf) };  // what closing it compares with
-  if (s.poster) $("#d-poster").src = s.poster; else $("#d-poster").removeAttribute("src");
+  $("#d-poster").src = posterSrc(s.poster, s.title);
   $("#d-title").textContent = s.title;
   renderMeta(s);
   $("#d-service").replaceChildren(el("option", { value: "", textContent: "Not downloaded by Unshackle" }),
     ...S.services.map((t) => el("option", { value: t, textContent: t })));
   $("#d-service").value = conf.service || "";
   $("#d-url").value = conf.title || "";
+  fillProgrammes(conf);
+  fillPages(conf);
   $("#d-fallback").value = conf.fallback_profiles || "";
   renderFind(conf.service);
   $("#d-subs").value = conf.subs_accept || "";
@@ -367,7 +430,8 @@ async function openDrawer(s, tab, fromRoute = false) {
   fillAdv(conf, s.title);
   fillQualityImport(conf);
   $("#d-adv").open = Boolean(conf.file_name || Object.keys(conf.season_map || {}).length || conf.episode_offset || conf.season_offset
-    || Object.keys(conf.episode_map || {}).length || conf.join_parts === false || conf.parts || (conf.episode_name && conf.episode_name !== "joined"));
+    || Object.keys(conf.episode_map || {}).length || conf.join_parts === false || conf.parts || (conf.episode_name && conf.episode_name !== "joined")
+    || conf.programmes);
   optionsEditor($("#d-opts"), S.dlOptions, conf.options);
   renderHideToggle();
   $("#drawer").classList.add("open");
@@ -394,7 +458,8 @@ function renderSeriesState() {
   const sick = conf.service && S.health[current.tvdbId];
   const [cls, text] = !conf.service ? ["", "Not downloaded by Unshackle"]
     : sick ? ["down", `Its downloads from ${svcName(conf.service)} fail`]
-    : !conf.title ? ["warn", `On ${svcName(conf.service)}: its series URL is missing`]
+    : !conf.title && !conf.programmes ? ["warn", `On ${svcName(conf.service)}: its series URL is missing`]
+    : conf.programmes ? ["ok", `Downloaded from ${svcName(conf.service)}, each episode its own programme`]
     : ["ok", `Downloaded from ${svcName(conf.service)}`];
   box.classList.remove("ok", "down", "warn");
   if (cls) box.classList.add(cls);
@@ -445,6 +510,7 @@ async function closeDrawer(fromRoute = false) {
     else return keepDrawer(fromRoute);
   }
   if (!fromRoute && drawerPushed) { history.back(); return true; }  // popstate closes it, and back stays in step
+  if (drawerTab === "settings") leaveNews((n) => n.series);  // its settings were open: their news are seen
   $("#drawer").classList.remove("open");
   $("#drawer").setAttribute("aria-hidden", "true");
   $("#backdrop").classList.remove("open");
@@ -505,7 +571,7 @@ async function loadSuggestions(s, refresh = false) {
   box.replaceChildren(...links.map((l) => el("button", {
     ariaLabel: `Use ${l.service}: ${l.url}`,
     onclick: () => applySuggestion(l),
-  }, el("b", { textContent: l.service }), el("span", { textContent: l.needs_series_url || l.episode ? `episode link · ${l.url}` : l.url }),
+  }, el("b", { textContent: l.service }), el("span", { textContent: l.needs_series_url || l.episode ? `episode link · ${l.url}` : l.found_by === "search" ? `found by its title · ${l.url}` : l.url }),
     el("small", { textContent: l.country }))));
   box.querySelectorAll("button").forEach((b, i) => b.dataset.url = links[i].url);
 }
@@ -524,6 +590,8 @@ async function applySuggestion(link) {
     $("#d-url").focus();
   }
   renderSeriesState();
+  renderMeta(current);
+  renderCheck(current, true);  // Episodes offers to ask the service at once, as a typed link does
   optionsEditor($("#d-service-opts"), await loadServiceOptions(conf.service).catch(() => []), conf.service_options);
   dirty();
   renderWall();
@@ -610,6 +678,43 @@ async function knownProfiles(service) {
 $("#d-prefer").oninput = (e) => { S.config.series[current.tvdbId].audio_prefer = e.target.value.trim() || undefined; dirty(); };
 $("#d-subs").oninput = (e) => { S.config.series[current.tvdbId].subs_accept = e.target.value.trim() || undefined; dirty(); };
 $("#d-fallback").oninput = (e) => { S.config.series[current.tvdbId].fallback_profiles = e.target.value.trim() || undefined; dirty(); };
+/* Each episode its own programme (BBC Documentaries and the like): found by its title, or by a URL pasted here. */
+function fillProgrammes(conf) {
+  $("#d-programmes").checked = !!conf.programmes;
+  showProgrammes(!!conf.programmes);
+  $("#d-progmap").value = Object.entries(conf.programme_map || {}).map(([a, b]) => `${a} ${b}`).join("\n");
+}
+function showProgrammes(on) {
+  $("#d-progmap-field").hidden = !on;
+  $("#d-probe").hidden = $("#d-probe-state").hidden = on;  // it lists a series URL's episodes
+  // each episode's number comes from its programme: the series' numbering does nothing then
+  for (const id of ["#d-seasons", "#d-pages", "#d-offset", "#d-soffset", "#d-epmap"]) $(id).closest(".field").hidden = on;
+}
+$("#d-programmes").onchange = (e) => {
+  const conf = S.config.series[current.tvdbId];
+  if (e.target.checked) conf.programmes = true; else delete conf.programmes;
+  showProgrammes(e.target.checked);
+  dirty();
+  renderSeriesState();
+};
+/* A season the service lists as a show of its own (SBS: Has Fallen's S02 is "Apollo Has Fallen"): its page. */
+function fillPages(conf) {
+  $("#d-pages").value = Object.entries(conf.season_pages || {})
+    .map(([s, p]) => `S${String(s).padStart(2, "0")} ${p.url}${Number(p.season || 1) !== 1 ? ` ${p.season}` : ""}`).join("\n");
+}
+$("#d-pages").oninput = (e) => {
+  const rows = [...e.target.value.matchAll(/^\s*S?(\d+)\s+(\S+)(?:\s+(\d+))?\s*$/gim)];
+  const conf = S.config.series[current.tvdbId];
+  if (rows.length) conf.season_pages = Object.fromEntries(rows.map((m) => [Number(m[1]), { url: m[2], ...(m[3] && Number(m[3]) !== 1 ? { season: Number(m[3]) } : {}) }]));
+  else delete conf.season_pages;
+  dirty();
+};
+$("#d-progmap").oninput = (e) => {
+  const pairs = [...e.target.value.matchAll(/^\s*(S\d+E\d+)\s+(\S+)\s*$/gim)];
+  const conf = S.config.series[current.tvdbId];
+  if (pairs.length) conf.programme_map = Object.fromEntries(pairs.map((m) => [m[1].toUpperCase(), m[2]])); else delete conf.programme_map;
+  dirty();
+};
 $("#d-url").oninput = async (e) => {
   const conf = S.config.series[current.tvdbId], before = serviceOfLink(conf.title);
   conf.title = e.target.value.trim();
@@ -624,6 +729,7 @@ $("#d-url").oninput = async (e) => {
     conf.service_options = {};
     $("#d-service").value = tag;
     toast(`${svcName(tag)}: recognised from the link`);
+    dirty();  // a series without a service was not part of the save: with one now, Save shows
     renderMeta(current);
     renderCheck(current, true);
     await renderServiceOptions(conf);
@@ -631,11 +737,10 @@ $("#d-url").oninput = async (e) => {
   }
 };
 /* Sonarr as a browser opens it: its public address, else the one Unshacklarr uses unless it's a Docker name (http://sonarr:8989). */
-function sonarrWeb() {
-  const set = S.config.settings || {};
-  if (set.sonarr_public_url) return set.sonarr_public_url.replace(/\/+$/, "");
+function sonarrWeb(url = S.config.settings?.sonarr_url, publicUrl = S.config.settings?.sonarr_public_url) {
+  if (publicUrl) return publicUrl.replace(/\/+$/, "");
   try {
-    const u = new URL(set.sonarr_url);
+    const u = new URL(url);
     // A Docker name or a LAN address only works at home. Sonarr runs beside Unshacklarr (as in the compose file): the
     // name this page was opened with reaches the same machine (Tailscale, a VPN, another LAN name). A LAN address
     // stays as it is through a reverse proxy (no port in the page's address): Sonarr's port is rarely open there,
@@ -646,6 +751,15 @@ function sonarrWeb() {
     return u.origin + u.pathname.replace(/\/+$/, "");
   } catch { return ""; }
 }
+/* The other Sonarr instances that have the series, set up here or not: their names, each a link to it there. */
+function inOtherSonarrs(s, ext) {
+  const others = S.sonarrsOf?.[s.tvdbId] || [];
+  if (!others.length) return [];
+  return others.flatMap((o) => {
+    const web = sonarrWeb(o.url, "");
+    return [" · ", web && o.slug ? ext(o.name, `${web}/series/${o.slug}`) : o.name];
+  });
+}
 /* Under the series' name: it on TVDB, TMDB, its service (the page Unshackle downloads from) and Sonarr. */
 function renderMeta(s) {
   const ext = (label, href) => el("a", { href, target: "_blank", rel: "noopener", textContent: label, title: `This series on ${label}` });
@@ -653,6 +767,7 @@ function renderMeta(s) {
   $("#d-meta").replaceChildren(ext("TVDB", `https://thetvdb.com/dereferrer/series/${s.tvdbId}`),
     ...(s.tmdbId ? [" · ", ext("TMDB", `https://www.themoviedb.org/tv/${s.tmdbId}`)] : []),
     ...(conf?.service && /^https?:\/\//.test(conf.title || "") ? [" · ", ext(svcName(conf.service), conf.title)] : []),
-    ...(sonarrWeb() && s.titleSlug ? [" · ", ext("Sonarr", `${sonarrWeb()}/series/${s.titleSlug}`)] : []),
+    ...(s.id && sonarrWeb() && s.titleSlug ? [" · ", ext("Sonarr", `${sonarrWeb()}/series/${s.titleSlug}`)] : []),
+    ...inOtherSonarrs(s, ext),
     s.year ? ` · ${s.year}` : "");
 }

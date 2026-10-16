@@ -1,0 +1,1579 @@
+{
+ "title": "Stacey Dooley",
+ "tvdb": 272249,
+ "show": {
+  "service": "iP",
+  "title": "https://www.bbc.co.uk/iplayer/episodes/b048vy8l"
+ },
+ "tmdb_key": true,
+ "country": "AU",
+ "inputs": {
+  "service": [
+   {
+    "type": "episode",
+    "name": "Rape on Trial: Episode 1",
+    "id": "m0028vp1",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Rape on Trial: Episode 2",
+    "id": "m0028vp3",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Border Wars",
+    "id": "p00zhqb0",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2012,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Girls Behind Bars",
+    "id": "p00z83kh",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2012,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Investigates: Sex in Strange Places: Brazil",
+    "id": "p03lhsl4",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2016,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Investigates: Sex in Strange Places: Russia",
+    "id": "p03m5lln",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2016,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Young Sex for Sale in Japan",
+    "id": "p04t0h2b",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2017,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "Canada's Lost Girls",
+    "id": "p04tqcby",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2017,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "Mums Selling Their Kids for Sex",
+    "id": "p051xhnz",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2017,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "The Billion Pound Party",
+    "id": "p05b5w4x",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2017,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 10
+   },
+   {
+    "type": "episode",
+    "name": "Second Chance Sex Offenders",
+    "id": "p05tjbkp",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2018,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 11
+   },
+   {
+    "type": "episode",
+    "name": "Russia's War on Women",
+    "id": "p05vb22n",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2018,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 12
+   },
+   {
+    "type": "episode",
+    "name": "Shot by My Neighbour",
+    "id": "p06jy0dl",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2018,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 13
+   },
+   {
+    "type": "episode",
+    "name": "Face to Face with the Arms Dealers",
+    "id": "p07hnqtd",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2019,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 14
+   },
+   {
+    "type": "episode",
+    "name": "Nigeria's Female Suicide Bombers",
+    "id": "p07j7011",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2019,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 15
+   },
+   {
+    "type": "episode",
+    "name": "Costa del Narcos",
+    "id": "m000hqrb",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 16
+   },
+   {
+    "type": "episode",
+    "name": "On the Psych Ward",
+    "id": "p082bxzn",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2020,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 17
+   },
+   {
+    "type": "episode",
+    "name": "Back on the Psych Ward",
+    "id": "p094jg5m",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2021,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 18
+   },
+   {
+    "type": "episode",
+    "name": "Inside the Convent",
+    "id": "m00156nh",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 19
+   },
+   {
+    "type": "episode",
+    "name": "Two Daughters",
+    "id": "m0017x5x",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 20
+   },
+   {
+    "type": "episode",
+    "name": "Stalkers: Episode 1",
+    "id": "p0bf8t9c",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 21
+   },
+   {
+    "type": "episode",
+    "name": "Stalkers: Episode 2",
+    "id": "p0bf8v43",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2022,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 22
+   },
+   {
+    "type": "episode",
+    "name": "Ready for War?",
+    "id": "m001kz0p",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2023,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 23
+   },
+   {
+    "type": "episode",
+    "name": "Inside the Undertakers",
+    "id": "m001s7r1",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2023,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 24
+   },
+   {
+    "type": "episode",
+    "name": "Growing Up Gypsy",
+    "id": "m0028vp5",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 25
+   },
+   {
+    "type": "episode",
+    "name": "Meet the Shoplifters",
+    "id": "m0028vp8",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 26
+   },
+   {
+    "type": "episode",
+    "name": "Fallen Women",
+    "id": "m0032k3z",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2026,
+    "series_title": "Stacey Dooley",
+    "season": 1,
+    "number": 27
+   },
+   {
+    "type": "episode",
+    "name": "Giving Up My Baby",
+    "id": "b048wx68",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2014,
+    "series_title": "Stacey Dooley",
+    "season": 2,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Homeless in Detroit",
+    "id": "b049bcfb",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2014,
+    "series_title": "Stacey Dooley",
+    "season": 2,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Kids in the Crossfire",
+    "id": "b048vxx2",
+    "language": "en",
+    "description": null,
+    "date": null,
+    "cover_url": null,
+    "year": 2014,
+    "series_title": "Stacey Dooley",
+    "season": 2,
+    "number": 3
+   }
+  ],
+  "episodes": [
+   {
+    "id": 59806,
+    "seasonNumber": 0,
+    "episodeNumber": 1,
+    "title": "My Hometown Fanatics",
+    "airDate": "2012-02-20",
+    "airDateUtc": "2012-02-20T22:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59807,
+    "seasonNumber": 0,
+    "episodeNumber": 2,
+    "title": "The Truth about Magaluf",
+    "airDate": "2013-01-07",
+    "airDateUtc": "2013-01-07T22:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59808,
+    "seasonNumber": 0,
+    "episodeNumber": 3,
+    "title": "Saving the Cyber Sex Girls",
+    "airDate": "2015-10-19",
+    "airDateUtc": "2015-10-19T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59809,
+    "seasonNumber": 0,
+    "episodeNumber": 4,
+    "title": "World's Worst Place to Be a Woman",
+    "airDate": "2015-10-26",
+    "airDateUtc": "2015-10-26T22:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59810,
+    "seasonNumber": 0,
+    "episodeNumber": 5,
+    "title": "Young Sex for Sale in Japan",
+    "airDate": "2017-02-28",
+    "airDateUtc": "2017-02-28T22:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59811,
+    "seasonNumber": 0,
+    "episodeNumber": 6,
+    "title": "Canada's Lost Girls",
+    "airDate": "2017-03-07",
+    "airDateUtc": "2017-03-07T22:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59812,
+    "seasonNumber": 0,
+    "episodeNumber": 7,
+    "title": "Mums Selling Their Kids for Sex",
+    "airDate": "2017-05-16",
+    "airDateUtc": "2017-05-16T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59813,
+    "seasonNumber": 0,
+    "episodeNumber": 8,
+    "title": "Kids Selling Drugs Online",
+    "airDate": "2017-07-14",
+    "airDateUtc": "2017-07-14T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59814,
+    "seasonNumber": 0,
+    "episodeNumber": 9,
+    "title": "The Billion Pound Party",
+    "airDate": "2017-08-07",
+    "airDateUtc": "2017-08-07T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59815,
+    "seasonNumber": 0,
+    "episodeNumber": 10,
+    "title": "Second Chance Sex Offenders",
+    "airDate": "2018-01-24",
+    "airDateUtc": "2018-01-24T22:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59816,
+    "seasonNumber": 0,
+    "episodeNumber": 11,
+    "title": "Russia's War On Women",
+    "airDate": "2018-01-31",
+    "airDateUtc": "2018-01-31T22:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59817,
+    "seasonNumber": 0,
+    "episodeNumber": 12,
+    "title": "Gypsy Kids Taken From Home",
+    "airDate": "2018-02-14",
+    "airDateUtc": "2018-02-14T22:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59818,
+    "seasonNumber": 0,
+    "episodeNumber": 13,
+    "title": "Shot by My Neighbor",
+    "airDate": "2018-09-10",
+    "airDateUtc": "2018-09-10T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59819,
+    "seasonNumber": 0,
+    "episodeNumber": 14,
+    "title": "Fashion's Dirty Secrets",
+    "airDate": "2018-10-08",
+    "airDateUtc": "2018-10-08T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59820,
+    "seasonNumber": 0,
+    "episodeNumber": 15,
+    "title": "Nigeria's Female Suicide Bombers",
+    "airDate": "2019-08-14",
+    "airDateUtc": "2019-08-14T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59821,
+    "seasonNumber": 0,
+    "episodeNumber": 16,
+    "title": "The Whale Hunters",
+    "airDate": "2020-01-22",
+    "airDateUtc": "2020-01-22T22:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59822,
+    "seasonNumber": 0,
+    "episodeNumber": 17,
+    "title": "Spycam Sex Criminals",
+    "airDate": "2020-04-01",
+    "airDateUtc": "2020-04-01T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59823,
+    "seasonNumber": 0,
+    "episodeNumber": 18,
+    "title": "Locked Up With Lifers",
+    "airDate": "2020-04-19",
+    "airDateUtc": "2020-04-19T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59824,
+    "seasonNumber": 0,
+    "episodeNumber": 20,
+    "title": "Inside the Convent",
+    "airDate": "2022-03-07",
+    "airDateUtc": "2022-03-07T22:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59825,
+    "seasonNumber": 0,
+    "episodeNumber": 21,
+    "title": "Two Daughters",
+    "airDate": "2022-05-29",
+    "airDateUtc": "2022-05-29T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59826,
+    "seasonNumber": 0,
+    "episodeNumber": 22,
+    "title": "Ready for War?",
+    "airDate": "2023-04-12",
+    "airDateUtc": "2023-04-12T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59827,
+    "seasonNumber": 0,
+    "episodeNumber": 23,
+    "title": "Inside the Undertakers",
+    "airDate": "2023-11-09",
+    "airDateUtc": "2023-11-09T22:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59828,
+    "seasonNumber": 0,
+    "episodeNumber": 24,
+    "title": "Costa Del Narcos",
+    "airDate": "2020-04-26",
+    "airDateUtc": "2020-04-26T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59829,
+    "seasonNumber": 0,
+    "episodeNumber": 25,
+    "title": "On the Psych Ward",
+    "airDate": "2020-02-14",
+    "airDateUtc": "2020-02-14T22:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59830,
+    "seasonNumber": 0,
+    "episodeNumber": 26,
+    "title": "Back in the Psych Ward",
+    "airDate": "2021-06-14",
+    "airDateUtc": "2021-06-14T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59831,
+    "seasonNumber": 0,
+    "episodeNumber": 27,
+    "title": "Beaten by My Boyfriend",
+    "airDate": "2015-05-01",
+    "airDateUtc": "2015-05-01T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59832,
+    "seasonNumber": 0,
+    "episodeNumber": 28,
+    "title": "Migrant Kids in Crisis",
+    "airDate": "2016-04-19",
+    "airDateUtc": "2016-04-19T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59833,
+    "seasonNumber": 0,
+    "episodeNumber": 29,
+    "title": "Stacey on the Frontline: Girls, Guns and ISIS",
+    "airDate": "2016-11-15",
+    "airDateUtc": "2016-11-15T22:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59834,
+    "seasonNumber": 0,
+    "episodeNumber": 30,
+    "title": "Face to Face with ISIS",
+    "airDate": "2018-02-07",
+    "airDateUtc": "2018-02-07T22:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59835,
+    "seasonNumber": 0,
+    "episodeNumber": 31,
+    "title": "Face to Face with Armageddon",
+    "airDate": "2018-09-25",
+    "airDateUtc": "2018-09-25T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59836,
+    "seasonNumber": 0,
+    "episodeNumber": 32,
+    "title": "Face to Face with the Bounty Hunters",
+    "airDate": "2019-07-31",
+    "airDateUtc": "2019-07-31T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59837,
+    "seasonNumber": 0,
+    "episodeNumber": 33,
+    "title": "Face to Face with the Arms Dealers",
+    "airDate": "2019-08-29",
+    "airDateUtc": "2019-08-29T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59838,
+    "seasonNumber": 1,
+    "episodeNumber": 1,
+    "title": "Kids for Sale",
+    "airDate": "2009-10-01",
+    "airDateUtc": "2009-10-01T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59839,
+    "seasonNumber": 1,
+    "episodeNumber": 2,
+    "title": "Kids with Machetes",
+    "airDate": "2009-10-08",
+    "airDateUtc": "2009-10-08T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59840,
+    "seasonNumber": 2,
+    "episodeNumber": 1,
+    "title": "Kids with Guns",
+    "airDate": "2010-10-07",
+    "airDateUtc": "2010-10-07T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59841,
+    "seasonNumber": 2,
+    "episodeNumber": 2,
+    "title": "Sex Trafficking in Cambodia",
+    "airDate": "2010-10-14",
+    "airDateUtc": "2010-10-14T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59842,
+    "seasonNumber": 3,
+    "episodeNumber": 1,
+    "title": "Thailand",
+    "airDate": "2011-03-28",
+    "airDateUtc": "2011-03-28T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59843,
+    "seasonNumber": 3,
+    "episodeNumber": 2,
+    "title": "Kenya",
+    "airDate": "2011-06-09",
+    "airDateUtc": "2011-06-09T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59844,
+    "seasonNumber": 4,
+    "episodeNumber": 1,
+    "title": "Cocaine Capital of the World",
+    "airDate": "2013-08-12",
+    "airDateUtc": "2013-08-12T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59845,
+    "seasonNumber": 4,
+    "episodeNumber": 2,
+    "title": "Thailand's Drug Craze",
+    "airDate": "2013-08-20",
+    "airDateUtc": "2013-08-20T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59846,
+    "seasonNumber": 4,
+    "episodeNumber": 3,
+    "title": "Europe's Dirty Drugs Secret",
+    "airDate": "2013-08-26",
+    "airDateUtc": "2013-08-26T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59847,
+    "seasonNumber": 5,
+    "episodeNumber": 1,
+    "title": "Booze, Bar Crawls & Bulgaria",
+    "airDate": "2013-09-30",
+    "airDateUtc": "2013-09-30T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59848,
+    "seasonNumber": 5,
+    "episodeNumber": 2,
+    "title": "Sex, Stags and Prague",
+    "airDate": "2013-10-07",
+    "airDateUtc": "2013-10-07T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59849,
+    "seasonNumber": 5,
+    "episodeNumber": 3,
+    "title": "Crime, Carnage and Cancun",
+    "airDate": "2013-10-14",
+    "airDateUtc": "2013-10-14T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59850,
+    "seasonNumber": 6,
+    "episodeNumber": 1,
+    "title": "Meth and Madness in Mexico",
+    "airDate": "2015-04-07",
+    "airDateUtc": "2015-04-07T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59851,
+    "seasonNumber": 6,
+    "episodeNumber": 2,
+    "title": "Ecstasy Wars",
+    "airDate": "2015-04-14",
+    "airDateUtc": "2015-04-14T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59852,
+    "seasonNumber": 6,
+    "episodeNumber": 3,
+    "title": "The Cannabis Smugglers",
+    "airDate": "2015-04-21",
+    "airDateUtc": "2015-04-21T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59853,
+    "seasonNumber": 7,
+    "episodeNumber": 1,
+    "title": "Turkey",
+    "airDate": "2016-03-08",
+    "airDateUtc": "2016-03-08T22:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59854,
+    "seasonNumber": 7,
+    "episodeNumber": 2,
+    "title": "Brazil",
+    "airDate": "2016-03-15",
+    "airDateUtc": "2016-03-15T22:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59855,
+    "seasonNumber": 7,
+    "episodeNumber": 3,
+    "title": "Russia",
+    "airDate": "2016-03-22",
+    "airDateUtc": "2016-03-22T22:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59856,
+    "seasonNumber": 8,
+    "episodeNumber": 1,
+    "title": "Stalkers: Episode 1",
+    "airDate": "2022-01-19",
+    "airDateUtc": "2022-01-19T22:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59857,
+    "seasonNumber": 8,
+    "episodeNumber": 2,
+    "title": "Stalkers: Episode 2",
+    "airDate": "2022-01-26",
+    "airDateUtc": "2022-01-26T22:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59858,
+    "seasonNumber": 9,
+    "episodeNumber": 1,
+    "title": "Rape on Trial: Episode 1",
+    "airDate": "2025-03-13",
+    "airDateUtc": "2025-03-13T22:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59859,
+    "seasonNumber": 9,
+    "episodeNumber": 2,
+    "title": "Rape on Trial: Episode 2",
+    "airDate": "2025-03-13",
+    "airDateUtc": "2025-03-13T22:55:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59860,
+    "seasonNumber": 9,
+    "episodeNumber": 3,
+    "title": "Meet the Shoplifters",
+    "airDate": "2025-03-20",
+    "airDateUtc": "2025-03-20T22:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59861,
+    "seasonNumber": 9,
+    "episodeNumber": 4,
+    "title": "Growing Up Gypsy",
+    "airDate": "2025-03-27",
+    "airDateUtc": "2025-03-27T22:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59862,
+    "seasonNumber": 10,
+    "episodeNumber": 1,
+    "title": "Fallen Women",
+    "airDate": "2026-10-13",
+    "airDateUtc": "2026-10-13T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 59863,
+    "seasonNumber": 10,
+    "episodeNumber": 2,
+    "title": "Down the K Hole",
+    "airDate": "2026-10-20",
+    "airDateUtc": "2026-10-20T21:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   }
+  ],
+  "series": {
+   "tvdbId": 272249,
+   "tmdbId": 76475,
+   "title": "Stacey Dooley"
+  },
+  "tmdb": [
+   {
+    "names": [
+     "My Hometown Fanatics"
+    ],
+    "air_date": "2012-02-20",
+    "season": 0,
+    "number": 1
+   },
+   {
+    "names": [
+     "The Truth about Magaluf"
+    ],
+    "air_date": "2013-01-07",
+    "season": 0,
+    "number": 2
+   },
+   {
+    "names": [
+     "Young Sex for Sale in Japan"
+    ],
+    "air_date": "2017-02-28",
+    "season": 0,
+    "number": 3
+   },
+   {
+    "names": [
+     "Canada's Lost Girls"
+    ],
+    "air_date": "2017-03-07",
+    "season": 0,
+    "number": 4
+   },
+   {
+    "names": [
+     "Mums Selling Their Kids for Sex"
+    ],
+    "air_date": "2017-05-16",
+    "season": 0,
+    "number": 5
+   },
+   {
+    "names": [
+     "Kids Selling Drugs Online"
+    ],
+    "air_date": "2017-07-14",
+    "season": 0,
+    "number": 6
+   },
+   {
+    "names": [
+     "The Billion Pound Party"
+    ],
+    "air_date": "2017-08-07",
+    "season": 0,
+    "number": 7
+   },
+   {
+    "names": [
+     "Second Chance Sex Offenders"
+    ],
+    "air_date": "2018-01-24",
+    "season": 0,
+    "number": 8
+   },
+   {
+    "names": [
+     "Russia's War on Women"
+    ],
+    "air_date": "2018-01-31",
+    "season": 0,
+    "number": 9
+   },
+   {
+    "names": [
+     "Gypsy Kids Taken From Home"
+    ],
+    "air_date": "2018-02-14",
+    "season": 0,
+    "number": 10
+   },
+   {
+    "names": [
+     "The Billion Pound Party"
+    ],
+    "air_date": "2017-08-07",
+    "season": 0,
+    "number": 12
+   },
+   {
+    "names": [
+     "Nigeria's Female Suicide Bombers"
+    ],
+    "air_date": "2019-08-14",
+    "season": 0,
+    "number": 13
+   },
+   {
+    "names": [
+     "Spycam Sex Criminals"
+    ],
+    "air_date": "2020-04-01",
+    "season": 0,
+    "number": 15
+   },
+   {
+    "names": [
+     "Locked Up With Lifers"
+    ],
+    "air_date": "2020-04-19",
+    "season": 0,
+    "number": 16
+   },
+   {
+    "names": [
+     "Two Daughters"
+    ],
+    "air_date": "2022-05-29",
+    "season": 0,
+    "number": 18
+   },
+   {
+    "names": [
+     "Ready for War?"
+    ],
+    "air_date": "2023-04-12",
+    "season": 0,
+    "number": 19
+   },
+   {
+    "names": [
+     "The Whale Hunters"
+    ],
+    "air_date": "2020-05-03",
+    "season": 0,
+    "number": 20
+   },
+   {
+    "names": [
+     "Kids for Sale"
+    ],
+    "air_date": "2009-10-01",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "names": [
+     "Kids with Machetes"
+    ],
+    "air_date": "2009-10-08",
+    "season": 1,
+    "number": 2
+   },
+   {
+    "names": [
+     "Kids with Guns"
+    ],
+    "air_date": "2010-10-07",
+    "season": 2,
+    "number": 1
+   },
+   {
+    "names": [
+     "Sex Trafficking in Cambodia"
+    ],
+    "air_date": "2010-10-14",
+    "season": 2,
+    "number": 2
+   },
+   {
+    "names": [
+     "Thailand"
+    ],
+    "air_date": "2011-03-28",
+    "season": 3,
+    "number": 1
+   },
+   {
+    "names": [
+     "Kenya"
+    ],
+    "air_date": "2011-06-09",
+    "season": 3,
+    "number": 2
+   },
+   {
+    "names": [
+     "Cocaine Capital of the World"
+    ],
+    "air_date": "2013-08-12",
+    "season": 4,
+    "number": 1
+   },
+   {
+    "names": [
+     "Thailand's Drug Craze"
+    ],
+    "air_date": "2013-08-19",
+    "season": 4,
+    "number": 2
+   },
+   {
+    "names": [
+     "Europe's Dirty Drugs Secret"
+    ],
+    "air_date": "2013-08-26",
+    "season": 4,
+    "number": 3
+   },
+   {
+    "names": [
+     "Booze, Bar Crawls & Bulgaria"
+    ],
+    "air_date": "2013-09-30",
+    "season": 5,
+    "number": 1
+   },
+   {
+    "names": [
+     "Sex, Stags and Prague"
+    ],
+    "air_date": "2013-10-07",
+    "season": 5,
+    "number": 2
+   },
+   {
+    "names": [
+     "Crime, Carnage and Cancun"
+    ],
+    "air_date": "2013-10-14",
+    "season": 5,
+    "number": 3
+   },
+   {
+    "names": [
+     "Meth and Madness in Mexico"
+    ],
+    "air_date": "2015-04-07",
+    "season": 6,
+    "number": 1
+   },
+   {
+    "names": [
+     "Ecstasy Wars"
+    ],
+    "air_date": "2015-04-14",
+    "season": 6,
+    "number": 2
+   },
+   {
+    "names": [
+     "The Cannabis Smugglers"
+    ],
+    "air_date": "2015-04-21",
+    "season": 6,
+    "number": 3
+   },
+   {
+    "names": [
+     "Saving the Cyber Sex Girls"
+    ],
+    "air_date": "2015-10-19",
+    "season": 7,
+    "number": 1
+   },
+   {
+    "names": [
+     "World's Worst Place to Be a Woman?"
+    ],
+    "air_date": "2015-10-26",
+    "season": 7,
+    "number": 2
+   },
+   {
+    "names": [
+     "Young Sex for Sale in Japan"
+    ],
+    "air_date": "2017-02-28",
+    "season": 8,
+    "number": 1
+   },
+   {
+    "names": [
+     "Canada's Lost Girls"
+    ],
+    "air_date": "2017-03-07",
+    "season": 8,
+    "number": 2
+   },
+   {
+    "names": [
+     "Mums Selling Their Kids for Sex"
+    ],
+    "air_date": "2017-06-16",
+    "season": 8,
+    "number": 3
+   },
+   {
+    "names": [
+     "Greece"
+    ],
+    "air_date": "2016-04-19",
+    "season": 9,
+    "number": 1
+   },
+   {
+    "names": [
+     "On the Frontline: Girls, Guns and Isis"
+    ],
+    "air_date": "2016-11-29",
+    "season": 9,
+    "number": 2
+   },
+   {
+    "names": [
+     "Anti-Abortion Camp"
+    ],
+    "air_date": "2016-11-29",
+    "season": 10,
+    "number": 1
+   },
+   {
+    "names": [
+     "Living with Big Game Hunters"
+    ],
+    "air_date": "2016-12-06",
+    "season": 10,
+    "number": 2
+   },
+   {
+    "names": [
+     "Young Sex for Sale in Japan"
+    ],
+    "air_date": "2017-02-28",
+    "season": 11,
+    "number": 1
+   },
+   {
+    "names": [
+     "Canada’s Lost Girls"
+    ],
+    "air_date": "2017-03-07",
+    "season": 11,
+    "number": 2
+   },
+   {
+    "names": [
+     "Mums Selling Their Kids for Sex"
+    ],
+    "air_date": "2017-05-16",
+    "season": 11,
+    "number": 3
+   },
+   {
+    "names": [
+     "Kids Selling Drugs Online"
+    ],
+    "air_date": "2017-07-14",
+    "season": 11,
+    "number": 4
+   },
+   {
+    "names": [
+     "The Billion Pound Party"
+    ],
+    "air_date": "2017-08-07",
+    "season": 11,
+    "number": 5
+   },
+   {
+    "names": [
+     "Second Chance Sex Offenders"
+    ],
+    "air_date": "2018-01-24",
+    "season": 11,
+    "number": 6
+   },
+   {
+    "names": [
+     "Russia's War on Women"
+    ],
+    "air_date": "2018-01-31",
+    "season": 11,
+    "number": 7
+   },
+   {
+    "names": [
+     "Face to Face with Isis"
+    ],
+    "air_date": "2018-02-07",
+    "season": 11,
+    "number": 8
+   },
+   {
+    "names": [
+     "Gypsy Kids Taken from Home"
+    ],
+    "air_date": "2018-02-14",
+    "season": 11,
+    "number": 9
+   },
+   {
+    "names": [
+     "Shot by My Neighbour"
+    ],
+    "air_date": "2018-09-10",
+    "season": 11,
+    "number": 10
+   },
+   {
+    "names": [
+     "Face to Face with Armageddon"
+    ],
+    "air_date": "2018-09-18",
+    "season": 11,
+    "number": 11
+   },
+   {
+    "names": [
+     "Fashion's Dirty Secrets"
+    ],
+    "air_date": "2018-10-08",
+    "season": 11,
+    "number": 12
+   },
+   {
+    "names": [
+     "The Young and Homeless"
+    ],
+    "air_date": "2018-11-13",
+    "season": 11,
+    "number": 13
+   }
+  ],
+  "tvdb": {}
+ },
+ "expect": {
+  "available": {
+   "59810": {
+    "service": "S01E07",
+    "name": "Young Sex for Sale in Japan",
+    "match": "title",
+    "same": true
+   },
+   "59811": {
+    "service": "S01E08",
+    "name": "Canada's Lost Girls",
+    "match": "title",
+    "same": true
+   },
+   "59812": {
+    "service": "S01E09",
+    "name": "Mums Selling Their Kids for Sex",
+    "match": "title",
+    "same": true
+   },
+   "59814": {
+    "service": "S01E10",
+    "name": "The Billion Pound Party",
+    "match": "title",
+    "same": true
+   },
+   "59815": {
+    "service": "S01E11",
+    "name": "Second Chance Sex Offenders",
+    "match": "title",
+    "same": true
+   },
+   "59816": {
+    "service": "S01E12",
+    "name": "Russia's War on Women",
+    "match": "title",
+    "same": true
+   },
+   "59818": {
+    "service": "S01E13",
+    "name": "Shot by My Neighbour",
+    "match": "title",
+    "same": true
+   },
+   "59820": {
+    "service": "S01E15",
+    "name": "Nigeria's Female Suicide Bombers",
+    "match": "title",
+    "same": true
+   },
+   "59824": {
+    "service": "S01E19",
+    "name": "Inside the Convent",
+    "match": "title",
+    "same": true
+   },
+   "59825": {
+    "service": "S01E20",
+    "name": "Two Daughters",
+    "match": "title",
+    "same": true
+   },
+   "59826": {
+    "service": "S01E23",
+    "name": "Ready for War?",
+    "match": "title",
+    "same": true
+   },
+   "59827": {
+    "service": "S01E24",
+    "name": "Inside the Undertakers",
+    "match": "title",
+    "same": true
+   },
+   "59828": {
+    "service": "S01E16",
+    "name": "Costa del Narcos",
+    "match": "title",
+    "same": true
+   },
+   "59829": {
+    "service": "S01E17",
+    "name": "On the Psych Ward",
+    "match": "title",
+    "same": true
+   },
+   "59837": {
+    "service": "S01E14",
+    "name": "Face to Face with the Arms Dealers",
+    "match": "title",
+    "same": true
+   },
+   "59856": {
+    "service": "S01E21",
+    "name": "Stalkers: Episode 1",
+    "match": "title",
+    "same": true
+   },
+   "59857": {
+    "service": "S01E22",
+    "name": "Stalkers: Episode 2",
+    "match": "title",
+    "same": true
+   },
+   "59858": {
+    "service": "S01E01",
+    "name": "Rape on Trial: Episode 1",
+    "match": "title",
+    "same": true
+   },
+   "59859": {
+    "service": "S01E02",
+    "name": "Rape on Trial: Episode 2",
+    "match": "title",
+    "same": true
+   },
+   "59860": {
+    "service": "S01E26",
+    "name": "Meet the Shoplifters",
+    "match": "title",
+    "same": true
+   },
+   "59861": {
+    "service": "S01E25",
+    "name": "Growing Up Gypsy",
+    "match": "title",
+    "same": true
+   },
+   "59862": {
+    "service": "S01E27",
+    "name": "Fallen Women",
+    "match": "title",
+    "same": true
+   },
+   "59830": {
+    "service": "S01E18",
+    "name": "Back on the Psych Ward",
+    "match": "title"
+   },
+   "59854": {
+    "service": "S01E05",
+    "name": "Investigates: Sex in Strange Places: Brazil",
+    "match": "title"
+   },
+   "59855": {
+    "service": "S01E06",
+    "name": "Investigates: Sex in Strange Places: Russia",
+    "match": "title"
+   }
+  },
+  "titlesAgree": true,
+  "season_map": {}
+ }
+}

@@ -1,7 +1,9 @@
 /* Activity. The list holds what runs, then the history; the picked download shows
    its steps, a bar per track and why it ended, with Unshackle's raw output (xterm) folded underneath. */
 const TERM_COLS = 110;
-const OUTCOME = { running: "Running", downloaded: "Downloaded", failed: "Failed", kept: "Kept", interrupted: "Interrupted", stopped: "Stopped", unavailable: "Not out yet", cancelled: "Cancelled" };
+const OUTCOME = { running: "Running", downloaded: "Downloaded", failed: "Failed", kept: "Kept", import: "Import needed", interrupted: "Interrupted", stopped: "Stopped", unavailable: "Not out yet", cancelled: "Cancelled" };
+/* A separate programme no search found has aired: it is not on the service, rather than not out yet */
+const outcomeOf = (c) => c.outcome === "unavailable" && c.notOn ? `Not on ${c.notOn}` : OUTCOME[c.outcome] || c.outcome;
 const KIND = { auto: "automatic sync", burst: "release time", manual: "started by hand", retry: "retried by hand", upgrade: "better language" };
 let term = null, termFit = null, termSocket = null, termFor = null, runsShown = 50, runsTimer = null;
 let runCards = [], picked_run = null, conFilter = "all";
@@ -12,7 +14,7 @@ function duration(ms) {
   const s = Math.round(ms / 1000);
   return s < 60 ? `${s} s` : s < 3600 ? `${Math.floor(s / 60)} min ${String(s % 60).padStart(2, "0")}` : `${Math.floor(s / 3600)} h ${String(Math.round(s / 60) % 60).padStart(2, "0")}`;
 }
-const posterOf = (c) => S.series.find((x) => x.tvdbId === c.tvdbId)?.poster || "";
+const posterOf = (c) => { const s = S.series.find((x) => x.tvdbId === c.tvdbId); return posterSrc(s?.poster, s?.title || c.series); };
 const isLive = (c) => c.outcome === "running";
 const speedOf = (c) => (c.live?.speed || "").replace(/^[A-Za-z]+\s+(?=\d)/, "");  // serve writes "DASH 8.4 MB/s"
 const isQueued = (c) => isLive(c) && (c.live?.status || "queued") === "queued" && c.step === "queued";
@@ -29,7 +31,13 @@ async function openActivity() {
   const seq = ++runsSeq;
   let cards;
   try { cards = await api("/api/runs"); }
-  catch (e) { if (seq === runsSeq) $("#runs-live").replaceChildren(failed(`Could not load the downloads: ${e.message}`, openActivity)); return; }
+  catch (e) {
+    if (seq !== runsSeq) return;
+    $("#runs-live").replaceChildren(failed(`Could not load the downloads: ${e.message}`, openActivity));
+    clearTimeout(runsTimer);
+    runsTimer = setTimeout(activityLater, 10000);  // back from a sleep, the network may not be up yet: tried again
+    return;
+  }
   if (seq !== runsSeq) return;  // a newer call is on its way: this answer may predate a Stop
   runCards = cards;
   clearTimeout(runsTimer);
@@ -37,24 +45,48 @@ async function openActivity() {
   api("/api/leftovers").then((r) => { $("#con-left-n").textContent = r.items.length ? `(${r.items.length})` : ""; }).catch(() => {});
   if ($("#tab-log").hidden) return;
   followLive();
-  runsTimer = setTimeout(openActivity, liveFeed ? 15000 : runCards.some(isLive) ? 2000 : 15000);  // without the feed: polling
+  runsTimer = setTimeout(activityLater, liveFeed ? 15000 : runCards.some(isLive) ? 2000 : 15000);  // without the feed: polling
+}
+function activityLater() {  // the history asked again, not while the tab is out of sight (left open for days)
+  if (document.hidden) runsTimer = setTimeout(activityLater, 15000); else openActivity();
 }
 /* The downloads going on now, pushed by the server as they move; the whole list again when one starts or ends. */
-let liveFeed = null;
+let liveFeed = null, liveNext = null;
 function followLive() {
-  if (liveFeed || !window.EventSource) return;
+  if (liveFeed || !window.EventSource || document.hidden) return;
   liveFeed = new EventSource("/api/runs/live");
   liveFeed.onmessage = (e) => {
     if ($("#tab-log").hidden) { liveFeed.close(); liveFeed = null; return; }
     if (document.hidden) return;  // nothing drawn out of sight: the next message, once back, draws it
-    const live = JSON.parse(e.data), ids = new Set(live.map((c) => c.id));
-    const known = new Set(runCards.filter((c) => isLive(c) && !c.waiting).map((c) => c.id));  // the queued aren't in the feed
-    if (live.length !== known.size || live.some((c) => !known.has(c.id))) return openActivity();  // one started or ended
-    runCards = runCards.map((c) => (ids.has(c.id) ? live.find((x) => x.id === c.id) : c));
-    renderConsole(true);
+    // several messages waiting (a slow phone, a tab just back): only the last one is drawn, once per frame
+    if (liveNext === null) requestAnimationFrame(() => { const data = liveNext; liveNext = null; liveTick(data); });
+    liveNext = e.data;
   };
   liveFeed.onerror = () => { liveFeed?.close(); liveFeed = null; };  // polling takes over; the next load tries again
 }
+function liveTick(data) {
+  if (data === null || $("#tab-log").hidden) return;
+  const live = JSON.parse(data), ids = new Set(live.map((c) => c.id));
+  const known = new Set(runCards.filter((c) => isLive(c) && !c.waiting).map((c) => c.id));  // the queued aren't in the feed
+  if (live.length !== known.size || live.some((c) => !known.has(c.id))) return openActivity();  // one started or ended
+  runCards = runCards.map((c) => (ids.has(c.id) ? live.find((x) => x.id === c.id) : c));
+  renderConsole(true);
+}
+/* Out of sight, Activity stops its live feed and Unshackle's output: a hidden tab runs its timers once a minute
+   after 5 minutes, and the output piled up meanwhile froze the page when it came back. Back in sight, it starts
+   again from what is now, the output from its end. */
+let termResume = null;
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    liveFeed?.close(); liveFeed = null; liveNext = null;
+    if (termSocket) { termResume = termQuery; termSocket.onmessage = null; termSocket.close(); termSocket = null; }
+    return;
+  }
+  if ($("#tab-log").hidden) { termResume = null; return; }
+  if (termResume && termFor) streamTerm(termFor, termResume);
+  termResume = null;
+  openActivity();
+});
 /* A bar redrawn with the page keeps moving from where it was, instead of jumping. */
 const barWidths = new Map();
 function glideBars(root) {
@@ -75,7 +107,7 @@ function renderConsole(liveOnly = false) {  // liveOnly: a tick of the live feed
   if (!liveOnly) {  // the history and its counts: unchanged while the same downloads only move on
     const q = $("#con-search").value.trim().toLowerCase();
     const groups = { all: () => true, downloaded: (c) => c.outcome === "downloaded", failed: (c) => c.outcome === "failed",
-      kept: (c) => c.outcome === "kept", stopped: (c) => ["stopped", "interrupted", "cancelled"].includes(c.outcome) };
+      kept: (c) => c.outcome === "kept" || c.outcome === "import", stopped: (c) => ["stopped", "interrupted", "cancelled"].includes(c.outcome) };
     const searched = runCards.filter((c) => !isLive(c) && (!q || c.series.toLowerCase().includes(q)));
     document.querySelectorAll("#tab-log .con-filters button").forEach((b) => b.querySelector("span").textContent = `(${searched.filter(groups[b.dataset.f]).length})`);
     const pastItems = jobsOf(searched.filter(groups[conFilter]).filter((c) => !liveJobs.has(c.batch)));
@@ -131,7 +163,7 @@ const pulse = () => el("span", { className: "pulse", ariaLabel: "Running", style
 const thumbs = new Map();
 function thumb(key, src) {
   let img = thumbs.get(key);
-  if (!img || img.getAttribute("src") !== src) thumbs.set(key, img = el("img", { alt: "", loading: "lazy", src }));
+  if (!img || img.getAttribute("src") !== src) thumbs.set(key, img = el("img", { alt: "", loading: "lazy", src, onerror: posterFail("") }));
   return img;
 }
 const itemKey = (i) => (i?.job ? `job:${i.job}` : i?.id);
@@ -142,9 +174,9 @@ function jobState(j) {
   const n = { done: 0, failed: 0, stopped: 0, cancelled: 0, downloading: 0, finishing: 0, queued: 0 };
   let progress = 0;
   for (const c of j.cards) {
-    if (c.waiting) n.queued++;
+    if (c.waiting || (isLive(c) && c.step === "queued")) n.queued++;  // waiting for a slot counts as queued (by mj23au, #10)
     else if (isLive(c)) { if (FINISHING.has(c.step)) { n.finishing++; progress += 0.95; } else { n.downloading++; progress += (Number(c.live?.progress) || 0) / 100 * 0.9; } }
-    else if (c.outcome === "downloaded" || c.outcome === "kept") { n.done++; progress += 1; }
+    else if (["downloaded", "kept", "import"].includes(c.outcome)) { n.done++; progress += 1; }
     else if (c.outcome === "failed") { n.failed++; progress += 1; }
     else if (c.outcome === "cancelled") { n.cancelled++; progress += 1; }
     else { n.stopped++; progress += 1; }
@@ -172,20 +204,40 @@ let justOpened = null;  // the card unfolding now: it alone fades in
 let following = null;  // a card unfolded by hand while downloading: once done, the next download unfolds in its place
 const ICON_SPEED = '<path d="M13 3 4 14h7l-1 7 9-11h-7z"/>', ICON_CLOCK = '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>';
 const ICON_GLOBE = '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>', ICON_SWAP = '<path d="M4 8h13l-3-3M20 16H7l3 3"/>';
+const ICON_FILM = '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 12h4M17 12h4"/>';
 /* What serve does once every track is in, before the file is made: decrypting them (a DRM title), repackaging,
    muxing. "" while it still downloads. Without it, a card showed 96% and a stale time left, and seemed stuck. */
 function afterTracks(c) {
   const lv = c.live || {}, phase = String(lv.phase || "");
-  if (phase.startsWith("mux")) return "Muxing";
+  if (phase.startsWith("mux")) return muxPct(c) != null ? `Muxing ${muxPct(c)}%` : "Muxing";
   if (phase.startsWith("repack")) return "Repackaging";
   if (lv.total_tracks && Number(lv.completed_tracks) >= Number(lv.total_tracks)) return c.cdm ? "Decrypting" : "Processing the tracks";
   return "";
 }
+/* How far serve's mux is, from the file it writes in its work folder (Unshacklarr reads that folder when it is
+   mounted, UNSHACKLE_TEMP_DIR): a percentage, and the time left at the pace it goes; null when unknown. */
+const muxPct = (c) => c.mux?.total ? Math.min(99, Math.floor((c.mux.done / c.mux.total) * 100)) : null;
+const muxLog = {};  // run id -> [[time, bytes written]]
+function muxLeft(c) {
+  if (!c.mux?.total) return "";
+  const log = (muxLog[c.id] ||= []), now = Date.now();
+  if (!log.length || log[log.length - 1][1] !== c.mux.done) log.push([now, c.mux.done]);
+  while (log.length > 20) log.shift();
+  const [t0, d0] = log[0], rate = (c.mux.done - d0) / ((now - t0) / 1000);
+  return rate > 0 ? duration(((c.mux.total - c.mux.done) / rate) * 1000) : "";
+}
+const since = (iso) => iso ? duration(Date.now() - new Date(iso)) : "";
 /* The proxy a download goes through: serve's word once it has one, else what was asked; "" for none. */
 function proxyOf(c) {
   if (c.proxy) return c.proxy.provider ? [c.proxy.provider, c.proxy.region?.toUpperCase()].filter(Boolean).join(" · ") : "Custom proxy";
   const asked = c.setup?.proxy;
   return !asked || asked === "none" || "proxy" in c ? "" : asked.includes("//") ? "Custom proxy" : asked.toUpperCase();
+}
+/* The video asked for this download over the series' ladder: "1080p H.264"; "" when none was. */
+function videoOf(c) {
+  const v = c.video_override;
+  if (!v) return "";
+  return [v.quality && `${v.quality}p`, { AVC: "H.264", HEVC: "H.265" }[v.vcodec] || v.vcodec].filter(Boolean).join(" ");
 }
 /* The CDM a download decrypts with: its device, its DRM and level (L3, SL2000), or the server's. */
 function cdmOf(c) {
@@ -233,11 +285,11 @@ function renderJob(j) {
   const cards = el("ol", { className: "job-cards" }, ...j.cards.map((c) => {
     const live = isLive(c);
     const label = c.waiting ? "Queued" : live ? (FINISHING.has(c.step) ? { joining: "Joining parts", finishing: "Finishing", renaming: "Renaming", importing: "Importing" }[c.step]
-      : isQueued(c) ? "Waiting for a slot" : afterTracks(c) || `Downloading ${Math.round(Number(c.live?.progress) || 0)}%`) : OUTCOME[c.outcome] || c.outcome;
-    const tone = c.waiting ? "" : live ? "now" : c.outcome === "downloaded" ? "ok" : c.outcome === "failed" ? "err" : c.outcome === "kept" ? "warn" : "";
+      : isQueued(c) ? "Waiting for a slot" : afterTracks(c) || `Downloading ${Math.round(Number(c.live?.progress) || 0)}%`) : outcomeOf(c);
+    const tone = c.waiting ? "" : live ? "now" : c.outcome === "downloaded" ? "ok" : c.outcome === "failed" ? "err" : c.outcome === "kept" || c.outcome === "import" ? "warn" : "";
     const downloading = isDownloading(c);
     const detail = downloading ? el("div", { className: "jmeta" },  // how fast, how long still: in sight, not a grey line
-        ...[...(afterTracks(c) ? [[ICON_CLOCK, `${afterTracks(c)}: the tracks are in`]] : [[ICON_SPEED, speedOf(c)], [ICON_CLOCK, timeLeft(c) && `${timeLeft(c)} left`]]), [ICON_GLOBE, proxyOf(c), "extra"],
+        ...[...(afterTracks(c) ? [[ICON_CLOCK, muxLeft(c) ? `${afterTracks(c)} · ${muxLeft(c)} left` : `${afterTracks(c)} · ${since(c.mux_from || c.tracks_in)}`]] : [[ICON_SPEED, speedOf(c)], [ICON_CLOCK, timeLeft(c) && `${timeLeft(c)} left`]]), [ICON_GLOBE, proxyOf(c), "extra"], [ICON_FILM, videoOf(c), "extra"],
           [ICON_SWAP, c.serviceEpisode && c.serviceEpisode !== c.sxxeyy && `${c.serviceEpisode} on ${c.service}`, "extra"]]
           .filter(([, t]) => t).map(([icon, t, extra]) => { const chip = metaChip(icon, t); if (extra) chip.classList.add(extra); return chip; }))
       : el("small", { textContent: !live && c.ended ? [c.cause, `took ${duration(new Date(c.ended) - new Date(c.started))}`, c.size && size(c.size)].filter(Boolean).join(" · ") : "" });
@@ -291,7 +343,7 @@ function jobTotals(j) {
 function jobDone(j, st) {
   const tried = j.cards.filter((c) => c.ended && c.outcome !== "cancelled");
   const first = Math.min(...tried.map((c) => new Date(c.started))), last = Math.max(...tried.map((c) => new Date(c.ended)));
-  const done = j.cards.filter((c) => c.outcome === "downloaded" || c.outcome === "kept"), bytes = done.reduce((n, c) => n + (c.size || 0), 0);
+  const done = j.cards.filter((c) => ["downloaded", "kept", "import"].includes(c.outcome)), bytes = done.reduce((n, c) => n + (c.size || 0), 0);
   const took = tried.length ? last - first : 0;
   const per = done.length ? done.reduce((n, c) => n + (new Date(c.ended) - new Date(c.started)), 0) / done.length : 0;
   const tone = st.n.failed ? "err" : done.length === j.cards.length ? "ok" : "mut";
@@ -310,7 +362,7 @@ function listRow(c) {
     : c.outcome === "unavailable" && c.checks > 1 ? `${c.service} · checked ${c.checks} times, last ${day(started)} ${time(started)}`
     : `${day(started)} ${time(started)}${c.ended ? ` · ${duration(new Date(c.ended) - started)}` : ""}`;
   const side = isLive(c) ? (isQueued(c) ? el("span", { className: "chip", textContent: "Queued" }) : pulse())
-    : el("span", { className: `chip o-${c.outcome}`, textContent: OUTCOME[c.outcome] || c.outcome });
+    : el("span", { className: `chip o-${c.outcome}`, textContent: outcomeOf(c) });
   const row = el("button", { className: "crow" + (c.id === picked_run ? " sel" : "") + hovering(`row:${c.id}`), dataset: { hk: `row:${c.id}` }, onclick: () => pickRun(c.id) },
     thumb(`row:${c.id}`, posterOf(c)),
     el("span", {}, el("b", {}, el("span", { textContent: c.series }), el("em", { textContent: c.sxxeyy })),
@@ -346,9 +398,9 @@ async function showLeftovers() {
     } catch (err) { e.target.disabled = false; toast(err.message, true); }
   } });
   const rows = r.items.map((it) => {
-    const poster = S.series.find((x) => x.tvdbId === it.tvdbId)?.poster || "";
+    const poster = posterSrc(S.series.find((x) => x.tvdbId === it.tvdbId)?.poster, it.series);
     const age = Math.floor((Date.now() / 1000 - it.since) / 86400);
-    return el("div", { className: "left-row" }, el("img", { alt: "", src: poster }),
+    return el("div", { className: "left-row" }, el("img", { alt: "", loading: "lazy", src: poster, onerror: posterFail(it.series) }),
       el("div", {}, el("b", { textContent: `${it.series || `TVDB ${it.tvdbId}`} ${it.sxxeyy}` }),
         el("small", { className: "why", textContent: it.cause || (it.outcome ? OUTCOME[it.outcome] : "No download history for it") }),
         el("small", { textContent: `${it.size >= 2 ** 30 ? `${(it.size / 2 ** 30).toFixed(1)} GB` : `${Math.max(1, Math.round(it.size / 2 ** 20))} MB`} · waiting ${age < 1 ? "since today" : `${age} day${age > 1 ? "s" : ""}`} · ${it.sonarr_path}` }),
@@ -364,7 +416,20 @@ $("#con-left").onclick = showLeftovers;
 
 /* Catch up: the aired episodes Unshacklarr's series still miss (those before a series got its service, or the
    automatic sync gave up on), downloaded together as one job. Within so many days, or all. */
-let missingDays = 30;
+let missingDays = 30, missingSonarr = "";
+/* Catch up and Upgrades for another Sonarr (a 4K one) too: which one, beside the rest; one whose ladder was never chosen
+   says so, and nothing is downloaded for it. */
+function sonarrPicker(picked, pick) {
+  const others = S.config.settings.sonarrs || [];
+  if (!others.length) return null;
+  return el("div", { className: "ax-seg", role: "radiogroup", ariaLabel: "Which Sonarr" },
+    ...["", ...others.map((i) => i.name)].map((n) => el("button", { type: "button", role: "radio", textContent: n || mainSonarr(),
+      ariaChecked: String(picked === n), onclick: () => pick(n) })));
+}
+function unsetNote(name) {
+  const inst = (S.config.settings.sonarrs || []).find((i) => i.name === name);
+  return inst && !inst.quality_ladder ? el("p", { className: "status-err", textContent: `Sonarr ${name} has no quality ladder chosen: nothing is downloaded for it until you choose one in Settings, Sonarr.` }) : null;
+}
 async function showMissing() {
   picked_run = "missing";
   $("#con").classList.add("open");
@@ -374,36 +439,41 @@ async function showMissing() {
   $("#cd-foot").replaceChildren();
   $("#cd-main").replaceChildren(loading("Asking Sonarr what your series miss…"));
   let r;
-  try { r = await api(`/api/missing${missingDays ? `?days=${missingDays}` : ""}`); } catch (e) { return $("#cd-main").replaceChildren(failed(e.message, showMissing)); }
+  if (missingSonarr && !(S.config.settings.sonarrs || []).some((i) => i.name === missingSonarr)) missingSonarr = "";
+  const q = new URLSearchParams({ ...(missingDays ? { days: missingDays } : {}), ...(missingSonarr ? { sonarr: missingSonarr } : {}) });
+  try { r = await api(`/api/missing${q.size ? `?${q}` : ""}`); } catch (e) { return $("#cd-main").replaceChildren(failed(e.message, showMissing)); }
   if (picked_run !== "missing") return;
   const ages = el("div", { className: "ax-seg", role: "radiogroup", ariaLabel: "Aired within" }, ...[[7, "7 days"], [30, "30 days"], [90, "90 days"], [0, "All"]].map(([d, label]) =>
     el("button", { type: "button", role: "radio", textContent: label, ariaChecked: String(missingDays === d), onclick: () => { missingDays = d; showMissing(); } })));
-  const go = el("button", { className: "btn primary", textContent: r.items.length === 1 ? "Download it" : `Download the ${r.items.length}`, hidden: !r.items.length,
+  const unset = unsetNote(missingSonarr);
+  const go = el("button", { className: "btn primary", textContent: r.items.length === 1 ? "Download it" : `Download the ${r.items.length}`, hidden: !r.items.length || !!unset,
     onclick: async (e) => {
       e.target.disabled = true;
       try {
-        await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: r.items.map((x) => x.episodeId) }) });
+        await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: r.items.map((x) => x.episodeId), ...(missingSonarr ? { sonarr: missingSonarr } : {}) }) });
         toast(r.items.length === 1 ? "1 episode queued" : `${r.items.length} episodes queued, one after the other`);
       } catch (err) { e.target.disabled = false; toast(err.message, true); }
     } });
   const rows = r.items.map((it) => {
-    const poster = S.series.find((x) => x.tvdbId === it.tvdbId)?.poster || "";
-    return el("div", { className: "left-row" }, el("img", { alt: "", src: poster }),
+    const poster = posterSrc(S.series.find((x) => x.tvdbId === it.tvdbId)?.poster, it.series);
+    return el("div", { className: "left-row" }, el("img", { alt: "", loading: "lazy", src: poster, onerror: posterFail(it.series) }),
       el("div", {}, el("b", { textContent: `${it.series} ${it.sxxeyy}` }),
-        el("small", { textContent: [it.title, `aired ${ago(it.aired)}`].filter(Boolean).join(" · ") })));
+        el("small", {}, ...(it.title ? [episodeTitle(it.tvdbId, it.sxxeyy, it.title), " · "] : []), `aired ${ago(it.aired)}`)));
   });
   $("#cd-main").replaceChildren(el("div", { style: "display:grid;gap:14px" },
     el("div", { className: "cd-head" }, el("div", {}, el("h3", { textContent: "Catch up" }),
       el("small", { className: "line1", textContent: "Episodes that aired, are monitored and have no file in Sonarr, for the series Unshackle downloads. The automatic sync only looks at recent ones." }))),
+    ...[sonarrPicker(missingSonarr, (n) => { missingSonarr = n; showMissing(); }), unset].filter(Boolean),
     el("div", { className: "miss-bar" }, ages, go),
     ...(rows.length ? [el("div", {}, ...rows)] : [el("p", { className: "muted", textContent: missingDays ? `Nothing missing from the last ${missingDays} days.` : "Nothing missing: every aired episode has its file." })])));
 }
 $("#con-missing").onclick = showMissing;
 
 /* Upgrades: the files of the series with a quality ladder that are not on its first step, checked against the
-   service's tracks (one episode at a time, in the background); those it has on an earlier step are replaced. */
-let upgradeTimer = null, upgradeSkip = new Set();
-async function showUpgrades() {
+   service's tracks (a series' episodes 10 at a time, in the background; answers kept); those it has on an earlier step are replaced. */
+let upgradeTimer = null, upgradePick = new Set(), upgradeOpen = new Set(), upgradeSonarr = "";
+let upgradeLast = null;  // the last answer: a tick of a box draws again from it, without asking the server
+async function showUpgrades(fresh = true) {
   picked_run = "upgrades";
   clearTimeout(upgradeTimer);
   $("#con").classList.add("open");
@@ -412,41 +482,80 @@ async function showUpgrades() {
   $("#cd-raw").hidden = true;
   $("#cd-foot").replaceChildren();
   let r;
-  try { r = await api("/api/upgrades"); } catch (e) { return $("#cd-main").replaceChildren(failed(e.message, showUpgrades)); }
+  if (upgradeSonarr && !(S.config.settings.sonarrs || []).some((i) => i.name === upgradeSonarr)) upgradeSonarr = "";
+  if (fresh !== false || !upgradeLast) {
+    try { r = upgradeLast = await api(`/api/upgrades${upgradeSonarr ? `?sonarr=${encodeURIComponent(upgradeSonarr)}` : ""}`); } catch (e) { return $("#cd-main").replaceChildren(failed(e.message, showUpgrades)); }
+  } else r = upgradeLast;
   if (picked_run !== "upgrades") return;
-  const scan = r.scan, picked = r.items.filter((i) => !upgradeSkip.has(i.episodeId) && !i.running);
-  const check = el("button", { className: "btn" + (scan.running ? " danger" : ""), textContent: scan.running ? "Stop the check" : r.checked ? "Check again" : "Check now",
-    onclick: async (e) => {
-      e.target.disabled = true;
-      try { await api(scan.running ? "/api/upgrades/stop" : "/api/upgrades/check", { method: "POST" }); } catch (err) { toast(err.message, true); }
-      showUpgrades();
-    } });
+  const scan = r.scan, free = r.items.filter((i) => !i.running), picked = free.filter((i) => upgradePick.has(i.episodeId));
+  // every series, or one from its card (asked afresh); the ticks only choose what is replaced (by mj23au, #18)
+  const checkUp = async (button, only = []) => {
+    button.disabled = true;
+    try { await api(scan.running ? "/api/upgrades/stop" : "/api/upgrades/check", { method: "POST", body: JSON.stringify({ sonarr: upgradeSonarr, series: only }) }); } catch (err) { toast(err.message, true); }
+    showUpgrades();
+  };
+  // a stopped check ends the batch it is asking (up to 10 episodes of a series): said, so Stop is seen to work
+  const check = el("button", { className: "btn" + (scan.running ? " danger" : ""), disabled: !!scan.stopping,
+    textContent: scan.stopping ? "Stopping after this batch…" : scan.running ? "Stop the check" : r.checked ? "Check again" : "Check now", onclick: (e) => checkUp(e.target) });
   const go = el("button", { className: "btn primary", hidden: !picked.length || scan.running,
-    textContent: picked.length === 1 ? "Replace it" : `Replace the ${picked.length}`, onclick: async (e) => {
+    textContent: picked.length === 1 ? "Replace it" : `Replace the ${picked.length} selected`, onclick: async (e) => {
       e.target.disabled = true;
       try {
-        await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: picked.map((i) => i.episodeId), replace: true }) });
+        await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: picked.map((i) => i.episodeId), replace: true, ...(upgradeSonarr ? { sonarr: upgradeSonarr } : {}) }) });
         toast(picked.length === 1 ? "1 episode queued, replacing its file" : `${picked.length} episodes queued, replacing their files`);
+        picked.forEach((i) => upgradePick.delete(i.episodeId));
         showUpgrades();
       } catch (err) { e.target.disabled = false; toast(err.message, true); }
     } });
-  const state = scan.running ? `Checking ${scan.done} of ${scan.total}${scan.series ? ` · ${scan.series}` : ""}…`
+  const state = scan.running ? `Checking ${scan.done} of ${scan.total}${scan.sonarr ? ` in ${scan.sonarr}` : ""}${scan.series ? ` · ${scan.series}` : ""}…`
     : r.checked ? `Checked ${ago(r.checked)}${r.stopped ? ", stopped before the end" : ""}${scan.errors ? ` · ${scan.errors} could not be asked` : ""}` : "Not checked yet.";
-  const rows = r.items.map((it) => {
-    const poster = S.series.find((x) => x.tvdbId === it.tvdbId)?.poster || "";
-    const box = el("input", { type: "checkbox", checked: !upgradeSkip.has(it.episodeId), disabled: it.running, ariaLabel: `Replace ${it.series} ${it.sxxeyy}`,
-      onchange: (e) => { if (e.target.checked) upgradeSkip.delete(it.episodeId); else upgradeSkip.add(it.episodeId); showUpgrades(); } });
-    return el("label", { className: "left-row up-row" }, box, el("img", { alt: "", src: poster }),
-      el("div", {}, el("b", { textContent: `${it.series} ${it.sxxeyy}` }),
-        el("small", { textContent: `${it.file} here${it.fileStep ? ` (step ${it.fileStep})` : " (outside the ladder)"} → ${it.better} on the service (step ${it.betterStep} of ${it.ladder})` }),
-        ...(it.running ? [el("small", { className: "left-hand", textContent: "Being replaced now" })] : [])));
+  const selAll = el("button", { className: "btn", hidden: !free.length || scan.running,
+    textContent: picked.length === free.length ? "Select none" : "Select all",
+    onclick: () => { if (picked.length === free.length) upgradePick.clear(); else free.forEach((i) => upgradePick.add(i.episodeId)); showUpgrades(false); } });
+  const bySeries = new Map();
+  for (const it of r.items) { const k = `${it.tvdbId}|${it.series}`; if (!bySeries.has(k)) bySeries.set(k, []); bySeries.get(k).push(it); }
+  const FIN = { joining: "Joining parts", finishing: "Finishing", renaming: "Renaming", importing: "Importing" };
+  const liveBy = new Map(runCards.filter((c) => isLive(c) && (c.instance || "") === upgradeSonarr).map((c) => [`${c.tvdbId}|${c.sxxeyy}`, c]));
+  const liveOf = (it) => liveBy.get(`${it.tvdbId}|${it.sxxeyy}`);  // one lookup per row, not a scan of every card
+  const stateOf = (c) => !c ? "" : c.waiting || isQueued(c) ? "Queued" : FIN[c.step] || `Downloading ${Math.round(Number(c.live?.progress) || 0)}%`;
+  const rows = [...bySeries].map(([k, eps]) => {
+    const poster = posterSrc(S.series.find((x) => x.tvdbId === eps[0].tvdbId)?.poster, eps[0].series);
+    const ids = eps.filter((i) => !i.running).map((i) => i.episodeId), n = ids.filter((id) => upgradePick.has(id)).length;
+    const all = el("input", { type: "checkbox", checked: ids.length > 0 && n === ids.length, indeterminate: n > 0 && n < ids.length, disabled: !ids.length,
+      ariaLabel: `Select every ${eps[0].series} episode`,
+      onclick: (e) => e.stopPropagation(),
+      onchange: (e) => { ids.forEach((id) => (e.target.checked ? upgradePick.add(id) : upgradePick.delete(id))); showUpgrades(false); } });
+    const busy = eps.filter((i) => i.running), queued = busy.filter((i) => { const c = liveOf(i); return !c || c.waiting || isQueued(c); }).length;
+    const busyText = [busy.length - queued && `${busy.length - queued} downloading`, queued && `${queued} queued`].filter(Boolean).join(", ");
+    const list = eps.map((it) => {
+      const box = el("input", { type: "checkbox", checked: upgradePick.has(it.episodeId), disabled: it.running, ariaLabel: `Replace ${it.series} ${it.sxxeyy}`,
+        onchange: (e) => { if (e.target.checked) upgradePick.add(it.episodeId); else upgradePick.delete(it.episodeId); showUpgrades(false); } });
+      return el("label", { className: "left-row up-row up-ep" }, box,
+        el("div", {}, el("b", { textContent: it.sxxeyy }),
+          el("small", { textContent: `${it.file} here${it.fileStep ? ` (step ${it.fileStep})` : " (outside the ladder)"} → ${it.better} on the service (step ${it.betterStep} of ${it.ladder})` }),
+          ...(it.running ? [el("small", { className: "left-hand up-live", textContent: `↓ ${stateOf(liveOf(it)) || "Being replaced now"}` })] : [])));
+    });
+    const card = el("details", { className: "up-card", open: upgradeOpen.has(k), ontoggle: (e) => { if (e.target.open) upgradeOpen.add(k); else upgradeOpen.delete(k); } },
+      el("summary", { className: "left-row up-row" }, all, thumb(`up:${eps[0].tvdbId}`, poster),  // the same image every 3 s
+        el("div", {}, el("b", { textContent: eps[0].series }),
+          el("small", { textContent: [eps.length === 1 ? "1 episode" : `${eps.length} episodes`, n && `${n} selected`, busyText,
+            r.seriesChecked?.[eps[0].tvdbId] && `checked ${ago(r.seriesChecked[eps[0].tvdbId])}`].filter(Boolean).join(" · ") }),
+          ...(busy.length ? [el("small", { className: "left-hand up-live", textContent: "↓ Replacing" })] : [])),
+        el("button", { type: "button", className: "btn small", textContent: "Check", hidden: scan.running,
+          title: `Ask the service again about ${eps[0].series}`,
+          onclick: (e) => { e.preventDefault(); e.stopPropagation(); checkUp(e.target, [eps[0].tvdbId]); } })),
+      ...list);
+    return card;
   });
   $("#cd-main").replaceChildren(el("div", { style: "display:grid;gap:14px" },
     el("div", { className: "cd-head" }, el("div", {}, el("h3", { textContent: "Upgrades" }),
-      el("small", { className: "line1", textContent: "Files your quality ladder says could be better. Check now asks each service, one episode at a time, what it has. Replace downloads the better ones over your files, even when Sonarr ranks both the same (H.264 and H.265 in 1080p)." }))),
-    el("div", { className: "miss-bar" }, el("span", { className: "muted", textContent: state }), el("span", { className: "up-acts" }, check, go)),
+      el("small", { className: "line1", textContent: "Files your quality ladder says could be better. Check now asks each service what it has, up to 10 episodes of a series at a time, and keeps each answer for the days set in Settings, Upgrades. Replace downloads the better ones over your files, even when Sonarr ranks both the same (H.264 and H.265 in 1080p)." }))),
+    ...[sonarrPicker(upgradeSonarr, (n) => { upgradeSonarr = n; upgradePick.clear(); upgradeOpen.clear(); showUpgrades(); }), unsetNote(upgradeSonarr)].filter(Boolean),
+    el("div", { className: "miss-bar" }, el("span", { className: "muted", textContent: state }), el("span", { className: "up-acts" }, selAll, check, go)),
     ...(rows.length ? [el("div", {}, ...rows)] : [el("p", { className: "muted", textContent: scan.running ? "Nothing better found yet." : r.checked ? "Nothing better on the services: every file is already on the best step they have." : "Check now asks each service what it has, one episode at a time." })])));
-  if (scan.running) upgradeTimer = setTimeout(() => picked_run === "upgrades" && showUpgrades(), 3000);
+  // asked again every 3 s while something runs, but not while Activity or the tab is out of sight
+  const tick = () => { if (picked_run !== "upgrades") return; if (document.hidden || $("#tab-log").hidden) upgradeTimer = setTimeout(tick, 3000); else showUpgrades(); };
+  if (scan.running || r.items.some((i) => i.running)) upgradeTimer = setTimeout(tick, 3000);
 }
 $("#con-upgrades").onclick = showUpgrades;
 
@@ -485,7 +594,8 @@ async function showStats() {
 }
 $("#con-stats").onclick = showStats;
 $("#cd-back").onclick = () => { $("#con").classList.remove("open"); picked_run = null; renderConsole(); };
-$("#con-search").oninput = renderConsole;
+let searchTimer = null;  // typed: the history filtered once the typing pauses, not at each key
+$("#con-search").oninput = () => { clearTimeout(searchTimer); searchTimer = setTimeout(renderConsole, 150); };
 document.querySelectorAll("#tab-log .con-filters button").forEach((b) => b.onclick = () => {
   conFilter = b.dataset.f;
   document.querySelectorAll("#tab-log .con-filters button").forEach((x) => x.setAttribute("aria-pressed", x === b));
@@ -498,14 +608,15 @@ addEventListener("scroll", () => {  // a phone: the list is the page
   if (!$("#tab-log").hidden && innerWidth <= 700 && scrollY + innerHeight > document.documentElement.scrollHeight - 400) moreRuns();
 }, { passive: true });
 
-const STEPS = ["Queued", "Downloading", "Joining parts", "Renaming", "Sonarr import"];
-const STEPS_SHORT = ["Queued", "Download", "Join", "Rename", "Import"];
+const STEPS = ["Queued", "Downloading", "Decrypting and muxing", "Joining parts", "Renaming", "Sonarr import"];
+const STEPS_SHORT = ["Queued", "Download", "Mux", "Join", "Rename", "Import"];
 function stepStates(c) {
-  const at = { queued: 0, downloading: 1, joining: 2, finishing: 2, renaming: 3, importing: 4, done: 5 }[c.step] ?? 0;
+  const at = c.step === "downloading" && afterTracks(c) ? 2  // every track in: serve makes the file
+    : { queued: 0, downloading: 1, joining: 3, finishing: 3, renaming: 4, importing: 5, done: 6 }[c.step] ?? 0;
   return STEPS.map((_, i) => {
-    if (i === 2 && c.parts === 1) return "skip";  // one file: nothing to join
+    if (i === 3 && c.parts === 1) return "skip";  // one file: nothing to join
     if (c.outcome === "downloaded") return "done";
-    if (c.outcome === "kept") return i < 4 ? "done" : "warn";
+    if (c.outcome === "kept" || c.outcome === "import") return i < 5 ? "done" : "warn";
     if (i < at) return "done";
     if (i === at) return { running: "now", failed: "fail", stopped: "halt", interrupted: "halt", unavailable: "halt" }[c.outcome] || "halt";
     return "";
@@ -545,7 +656,8 @@ function cardActs(c) {
     setupButton(c),
     live && c.job_id ? act("stop", "Stop", stopRun, "danger") : "",
     !live && c.outcome === "kept" ? act("import", "Import anyway", importKept, "primary") : "",
-    !live && c.episodeId && c.outcome !== "downloaded" && c.outcome !== "kept" ? act("retry", "Retry", retryRun, "primary") : "",
+    !live && c.outcome === "import" ? act("import", "Import", importKept, "primary") : "",
+    !live && c.episodeId && !["downloaded", "kept", "import"].includes(c.outcome) ? act("retry", "Retry", retryRun, "primary") : "",
     !live ? act("delete", "Delete", deleteRun, "danger") : "",
   ].filter(Boolean);
 }
@@ -555,10 +667,22 @@ function runActs(c) {
   return [
     setupButton(c),
     live && c.job_id ? el("button", { className: "btn small danger", textContent: "Stop", onclick: (e) => stopRun(c, e.target) }) : "",
-    !live && c.outcome === "kept" ? el("button", { className: "btn small primary", textContent: "Import anyway", onclick: (e) => importKept(c, e.target) }) : "",
-    !live && c.episodeId && c.outcome !== "downloaded" && c.outcome !== "kept" ? el("button", { className: "btn small primary", textContent: "Retry", onclick: (e) => retryRun(c, e.target) }) : "",
+    !live && (c.outcome === "kept" || c.outcome === "import") ? el("button", { className: "btn small primary", textContent: c.outcome === "kept" ? "Import anyway" : "Import", onclick: (e) => importKept(c, e.target) }) : "",
+    !live && c.episodeId && !["downloaded", "kept", "import"].includes(c.outcome) ? el("button", { className: "btn small primary", textContent: "Retry", onclick: (e) => retryRun(c, e.target) }) : "",
+    !live ? el("button", { className: "btn small", textContent: "Diagnostic", title: "A file to attach to a GitHub issue: versions, settings and this attempt's log, without passwords, keys or tokens",
+      onclick: () => downloadDiagnostic(c) }) : "",
     !live ? el("button", { className: "btn small", textContent: "Delete", onclick: (e) => deleteRun(c, e.target) }) : "",
   ].filter(Boolean);
+}
+async function downloadDiagnostic(c) {
+  try {
+    const r = await fetch(`/api/runs/${encodeURIComponent(c.id)}/diagnostic`);
+    if (!r.ok) throw new Error(await r.text() || r.statusText);
+    const a = el("a", { href: URL.createObjectURL(await r.blob()), download: `unshacklarr-diagnostic-${c.id}.md` });
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast("Diagnostic downloaded: check it, then attach it to the issue");
+  } catch (e) { toast(e.message, true); }
 }
 /* A track as serve names it ("Part 1 · audio fr 2.0"): an icon for its kind, the kind, then what it is in chips. */
 const TRACK_KINDS = {
@@ -592,6 +716,7 @@ function trackDone(t) {
   if (t.took != null) span.append(duration(t.took * 1000));
   return span;
 }
+const tracksOpen = new Set();  // attempts whose downloaded tracks were unfolded: they stay so as it moves on
 /* An attempt's steps, what waits for you, its figures or its end, and its tracks: in its own view and in a job's card. */
 function runBody(c) {
   const started = new Date(c.started), live = isLive(c);
@@ -602,16 +727,28 @@ function runBody(c) {
   const parts = [steps];
   if (live && c.action) parts.push(actionBox(c));
   if (live && c.prompt) parts.push(promptBox(c.prompt));
+  if (live && c.notice) parts.push(el("div", { className: "cd-note warn" },  // Unshackle 6: waits for an approval, nothing to type
+    el("b", { textContent: `${c.service || "The service"} is waiting for you` }), el("span", { textContent: c.notice })));
   if (live) {
     const lv = c.live || {};
+    const muxing = String(lv.phase || "").startsWith("mux");
     parts.push(el("div", { className: "cd-stats" },
-      ...[["Progress", `${Math.round(Number(lv.progress) || 0)}%`], ...(afterTracks(c) ? [["Now", afterTracks(c)]] : [["Speed", speedOf(c) || "–"], ["Left", timeLeft(c) || "–"]]),
-        ...partStat(c), [partStat(c).length ? "Tracks in it" : "Tracks", lv.total_tracks ? `${lv.completed_tracks || 0} of ${lv.total_tracks}` : "–"]]
+      ...[["Progress", `${Math.round(Number(lv.progress) || 0)}%`],
+        ...(muxing ? [["Now", "Muxing"], ["Muxed", c.mux?.total ? `${size(Math.min(c.mux.done, c.mux.total))} of ${size(c.mux.total)}` : since(c.mux_from)], ["Left", muxLeft(c) || "–"]]
+          : afterTracks(c) ? [["Now", afterTracks(c)], ["For", since(c.tracks_in) || "–"]] : [["Speed", speedOf(c) || "–"], ["Left", timeLeft(c) || "–"]]),
+        ...partStat(c), ...(muxing ? [] : [[partStat(c).length ? "Tracks in it" : "Tracks", lv.total_tracks ? `${lv.completed_tracks || 0} of ${lv.total_tracks}` : "–"]])]
         .map(([k, v]) => el("div", {}, el("small", { textContent: k }), el("b", { textContent: v })))));
+    if (muxing) {  // the file being made: how far, or, without its work folder in reach, that it goes on
+      const pct = muxPct(c);
+      parts.push(el("div", { className: "cd-mux" },
+        el("div", {}, el("b", { textContent: "Muxing" }), el("small", { textContent: pct != null
+          ? `${pct}%${muxLeft(c) ? ` · ${muxLeft(c)} left` : ""}` : `for ${since(c.mux_from)}` })),
+        el("span", { className: `bar${pct == null ? " busy" : ""}` }, el("i", { style: `width:${pct ?? 100}%`, dataset: { k: `mux:${c.id}` } }))));
+    }
   } else {
-    const note = { downloaded: ["ok", "Downloaded"], failed: ["err", "Failed"], kept: ["warn", "Sonarr kept its own file"],
+    const note = { downloaded: ["ok", "Downloaded"], failed: ["err", "Failed"], kept: ["warn", "Sonarr kept its own file"], import: ["warn", "Downloaded, import needed"],
       stopped: ["mut", "Stopped"], interrupted: ["mut", "Interrupted: Unshacklarr stopped during it"],
-      unavailable: ["mut", "Not out yet: nothing to download"] }[c.outcome] || ["mut", c.outcome];
+      unavailable: ["mut", c.notOn ? `${outcomeOf(c)}: nothing to download` : "Not out yet: nothing to download"] }[c.outcome] || ["mut", c.outcome];
     if (c.outcome === "downloaded") {  // all went well: one quiet line, not a block
       parts.push(el("div", { className: "cd-note ok inline" }, el("b", { textContent: "✓ Imported" }),  // imported says downloaded too
         ...[c.ended && duration(new Date(c.ended) - started), c.size && size(c.size), checksNote(c)].filter(Boolean).map((t) => el("span", { textContent: t }))));
@@ -632,14 +769,23 @@ function runBody(c) {
     const byPart = Object.groupBy(tracks, (t) => /^Part (\d+)/.exec(t.label)?.[1] || "");
     const numbers = Object.keys(byPart).filter(Boolean);
     // An episode in parts (Koh-Lanta on Molotov): each part under its own head, how far it is, then its tracks
-    parts.push(numbers.length > 1 ? el("div", { className: "cd-tracks" }, ...numbers.map((n) => {
+    const list = numbers.length > 1 ? el("div", { className: "cd-tracks" }, ...numbers.map((n) => {
       const list = byPart[n], done = list.every((t) => t.progress >= 100);
       const pct = Math.round(list.reduce((sum, t) => sum + Math.min(100, t.progress), 0) / list.length);
       return el("div", { className: `tpart${done ? " done" : ""}` },
         el("div", { className: "tpart-head" }, el("b", { textContent: `Part ${n}` }), el("small", { textContent: `of ${numbers.length}` }),
           done ? (() => { const d = trackDone({ took: null }); d.append("Done"); return d; })() : el("span", { className: "now", textContent: `${pct}%` })),
         ...list.map(row));
-    })) : el("div", { className: "cd-tracks" }, ...tracks.map(row)));
+    })) : el("div", { className: "cd-tracks" }, ...tracks.map(row));
+    // every track in: folded into one line, the steps after it in sight; a click shows them again
+    if (tracks.every((t) => t.progress >= 100)) {
+      const took = c.tracks_in && duration(new Date(c.tracks_in) - started);
+      const head = el("summary", {}, trackDone({ took: null }),
+        el("b", { textContent: tracks.length === 1 ? "1 track downloaded" : `${tracks.length} tracks downloaded` }),
+        ...(took ? [el("small", { textContent: took })] : []));
+      parts.push(el("details", { className: "cd-tracks-fold", open: tracksOpen.has(c.id),
+        ontoggle: (e) => (e.target.open ? tracksOpen.add(c.id) : tracksOpen.delete(c.id)) }, head, list));
+    } else parts.push(list);
   }
   return parts;
 }
@@ -671,7 +817,7 @@ function openSetup(c, at) {
 function setupBox(c) {
   const known = "proxy" in c || c.setup.proxy === "none";
   const rows = [["Runs on", c.setup.via], ["On the service", c.serviceEpisode !== c.sxxeyy && c.serviceEpisode],
-    ["Proxy", proxyOf(c) || (known ? "None" : "")], ["CDM", cdmOf(c)], ["Attempt", c.attempts > 1 && String(c.attempts)]].filter(([, v]) => v);
+    ["Proxy", proxyOf(c) || (known ? "None" : "")], ["Video asked", videoOf(c)], ["CDM", cdmOf(c)], ["Attempt", c.attempts > 1 && String(c.attempts)]].filter(([, v]) => v);
   const copy = el("button", { type: "button", className: "jact", ariaLabel: "Copy the command",
     onclick: () => navigator.clipboard.writeText(c.setup.command).then(() => toast("Command copied"), () => toast("The browser refused to copy", true)) });
   copy.innerHTML = ICON_COPY;

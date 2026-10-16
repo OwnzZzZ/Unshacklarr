@@ -1,7 +1,7 @@
 /* Quality ladders (Settings, Quality), the other Unshackle servers (Settings, Unshackle) and what follows a download
    (Settings, Automation): their editors, and the pickers a service and a series show for them. */
 const CODECS = [["", "Any codec"], ["AVC", "H.264"], ["HEVC", "H.265"], ["AV1", "AV1"], ["VP9", "VP9"], ["VP8", "VP8"], ["VC1", "VC-1"]];
-const RANGES = [["", "Any range"], ["SDR", "SDR"], ["HDR10", "HDR10"], ["HDR10P", "HDR10+"], ["DV", "Dolby Vision"], ["HLG", "HLG"]];
+const RANGES = [["", "Any range"], ["SDR", "SDR"], ["HDR10", "HDR10"], ["HDR10P", "HDR10+"], ["DV", "Dolby Vision"], ["HLG", "HLG"], ["HYBRID", "Hybrid (DV + HDR10)"]];
 const ladders = () => (S.config.quality_ladders ??= []);
 const nameOf = (list, v) => (list.find(([k]) => k === v) || [v, v])[1];
 /* A series' ladder (its own, its service's, the settings'), and where a track stands on it: as sync.ladder_of,
@@ -13,35 +13,45 @@ function ladderOfSeries(conf) {
 const HEIGHTS = [4320, 2160, 1440, 1080, 720, 576, 540, 480, 360, 240];  // sync.HEIGHTS: a class within 2% counts as it
 const heightClass = (v) => HEIGHTS.find((h) => Math.abs(v - h) <= h * 0.02) ?? Math.floor(v);
 const eqHeight = (t) => Math.max(heightClass(t.height || 0), heightClass((t.width || 0) * 9 / 16));
-const fitsStep = (st, t) => (!st.codec || t.codec === st.codec) && (!st.range || t.range === st.range)
+const ranges = (t) => (t.layers?.length ? t.layers : [t.range]);
+const fitsStep = (st, t) => (!st.codec || t.codec === st.codec)
+  && (st.range === "HYBRID" ? ranges(t).includes("DV") && ranges(t).some((r) => r === "HDR10" || r === "HDR10P") : !st.range || ranges(t).includes(st.range))
   && eqHeight(t) >= (st.min || 0) && (!st.max || eqHeight(t) <= st.max);
 const stepOf = (lad, t) => { const i = lad.steps.findIndex((st) => fitsStep(st, t)); return i < 0 ? lad.steps.length : i; };
-const trackText = (t) => `${eqHeight(t) || "?"}p ${nameOf(CODECS, t.codec) || "?"} ${nameOf(RANGES, t.range) || "?"}`;
-function stepText(st) {
-  const height = st.max && st.max !== st.min ? `${st.min || 0}–${st.max}p` : st.max ? `${st.max}p` : st.min ? `${st.min}p and up` : "Any height";
-  return [height, st.codec ? nameOf(CODECS, st.codec) : "", st.range ? nameOf(RANGES, st.range) : ""].filter(Boolean).join(" ");
-}
+const trackText = (t) => `${eqHeight(t) || "?"}p ${nameOf(CODECS, t.codec) || "?"} ${(t.layers?.length ? t.layers : [t.range]).map((r) => nameOf(RANGES, r) || "?").join(" + ")}`;
 
 /* Every place a ladder (or a server) is picked by name: a rename follows, a removal falls back to the level before. */
 function renameRefs(key, from, to) {
   const set = S.config.settings;
   if (key === "ladder" && set.quality_ladder === from) set.quality_ladder = to;
+  if (key === "ladder") for (const other of set.sonarrs || []) if (other.quality_ladder === from) other.quality_ladder = to;  // "" : each series' own
   for (const level of [...Object.values(S.config.service_defaults || {}), ...(key === "ladder" ? Object.values(S.config.series || {}) : [])])
     if (level[key] === from) { if (to) level[key] = to; else delete level[key]; }
 }
 function ladderUse(name) {
   const services = Object.entries(S.config.service_defaults || {}).filter(([, l]) => l.ladder === name).map(([t]) => t);
   const series = Object.values(S.config.series || {}).filter((c) => c.service && c.ladder === name).length;
-  return [S.config.settings.quality_ladder === name ? "every series" : "", ...services.map(svcName), series ? `${series} series` : ""].filter(Boolean);
+  const others = (S.config.settings.sonarrs || []).filter((i) => i.quality_ladder === name).map((i) => `Sonarr ${i.name}`);
+  return [S.config.settings.quality_ladder === name ? "every series" : "", ...services.map(svcName), series ? `${series} series` : "", ...others].filter(Boolean);
 }
 
-/* A ladder picker: "" is the level before (named in its label), off is none. */
+/* A ladder picker: each choice once, the one the level before gives marked (default). Picking it is "" (follow
+   that level), any other is this level's own; off is none. */
 function ladderSelect(value, inherited, onchange) {
+  const def = inherited && ladders().some((l) => l.name === inherited) ? inherited : "off";
+  const choice = (name, label) => el("option", { value: name === def ? "" : name, textContent: name === def ? `${label} (default)` : label });
   const sel = el("select", { onchange: (e) => onchange(e.target.value) },
-    el("option", { value: "", textContent: `Default: ${inherited && inherited !== "off" ? inherited : "Off"}` }),
-    el("option", { value: "off", textContent: "Off" }), ...ladders().map((l) => el("option", { value: l.name, textContent: l.name })));
-  sel.value = value || "";
+    choice("off", "Off"), ...ladders().map((l) => choice(l.name, l.name)));
+  sel.value = !value || value === def ? "" : value;
   return sel;
+}
+/* Chips for a setting a series may take from the level before: each choice once, the inherited one marked
+   default; picking it follows that level again, any other is the series' own. */
+function defaultChips(box, choices, own, inherited, pick) {
+  const now = own ?? inherited;
+  box.replaceChildren(...choices.map(([v, label]) => el("button", { type: "button", role: "radio", ariaChecked: String(now === v),
+    onclick: () => pick(v === inherited ? undefined : v) },
+    el("span", { textContent: label }), ...(v === inherited ? [el("small", { className: "chip-default", textContent: "default" })] : []))));
 }
 
 function renderQuality() {
@@ -251,6 +261,100 @@ $("#ub-add").onclick = () => {
   $("#ub-list .ub-block:last-child input[type=url]")?.focus();
 };
 
+/* Settings, Sonarr: other instances (a 4K one), each with its address, key, downloads folder as it sees it, and its
+   own ladder and import over the series'. */
+function renderSonarrs() {
+  const list = (S.config.settings.sonarrs ??= []);
+  $("#sn-list").replaceChildren(...(list.length ? list.map(sonarrBlock)
+    : [el("p", { className: "dx-empty", textContent: "None: every series downloads for the Sonarr above only." })]));
+  paintSonarrs();
+}
+function sonarrBlock(i) {
+  const list = S.config.settings.sonarrs;
+  const state = el("span", { className: "ub-state", dataset: { sonarr: i.name || "" } });
+  const check = (input, why) => {
+    input.classList.toggle("bad", !!why);
+    input.nextElementSibling.classList.toggle("bad", !!why);
+    input.nextElementSibling.textContent = why || input.dataset.help;
+  };
+  const text = (key, opts, help, validate) => el("input", { type: "text", spellcheck: false, value: i[key] || "", dataset: { help }, ...opts, oninput: (e) => {
+    const v = e.target.value.trim(), why = validate ? validate(v) : "";
+    check(e.target, why);
+    if (key === "name" && !why) head.textContent = v;
+    if (!why) i[key] = v;
+    dirty();
+  } });
+  const name = text("name", {}, "Shown on its series, and used at the start of its download folder names. Example: sonarr-2.", (v) => !v ? "Give it a name"
+    : list.some((o) => o !== i && o.name === v) || v === S.config.settings.sonarr_name ? "Another Sonarr has this name" : !/^[A-Za-z][A-Za-z0-9-]{0,23}$/.test(v) ? "A letter, then letters, digits or dashes" : "");
+  const url = text("url", { type: "url", placeholder: "http://sonarr-2:8989" }, "Where Unshacklarr reaches it.",
+    (v) => !URL_OK.test(v) ? "An address starting with http:// or https://, without a user name"
+      : v.replace(/\/+$/, "") === (S.config.settings.sonarr_url || "").replace(/\/+$/, "") ? "That is the Sonarr above" : "");
+  const key = el("input", { type: "password", autocomplete: "off", placeholder: i.api_key_set ? "Type a new key to replace it" : "",
+    oninput: (e) => { i.api_key = e.target.value.trim() || undefined; dirty(); } });
+  const dl = text("downloads", { placeholder: S.config.settings.sonarr_downloads || "As the main one" }, "The downloads folder, as this Sonarr sees it. Empty: as the main Sonarr sees it.",
+    (v) => !v || /^(\/|[A-Za-z]:[\\/])/.test(v) && !/(^|[\\/])\.\.([\\/]|$)/.test(v) ? "" : "A full path, from / (or a drive letter), without ..");
+  // chosen, never a silent default: a 4K Sonarr left on each series' own would get 1080p copies
+  const ladder = el("select", { onchange: (e) => { i.quality_ladder = e.target.value; dirty(); showChoice(); } },
+    el("option", { value: "", textContent: "Choose…", disabled: true }), el("option", { value: "series", textContent: "Same as each series" }),
+    el("option", { value: "off", textContent: "Off" }), ...ladders().map((l) => el("option", { value: l.name, textContent: l.name })));
+  ladder.value = i.quality_ladder || "";
+  const showChoice = () => {
+    const unset = !i.quality_ladder;
+    ladder.classList.toggle("bad", unset);
+    ladder.nextElementSibling?.classList.toggle("bad", unset);
+    if (ladder.nextElementSibling) ladder.nextElementSibling.textContent = unset
+      ? "Choose one: nothing is downloaded for this Sonarr until you do."
+      : "For every series it downloads, over the series' own.";
+  };
+  queueMicrotask(showChoice);
+  const after = el("select", { onchange: (e) => { i.download_only = e.target.value === "" ? null : e.target.value === "only"; dirty(); } },
+    el("option", { value: "", textContent: "Each series' own" }), el("option", { value: "import", textContent: "Sonarr imports it" }),
+    el("option", { value: "only", textContent: "Download only" }));
+  after.value = i.download_only === true ? "only" : i.download_only === false ? "import" : "";
+  const head = el("b", { textContent: i.name || "New Sonarr" });
+  const test = el("button", { type: "button", className: "btn small", textContent: "Test", onclick: async () => {
+    if (!URL_OK.test(i.url || "")) return check(url, "An address starting with http:// or https://, without a user name");
+    state.className = "ub-state"; state.textContent = "Testing…";
+    try {
+      const { version } = await api("/api/sonarr/test", { method: "POST", body: JSON.stringify({ sonarr_url: i.url, sonarr_api_key: i.api_key || "" }) });
+      state.className = "ub-state ok"; state.textContent = `✓ Reached: Sonarr ${version}`;
+    } catch (err) { state.className = "ub-state bad"; state.textContent = err.message; }
+    state.dataset.tested = "1";
+  } });
+  const remove = el("button", { type: "button", className: "btn small danger", textContent: "Remove", onclick: (e) => {
+    if (e.target.dataset.sure !== "1") { e.target.dataset.sure = "1"; e.target.textContent = "Sure?"; return; }
+    list.splice(list.indexOf(i), 1);
+    dirty(); renderSonarrs();
+  } });
+  const withHelp = (label, input, saved, help) => el("div", { className: "field" },
+    el("label", { htmlFor: input.id ||= `sn-${++fieldIds}` }, label, ...(saved ? [" ", el("span", { className: "sx-saved", textContent: "✓ Saved" })] : [])),
+    input, el("small", { textContent: help || input.dataset.help || "In Sonarr: Settings, General. Empty keeps the saved one." }));
+  return el("div", { className: "svc-block ub-block" },
+    el("div", { className: "svc-block-head" }, head, el("span", { className: "ub-acts" }, state, test, remove)),
+    el("div", { className: "sx-grid" }, withHelp("Name", name), withHelp("Address", url), withHelp("API key", key, i.api_key_set),
+      withHelp("Downloads folder, as it sees it", dl),
+      withHelp("Quality ladder", ladder, false, "For every series it downloads, over the series' own."),
+      withHelp("After the download", after, false, "For every series it downloads, over the series' own.")));
+}
+let sonarrStates = {};
+function paintSonarrs(states = sonarrStates) {
+  sonarrStates = states || {};
+  document.querySelectorAll(".ub-state[data-sonarr]").forEach((box) => {
+    const st = sonarrStates[box.dataset.sonarr];
+    if (!st || box.dataset.tested) return;
+    box.className = st.ok ? "ub-state ok" : "ub-state bad";
+    box.textContent = st.ok ? `● Connected${st.version ? ` · Sonarr ${st.version}` : ""}` : `● ${st.error || "Unreachable"}`;
+  });
+}
+$("#sn-add").onclick = () => {
+  const list = (S.config.settings.sonarrs ??= []);
+  let n = list.length + 2;  // the main one is the first
+  while (list.some((o) => o.name === `sonarr-${n}`)) n++;
+  list.push({ name: `sonarr-${n}`, url: "", downloads: "", quality_ladder: "", download_only: null });  // its ladder: to choose
+  dirty(); renderSonarrs();
+  $("#sn-list .ub-block:last-child input[type=url]")?.focus();
+};
+
 /* Settings, Automation: Sonarr imports each download, or it waits for an import by hand. */
 function renderImportMode() {
   if (!S.config?.settings) return;
@@ -269,24 +373,318 @@ $("#ax-import").querySelectorAll("button").forEach((b) => b.onclick = () => {
 
 /* A series' page: its ladder and what follows its downloads, Default being its service's, then the settings'. */
 function fillQualityImport(conf) {
+  fillFallback(conf);
+  renderLibraries(conf);
   const set = S.config.settings, svc = S.config.service_defaults?.[conf.service] || {};
   $("#d-ladder").replaceWith(Object.assign(ladderSelect(conf.ladder, svc.ladder || set.quality_ladder, (v) => {
     if (v) conf.ladder = v; else delete conf.ladder;
+    renderLibraries(conf);
     dirty();
   }), { id: "d-ladder" }));
-  $("#d-import").options[0].textContent = `Default: ${set.download_only ? "Download only" : "Sonarr imports it"}`;
-  $("#d-import").value = conf.download_only === true ? "only" : conf.download_only === false ? "import" : "";
   importChips();
+  $("#d-skip-upgrades").checked = conf.skip_upgrades === true;
+  spoilerChips(conf);
+  notifyChips(conf);
+}
+$("#d-skip-upgrades").onchange = (e) => {  // a series Upgrades never asks about
+  const conf = S.config.series[current.tvdbId];
+  if (e.target.checked) conf.skip_upgrades = true; else delete conf.skip_upgrades;
+  dirty();
+};
+/* tick the series Activity, Upgrades checks (skip_upgrades on each series) */
+function upgradeSeries() {
+  const name = Object.fromEntries(S.series.map((s) => [String(s.tvdbId), s.title]));
+  return Object.entries(S.config.series || {}).filter(([, c]) => c.service)
+    .map(([id, c]) => ({ id, conf: c, title: name[id] || c.title || id })).sort((a, b) => a.title.localeCompare(b.title));
+}
+function renderUpgradeSeries() {
+  const box = $("#ug-series");
+  if (!box) return;
+  const find = $("#ug-find").value.trim().toLowerCase(), all = upgradeSeries();
+  const shown = all.filter((s) => !find || s.title.toLowerCase().includes(find));
+  box.replaceChildren(...shown.map((s) => el("label", { className: "ug-line" },
+    el("input", { type: "checkbox", checked: s.conf.skip_upgrades !== true, onchange: (e) => {
+      if (e.target.checked) delete s.conf.skip_upgrades; else s.conf.skip_upgrades = true;
+      dirty(); upgradeSay(all);
+    } }), el("span", { textContent: s.title }))));
+  if (!shown.length) box.replaceChildren(el("p", { className: "dx-empty", textContent: all.length ? "No series matches." : "No series set up yet." }));
+  upgradeSay(all);
+}
+function upgradeSay(all) {
+  const on = all.filter((s) => s.conf.skip_upgrades !== true).length;
+  $("#ug-say").textContent = `${on} of ${all.length} series checked`;
+  const st = $("#ug-state"), days = Number(S.config.settings?.upgrade_recheck_days ?? 30);
+  st.className = `sx-state${on ? " ok" : ""}`;
+  st.querySelector("b").textContent = `${on} of ${all.length} series checked`;
+  const every = Number(S.config.settings?.upgrade_check_days ?? 7);
+  $("#ug-new").checked = !!S.config.settings?.upgrade_check_new;
+  st.querySelector("small").textContent = [every ? (every === 1 ? "Checked automatically every day" : `Checked automatically every ${every} days`) : "Checked only when you click Check",
+    days ? (days === 1 ? "Answers kept 1 day" : `Answers kept ${days} days`) : "Asked every time",
+    S.config.settings?.upgrade_other_groups ? "Other release groups are replaced" : ""].filter(Boolean).join(" · ");
+}
+$("#ug-find").oninput = renderUpgradeSeries;
+for (const [id, on] of [["#ug-all", true], ["#ug-none", false]]) $(id).onclick = () => {  // only the series the search shows
+  const find = $("#ug-find").value.trim().toLowerCase();
+  upgradeSeries().filter((s) => !find || s.title.toLowerCase().includes(find))
+    .forEach((s) => { if (on) delete s.conf.skip_upgrades; else s.conf.skip_upgrades = true; });
+  dirty(); renderUpgradeSeries();
+};
+
+/* Settings, Upgrades, Release group: the switch, and the group each series' downloads carry (asked of the server) */
+let ugGroups = null;
+async function renderUpgradeGroups(fetch = true) {
+  const on = !!S.config.settings?.upgrade_other_groups, box = $("#ug-groups");
+  $("#ug-other").checked = on;
+  if (fetch || !ugGroups) {
+    box.replaceChildren(el("small", { className: "muted", textContent: "Looking up your release group…" }));
+    try { ugGroups = await api("/api/upgrades/groups"); } catch (e) { box.replaceChildren(el("small", { className: "bad", textContent: `Could not look it up: ${e.message}` })); return; }
+  }
+  const name = Object.fromEntries(S.series.map((s) => [s.tvdbId, s.title])), { groups, none } = ugGroups;
+  const all = groups.length + (none.length ? 1 : 0) > 1;
+  $("#ug-other").disabled = !groups.length && !on;
+  const listed = (ids) => ids.map((id) => name[id] || id).slice(0, 6).join(", ") + (ids.length > 6 ? "…" : "");
+  box.replaceChildren(...groups.map((g) => el("div", { className: "ug-group" },
+    el("span", {}, el("b", { textContent: g.group }), el("small", { textContent: ` · ${g.where}` })),
+    el("small", { textContent: !all ? "For every series." : g.series.length === 1 ? `For 1 series: ${listed(g.series)}.` : `For ${g.series.length} series: ${listed(g.series)}.` }))),
+    ...(none.length ? [el("div", { className: "ug-group warn" },
+      el("small", { textContent: !groups.length
+        ? "No release group is set. Set a Group Tag in Settings, Download options: your downloads then carry it, and this switch can tell them apart."
+        : none.length === 1 ? `1 series has no group and is left as it is: ${listed(none)}. Set a Group Tag in Download options to include it.`
+        : `${none.length} series have no group and are left as they are: ${listed(none)}. Set a Group Tag in Download options to include them.` }))] : []));
+}
+$("#ug-new").onchange = (e) => { S.config.settings.upgrade_check_new = e.target.checked; dirty(); };
+$("#ug-other").onchange = (e) => { S.config.settings.upgrade_other_groups = e.target.checked; dirty(); renderUpgradeSeries(); renderUpgradeGroups(false); };
+
+/* What is sent for this series: every notification, its failures only, or nothing (the bell keeps all). */
+function notifyChips(conf) {
+  const opts = [["", "All"], ["failures", "Failures only"], ["none", "None"]];
+  $("#d-notify-seg").replaceChildren(...opts.map(([v, label]) => el("button", { type: "button", role: "radio", textContent: label,
+    ariaChecked: String((conf.notify || "") === v), onclick: () => {
+      if (v) conf.notify = v; else delete conf.notify;
+      notifyChips(conf);
+      dirty();
+    } })));
+}
+/* Episode titles: hidden or shown for this series, the settings' No spoilers marked default. */
+function spoilerChips(conf) {
+  defaultChips($("#d-spoiler-seg"), [[true, "Hidden"], [false, "Shown"]], conf.spoiler_free, S.config.settings.spoiler_free === true, (v) => {
+    if (v === undefined) delete conf.spoiler_free; else conf.spoiler_free = v;
+    spoilerChips(conf);
+    dirty();
+  });
 }
 /* After the download: its choices as chips, the select behind them keeping the value. */
 function importChips() {
-  const sel = $("#d-import");
-  $("#d-import-seg").replaceChildren(...[...sel.options].map((o) => el("button", { type: "button", role: "radio", textContent: o.textContent,
-    ariaChecked: String(o.value === sel.value), onclick: () => { sel.value = o.value; sel.dispatchEvent(new Event("change")); } })));
-}
-$("#d-import").onchange = (e) => {
   const conf = S.config.series[current.tvdbId];
-  if (e.target.value) conf.download_only = e.target.value === "only"; else delete conf.download_only;
-  importChips();
-  dirty();
+  defaultChips($("#d-import-seg"), [[false, "Sonarr imports it"], [true, "Download only"]], conf.download_only, S.config.settings.download_only === true, (v) => {
+    if (v === undefined) delete conf.download_only; else conf.download_only = v;
+    importChips();
+    renderLibraries(conf);
+    dirty();
+  });
+}
+
+/* Download options, Languages: when the preferred audio comes, the episode again or its audio added to the file. */
+function renderUpgradeMode() {
+  const set = S.config.settings, mode = set.upgrade_mode || "redownload";
+  $("#dx-upmode").querySelectorAll("button").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.mode === mode)));
+  $("#dx-library").hidden = mode !== "add_track";
+  if (mode === "add_track") renderLibrary();
+  const other = set.add_track_other_source || "ask";
+  $("#dx-lib-other").querySelectorAll("button").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.other === other)));
+  $("#dx-upmode-say").textContent = mode === "add_track"
+    ? "Only the new audio track is downloaded and added to the existing file, as its default audio: subtitles in that language then show only their forced lines. Unshacklarr needs access to your library: set its folder below. The file is written again whole: your media server rescans it, and a hard link to it (a torrent still seeding) is broken. The whole episode is downloaded instead when the file can't be found, and for an episode in parts or a series of separate programmes."
+    : "The whole episode is downloaded again and replaces the existing file.";
+}
+/* Add audio track: each Sonarr's library, as it sees it and as Unshacklarr does; its root folders offered, both sides
+   browsable, and a real episode file of that Sonarr's looked for with the two folders, so a wrong pair shows at once. */
+let libWho = "", libRoots = [], libCommon = "", libTimer = null;  // "": the main Sonarr; else another one's name
+const libOf = () => (libWho && (S.config.settings.sonarrs || []).find((i) => i.name === libWho)) || S.config.settings;
+const FOLDER_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
+function renderLibrary() {
+  if (libWho && !(S.config.settings.sonarrs || []).some((i) => i.name === libWho)) libWho = "";
+  const lib = libOf(), main = S.config.settings, own = lib !== main;
+  $("#dx-lib-who").replaceChildren(...[sonarrPicker(libWho, (n) => { libWho = n; renderLibrary(); })].filter(Boolean));
+  $("#dx-lib-sonarr").value = lib.library_sonarr_root || "";
+  $("#dx-lib-local").value = lib.library_local_root || "";
+  // another Sonarr with none of its own reads the main one's library
+  $("#dx-lib-sonarr").placeholder = own && main.library_sonarr_root ? `Leave empty to use ${main.library_sonarr_root}, as set for ${mainSonarr()}` : "Example: /tv";
+  $("#dx-lib-local").placeholder = own && main.library_local_root ? `Leave empty to use ${main.library_local_root}, as set for ${mainSonarr()}` : "Example: /mnt/tv";
+  renderLibraryPicks();
+  checkLibrary();
+}
+function renderLibraryPicks() {
+  const lib = libOf(), browse = (side) => el("button", { type: "button", className: "chip-btn", textContent: "Browse…",
+    onclick: () => openFolders(side, (side === "sonarr" ? $("#dx-lib-sonarr") : $("#dx-lib-local")).value.trim(), (path) => setLibrary(side, path)) });
+  // several root folders: the one setting converts a single folder, so their common one comes first (it holds them all)
+  const roots = libRoots.length > 1 && libCommon ? [libCommon] : libRoots.filter((r) => r !== lib.library_sonarr_root);
+  $("#dx-lib-sonarr-pick").replaceChildren(...(roots.length && roots[0] !== lib.library_sonarr_root ? [el("span", { textContent: "In Sonarr:" }),
+    ...roots.map((r) => el("button", { type: "button", className: "chip-btn", onclick: () => setLibrary("sonarr", r),
+      textContent: r === libCommon ? `${r} (contains your ${libRoots.length} root folders)` : r }))] : []), browse("sonarr"));
+  $("#dx-lib-local-pick").replaceChildren(browse("local"));
+}
+function setLibrary(side, path) {
+  libOf()[side === "sonarr" ? "library_sonarr_root" : "library_local_root"] = path || undefined;
+  (side === "sonarr" ? $("#dx-lib-sonarr") : $("#dx-lib-local")).value = path;
+  dirty(); renderLibraryPicks(); checkLibrary();
+}
+$("#dx-lib-sonarr").oninput = (e) => { libOf().library_sonarr_root = e.target.value.trim() || undefined; dirty(); checkLibrary(); };
+$("#dx-lib-local").oninput = (e) => { libOf().library_local_root = e.target.value.trim() || undefined; dirty(); checkLibrary(); };
+function checkLibrary() {
+  clearTimeout(libTimer);
+  libTimer = setTimeout(async () => {
+    const lib = libOf(), main = S.config.settings, own = lib.library_sonarr_root || lib.library_local_root ? lib : main;
+    const q = new URLSearchParams({ sonarr_root: own.library_sonarr_root || "", local_root: own.library_local_root || "", ...(libWho ? { sonarr: libWho } : {}) });
+    const say = $("#dx-lib-check"), who = libWho || mainSonarr();
+    say.className = "lib-check"; say.textContent = "Looking for one of your episode files…";
+    let r;
+    try { r = await api(`/api/library/check?${q}`); } catch (e) { say.textContent = e.message; return; }
+    if ((libWho || "") !== (q.get("sonarr") || "")) return;  // another Sonarr picked meanwhile
+    libRoots = r.roots || []; libCommon = r.common || ""; renderLibraryPicks();
+    if (r.ok === true) { say.className = "lib-check ok"; say.textContent = `✓ Unshacklarr reads ${who}'s library: ${r.local_path}`; }
+    else if (r.ok === false && r.guess) {  // found elsewhere in the container: both folders, one click
+      say.className = "lib-check";
+      say.replaceChildren(el("span", { textContent: `Your library was found in another folder: ${r.guess.sonarr_root} in Sonarr is ${r.guess.local_root} in Unshacklarr.` }), " ",
+        el("button", { type: "button", className: "chip-btn", textContent: "Use these folders",
+          onclick: () => { setLibrary("sonarr", r.guess.sonarr_root); setLibrary("local", r.guess.local_root); } }));
+    }
+    else if (r.ok === false) { say.className = "lib-check err"; say.textContent = `Not found here: ${r.local_path}. Is the library mounted in Unshacklarr's container, in this folder?`; }
+    else say.textContent = r.why || "";
+  }, 400);
+}
+/* A folder picked by browsing: as Sonarr sees them (its own folder browser), or Unshacklarr's (its container's) */
+function openFolders(side, start, use) {
+  const dlg = $("#folder-dialog");
+  let here = "";
+  $("#folder-title").textContent = side === "sonarr" ? `A folder as ${libWho || mainSonarr()} sees it` : "A folder as Unshacklarr sees it";
+  const load = async (path) => {
+    $("#folder-err").textContent = "";
+    let r;
+    try { r = await api(`/api/library/browse?${new URLSearchParams({ side, path, ...(libWho && side === "sonarr" ? { sonarr: libWho } : {}) })}`); }
+    catch (e) { $("#folder-err").textContent = e.message; if (path) return load(""); return; }  // a folder that isn't there: from the top
+    here = r.path || "/";
+    $("#folder-path").textContent = here;
+    $("#folder-use").disabled = !r.path;
+    const row = (label, path, icon = true) => el("button", { type: "button", className: "url-hit", onclick: () => load(path) },
+      ...(icon ? [el("i", { innerHTML: FOLDER_ICON })] : [el("i", { textContent: "↑" })]), el("span", { textContent: label }));
+    $("#folder-list").replaceChildren(...(r.parent != null ? [row("Up", r.parent, false)] : []),
+      ...r.dirs.map((d) => row(d.split(/[\\/]/).filter(Boolean).pop() || d, d)),
+      ...(!r.dirs.length ? [el("p", { className: "muted", textContent: "No folder in it." })] : []));
+  };
+  dlg.addEventListener("close", () => { if (dlg.returnValue === "use" && here) use(here); }, { once: true });
+  dlg.returnValue = "";
+  dlg.showModal();
+  load(start || (side === "local" ? "/library" : ""));  // the usual mount for the library; absent, from the top
+}
+
+$("#dx-lib-other").querySelectorAll("button").forEach((b) => b.onclick = () => {
+  S.config.settings.add_track_other_source = b.dataset.other;
+  dirty(); renderUpgradeMode();
+});
+$("#dx-upmode").querySelectorAll("button").forEach((b) => b.onclick = () => {
+  S.config.settings.upgrade_mode = b.dataset.mode;
+  dirty(); renderUpgradeMode();
+});
+
+/* Automation: release times learnt, the download window. */
+function renderLearnWindow() {
+  const set = S.config.settings;
+  $("#ax-learn").checked = set.release_learn === true;
+  $("#ax-learn-say").textContent = set.release_learn
+    ? "On. Release times you set yourself are never changed."
+    : "Off. Release times are only suggested on each series page.";
+  $("#ax-window-bursts").checked = set.download_window_bursts === true;
+  const from = $("#ax-from").value, to = $("#ax-to").value, half = !from !== !to;
+  [$("#ax-from"), $("#ax-to")].forEach((x) => x.classList.toggle("bad", half && !x.value));
+  $("#ax-window-say").className = half ? "rt-who status-err" : "rt-who";
+  $("#ax-window-say").textContent = half ? "Set both a start and an end time, or neither."
+    : from ? (set.download_window_bursts ? `Automatic and release-time downloads only run from ${from} to ${to}.`
+      : `Automatic downloads only run from ${from} to ${to}. Release-time downloads are not affected.`)
+      : "No limit: downloads run at any time.";
+}
+$("#rg-spoiler").onchange = (e) => { S.config.settings.spoiler_free = e.target.checked; dirty(); renderInterface(); };
+$("#ax-learn").onchange = (e) => { S.config.settings.release_learn = e.target.checked; dirty(); renderLearnWindow(); };
+$("#ax-window-bursts").onchange = (e) => { S.config.settings.download_window_bursts = e.target.checked; dirty(); renderLearnWindow(); };
+["#ax-from", "#ax-to"].forEach((id) => $(id).addEventListener("input", renderLearnWindow));
+
+/* A series' fallback service: tried when its own has nothing yet, or not in a language accepted. */
+function fillFallback(conf) {
+  const alt = conf.fallback || {};
+  $("#d-fb-service").replaceChildren(el("option", { value: "", textContent: "None" }),
+    ...S.services.filter((t) => t !== conf.service).map((t) => el("option", { value: t, textContent: svcName(t) })));
+  $("#d-fb-service").value = alt.service || "";
+  $("#d-fb-url").value = alt.title || "";
+  $("#d-fb").open = !!alt.service;
+  checkFallback(conf);
+}
+function checkFallback(conf) {
+  const alt = conf.fallback || {}, half = !alt.service !== !alt.title;
+  $("#d-fb-url").classList.toggle("bad", half && !alt.title);
+  $("#d-fb-service").classList.toggle("bad", half && !alt.service);
+  $("#d-fb-say").className = half ? "status-err" : "";
+  $("#d-fb-say").textContent = half ? "Set both the service and the series URL, or neither."
+    : "If this service numbers episodes differently, set its numbering in config.yaml.";
+}
+const setFallback = (key, value) => {
+  const conf = S.config.series[current.tvdbId];
+  const alt = { ...(conf.fallback || {}), [key]: value };
+  if (!alt.service && !alt.title) delete conf.fallback; else conf.fallback = alt;
+  dirty(); checkFallback(conf);
 };
+$("#d-fb-service").onchange = (e) => setFallback("service", e.target.value);
+$("#d-fb-url").oninput = (e) => setFallback("title", e.target.value.trim());
+
+/* A series' page, Source, Libraries: each Sonarr that has the series, switched on or off for it (main_off,
+   sonarrs[name].off), with the ladder and After the download it downloads by (What to get for Sonarr, Settings ›
+   Sonarr for the others) and what it misses, one click from Episodes. Advanced: options for one library's copies.
+   From #10, with mj23au. */
+function renderLibraries(conf) {
+  const found = S.sonarrsOf?.[current?.tvdbId] || [], set = S.config.settings || {};
+  $("#d-libs-field").hidden = !found.length;
+  if (!found.length) return;
+  const insts = Object.fromEntries((set.sonarrs || []).map((i) => [i.name, i]));
+  const own = conf.ladder || S.config.service_defaults?.[conf.service]?.ladder || set.quality_ladder || "";
+  const after = conf.download_only ?? set.download_only === true;
+  const all = conf.sonarrs || {};
+  const per = (name) => ((conf.sonarrs ??= {})[name] ??= {});
+  const tidy = (name) => {
+    if (conf.sonarrs?.[name] && !Object.keys(conf.sonarrs[name]).length) delete conf.sonarrs[name];
+    if (conf.sonarrs && !Object.keys(conf.sonarrs).length) delete conf.sonarrs;
+  };
+  const said = (ladder, only) => `${!ladder || ladder === "off" ? "No quality ladder" : ladder} · ${only ? "Download only" : "Sonarr imports it"}`;
+  const view = (name) => { epSonarr = name; epSonarrOf = current.tvdbId; showDrawerTab("episodes"); loadEpisodes(current); };
+  const chip = (name, on, says, missing, toggle, lib = name) => el("div", { className: `d-lib${on ? " on" : ""}` },
+    el("button", { type: "button", className: "d-lib-sw", ariaPressed: String(on), onclick: toggle },
+      el("b", { textContent: name }), el("small", { textContent: on ? says : "Switched off" })),
+    ...(missing ? [el("button", { type: "button", className: "d-lib-miss", textContent: `${missing} missing`,
+      title: `Open the episodes missing in ${name}`, onclick: () => view(lib) })] : []));
+  const mainMissing = S.series.find((x) => x.tvdbId === current.tvdbId)?.missing;
+  $("#d-libs").replaceChildren(
+    ...(current.id ? [chip(mainSonarr(), !conf.main_off, said(own, after), mainMissing, () => {  // in the main Sonarr too
+      if (conf.main_off) delete conf.main_off; else conf.main_off = true;
+      dirty(); renderLibraries(conf);
+    }, "")] : []),
+    ...found.map((o) => {
+      const inst = insts[o.name] || {}, on = !all[o.name]?.off;
+      const ladder = inst.quality_ladder === "series" ? own : inst.quality_ladder;
+      const only = typeof inst.download_only === "boolean" ? inst.download_only : after;
+      return chip(o.name, on, said(ladder, only), o.missing, () => {
+        if (on) per(o.name).off = true; else { delete per(o.name).off; tidy(o.name); }
+        dirty(); renderLibraries(conf);
+      });
+    }));
+  // Advanced: options added to the series' own for one library's copies only, for whoever needs them
+  $("#d-libs-adv-body").replaceChildren(...found.map((o) => {
+    const opts = el("div", { className: "opts" });
+    const values = new Proxy({ ...(all[o.name]?.options || {}) }, {  // written into conf only once an option is added
+      set: (t, k, v) => { t[k] = v; per(o.name).options = { ...t }; dirty(); return true; },
+      deleteProperty: (t, k) => {
+        delete t[k];
+        if (Object.keys(t).length) per(o.name).options = { ...t }; else if (conf.sonarrs?.[o.name]) { delete conf.sonarrs[o.name].options; tidy(o.name); }
+        dirty(); return true;
+      } });
+    optionsEditor(opts, S.dlOptions, values);
+    return el("div", { className: "field" }, el("label", { textContent: `Download options for ${o.name}` }), opts);
+  }));
+  $("#d-libs-adv").open = found.some((o) => all[o.name]?.options);
+}

@@ -346,7 +346,7 @@ async def record() -> dict:
                           {"show": config["series"][s["tvdbId"]], "seriesId": s["id"], "tvdbId": s["tvdbId"], "title": s["title"]})
         for path in ("/api/session", "/api/state", "/api/schedule", "/api/runs", "/api/busy", "/api/inbox", "/api/stats",
                      "/api/status", "/api/log", "/api/cdm", "/api/cookies", "/api/notifications/sent", "/api/leftovers",
-                     "/api/push/key"):
+                     "/api/push/key", "/api/changelog"):
             await get(path)
         await get("/api/status?full=1")
         for days in ("", "?days=7", "?days=30", "?days=90"):  # Activity, Catch up

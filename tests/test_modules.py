@@ -222,7 +222,8 @@ def test_a_local_serve_gets_its_socket_and_key_without_the_command_line(tmp_path
     (pkg / "__main__.py").write_text(
         "import os, sys, json\nfrom aiohttp import web\nfrom unshackle.core.config import config\n"
         "def main(argv):\n"
-        "    seen = {'argv': sys.argv, 'key': config.serve['api_secret'], 'env': [k for k in os.environ if k.startswith('UNSHACKLARR')]}\n"
+        "    seen = {'argv': sys.argv, 'key': config.serve['api_secret'], 'env': [k for k in os.environ if k.startswith('UNSHACKLARR')],\n"
+        "            'users': config.serve.get('users')}\n"
         "    app = web.Application()\n"
         "    app.router.add_get('/api/health', lambda r: web.json_response(seen))\n"
         "    web.run_app(app, host='127.0.0.1', port=1, print=None)\n")  # port 1: only the handed socket can serve
@@ -237,6 +238,9 @@ def test_a_local_serve_gets_its_socket_and_key_without_the_command_line(tmp_path
         seen = requests.get(f"{local.url}/api/health", timeout=5).json()
         assert seen["key"] == local.key and seen["env"] == []  # the key arrived, and left the environment
         assert str(local.url.rsplit(":", 1)[1]) not in " ".join(seen["argv"])  # nor the port on the command line
+        # Unshackle 6 serves its proxies only to a key with server_proxy: this run's key has it (5.x reads no such field)
+        mine = seen["users"][local.key]  # every right the unlisted admin key had: listed, it would lose them otherwise
+        assert all(mine[k] is True for k in ("server_proxy", "admin", "server_cdm", "server_vault", "server_accounts"))
     finally:
         local.stop()
 
@@ -273,3 +277,43 @@ def test_a_load_error_s_own_words_stay_out_of_the_message(tmp_path):
         backend.download({"service": "AMZN"})
     assert "private-value" not in str(caught.value)
     assert "startup log says why" in str(caught.value)
+
+
+@responses.activate
+def test_unshackle_6s_refused_proxy_and_its_limit_of_requests_are_said_plainly(tmp_path):
+    # Unshackle 6 resolves a country code into its own proxies only for a key with server_proxy, and may cap a key's
+    # requests per hour (429 with Retry-After): the first is told with what to do, the second carries its wait
+    backend = Unshackle(tmp_path)
+    backend.configure({"unshackle_url": "http://backend:8786", "unshackle_api_key": "test-api-secret"})
+    responses.post("http://backend:8786/api/download", status=400, json={"status": 400, "message":
+                   "This server does not resolve country codes into proxies. Pass --proxy with a full proxy URI (http://, https:// or socks5://)."})
+    responses.get("http://backend:8786/api/download/jobs/j1", status=429, json={"status": 429, "message": "Rate limit exceeded."},
+                  headers={"Retry-After": "42"})
+    try:
+        backend.call("POST", "/api/download", json={"proxy": "au"})
+        raise AssertionError("refused")
+    except UnshackleError as e:
+        assert "Settings, Unshackle" in str(e) and backend.proxy_refused
+    try:
+        backend.call("GET", "/api/download/jobs/j1")
+        raise AssertionError("limited")
+    except UnshackleError as e:
+        assert e.retry_after == 42
+
+
+@responses.activate
+def test_a_cdm_named_for_the_download_is_sent_and_its_refusal_said(tmp_path):
+    # Unshackle 6's --cdm (API: cdm) is taken only when unshackle.yaml allows it (serve: cdm_overrides); the options
+    # 5.4 doesn't know say they need 6.0, since 5.4 drops them without a word
+    from unshacklarr import options
+    assert options.to_params({"--cdm": "my_l3", "--forced-subs-only": True}, options.dl_specs()) == {"cdm": "my_l3", "forced_subs_only": True}
+    helps = {s["flag"]: s["help"] for s in options.dl_specs()}
+    assert helps["--cdm"].endswith("Unshackle 6.0 or later.") and not helps["--quality"].endswith("6.0 or later.")
+    backend = Unshackle(tmp_path)
+    backend.configure({"unshackle_url": "http://backend:8786", "unshackle_api_key": "test-api-secret"})
+    responses.post("http://backend:8786/api/download", status=403, json={"status": 403, "message": "The requested CDM is not permitted for API downloads."})
+    try:
+        backend.call("POST", "/api/download", json={"cdm": "my_l3"})
+        raise AssertionError("refused")
+    except UnshackleError as e:
+        assert "cdm_overrides" in str(e)

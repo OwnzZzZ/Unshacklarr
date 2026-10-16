@@ -115,8 +115,24 @@ function renderUnshackleStatus(st) {
     ...(local || !/^https?:\/\/unshackle(:\d+)?\/?$/.test(S.config.settings.unshackle_url || "") ? [] : [el("div", { className: "st-sect" }, el("b", { textContent: "Restart it or read its log where it runs" }),
       el("div", { className: "st-cmds" }, copyCmd("docker compose restart unshackle"), copyCmd("docker logs -f --tail 200 unshackle")))]),
   ] : [];
+  // Unshackle 6 serves its proxies (a country code, a provider) only to a key allowed to: said, and allowed in one click
+  const restartCmd = /^https?:\/\/unshackle(:\d+)?\/?$/.test(S.config.settings.unshackle_url || "") ? "docker compose restart unshackle" : "";
+  const proxies = st.proxy_refused ? [el("div", { className: "st-sect warn" },
+    el("b", { textContent: "Unshackle doesn't let Unshacklarr use its proxies" }),
+    el("small", { textContent: "Since Unshackle 6, an API key may use the proxies set in unshackle.yaml (a country code such as au, or a provider) only once it is allowed. Downloads that ask for one fail until then." }),
+    el("div", { className: "st-maint" }, el("button", { className: "btn small primary", textContent: "Allow Unshacklarr's key", onclick: async (e) => {
+      e.target.disabled = true;
+      try {
+        await api("/api/unshackle/allow-proxies", { method: "POST" });
+        toast("Allowed in unshackle.yaml. Restart Unshackle when nothing is downloading, so that it reads it.");
+        e.target.closest(".st-sect").replaceChildren(el("b", { textContent: "Allowed in unshackle.yaml" }),
+          el("small", { textContent: "Restart Unshackle when nothing is downloading, so that it reads it." }), ...(restartCmd ? [copyCmd(restartCmd)] : []));
+      } catch (err) { e.target.disabled = false; toast(err.message, true); }
+    } })),
+    el("small", { textContent: "To do it by hand, the README shows the lines to add to unshackle.yaml." }))] : [];
   $("#u-status").replaceChildren(
     ...(st.error ? [el("p", { className: "status-err", textContent: st.error })] : []),
+    ...proxies,
     ...(missing.length ? [el("p", { className: "status-err", textContent: `Missing: ${missing.map((t) => t.name).join(", ")}. Install them, then check again.` })] : []),
     ...extra,
     ...(st.tools ? [el("details", { className: "tools-box" },
@@ -153,7 +169,7 @@ async function openBulk() {
   const todo = S.series.filter((s) => !S.config.series[s.tvdbId]?.service && s.monitored && s.status !== "ended"
     && !S.config.hidden_series.includes(s.tvdbId) && s.tmdbId);
   const rows = todo.map((s) => {
-    const li = el("li", {}, el("img", { alt: "", loading: "lazy", src: s.poster || "" }),
+    const li = el("li", {}, el("img", { alt: "", loading: "lazy", src: posterSrc(s.poster, s.title), onerror: posterFail(s.title) }),
       el("div", {}, el("b", { textContent: s.title }), el("div", { className: "opts" }, loading("Looking on TMDB…"))));
     li.dataset.tvdb = s.tvdbId;
     return li;
@@ -231,6 +247,7 @@ $("#d-probe").onclick = async () => {
   $("#d-probe").disabled = true;
   state.replaceChildren(loading("Asking the service… (up to a minute)"));
   out.replaceChildren();
+  const slow = slowHint(svcName(conf.service));
   try {
     const r = await api("/api/probe", { method: "POST", signal: AbortSignal.timeout(120000),
       body: JSON.stringify({ show: conf, seriesId: current.id, title: current.title }) });
@@ -253,14 +270,16 @@ $("#d-probe").onclick = async () => {
         dirty();
         toast("Season map set: save, then test again");
       } }))] : [];
-    const single = r.count > 0 && r.count < 3 ? [el("div", { className: "probe-warn" },
+    // An episode link, not the series: the service lists fewer than Sonarr has aired. A series simply new (one aired,
+    // one listed) is no warning.
+    const single = r.count > 0 && r.count < 3 && r.checks.filter((c) => c.aired).length > r.count ? [el("div", { className: "probe-warn" },
       el("b", { textContent: "This link may be an episode, not the series." }),
       el("span", { textContent: " On the service, open the series' own page (all its episodes) and paste that link instead." }))] : [];
     out.replaceChildren(el("div", { className: "probe-out" },
       el("div", { className: "head" }, "Found ", el("b", { textContent: r.series || "the series" }), `: ${r.count} episodes${seasons ? ` · ${seasons}` : ""}`),
       ...single, ...apply, ...rows));
   } catch (e) { state.replaceChildren(failed(e.message)); }
-  finally { $("#d-probe").disabled = false; }
+  finally { $("#d-probe").disabled = false; clearTimeout(slow); }
 };
 
 /* This device's notifications (Web Push): allowed here, sent by the server through the browser's push service. */

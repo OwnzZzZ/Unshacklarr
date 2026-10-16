@@ -10,11 +10,11 @@
 </p>
 
 <p align="center">
-  <img alt="Version 1.4.0" src="https://img.shields.io/badge/version-1.4.0-26a69a">
+  <img alt="Version 1.5.0" src="https://img.shields.io/badge/version-1.5.0-26a69a">
   <img alt="License GPL-3.0" src="https://img.shields.io/badge/license-GPL--3.0-blue">
   <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-3776ab">
   <img alt="Sonarr v3 and v4" src="https://img.shields.io/badge/sonarr-v3%20%7C%20v4-35c5f4">
-  <img alt="Unshackle 5.4+" src="https://img.shields.io/badge/unshackle-5.4%2B-e0559b">
+  <img alt="Unshackle 5.4 to 6" src="https://img.shields.io/badge/unshackle-5.4%20%7C%206-e0559b">
   <img alt="9 languages" src="https://img.shields.io/badge/languages-9-8a63d2">
 </p>
 
@@ -82,6 +82,10 @@ flowchart LR
     <td valign="top">💚 <b>Health</b><br>Lights for Unshackle and Sonarr, and a message when one goes down, comes back, or when cookies or a device are about to fail.</td>
   </tr>
   <tr>
+    <td valign="top">📚 <b>More than one Sonarr</b><br>A 4K library beside the 1080p one: each Sonarr with its own quality ladder, its copy downloaded at the same release time and imported into it.</td>
+    <td valign="top">⬆️ <b>Upgrades</b><br>The files your quality ladder says could be better, checked against the service by themselves every week, and replaced when you tick them.</td>
+  </tr>
+  <tr>
     <td valign="top">📱 <b>On a phone</b><br>An installable app with a tab bar, live progress and push notifications, once the page is served over HTTPS.</td>
     <td valign="top">🌍 <b>Your language</b><br>English, French, Spanish, German, Brazilian Portuguese, Italian, Russian, Simplified Chinese and Japanese, notifications included.</td>
   </tr>
@@ -101,7 +105,7 @@ flowchart LR
     <td width="50%" valign="top"><img src="docs/screenshots/schedule.webp" alt="The Schedule: the coming episodes by day and the time each is tried"><br>📅 <b>Schedule</b>: the coming episodes by day, when each is tried, the late ones in one banner.</td>
   </tr>
   <tr>
-    <td valign="top"><img src="docs/screenshots/activity.webp" alt="Activity: a finished job, its time, size and episodes"><br>📈 <b>Activity</b>: downloads live, track by track, then their history and stats per week and per service.</td>
+    <td valign="top"><img src="docs/screenshots/activity.webp" alt="Activity: a finished job, its time, size and episodes"><br>📈 <b>Activity</b>: downloads live, track by track and through the mux, then their history and stats per week and per service.</td>
     <td valign="top" align="center"><img src="docs/screenshots/mobile-series.webp" width="31%" alt="The Series page on a phone"> <img src="docs/screenshots/mobile-schedule.webp" width="31%" alt="The Schedule on a phone"> <img src="docs/screenshots/mobile-settings.webp" width="31%" alt="Settings on a phone, as a list of sections"><br>📱 <b>On a phone</b>: the same app, with a tab bar.</td>
   </tr>
 </table>
@@ -112,15 +116,35 @@ flowchart LR
 
 You need:
 
-- ⬇️ **Unshackle** 5.4.0 or later, set up with its services, cookies and CDMs;
+- ⬇️ **Unshackle** 5.4.0 or later, 6.0 included, set up with its services, cookies and CDMs;
 - 📡 **Sonarr** v4, or v3;
 - 🎞️ **MKVToolNix** (`mkvmerge`, `mkvpropedit`), which Unshackle needs too; the Docker image has it.
 
 > [!NOTE]
 > A few extras need what Unshackle itself does not have yet: describing, testing and reprovisioning
-> CDM devices, downloading through a remote server (`--remote`), answering a service's question
-> during a download (a code sent by e-mail), a TV login's link and code, and Unshackle's own log,
-> live in Activity. Without them, everything else works.
+> CDM devices, downloading through a remote server (`--remote`), a TV login's link and code, and
+> Unshackle's own log, live in Activity. Without them, everything else works. Answering a service's
+> question during a download (a code sent by e-mail) needs Unshackle 6.0 or later.
+>
+> **Unshackle 6** lets an API key use the proxies of `unshackle.yaml` (a country code such as `au`, or a
+> provider) only once it is allowed. Run by Unshacklarr on the same computer, its key always is; with
+> Docker or another server, Settings › Unshackle offers to allow it the first time a download is refused.
+> By hand: a key listed under `serve: users:` loses the rights the unlisted admin key has, so list it
+> with all of them, then restart Unshackle (5.4 reads `server_cdm` and the devices, and ignores the rest):
+>
+> ```yaml
+> serve:
+>   users:
+>     <your UNSHACKLE_API_KEY>:
+>       devices: [<your .wvd names>]
+>       playready_devices: [<your .prd names>]
+>       username: api_user
+>       admin: true
+>       server_cdm: true
+>       server_vault: true
+>       server_accounts: true
+>       server_proxy: true
+> ```
 
 **Docker** pulls Unshacklarr's image and runs Unshackle in a container of its own too, built once from
 its source (on an x86-64 host). **On the computer where Unshackle runs**, Unshacklarr uses the
@@ -187,8 +211,15 @@ The setup asks for a password, Sonarr's URL and API key (in Sonarr › Settings 
 [the downloads folder as Sonarr sees it](#downloads-folder). Then, in **Series**, pick a service for
 each series you want.
 
-**Updating:** `docker compose pull && docker compose up -d` brings a new Unshacklarr; for a new
-Unshackle, `docker compose build --pull unshackle && docker compose up -d`.
+**Updating:** `docker compose pull unshacklarr && docker compose up -d --no-deps unshacklarr` brings a
+new Unshacklarr and leaves Unshackle running: without `--no-deps`, Compose may recreate Unshackle too
+(Unshacklarr depends on it), which cuts the downloads going on and leaves Unshacklarr saying Unshackle
+is unreachable until it has started again. For a new Unshackle, when nothing is downloading,
+`docker compose build --pull unshackle && docker compose up -d`.
+
+**On a Synology NAS:** its shutdown marks the containers as stopped, so `restart: unless-stopped` leaves them off
+after a reboot. Use `restart: always` there. On a small NAS, Settings › Unshackle › Downloads at once set to 1
+keeps the disks from being saturated.
 
 <details>
 <summary><b>🍴 A fork of Unshackle, or a <code>serve</code> that already runs elsewhere</b></summary>
@@ -293,6 +324,22 @@ picked for it in Settings › Download options › Per service; a service only o
 Its downloads folder left empty is the main server's. Each one is watched: its state shows in Settings, and you
 are told when it goes down and when it is back.
 
+**Other Sonarr instances** (Settings › Sonarr): a second Sonarr with its own library, each with a name, its address,
+API key, the downloads folder as it sees it, and its own quality ladder and After the download. The series set up in
+Unshacklarr are downloaded for each instance that has them (by TVDB id), into folders named after it
+(`unshackle-sonarr-2-<tvdb>-SxxEyy`), and imported into it. Episodes, Catch up and Upgrades work with each one;
+new episodes come at their release time and with the automatic sync, as for the main Sonarr. The main Sonarr can be named
+too (Settings › Sonarr › Name); a badge on each series names the libraries it is in.
+
+**Upgrades** (Activity): the episodes on disk in a lower quality than the series' quality ladder asks for, that the
+service now has better. They are checked automatically every 7 days, each episode's answer kept 30 days, and replaced
+only when you tick them (Settings › Upgrades).
+
+**Muxing progress** (Activity): once every track is in, Unshackle decrypts them and muxes the file. Activity shows how
+far the mux is when Unshacklarr can read Unshackle's work folder (its `directories: temp`): on the same computer it
+always can; with Docker, mount that folder read only and set `UNSHACKLE_TEMP_DIR`, as `docker-compose.example.yml`
+does. Without it, the step shows how long it has been going.
+
 **Catch up** (Activity): the automatic sync only takes new episodes. The aired episodes your series still miss
 (those from before a series got its service, or that the sync gave up on) are listed there, within 7, 30 or 90
 days or all, and downloaded together.
@@ -302,7 +349,9 @@ days or all, and downloaded together.
 Options are Unshackle's own, written as on its command line (`--quality 1080`, `--a-lang fr`).
 They stack in three levels, each overriding the one before: **defaults** for every series, **per
 service** (`--proxy ca` for one service), then **per series**. The Schedule shows each download as
-the `unshackle dl` command it amounts to.
+the `unshackle dl` command it amounts to. Every option `unshackle serve` takes is offered; those Unshackle 6
+added (`--cdm`, `--proxy-download`, `--forced-subs-only`, `--require-audio`…) say so, as an older Unshackle
+ignores them without a word.
 
 **Quality ladders** (Settings › Quality) go further than a fixed `--quality`: an ordered list of steps
 (a codec, a range, a height from… to…), tried against the episode's real tracks just before the
@@ -328,6 +377,14 @@ download. Unshacklarr must see those files:
 Describing, testing and reprovisioning devices goes through `unshackle serve`, which has the DRM
 libraries.
 
+**One device for a series or a service** (Unshackle 6): the `--cdm` option, its value picked among the devices
+above, overrides the `cdm:` section for those downloads. Unshackle takes it only once `unshackle.yaml` allows it:
+
+```yaml
+serve:
+  cdm_overrides: true   # or a list of the devices allowed
+```
+
 ### 📁 Where things are kept
 
 | | Settings, history and caches |
@@ -342,9 +399,28 @@ change that.
 
 <a name="api"></a>
 
+## 🧰 Options worth knowing
+
+These are off until you turn them on:
+
+- **Add audio track** (Settings › Download options › Languages). When your preferred audio
+  language becomes available, only that audio track is downloaded and added to the file in your library. Sonarr then
+  imports the updated file. Unshacklarr needs access to your library: set its folder as Sonarr sees it and as
+  Unshacklarr sees it. If the file can't be found, the whole episode is downloaded instead.
+- **Fallback service** (on a series page, in Source). A second service and the series URL on it, used when the main
+  service doesn't have the episode yet, or not in an accepted language. If that service numbers episodes
+  differently, set its `season_map` or `episode_offset` under `fallback:` in `config.yaml`.
+- **Auto release times** (Settings › Automation). When 3 episodes of a series come out at the same time, that time
+  becomes its release time. Release times you set yourself are never changed.
+- **Download window** (Settings › Automation). Automatic downloads only run between two times, which can span
+  midnight. Release-time downloads can follow it too. Episodes you start by hand are not affected.
+
+After an update, the **What's new** button in the header lists the new options, and each one shows a "New" badge
+until you have seen it.
+
 ## 💾 Backups
 
-Settings › Account › *Back up the settings* downloads every setting but the password (the series, their options,
+Settings › Account › *Backups* downloads every setting but the password (the series, their options,
 the ladders, the notifications, the API keys: keep the file private), and *Restore from a file* puts one back.
 Set *Back up automatically every N days*, and a backup is also saved in the data folder's `backups` folder, the
 newest few kept. To rebuild an install, put a backup in that folder (or keep the file at hand), start
@@ -397,7 +473,7 @@ made up at each start.
 |---|---|
 | 🚪 **Someone reaches the page** | A password (hashed with scrypt, compared in constant time), five wrong ones per address and thirty in all every 5 minutes, each counted before it is checked. The first run asks for a setup code printed in the server's log: nobody who finds a fresh install can claim it, nor see its addresses and folders. |
 | 🍪 **A stolen or forged session** | The session cookie is signed (HMAC-SHA256), expires after 30 days, and is `HttpOnly`, `SameSite=Strict`, and `Secure` over HTTPS. Logging out ends it on the server too. Changing the password, or logging out other devices, ends every other session and turns off every device's push notifications. |
-| 🔌 **The API key** | It opens `/api/v1` only, never the password, cookies, devices or settings, and cannot force a file to be replaced. Only its hash is kept; it is shown once, when created, after the password is asked again. |
+| 🔌 **The API key** | It opens `/api/v1` only, never the password, cookies, devices or settings. It replaces a file of the library only when asked to (`"replace": true`), as the page's Replace anyway does. Only its hash is kept; it is shown once, when created, after the password is asked again. |
 | 🌐 **Another site acting as you (CSRF)** | Every request that changes something needs a custom header that another site's page cannot send without a CORS preflight, which the server never grants. |
 | 💉 **Injected script (XSS), framing** | The page builds everything as DOM nodes with `textContent`; `innerHTML` is used only for fixed icons written in the code, never for data. Every script it runs is served by Unshacklarr itself, no CDN, and it refuses to be framed by another site. |
 | 🔑 **Keys in the browser** | The keys of Sonarr, Unshackle and TMDB never reach it: the page only learns whether one is set, and a saved key is never sent to a new address unless you type it again, nor a remote CDM's secret to a new server. Notification addresses and a proxy's password reach it masked. `unshackle.yaml` shows as it is only in its editor, after the password is asked again. |
@@ -448,10 +524,26 @@ Every change, version by version: **[CHANGELOG.md](CHANGELOG.md)**. Settings sho
 running.
 
 > [!TIP]
-> **Coming next, to try now:** the [`dev-AdvancedSonarr`](https://github.com/OwnzZzZ/Unshacklarr/tree/dev-AdvancedSonarr)
-> branch lets **Sonarr drive**: Unshacklarr becomes its indexer and download client (set up in one
-> click), Sonarr searches, grabs and imports. Its README says what changed and how to build it; it
-> does not have the API yet.
+> **Coming next, for Sonarr 5:** Sonarr 5 is still in beta, so what Unshacklarr does with it waits in the
+> [`dev-sonarr-v5`](https://github.com/OwnzZzZ/Unshacklarr/tree/dev-sonarr-v5) branch until Sonarr 5 is released.
+> That branch has everything in this version, plus:
+>
+> - **Languages** (Activity): your files without your audio languages, read from Sonarr 5's own tracks. Watch them
+>   for the preferred audio, or download them again.
+> - **Titles in your language:** a series whose titles Sonarr gives in English offers, on its page, to have them in
+>   yours, so that its episodes match the service's better.
+> - **Episode order:** a series Sonarr numbers in another order (DVD, Netflix…) says so in its Numbering. When that
+>   order changes after the numbering was set, new episodes wait until you confirm the numbering.
+>
+> It is made for Sonarr 5 and has no ready-made image. To try it, build one and use it in place of
+> `ghcr.io/ownzzzz/unshacklarr` in `docker-compose.yml`:
+>
+> ```bash
+> docker build -t unshacklarr:sonarr-v5 https://github.com/OwnzZzZ/Unshacklarr.git#dev-sonarr-v5
+> ```
+>
+> Without Docker: `uv tool install git+https://github.com/OwnzZzZ/Unshacklarr.git@dev-sonarr-v5`. Tell us on the
+> [Discord](https://discord.gg/5HmNgaGASy) or in an issue how it goes.
 
 <details>
 <summary><b>🛠️ Development, translations and releases</b></summary>
@@ -498,7 +590,7 @@ for the commit), and on GitHub makes the release, its notes taken from the chang
   write packages).
 
 The example compose file uses that image: a server only pulls it,
-`docker compose pull unshacklarr && docker compose up -d unshacklarr`.
+`docker compose pull unshacklarr && docker compose up -d --no-deps unshacklarr`.
 
 </details>
 

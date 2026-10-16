@@ -78,7 +78,7 @@ $("#hidden-open").onclick = () => {
   const rows = S.config.hidden_series.map((tvdbId) => {
     const series = S.series.find((x) => x.tvdbId === tvdbId), name = series?.title || `TVDB ${tvdbId}`;
     const input = el("input", { type: "checkbox", checked: false, ariaLabel: `Show ${name} in the schedule` });
-    const li = el("li", { className: "off" }, el("img", { alt: "", src: series?.poster || "" }), el("span", { className: "n", textContent: name }),
+    const li = el("li", { className: "off" }, el("img", { alt: "", loading: "lazy", src: posterSrc(series?.poster, name), onerror: posterFail(name) }), el("span", { className: "n", textContent: name }),
       el("label", { className: "switch" }, "In schedule", input, el("i")));
     input.onchange = async () => {
       li.classList.toggle("off", !input.checked);
@@ -270,10 +270,12 @@ $("#cal-today").onclick = () => moveMonth(0);
 function schedRow(d, when) {
   const quote = (a) => /^[\w@%+=:,./-]+$/.test(a) ? a : `'${a.replaceAll("'", "'\\''")}'`;
   const series = S.series.find((x) => x.tvdbId === d.tvdbId);
-  const thumb = el("img", { className: "thumb", alt: "", loading: "lazy", src: series?.poster || "" });
+  const thumb = el("img", { className: "thumb", alt: "", loading: "lazy", src: posterSrc(series?.poster, series?.title || d.series), onerror: posterFail(series?.title || d.series) });
   const hideCtl = d.fromLate ? "" : hideButton(d);
-  const what = el("span", { className: "what" }, el("b", { textContent: `${d.series} ${d.sxxeyy}` }),
-    el("small", { textContent: d.title && d.title !== "TBA" ? d.title : "" }), d.managed ? statusPill(d, "m-only") : "");
+  const FINALE = { season: "Season finale", series: "Series finale", midseason: "Mid-season finale" };
+  const what = el("span", { className: "what" }, el("b", { textContent: `${d.series} ${d.sxxeyy}` },
+    ...(FINALE[d.finale] ? [el("span", { className: "finale-tag", textContent: FINALE[d.finale] })] : [])),
+    el("small", {}, episodeTitle(d.tvdbId, d.sxxeyy, d.title && d.title !== "TBA" ? d.title : "")), d.managed ? statusPill(d, "m-only") : "");
   if (!d.managed) {  // not downloaded by Unshackle: one tap to its settings, to add it
     return el("div", { className: "sched-row other" }, el("div", { className: "row-main" },
       thumb, el("span", { className: "when" }, when, networkBadge(d, "in-when")), what,
@@ -343,6 +345,23 @@ let busyStarted = false;
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden && busyStarted) { refreshHealth(); refreshInbox(); refreshLog(); }
 });
+/* A service waiting for a code to sign in (MAX's device linking), read from Unshackle's log in local mode: shown once
+   per code, closed once signed in. */
+let signInShown = "";
+function showSignIn(s) {
+  const dlg = $("#signin-dlg");
+  if (!s) {
+    if (dlg.open && signInShown) { dlg.close(); toast("Signed in"); }
+    signInShown = "";
+    return;
+  }
+  if (s.code === signInShown) return;
+  signInShown = s.code;
+  $("#signin-url").href = $("#signin-url").textContent = s.url;
+  $("#signin-code").textContent = s.code;
+  $("#signin-copy").onclick = () => copyCode(s.code);
+  if (!dlg.open) dlg.showModal();
+}
 async function refreshBusy() {
   if (!document.hidden) {
     try {
@@ -351,6 +370,7 @@ async function refreshBusy() {
       badge.textContent = b.running || b.queued;
       badge.classList.toggle("queued", !b.running);
       badge.title = [b.running && `${b.running} downloading`, b.queued && `${b.queued} queued`].filter(Boolean).join(", ");
+      showSignIn(b.sign_in);
     } catch { /* offline a moment: the next round */ }
   }
   setTimeout(refreshBusy, 5000);
@@ -373,6 +393,7 @@ function renderHealth(h) {
   renderSonarrState(h.sonarr);
   renderUnshackleState(h.unshackle);
   paintServers(h.servers);
+  paintSonarrs(h.sonarrs);
 }
 function renderUnshackleState(st = S.health?.unshackle || {}, tested = false) {
   const set = S.config.settings || {}, box = $("#ux-state");

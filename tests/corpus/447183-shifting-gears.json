@@ -1,0 +1,983 @@
+{
+ "title": "Shifting Gears",
+ "tvdb": 447183,
+ "show": {
+  "service": "DSNP",
+  "title": "https://www.disneyplus.com/browse/entity-97b19827-e7e5-4b0b-ba28-db8d0b2a31fe"
+ },
+ "tmdb_key": true,
+ "country": "FR",
+ "inputs": {
+  "service": [
+   {
+    "type": "episode",
+    "name": "Restauration",
+    "id": "5fb35cbe-cb1d-41be-b87c-59a5394ce6f9",
+    "language": "en",
+    "description": "Matt, un veuf propriétaire d'un garage qui restaure des voitures de collection, est confronté à une réparation des plus complexe et inattendue lorsque sa fille, avec qui il était en froid, débarque à nouveau dans sa vie, accompagnée de ses enfants adolescents.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Famille en réparation",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Aménagements",
+    "id": "08f9d3bd-5bc7-4e79-b362-f220362e3b3f",
+    "language": "en",
+    "description": "Matt rejoint Riley à la journée portes ouvertes du lycée de Carter. Riley reprend contact avec Caitlin, une ancienne camarade de classe, et lui présente Gabriel.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Famille en réparation",
+    "season": 1,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Travail",
+    "id": "864c9fe4-6566-4af0-a639-3672c98e4512",
+    "language": "en",
+    "description": "À la recherche d'un emploi, Riley accepte à contrecœur de travailler à l'atelier de Matt. Gabriel et Stitch divergent en secret de la vision de Matt sur un projet de restomod prioritaire.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Famille en réparation",
+    "season": 1,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Deuil",
+    "id": "8c3b887f-ae15-4b8b-9074-b36a5c984045",
+    "language": "en",
+    "description": "Lorsque Riley découvre un placard rempli de vêtements de sa défunte mère, elle est persuadée que Matt n'a pas fait son deuil et l'incite à aller voir un thérapeute. Gabriel perd toute son assurance quand on lui confie la responsabilité de l'atelier pour la journée.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Famille en réparation",
+    "season": 1,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Jimmy",
+    "id": "c4019370-1c22-4829-bf31-1d4b062f32f9",
+    "language": "en",
+    "description": "Jimmy, le mari dont Riley s'est séparée, débarque pour la reconquérir, au grand dam de Matt. Riley trouve du soutien auprès d'une personne inattendue.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Famille en réparation",
+    "season": 1,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "La Saint-Valentin",
+    "id": "f0494e7f-0bce-4317-8e23-fb14a08725e8",
+    "language": "en",
+    "description": "Une visite sur la tombe de sa femme le jour de la Saint-Valentin permet à Matt de nouer des liens inattendus dans un lieu improbable. Riley est mise en vedette dans une vidéo promotionnelle du studio de dance.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Famille en réparation",
+    "season": 1,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Pique-nique",
+    "id": "fd63addd-566b-4aa2-a1e0-4f423d915f91",
+    "language": "en",
+    "description": "La querelle entre Parker Customs et Premiere Dance Lab s'envenime lorsque Matt reproche à la propriétaire d'avoir installé une table de pique-nique dans l'allée commune. Le besoin de Carter d'avoir du temps « pour lui » suscite une conversation avec Matt.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Famille en réparation",
+    "season": 1,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "Carrière",
+    "id": "6d870114-082c-41de-89fd-a7c983aaa439",
+    "language": "en",
+    "description": "Georgia invite Matt et Riley à prendre la parole lors de la journée des métiers de son école, où la rivalité bonne enfant ambiante devient tendue lorsque Riley apprend que Georgia a honte de son travail. Gabriel aide Carter dans son projet jusqu'à ce qu'une affaire plus urgente se présente.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Famille en réparation",
+    "season": 1,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "Oursons",
+    "id": "d09199ad-41d8-41e5-912e-be424ca126a7",
+    "language": "en",
+    "description": "Riley est horrifiée quand elle découvre des bonbons au cannabis dans les poches de Carter, ce qui lui vaut des conseils surprenants de la part de Matt. Eve met accidentellement Gabriel et Stitch dans l'embarras après leur avoir demandé de faire un don pour une vente de charité.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Famille en réparation",
+    "season": 1,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "Baiser",
+    "id": "bd8d0f12-7ed0-469e-bad1-2eb33230730a",
+    "language": "en",
+    "description": "Lorsque Jimmy réapparaît avec un nouveau travail et propose à Riley et aux enfants d'emménager chez lui, Riley est déchirée entre son passé et son avenir. La querelle entre Matt et Eve reprend de plus belle après qu'elle a endommagé sa voiture.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Famille en réparation",
+    "season": 1,
+    "number": 10
+   },
+   {
+    "type": "episode",
+    "name": "Secret",
+    "id": "aa5fb04a-c639-47c0-8d02-0826b9a8ba80",
+    "language": "en",
+    "description": "Matt est tiraillé par ses sentiments pour Eve et Charlotte le convainc de rejoindre un groupe de personnes endeuillées. De son côté, Riley est tiraillée par ses sentiments pour Gabe.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Famille en réparation",
+    "season": 2,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Rencard",
+    "id": "881e44f3-cd1b-4000-95be-7aa462ddc858",
+    "language": "en",
+    "description": "Matt et Eve ont leur premier rencard, mais n'ont pas la même vision des choses. Riley se lie d'amitié avec la mère de la nouvelle amie de Georgia. Carter tente de calmer le jeu entre Gabe et Stitch.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Famille en réparation",
+    "season": 2,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Passion",
+    "id": "9430b8c6-0065-4fb8-a55a-c78c50d5b2de",
+    "language": "en",
+    "description": "Voyant que Carter gagne plus d'argent qu'elle, Riley décide de trouver sa vocation et se dispute avec Matt au sujet de son avenir. Gabriel \"Fluffy\" Iglesias passe à l'atelier Parker. Matt hésite à tourner la page.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Famille en réparation",
+    "season": 2,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Danger",
+    "id": "33d95c32-0480-417f-8e20-9b554158fb5c",
+    "language": "en",
+    "description": "Un raton laveur débarque dans le jardin des Parker. Matt y voit l'occasion d'apprendre à Carter à affronter ses peurs. Riley peine à s'y retrouver sur les applis de rencontre et se rend à son premier rencard depuis son divorce.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Famille en réparation",
+    "season": 2,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Soirée d'horreur",
+    "id": "a3fde93f-992d-4c59-8875-e0fbe2ceb3e5",
+    "language": "en",
+    "description": "Matt prévoit de passer Halloween avec Eve mais la véritable horreur commence quand Eve veut dormir chez lui. Carter et Georgia étant de sortie, Riley invite Gabe et Stitch à une fête d'Halloween, espérant revivre les folles soirées mémorables de sa jeunesse.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Famille en réparation",
+    "season": 2,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Loyauté",
+    "id": "9af71a90-ce54-428d-b0c4-8de524989dc5",
+    "language": "en",
+    "description": "Un conflit entre Stitch et un client menace de faire capoter un contrat et le projet de restauration de voiture dont Matt a toujours rêvé se transforme en cauchemar. Riley embauche Carter pour travailler au café ambulant, mais elle découvre vite que travailler en famille vient avec son lot d’ennuis.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Famille en réparation",
+    "season": 2,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Plus de permis",
+    "id": "14ebdb06-006e-46ba-96cf-6110a52184db",
+    "language": "en",
+    "description": "Le plan de Matt pour prouver qu’il est le meilleur moniteur de conduite déraille lorsqu’il découvre que son permis est expiré. les deux mondes de Riley se percutent tandis qu’elle peine à garder son entreprise et sa famille à flot.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Famille en réparation",
+    "season": 2,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "Casse-noisette",
+    "id": "ce16cdd0-a8f3-4d71-a68a-072257b46a59",
+    "language": "en",
+    "description": "En cette période de fêtes, les Parker découvrent que l’amour n’est pas toujours un long fleuve tranquille, alors que Matt et Eve sont au bord de la rupture. Gabe demande à Riley d’aider Amelie à faire bonne impression auprès de sa mère. Carter cherche de l’aide pour sa demande d'invitation au bal de promo.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Famille en réparation",
+    "season": 2,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "Chien",
+    "id": "d426a6de-226d-493d-be9d-2898cbf22e8d",
+    "language": "en",
+    "description": "Quand Matt refuse de laisser Carter ramener son chien chez lui, Riley commence à se demander si ce serait le moment pour elle et les enfants de trouver leur chez soi, Gabe demande conseil à Riley sur son projet d'emménager avec Amelie.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Famille en réparation",
+    "season": 2,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "Avec amitié",
+    "id": "a3c8baa7-5f21-4c84-8af0-ae46808bb859",
+    "language": "en",
+    "description": "Les retrouvailles de Matt avec un ami du lycée ne suscitent pas seulement de la nostalgie lorsqu'il fait la connaissance de son épouse, tout aussi opiniâtre que lui. Riley est bouleversée quand Klatch reçoit un commentaire négatif sur Yelp.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Famille en réparation",
+    "season": 2,
+    "number": 10
+   },
+   {
+    "type": "episode",
+    "name": "Jouets",
+    "id": "d9d12864-8c6f-441d-88c7-2eeaa92a1975",
+    "language": "en",
+    "description": "La nouvelle relation de Riley semble parfaite jusqu'à ce que Matt fasse irruption, en semant des obstacles inattendus. Le projet de jouets de Matt déraille lorsque qu'il doit travailler avec Gabe.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Famille en réparation",
+    "season": 2,
+    "number": 11
+   },
+   {
+    "type": "episode",
+    "name": "Oncle Sam",
+    "id": "0866b790-753e-4601-8ce7-31be7bf57fcf",
+    "language": "en",
+    "description": "Matt est excité de montrer son fils Sam en héro militaire, mais un changement dans la carrière de Sam pourrait donner à Riley la chance d'être l'enfant prodige. Le chant d'Andy atteint les fausses notes pour Riley.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Famille en réparation",
+    "season": 2,
+    "number": 12
+   },
+   {
+    "type": "episode",
+    "name": "Surprise",
+    "id": "ea6369f2-d103-4125-b2bf-f66fd3bbe9ac",
+    "language": "en",
+    "description": "Matt découvre que la route de l'amour est plus compliquée que prévue. Riley et Gabe s'interrogent sur la nature de leur relation.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "Famille en réparation",
+    "season": 2,
+    "number": 13
+   }
+  ],
+  "episodes": [
+   {
+    "id": 70062,
+    "seasonNumber": 1,
+    "episodeNumber": 1,
+    "title": "Restoration",
+    "airDate": "2025-01-08",
+    "airDateUtc": "2025-01-09T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 70063,
+    "seasonNumber": 1,
+    "episodeNumber": 2,
+    "title": "Accommodations",
+    "airDate": "2025-01-15",
+    "airDateUtc": "2025-01-16T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 70788,
+    "seasonNumber": 1,
+    "episodeNumber": 3,
+    "title": "Job",
+    "airDate": "2025-01-22",
+    "airDateUtc": "2025-01-23T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 70789,
+    "seasonNumber": 1,
+    "episodeNumber": 4,
+    "title": "Grief",
+    "airDate": "2025-01-29",
+    "airDateUtc": "2025-01-30T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 70790,
+    "seasonNumber": 1,
+    "episodeNumber": 5,
+    "title": "Jimmy",
+    "airDate": "2025-02-05",
+    "airDateUtc": "2025-02-06T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 70791,
+    "seasonNumber": 1,
+    "episodeNumber": 6,
+    "title": "Valentine’s",
+    "airDate": "2025-02-12",
+    "airDateUtc": "2025-02-13T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 70792,
+    "seasonNumber": 1,
+    "episodeNumber": 7,
+    "title": "Picnic",
+    "airDate": "2025-02-26",
+    "airDateUtc": "2025-02-27T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 70793,
+    "seasonNumber": 1,
+    "episodeNumber": 8,
+    "title": "Career",
+    "airDate": "2025-03-05",
+    "airDateUtc": "2025-03-06T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 70794,
+    "seasonNumber": 1,
+    "episodeNumber": 9,
+    "title": "Gummies",
+    "airDate": "2025-03-12",
+    "airDateUtc": "2025-03-13T00:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 70795,
+    "seasonNumber": 1,
+    "episodeNumber": 10,
+    "title": "Kiss",
+    "airDate": "2025-03-19",
+    "airDateUtc": "2025-03-20T00:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 77458,
+    "seasonNumber": 2,
+    "episodeNumber": 1,
+    "title": "Secret",
+    "airDate": "2025-10-01",
+    "airDateUtc": "2025-10-02T00:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 78953,
+    "seasonNumber": 2,
+    "episodeNumber": 2,
+    "title": "Date",
+    "airDate": "2025-10-08",
+    "airDateUtc": "2025-10-09T00:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 78954,
+    "seasonNumber": 2,
+    "episodeNumber": 3,
+    "title": "Passion",
+    "airDate": "2025-10-15",
+    "airDateUtc": "2025-10-16T00:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 79054,
+    "seasonNumber": 2,
+    "episodeNumber": 4,
+    "title": "Danger",
+    "airDate": "2025-10-22",
+    "airDateUtc": "2025-10-23T00:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 79055,
+    "seasonNumber": 2,
+    "episodeNumber": 5,
+    "title": "Scary",
+    "airDate": "2025-10-29",
+    "airDateUtc": "2025-10-30T00:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 79229,
+    "seasonNumber": 2,
+    "episodeNumber": 6,
+    "title": "Loyalty",
+    "airDate": "2025-11-05",
+    "airDateUtc": "2025-11-06T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 79358,
+    "seasonNumber": 2,
+    "episodeNumber": 7,
+    "title": "License",
+    "airDate": "2025-12-03",
+    "airDateUtc": "2025-12-04T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 79449,
+    "seasonNumber": 2,
+    "episodeNumber": 8,
+    "title": "Nutcracker",
+    "airDate": "2025-12-10",
+    "airDateUtc": "2025-12-11T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 79450,
+    "seasonNumber": 2,
+    "episodeNumber": 9,
+    "title": "Dog",
+    "airDate": "2026-01-07",
+    "airDateUtc": "2026-01-08T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 79451,
+    "seasonNumber": 2,
+    "episodeNumber": 10,
+    "title": "Friend",
+    "airDate": "2026-01-14",
+    "airDateUtc": "2026-01-15T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 79452,
+    "seasonNumber": 2,
+    "episodeNumber": 11,
+    "title": "Toys",
+    "airDate": "2026-01-21",
+    "airDateUtc": "2026-01-22T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 79453,
+    "seasonNumber": 2,
+    "episodeNumber": 12,
+    "title": "Uncle Sam",
+    "airDate": "2026-01-28",
+    "airDateUtc": "2026-01-29T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 79454,
+    "seasonNumber": 2,
+    "episodeNumber": 13,
+    "title": "Surprise",
+    "airDate": "2026-02-04",
+    "airDateUtc": "2026-02-05T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 84879,
+    "seasonNumber": 3,
+    "episodeNumber": 1,
+    "title": "Expectations",
+    "airDate": "2027-01-06",
+    "airDateUtc": "2027-01-07T01:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85287,
+    "seasonNumber": 3,
+    "episodeNumber": 2,
+    "title": "Accidents",
+    "airDate": null,
+    "airDateUtc": null,
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85288,
+    "seasonNumber": 3,
+    "episodeNumber": 3,
+    "title": "Physical",
+    "airDate": null,
+    "airDateUtc": null,
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85942,
+    "seasonNumber": 3,
+    "episodeNumber": 4,
+    "title": "Dads",
+    "airDate": null,
+    "airDateUtc": null,
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85943,
+    "seasonNumber": 3,
+    "episodeNumber": 5,
+    "title": "Gamble",
+    "airDate": null,
+    "airDateUtc": null,
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 85944,
+    "seasonNumber": 3,
+    "episodeNumber": 6,
+    "title": "Schooled",
+    "airDate": null,
+    "airDateUtc": null,
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   }
+  ],
+  "series": {
+   "tvdbId": 447183,
+   "tmdbId": 260471,
+   "title": "Shifting Gears"
+  },
+  "tmdb": [
+   {
+    "names": [
+     "Restoration",
+     "Épisode 1"
+    ],
+    "air_date": "2025-01-08",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "names": [
+     "Accommodations",
+     "Épisode 2"
+    ],
+    "air_date": "2025-01-15",
+    "season": 1,
+    "number": 2
+   },
+   {
+    "names": [
+     "Job",
+     "Épisode 3"
+    ],
+    "air_date": "2025-01-22",
+    "season": 1,
+    "number": 3
+   },
+   {
+    "names": [
+     "Grief",
+     "Épisode 4"
+    ],
+    "air_date": "2025-01-29",
+    "season": 1,
+    "number": 4
+   },
+   {
+    "names": [
+     "Jimmy",
+     "Épisode 5"
+    ],
+    "air_date": "2025-02-05",
+    "season": 1,
+    "number": 5
+   },
+   {
+    "names": [
+     "Valentine's",
+     "Épisode 6"
+    ],
+    "air_date": "2025-02-12",
+    "season": 1,
+    "number": 6
+   },
+   {
+    "names": [
+     "Picnic",
+     "Épisode 7"
+    ],
+    "air_date": "2025-02-26",
+    "season": 1,
+    "number": 7
+   },
+   {
+    "names": [
+     "Career",
+     "Épisode 8"
+    ],
+    "air_date": "2025-03-05",
+    "season": 1,
+    "number": 8
+   },
+   {
+    "names": [
+     "Gummies",
+     "Épisode 9"
+    ],
+    "air_date": "2025-03-12",
+    "season": 1,
+    "number": 9
+   },
+   {
+    "names": [
+     "Kiss",
+     "Épisode 10"
+    ],
+    "air_date": "2025-03-19",
+    "season": 1,
+    "number": 10
+   },
+   {
+    "names": [
+     "Secret",
+     "Épisode 1"
+    ],
+    "air_date": "2025-10-01",
+    "season": 2,
+    "number": 1
+   },
+   {
+    "names": [
+     "Date",
+     "Épisode 2"
+    ],
+    "air_date": "2025-10-08",
+    "season": 2,
+    "number": 2
+   },
+   {
+    "names": [
+     "Passion",
+     "Épisode 3"
+    ],
+    "air_date": "2025-10-15",
+    "season": 2,
+    "number": 3
+   },
+   {
+    "names": [
+     "Danger",
+     "Épisode 4"
+    ],
+    "air_date": "2025-10-22",
+    "season": 2,
+    "number": 4
+   },
+   {
+    "names": [
+     "Scary",
+     "Épisode 5"
+    ],
+    "air_date": "2025-10-29",
+    "season": 2,
+    "number": 5
+   },
+   {
+    "names": [
+     "Loyalty",
+     "Épisode 6"
+    ],
+    "air_date": "2025-11-05",
+    "season": 2,
+    "number": 6
+   },
+   {
+    "names": [
+     "License",
+     "Épisode 7"
+    ],
+    "air_date": "2025-12-03",
+    "season": 2,
+    "number": 7
+   },
+   {
+    "names": [
+     "Nutcracker",
+     "Épisode 8"
+    ],
+    "air_date": "2025-12-10",
+    "season": 2,
+    "number": 8
+   },
+   {
+    "names": [
+     "Dog",
+     "Épisode 9"
+    ],
+    "air_date": "2026-01-07",
+    "season": 2,
+    "number": 9
+   },
+   {
+    "names": [
+     "Friend",
+     "Épisode 10"
+    ],
+    "air_date": "2026-01-14",
+    "season": 2,
+    "number": 10
+   },
+   {
+    "names": [
+     "Toys",
+     "Épisode 11"
+    ],
+    "air_date": "2026-01-21",
+    "season": 2,
+    "number": 11
+   },
+   {
+    "names": [
+     "Uncle Sam",
+     "Épisode 12"
+    ],
+    "air_date": "2026-01-28",
+    "season": 2,
+    "number": 12
+   },
+   {
+    "names": [
+     "Surprise",
+     "Épisode 13"
+    ],
+    "air_date": "2026-02-04",
+    "season": 2,
+    "number": 13
+   }
+  ],
+  "tvdb": {
+   "S01E01": "Restauration",
+   "S01E02": "Aménagements",
+   "S01E03": "Travail",
+   "S01E04": "Deuil",
+   "S01E06": "La saint-Valentin",
+   "S01E07": "Pique-nique",
+   "S01E08": "Carrière",
+   "S01E09": "Oursons",
+   "S01E10": "Baiser",
+   "S02E02": "Rencard",
+   "S02E05": "Soirée d'horreur",
+   "S02E06": "Loyauté",
+   "S02E07": "Plus de permis",
+   "S02E08": "Casse-noisette",
+   "S02E09": "Chien",
+   "S02E10": "Avec amitié",
+   "S02E11": "Jouets",
+   "S02E12": "Oncle Sam"
+  }
+ },
+ "expect": {
+  "available": {
+   "70062": {
+    "service": "S01E01",
+    "name": "Restauration",
+    "match": "title",
+    "same": true
+   },
+   "70063": {
+    "service": "S01E02",
+    "name": "Aménagements",
+    "match": "title",
+    "same": true
+   },
+   "70788": {
+    "service": "S01E03",
+    "name": "Travail",
+    "match": "title",
+    "same": true
+   },
+   "70789": {
+    "service": "S01E04",
+    "name": "Deuil",
+    "match": "title",
+    "same": true
+   },
+   "70790": {
+    "service": "S01E05",
+    "name": "Jimmy",
+    "match": "title",
+    "same": true
+   },
+   "70791": {
+    "service": "S01E06",
+    "name": "La Saint-Valentin",
+    "match": "title",
+    "same": true
+   },
+   "70792": {
+    "service": "S01E07",
+    "name": "Pique-nique",
+    "match": "title",
+    "same": true
+   },
+   "70793": {
+    "service": "S01E08",
+    "name": "Carrière",
+    "match": "title",
+    "same": true
+   },
+   "70794": {
+    "service": "S01E09",
+    "name": "Oursons",
+    "match": "title",
+    "same": true
+   },
+   "70795": {
+    "service": "S01E10",
+    "name": "Baiser",
+    "match": "title",
+    "same": true
+   },
+   "77458": {
+    "service": "S02E01",
+    "name": "Secret",
+    "match": "title",
+    "same": true
+   },
+   "78953": {
+    "service": "S02E02",
+    "name": "Rencard",
+    "match": "title",
+    "same": true
+   },
+   "78954": {
+    "service": "S02E03",
+    "name": "Passion",
+    "match": "title",
+    "same": true
+   },
+   "79054": {
+    "service": "S02E04",
+    "name": "Danger",
+    "match": "title",
+    "same": true
+   },
+   "79055": {
+    "service": "S02E05",
+    "name": "Soirée d'horreur",
+    "match": "title",
+    "same": true
+   },
+   "79229": {
+    "service": "S02E06",
+    "name": "Loyauté",
+    "match": "title",
+    "same": true
+   },
+   "79358": {
+    "service": "S02E07",
+    "name": "Plus de permis",
+    "match": "title",
+    "same": true
+   },
+   "79449": {
+    "service": "S02E08",
+    "name": "Casse-noisette",
+    "match": "title",
+    "same": true
+   },
+   "79450": {
+    "service": "S02E09",
+    "name": "Chien",
+    "match": "title",
+    "same": true
+   },
+   "79451": {
+    "service": "S02E10",
+    "name": "Avec amitié",
+    "match": "title",
+    "same": true
+   },
+   "79452": {
+    "service": "S02E11",
+    "name": "Jouets",
+    "match": "title",
+    "same": true
+   },
+   "79453": {
+    "service": "S02E12",
+    "name": "Oncle Sam",
+    "match": "title",
+    "same": true
+   },
+   "79454": {
+    "service": "S02E13",
+    "name": "Surprise",
+    "match": "title",
+    "same": true
+   }
+  },
+  "titlesAgree": false,
+  "season_map": {}
+ }
+}
