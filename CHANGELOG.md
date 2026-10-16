@@ -16,7 +16,7 @@ Every change worth knowing, newest first. The format follows
 - **Episode order.** A series Sonarr numbers in another order (DVD, Netflix…) says so in its Numbering; when that
   order changes, its new episodes wait until you confirm the numbering.
 
-## [1.5.0] - 2026-10-15
+## [1.5.0] - 2026-10-17
 
 Several Sonarr at once, the audio of your language added to the files you have, Upgrades that run by themselves,
 episodes matched far more reliably, and ready for Unshackle 6. Much of it came from mj23au's issues and code: thank you.
