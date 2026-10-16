@@ -1430,7 +1430,7 @@ def first_try(show: dict, ep: dict, aired: datetime | None, now: datetime) -> st
     return next_sync(aired).isoformat() if aired and aired > now else None
 
 
-burst_runs: dict[int, threading.Thread] = {}
+burst_runs: dict[tuple[str, int], threading.Thread] = {}  # (Sonarr name, "" the main one; episode id): its try
 
 
 def calendar_episodes(config: dict, start: datetime, end: datetime) -> list[dict]:
@@ -1438,7 +1438,7 @@ def calendar_episodes(config: dict, start: datetime, end: datetime) -> list[dict
     further as a series publishes before airing."""
     ahead = max([-sonarr_sync.release_day(s) for s in config["series"].values()] + [0])  # a release days before airing
     end = end + timedelta(days=ahead)
-    r = requests.get(f"{sonarr_sync.SONARR}/api/v3/calendar", headers=sonarr_sync.HEADERS,
+    r = requests.get(f"{sonarr_sync.sonarr_url()}/api/v3/calendar", headers=sonarr_sync.sonarr_headers(),  # the Sonarr on now
                      params={"start": start.isoformat(), "end": end.isoformat(), "includeSeries": "true"}, timeout=30)
     r.raise_for_status()
     plans = sonarr_sync.broadcast_plans(config)
@@ -1446,8 +1446,16 @@ def calendar_episodes(config: dict, start: datetime, end: datetime) -> list[dict
     return [ep for ep in r.json() if ep["id"] not in dated] + sonarr_sync.broadcast_episodes(config, start, end, plans)
 
 
-def due_releases(now: datetime) -> list[int]:
-    """Episodes whose release time has just come and which Sonarr still lacks."""
+def due_releases(now: datetime, inst: dict | None = None) -> list[int]:
+    """Episodes whose release time has just come and which Sonarr still lacks; in another Sonarr (inst), those of the
+    series it has, with its ids: its copy comes at the release time too, not at the next sync (#10, by mj23au)."""
+    if sonarr_sync.unset_ladder(inst):
+        return []  # no ladder chosen for it: nothing downloads for it
+    with sonarr_sync.on_instance(inst):
+        return due_in(now, inst)
+
+
+def due_in(now: datetime, inst: dict | None) -> list[int]:
     config = read_config()
     timed = [s for s in config["series"].values() if s.get("release_time")]
     if not timed:
@@ -1455,6 +1463,8 @@ def due_releases(now: datetime) -> list[int]:
     due = []
     for ep in calendar_episodes(config, now - timedelta(days=2), now + timedelta(days=1)):
         show = config["series"].get(ep["series"]["tvdbId"])
+        if show and inst and sonarr_sync.off_in(inst, show):
+            continue  # that library switched off for the series
         slot = show and show.get("service") and show.get("release_time") and sonarr_sync.release_slot(show, ep)  # no time: no burst
         burst_for = timedelta(minutes=float(sonarr_sync.SETTINGS["burst_minutes"]))
         if slot and slot <= now < slot + burst_for and not ep["hasFile"] and not sonarr_sync.episode_folder(ep).exists():
@@ -1462,14 +1472,14 @@ def due_releases(now: datetime) -> list[int]:
     return due
 
 
-def burst_failed(episode_id: int) -> bool:
+def burst_failed(episode_id: int, instance: str = "") -> bool:
     """A try of this release burst failed for good (refused, an error: not "not out yet"). The burst is there to
     catch the episode the minute it is out; trying again every 30 s would only fail the same way. The sync
     tries it again later."""
     if not sonarr_sync.RUNS_DIR.exists():
         return False
     since = (datetime.now(timezone.utc) - timedelta(minutes=float(sonarr_sync.SETTINGS["burst_minutes"]))).isoformat()
-    card = next((c for c in cards_on_disk() if c.get("episodeId") == episode_id), None)  # its latest try
+    card = next((c for c in cards_on_disk() if c.get("episodeId") == episode_id and c.get("instance", "") == instance), None)  # its latest try
     return bool(card and card.get("kind") == "burst" and card.get("outcome") == "failed" and (card.get("ended") or "") >= since)
 
 
@@ -1625,12 +1635,22 @@ async def watch_releases():
             if not sonarr_sync.SONARR:
                 await asyncio.sleep(30)
                 continue  # set up first
-            for episode_id in await asyncio.to_thread(due_releases, datetime.now(timezone.utc)):
-                run = burst_runs.get(episode_id)
-                if (run is None or not run.is_alive()) and not await asyncio.to_thread(burst_failed, episode_id):  # the previous try is over
-                    if sonarr_sync.SETTINGS.get("download_window_bursts") and not sonarr_sync.in_download_window():
-                        continue  # chosen in Automation: the release-time tries keep to the window too
-                    burst_runs[episode_id] = run_sync([episode_id], kind="burst")
+            now = datetime.now(timezone.utc)
+            for inst in [None, *sonarr_sync.SONARRS.values()]:  # the main Sonarr first, then each other one (#10)
+                name = (inst or {}).get("name", "")
+                if inst and health.get("sonarrs", {}).get(name, {}).get("ok") is False:
+                    continue  # down: the next sync gets its copy
+                try:
+                    due = await asyncio.to_thread(due_releases, now, inst)
+                except requests.RequestException as e:  # one Sonarr down for a moment: the others go on
+                    print(f"Release watch{f' ({name})' if name else ''}: {no_credentials(e)}", flush=True)
+                    continue
+                for episode_id in due:
+                    run = burst_runs.get((name, episode_id))
+                    if (run is None or not run.is_alive()) and not await asyncio.to_thread(burst_failed, episode_id, name):  # the previous try is over
+                        if sonarr_sync.SETTINGS.get("download_window_bursts") and not sonarr_sync.in_download_window():
+                            continue  # chosen in Automation: the release-time tries keep to the window too
+                        burst_runs[(name, episode_id)] = run_sync([episode_id], kind="burst", sonarr=name)
         except Exception as e:  # Sonarr down for a moment: try again next round
             print(f"Release watch: {e}", flush=True)
         await asyncio.sleep(float(sonarr_sync.SETTINGS["burst_every_seconds"]))

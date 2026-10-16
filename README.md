@@ -304,7 +304,7 @@ are told when it goes down and when it is back.
 API key, the downloads folder as it sees it, and its own quality ladder and After the download. The series set up in
 Unshacklarr are downloaded for each instance that has them (by TVDB id), into folders named after it
 (`unshackle-sonarr-2-<tvdb>-SxxEyy`), and imported into it. Episodes, Catch up and Upgrades work with each one;
-new episodes come with the automatic sync, release times with the main Sonarr only. The main Sonarr can be named
+new episodes come at their release time and with the automatic sync, as for the main Sonarr. The main Sonarr can be named
 too (Settings › Sonarr › Name); a badge on each series names the libraries it is in.
 
 **Upgrades** (Activity): the episodes on disk in a lower quality than the series' quality ladder asks for, that the

@@ -2213,7 +2213,6 @@
  "Spread the questions": "Repartir las preguntas",
  "Checked only when you click Check": "Comprobado solo cuando haces clic en Comprobar",
  "Each check asks the service only about episodes whose answer is older than Ask again after, so use fewer days than that. 0: only when you click Check.": "Cada comprobación solo pregunta al servicio por los episodios cuya respuesta es más antigua que Volver a preguntar tras, así que usa menos días. 0: solo cuando haces clic en Comprobar.",
- "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes are downloaded by the automatic sync. Release-time downloads follow only the Sonarr above.": "Un segundo Sonarr, con su propia biblioteca. Las series configuradas aquí también se descargan para él cuando las tiene, con su propia escalera de calidad. La sincronización automática descarga sus episodios nuevos. Las descargas a la hora de publicación solo siguen al Sonarr de arriba.",
  "Add the audio track": "Añadir la pista de audio",
  "Download the whole episode again": "Volver a descargar el episodio entero",
  "Downloaded: {0}{1}": "Descargado: {0}{1}",
@@ -2257,5 +2256,6 @@
  "Muxing {0}%": "Multiplexando {0}%",
  "{0} tracks downloaded": "{0} pistas descargadas",
  "{0} · {1} left": "{0} · quedan {1}",
- "· {0} left": "· quedan {0}"
+ "· {0} left": "· quedan {0}",
+ "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes are downloaded at their release time and by the automatic sync, as for the Sonarr above.": "Un segundo Sonarr, con su propia biblioteca. Las series configuradas aquí también se descargan para él cuando las tiene, con su propia escala de calidad. Sus episodios nuevos se descargan a su hora de estreno y con la sincronización automática, como en el Sonarr de arriba."
 }

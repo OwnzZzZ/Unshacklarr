@@ -2246,7 +2246,6 @@
  "Spread the questions": "分散询问",
  "Checked only when you click Check": "仅在点击“检查”时检查",
  "Each check asks the service only about episodes whose answer is older than Ask again after, so use fewer days than that. 0: only when you click Check.": "每次检查只向服务询问回答早于“多久后重新询问”的剧集，因此请设置更少的天数。0：仅在点击“检查”时。",
- "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes are downloaded by the automatic sync. Release-time downloads follow only the Sonarr above.": "第二个 Sonarr，拥有自己的媒体库。此处设置的剧集如果它也有，也会按它自己的画质阶梯为它下载。它的新剧集由自动同步下载。发布时间的下载只跟随上方的 Sonarr。",
  "Add the audio track": "添加音轨",
  "Download the whole episode again": "重新下载整集",
  "Downloaded: {0}{1}": "已下载：{0}{1}",
@@ -2290,5 +2289,6 @@
  "Muxing {0}%": "正在封装 {0}%",
  "{0} tracks downloaded": "已下载 {0} 个轨道",
  "{0} · {1} left": "{0} · 剩余 {1}",
- "· {0} left": "· 剩余 {0}"
+ "· {0} left": "· 剩余 {0}",
+ "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes are downloaded at their release time and by the automatic sync, as for the Sonarr above.": "第二个 Sonarr，拥有自己的媒体库。此处设置的剧集如果它也有，也会按它自己的质量阶梯下载。它的新剧集会在发布时间和自动同步时下载，与上面的 Sonarr 相同。"
 }
