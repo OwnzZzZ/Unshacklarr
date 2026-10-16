@@ -1032,8 +1032,10 @@ def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float, job_
                     if len(new) == 1:
                         work = new[0]
                         work_claimed[work] = run.id
-                if work is not None:
-                    run.card["mux"] = mux_progress(work) or run.card.get("mux")
+                if work is not None and (now := mux_progress(work)):
+                    # at its very end serve deletes the tracks before it moves the file: what goes in never shrinks
+                    now["total"] = max(now["total"], (run.card.get("mux") or {}).get("total") or 0)
+                    run.card["mux"] = now
         if job.get("track_progress") or int(job.get("log_count") or 0) != quiet_count:  # serve says something: it moves
             since, quiet_count = time.monotonic(), int(job.get("log_count") or 0)
         if run and not hinted and status not in ("queued", *TERMINAL) and time.monotonic() - since > SIGN_IN_HINT:
