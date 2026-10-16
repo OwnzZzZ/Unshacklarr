@@ -2243,5 +2243,19 @@
  "{0} tracks downloaded": "Скачано дорожек: {0}",
  "{0} · {1} left": "{0} · осталось {1}",
  "· {0} left": "· осталось {0}",
- "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes are downloaded at their release time and by the automatic sync, as for the Sonarr above.": "Второй Sonarr со своей библиотекой. Настроенные здесь сериалы скачиваются и для него, если они у него есть, со своей лестницей качества. Его новые эпизоды скачиваются во время выхода и автоматической синхронизацией, как и для Sonarr выше."
+ "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes are downloaded at their release time and by the automatic sync, as for the Sonarr above.": "Второй Sonarr со своей библиотекой. Настроенные здесь сериалы скачиваются и для него, если они у него есть, со своей лестницей качества. Его новые эпизоды скачиваются во время выхода и автоматической синхронизацией, как и для Sonarr выше.",
+ "Allow Unshacklarr's key": "Разрешить ключ Unshacklarr",
+ "Allowed in unshackle.yaml": "Разрешено в unshackle.yaml",
+ "Allowed in unshackle.yaml. Restart Unshackle when nothing is downloading, so that it reads it.": "Разрешено в unshackle.yaml. Перезапустите Unshackle, когда ничего не скачивается, чтобы он это прочитал.",
+ "Restart Unshackle when nothing is downloading, so that it reads it.": "Перезапустите Unshackle, когда ничего не скачивается, чтобы он это прочитал.",
+ "Since Unshackle 6, an API key may use the proxies set in unshackle.yaml (a country code such as au, or a provider) only once it is allowed. Downloads that ask for one fail until then.": "Начиная с Unshackle 6, ключ API может использовать прокси из unshackle.yaml (код страны, например au, или провайдер) только после разрешения. До тех пор загрузки, которым нужен прокси, не выполняются.",
+ "The service": "Сервис",
+ "Unshacklarr gives its own Unshackle that right when it starts it": "Unshacklarr даёт это право своему Unshackle при запуске",
+ "Unshackle 6 doesn't let Unshacklarr use its proxies (a country code such as au, or a provider): allow it in Settings, Unshackle": "Unshackle 6 не позволяет Unshacklarr использовать свои прокси (код страны, например au, или провайдер): разрешите это в Настройки, Unshackle",
+ "Unshackle doesn't let Unshacklarr use its proxies": "Unshackle не позволяет Unshacklarr использовать свои прокси",
+ "unshackle serve is busy: its limit of requests for this key is reached": "unshackle serve занят: достигнут лимит запросов для этого ключа",
+ "unshackle.yaml's serve: is not a section: change it by hand": "serve: в unshackle.yaml не является разделом: измените вручную",
+ "unshackle.yaml's serve: users: is not a section: change it by hand": "serve: users: в unshackle.yaml не является разделом: измените вручную",
+ "{0} is waiting for you": "{0} ждёт вас",
+ "To do it by hand, the README shows the lines to add to unshackle.yaml.": "Чтобы сделать это вручную, в README приведены строки для unshackle.yaml."
 }

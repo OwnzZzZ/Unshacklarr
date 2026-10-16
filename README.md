@@ -118,9 +118,29 @@ You need:
 
 > [!NOTE]
 > A few extras need what Unshackle itself does not have yet: describing, testing and reprovisioning
-> CDM devices, downloading through a remote server (`--remote`), answering a service's question
-> during a download (a code sent by e-mail), a TV login's link and code, and Unshackle's own log,
-> live in Activity. Without them, everything else works.
+> CDM devices, downloading through a remote server (`--remote`), a TV login's link and code, and
+> Unshackle's own log, live in Activity. Without them, everything else works. Answering a service's
+> question during a download (a code sent by e-mail) needs Unshackle 6.0 or later.
+>
+> **Unshackle 6** lets an API key use the proxies of `unshackle.yaml` (a country code such as `au`, or a
+> provider) only once it is allowed. Run by Unshacklarr on the same computer, its key always is; with
+> Docker or another server, Settings › Unshackle offers to allow it the first time a download is refused.
+> By hand: a key listed under `serve: users:` loses the rights the unlisted admin key has, so list it
+> with all of them, then restart Unshackle (5.4 reads `server_cdm` and the devices, and ignores the rest):
+>
+> ```yaml
+> serve:
+>   users:
+>     <your UNSHACKLE_API_KEY>:
+>       devices: [<your .wvd names>]
+>       playready_devices: [<your .prd names>]
+>       username: api_user
+>       admin: true
+>       server_cdm: true
+>       server_vault: true
+>       server_accounts: true
+>       server_proxy: true
+> ```
 
 **Docker** pulls Unshacklarr's image and runs Unshackle in a container of its own too, built once from
 its source (on an x86-64 host). **On the computer where Unshackle runs**, Unshacklarr uses the

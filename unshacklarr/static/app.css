@@ -1245,6 +1245,8 @@ button.pill[aria-pressed="true"] { background: rgb(79 179 191 / .16); border-col
 }
 .st-sect { display: grid; gap: 8px; }
 .st-sect > b { font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: .02em; }
+.st-sect.warn { padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--warn) 45%, transparent); border-radius: 12px; }
+.st-sect.warn > b { color: var(--warn); font-size: 13px; } .st-sect.warn small { color: var(--muted); }
 .st-jobs { display: grid; gap: 6px; }
 .st-job { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 12px; align-items: center; font-size: 13px; }
 .st-job span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

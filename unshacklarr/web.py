@@ -1662,6 +1662,8 @@ def unshackle_health(full: bool = False) -> dict:
                      services=len(UNSHACKLE.services()))
         if local and UNSHACKLE.local.started:
             state["since"] = UNSHACKLE.local.started.isoformat()
+        if UNSHACKLE.proxy_refused:  # Unshackle 6 refused its proxies to Unshacklarr's key: Settings offers to allow it
+            state["proxy_refused"] = UNSHACKLE.proxy_refused
         if full:
             jobs = UNSHACKLE.jobs()
             state["queue"] = {s: sum(j["status"] == s for j in jobs) for s in ("downloading", "queued")}
@@ -2300,6 +2302,25 @@ async def unshackle_yaml(request):
     if new == text:
         return web.json_response({"saved": False, "base": fingerprint(text), "versions": config_versions(), "restart": False})
     return web.json_response(await asyncio.to_thread(save_unshackle_yaml, path, text, new))
+
+
+async def allow_proxies(_):
+    """Settings, Unshackle: Unshacklarr's key allowed Unshackle 6's own proxies (serve.users.<key>.server_proxy), in
+    unshackle.yaml, the file before kept in the editor's history. serve reads it at its next start."""
+    key = str(sonarr_sync.SETTINGS.get("unshackle_api_key") or "")
+    if UNSHACKLE.mode == "local" or not key:
+        raise web.HTTPBadRequest(text="Unshacklarr gives its own Unshackle that right when it starts it")
+    try:
+        path, wvds, prds = await asyncio.to_thread(cdm_paths)
+        cdm.regular(path)
+        text = await asyncio.to_thread(path.read_text, encoding="utf8")
+        new = cdm.allow_proxies(text, key, sorted(p.stem for p in wvds.glob("*.wvd")), sorted(p.stem for p in prds.glob("*.prd")))
+    except (UnshackleError, cdm.CdmError, OSError) as e:
+        raise web.HTTPBadRequest(text=str(e))
+    if new != text:
+        await asyncio.to_thread(save_unshackle_yaml, path, text, new)
+    UNSHACKLE.proxy_refused = ""
+    return web.json_response({"saved": new != text})
 
 
 MAINTENANCE = {"clear-cache", "clear-temp", "refresh-services"}  # serve's own /api/maintenance actions
@@ -5016,6 +5037,7 @@ app.add_routes([
     web.post("/api/unshackle/restart", restart_unshackle),
     web.get("/api/unshackle/log", unshackle_log),
     web.post(r"/api/unshackle/maintenance/{action}", unshackle_maintenance),
+    web.post("/api/unshackle/allow-proxies", allow_proxies),
     web.post(r"/api/unshackle/jobs/{job_id}/cancel", cancel_job),
     web.get("/api/cookies", list_cookies),
     web.get("/api/profiles/{service}", service_profiles),

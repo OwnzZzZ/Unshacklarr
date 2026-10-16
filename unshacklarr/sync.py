@@ -1003,6 +1003,9 @@ def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float, job_
             job = backend.job(job_id)
             misses = 0
         except UnshackleError as e:
+            if e.retry_after:  # serve's limit of requests reached (Unshackle 6): waited for, not counted as a miss
+                time.sleep(min(e.retry_after, 120))
+                continue
             # One status that didn't come is not a failed download: the job still runs on serve, and a
             # retry now would start it a second time into the same folder.
             misses += 1
@@ -1070,6 +1073,13 @@ def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float, job_
                 run.card["step"] = "downloading"
             ask_for_action(run, job.get("action_needed") if status not in TERMINAL else None)
             ask_for_input(run, job.get("input_prompt") if status not in TERMINAL else None)
+            notice = job.get("notice") if status not in TERMINAL else None  # Unshackle 6: an approval waited for, no answer
+            if notice != run.card.get("notice"):
+                if notice:
+                    run.say(f"\r\n\x1b[33m{run.card.get('service') or 'The service'}: {notice}\x1b[0m")
+                    run.card["notice"] = str(notice)[:500]
+                else:
+                    run.card.pop("notice", None)
             if (snapshot := json.dumps(run.card)) != saved:  # unchanged: not written again every half second, which
                 run.save()                                   # would make every reader parse the whole history again
                 saved = snapshot

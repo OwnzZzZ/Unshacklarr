@@ -2246,5 +2246,19 @@
  "{0} tracks downloaded": "{0} トラックをダウンロード済み",
  "{0} · {1} left": "{0} · 残り {1}",
  "· {0} left": "· 残り {0}",
- "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes are downloaded at their release time and by the automatic sync, as for the Sonarr above.": "独自のライブラリを持つ2台目のSonarr。ここで設定したシリーズは、そのSonarrにもある場合、独自の品質ラダーでダウンロードされます。新しいエピソードは配信時刻と自動同期でダウンロードされ、上のSonarrと同じです。"
+ "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes are downloaded at their release time and by the automatic sync, as for the Sonarr above.": "独自のライブラリを持つ2台目のSonarr。ここで設定したシリーズは、そのSonarrにもある場合、独自の品質ラダーでダウンロードされます。新しいエピソードは配信時刻と自動同期でダウンロードされ、上のSonarrと同じです。",
+ "Allow Unshacklarr's key": "Unshacklarr のキーを許可",
+ "Allowed in unshackle.yaml": "unshackle.yaml で許可済み",
+ "Allowed in unshackle.yaml. Restart Unshackle when nothing is downloading, so that it reads it.": "unshackle.yaml で許可しました。何もダウンロードしていないときに Unshackle を再起動して読み込ませてください。",
+ "Restart Unshackle when nothing is downloading, so that it reads it.": "何もダウンロードしていないときに Unshackle を再起動して読み込ませてください。",
+ "Since Unshackle 6, an API key may use the proxies set in unshackle.yaml (a country code such as au, or a provider) only once it is allowed. Downloads that ask for one fail until then.": "Unshackle 6 以降、API キーが unshackle.yaml のプロキシ（au のような国コードやプロバイダー）を使えるのは許可された後だけです。それまでプロキシを求めるダウンロードは失敗します。",
+ "The service": "サービス",
+ "Unshacklarr gives its own Unshackle that right when it starts it": "Unshacklarr は自分で起動する Unshackle にこの権限を与えます",
+ "Unshackle 6 doesn't let Unshacklarr use its proxies (a country code such as au, or a provider): allow it in Settings, Unshackle": "Unshackle 6 は Unshacklarr にプロキシ（au のような国コードやプロバイダー）の使用を許可していません：設定の Unshackle で許可してください",
+ "Unshackle doesn't let Unshacklarr use its proxies": "Unshackle は Unshacklarr にプロキシの使用を許可していません",
+ "unshackle serve is busy: its limit of requests for this key is reached": "unshackle serve が混み合っています：このキーのリクエスト上限に達しました",
+ "unshackle.yaml's serve: is not a section: change it by hand": "unshackle.yaml の serve: がセクションではありません：手動で変更してください",
+ "unshackle.yaml's serve: users: is not a section: change it by hand": "unshackle.yaml の serve: users: がセクションではありません：手動で変更してください",
+ "{0} is waiting for you": "{0} があなたを待っています",
+ "To do it by hand, the README shows the lines to add to unshackle.yaml.": "手動で行う場合は、README に unshackle.yaml に追加する行があります。"
 }

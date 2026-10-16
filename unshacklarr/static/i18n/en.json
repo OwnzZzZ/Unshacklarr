@@ -246,6 +246,9 @@
   "S.series.length"
  ],
  "All shown": [],
+ "Allow Unshacklarr's key": [],
+ "Allowed in unshackle.yaml": [],
+ "Allowed in unshackle.yaml. Restart Unshackle when nothing is downloading, so that it reads it.": [],
  "Already downloaded: waiting for Sonarr's import": [],
  "Already set up": [],
  "Also apply to release-time downloads": [],
@@ -1731,6 +1734,7 @@
  "Reset": [],
  "Reset to the built-in ladders": [],
  "Restart": [],
+ "Restart Unshackle when nothing is downloading, so that it reads it.": [],
  "Restart it or read its log where it runs": [],
  "Restarting Unshackle…": [],
  "Restore": [],
@@ -1928,6 +1932,7 @@
  "Signed in by your reverse proxy as {0}": [
   "s.proxy_user"
  ],
+ "Since Unshackle 6, an API key may use the proxies set in unshackle.yaml (a country code such as au, or a provider) only once it is allowed. Downloads that ask for one fail until then.": [],
  "Size": [],
  "Skip": [],
  "Skip upgrades": [],
@@ -2362,6 +2367,7 @@
   "drm"
  ],
  "The server's address, with https://": [],
+ "The service": [],
  "The service Unshackle downloads this series from, and its page there.": [],
  "The service numbers episodes from the series' start, like Sonarr's absolute number: Download asks it for {0}": [
   "found.service"
@@ -2436,6 +2442,7 @@
  "TimeoutError": [],
  "Title": [],
  "To": [],
+ "To do it by hand, the README shows the lines to add to unshackle.yaml.": [],
  "To manage its devices here too, mount the folder of its unshackle.yaml and set its path in Settings, Unshackle, Folders.": [],
  "To manage them here too, mount its Cookies folder and set its path in Settings, Unshackle, Folders.": [],
  "Today": [],
@@ -2539,6 +2546,7 @@
   "tvdb"
  ],
  "Unshacklarr finds what Sonarr is missing, then hands it the downloads to import.": [],
+ "Unshacklarr gives its own Unshackle that right when it starts it": [],
  "Unshacklarr is set up already": [],
  "Unshacklarr starts it on this machine": [],
  "Unshacklarr sync stopped": [],
@@ -2560,12 +2568,14 @@
  ],
  "Unshacklarr, back to the series": [],
  "Unshackle": [],
+ "Unshackle 6 doesn't let Unshacklarr use its proxies (a country code such as au, or a provider): allow it in Settings, Unshackle": [],
  "Unshackle answers": [],
  "Unshackle command": [],
  "Unshackle config folder": [],
  "Unshackle doesn't answer yet: the last try of {0} may still be downloading there": [
   "c['sxxeyy']"
  ],
+ "Unshackle doesn't let Unshacklarr use its proxies": [],
  "Unshackle downloads the episodes: here, started by Unshacklarr, or elsewhere, as unshackle serve.": [],
  "Unshackle downloads them again, then replaces a file only if the new one ranks higher in the series' quality profile in Sonarr. Otherwise the download waits in the downloads folder and you get a warning.": [],
  "Unshackle made {0} file{1}:": [
@@ -2821,6 +2831,7 @@
  "days is a number of days": [],
  "debug ·": [],
  "default": [],
+ "docker compose restart unshackle": [],
  "downloaded": [],
  "downloads": [],
  "en-GB": [],
@@ -3103,6 +3114,7 @@
   "self.tail()"
  ],
  "unshackle serve downloads the episodes: started here by Unshacklarr, or running elsewhere.": [],
+ "unshackle serve is busy: its limit of requests for this key is reached": [],
  "unshackle serve is unreachable": [],
  "unshackle serve is unreachable at {0}: {1}": [
   "url",
@@ -3137,6 +3149,8 @@
   "key",
   "named"
  ],
+ "unshackle.yaml's serve: is not a section: change it by hand": [],
+ "unshackle.yaml's serve: users: is not a section: change it by hand": [],
  "until {0}": [
   "until"
  ],
@@ -3499,6 +3513,9 @@
  "{0} is used by {1}: pick another device for them first": [
   "name",
   "', '.join(used)"
+ ],
+ "{0} is waiting for you": [
+  "c.service || \"The service\""
  ],
  "{0} kb/s": [
   "Math.round(bps / 1e3)"

@@ -29,7 +29,21 @@ from unshacklarr.files import no_credentials
 LAUNCHER = """
 import os
 from unshackle.core.config import config
-config.serve["api_secret"] = os.environ.pop("UNSHACKLARR_SERVE_KEY")
+config.serve["api_secret"] = key = os.environ.pop("UNSHACKLARR_SERVE_KEY")
+# Unshackle 6 lets a key use the server's proxies (a country code, nordvpn:fr) only with server_proxy. A key listed in
+# serve.users is no longer the admin one (unlisted: every right), so this run's key gets every right the admin key has,
+# and the devices serve would give it; 5.4 reads server_cdm and the devices among them, and serves as before
+from pathlib import Path
+def device_names(folder, pattern):
+    try:
+        return [p.stem for p in Path(getattr(config.directories, folder)).glob(pattern)]
+    except (AttributeError, TypeError, OSError):
+        return []
+users = config.serve.get("users") if isinstance(config.serve.get("users"), dict) else {}
+users[key] = {"devices": device_names("wvds", "*.wvd"), "playready_devices": device_names("prds", "*.prd"),
+              "username": "api_user", "admin": True, "server_cdm": True, "server_vault": True, "server_accounts": True,
+              "server_proxy": True}
+config.serve["users"] = users
 port, fd = os.environ.pop("UNSHACKLARR_SERVE_PORT"), os.environ.pop("UNSHACKLARR_SERVE_FD", "")
 if fd:
     import socket
@@ -45,6 +59,13 @@ TERMINAL = {"completed", "failed", "cancelled"}
 
 class UnshackleError(Exception):
     """unshackle cannot be reached or refused a request; the message says why."""
+    retry_after = 0  # serve's own limit on requests reached (Unshackle 6): seconds before it answers again
+
+
+# Unshackle 6 serves its proxies (a country code, a provider) only to a key allowed to (server_proxy)
+PROXY_REFUSED = re.compile(r"does not resolve country codes into proxies|in a different region from yours", re.IGNORECASE)
+PROXY_HINT = ("Unshackle 6 doesn't let Unshacklarr use its proxies (a country code such as au, or a provider): "
+              "allow it in Settings, Unshackle")
 
 
 def unshackle_python(command: str) -> tuple[str, Path]:
@@ -210,6 +231,7 @@ class Unshackle:
         self._remote: tuple[float, list] = (0.0, [])
         self._config: tuple[float, dict] = (0.0, {})
         self._down: tuple[float, UnshackleError | None] = (0.0, None)
+        self.proxy_refused = ""  # when serve last refused its proxies to this key (Unshackle 6, no server_proxy)
 
     def configure(self, settings: dict) -> None:
         self.settings = settings
@@ -259,11 +281,18 @@ class Unshackle:
             raise UnshackleError(no_credentials(f"unshackle serve is unreachable at {url}: {e}")) from e
         if r.status_code == 401:
             raise UnshackleError("unshackle serve refused the API key")
+        if r.status_code == 429:  # a limit set on the key (Unshackle 6): waited for, not a lost job
+            err = UnshackleError("unshackle serve is busy: its limit of requests for this key is reached")
+            err.retry_after = int(r.headers.get("Retry-After") or 60) if str(r.headers.get("Retry-After") or "60").isdigit() else 60
+            raise err
         if not r.ok:
             try:
                 message = r.json().get("message") or r.text
             except ValueError:
                 message = r.text
+            if PROXY_REFUSED.search(message):
+                self.proxy_refused = datetime.now(timezone.utc).isoformat()
+                raise UnshackleError(PROXY_HINT)
             raise UnshackleError(f"unshackle serve: {message.strip()[:500]}")
         try:
             return r.json()

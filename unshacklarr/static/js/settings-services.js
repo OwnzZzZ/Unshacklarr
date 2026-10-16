@@ -115,8 +115,24 @@ function renderUnshackleStatus(st) {
     ...(local || !/^https?:\/\/unshackle(:\d+)?\/?$/.test(S.config.settings.unshackle_url || "") ? [] : [el("div", { className: "st-sect" }, el("b", { textContent: "Restart it or read its log where it runs" }),
       el("div", { className: "st-cmds" }, copyCmd("docker compose restart unshackle"), copyCmd("docker logs -f --tail 200 unshackle")))]),
   ] : [];
+  // Unshackle 6 serves its proxies (a country code, a provider) only to a key allowed to: said, and allowed in one click
+  const restartCmd = /^https?:\/\/unshackle(:\d+)?\/?$/.test(S.config.settings.unshackle_url || "") ? "docker compose restart unshackle" : "";
+  const proxies = st.proxy_refused ? [el("div", { className: "st-sect warn" },
+    el("b", { textContent: "Unshackle doesn't let Unshacklarr use its proxies" }),
+    el("small", { textContent: "Since Unshackle 6, an API key may use the proxies set in unshackle.yaml (a country code such as au, or a provider) only once it is allowed. Downloads that ask for one fail until then." }),
+    el("div", { className: "st-maint" }, el("button", { className: "btn small primary", textContent: "Allow Unshacklarr's key", onclick: async (e) => {
+      e.target.disabled = true;
+      try {
+        await api("/api/unshackle/allow-proxies", { method: "POST" });
+        toast("Allowed in unshackle.yaml. Restart Unshackle when nothing is downloading, so that it reads it.");
+        e.target.closest(".st-sect").replaceChildren(el("b", { textContent: "Allowed in unshackle.yaml" }),
+          el("small", { textContent: "Restart Unshackle when nothing is downloading, so that it reads it." }), ...(restartCmd ? [copyCmd(restartCmd)] : []));
+      } catch (err) { e.target.disabled = false; toast(err.message, true); }
+    } })),
+    el("small", { textContent: "To do it by hand, the README shows the lines to add to unshackle.yaml." }))] : [];
   $("#u-status").replaceChildren(
     ...(st.error ? [el("p", { className: "status-err", textContent: st.error })] : []),
+    ...proxies,
     ...(missing.length ? [el("p", { className: "status-err", textContent: `Missing: ${missing.map((t) => t.name).join(", ")}. Install them, then check again.` })] : []),
     ...extra,
     ...(st.tools ? [el("details", { className: "tools-box" },
