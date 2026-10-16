@@ -18,8 +18,8 @@ Every change worth knowing, newest first. The format follows
 
 ## [1.5.0] - 2026-10-15
 
-Several Sonarr at once, the audio of your language added to the files you have, Upgrades that run by themselves, and
-episodes matched far more reliably. Much of it came from mj23au's issues and code: thank you.
+Several Sonarr at once, the audio of your language added to the files you have, Upgrades that run by themselves,
+episodes matched far more reliably, and ready for Unshackle 6. Much of it came from mj23au's issues and code: thank you.
 
 ### Added
 
@@ -32,7 +32,8 @@ episodes matched far more reliably. Much of it came from mj23au's issues and cod
 
 **⬇️ Downloads**
 - **Add audio track.** When your language's audio comes out, only that track is downloaded and added to your file, as
-  its default audio, with its forced subtitles. In Settings › Download options.
+  its default audio, with its forced subtitles. A file not from the series' service is asked about in the bell first.
+  In Settings › Download options.
 - **Library folders picked, not typed.** Sonarr's root folders offered, both sides browsable, a real file to confirm them.
 - **Fallback service.** A second service for a series, used when the main one doesn't have the episode.
 - **Hybrid (DV + HDR10) in quality ladders.** A step can ask for both layers in one file.
@@ -44,12 +45,13 @@ episodes matched far more reliably. Much of it came from mj23au's issues and cod
 
 **🔎 Finding the right episode**
 - **Separate programmes.** For strands like BBC Documentaries: each episode is found by its title, no series URL
-  needed. (#17)
+  needed; one the service doesn't have says *Not on* it. (#17)
 - **Seasons listed as separate shows.** A season the service lists as a show of its own downloads from that show's
   page, which Episodes offers when it finds one. (#21)
 
 **⬆️ Upgrades**
-- **Upgrades you choose.** Which series are checked, how long an answer is kept, how far back. (#10)
+- **Upgrades you choose.** Which series are checked, how long an answer is kept, how far back; one card per series,
+  nothing ticked at first, each checkable on its own, replacements shown live. (#10, #18)
 - **Check automatically.** Every 7 days, asking only about answers grown old, spread over several checks. In
   Settings › Upgrades. (#23)
 - **Check new series.** A series set up with episodes already on disk is checked within the hour. (#23)
@@ -58,7 +60,6 @@ episodes matched far more reliably. Much of it came from mj23au's issues and cod
 **📡 Sonarr**
 - **Season and series finales**, in the Schedule and in the notification.
 - **Season names** in Episodes, where Sonarr has them.
-- **Dynamic range in Episodes.** DV, HDR10 or HDR10+ beside each file's codec.
 - **Room in the library checked too.** Nothing downloads while the series' folder is short of space; you are told once.
 
 **✨ Everywhere**
@@ -69,29 +70,31 @@ episodes matched far more reliably. Much of it came from mj23au's issues and cod
 - **A diagnostic for issues.** One click in Activity, without passwords, keys, addresses or folders.
 - **A health check** at `/health`, for Docker and Uptime Kuma.
 - **Sign-in codes.** When a service waits for you to sign in, you are told, with the link and the code when
-  Unshacklarr runs Unshackle.
+  Unshacklarr runs Unshackle, and with Unshackle 6 its approval messages.
+- **Dynamic range in Episodes.** DV, HDR10 or HDR10+ beside each file's codec.
+
+**🆕 Unshackle 6**
+- **Its proxies allowed in one click** to Unshacklarr's key, in Settings › Unshackle; on their own when Unshacklarr
+  runs Unshackle. Unshackle 5.4 and later still work as before.
+- **Its new download options**, each saying it needs 6.0, `--cdm` with the CDM devices you have.
+- **A limit of requests** set on the key is waited for, not taken for a lost download.
 
 New options are off until you turn them on, except Upgrades' automatic check (0 days turns it off).
 
 ### Changed
 
-- **Faster.** One call per series for its episodes and files, title matching about three times quicker, and fewer
-  calls to Sonarr for series with their own schedule.
+- **Faster and lighter.** One call per series for its episodes and files, title matching about three times quicker,
+  fewer calls to Sonarr for series with their own schedule, and no repeated waits while a server is down.
 - **One import at a time per Sonarr**, so big files don't reach it together. (#10)
 - **A busy Unshackle server is waited for** 1, 3 then 10 minutes before a download fails. (#10)
 - **Import needed**, with an Import button, instead of a failure when Sonarr didn't import. (#10)
-- **Upgrades, one card per series.** Nothing ticked at first, each series checkable on its own, replacements shown
-  live. (#18)
 - **Clearer selection in Series.** A check on each poster, the others dimmed.
+- **Clearer choices in a series' settings.** Each choice shown once, the one it inherits marked default.
 - **One schedule per series.** A series with its own broadcast schedule shows only that one.
 - **More from the API.** A download for another Sonarr, as a retry or a replacement, through its own proxy, in the
   codec and height you name. (#10)
 - **Updating Unshacklarr alone** (`--no-deps`, in the README and the example compose) leaves Unshackle and its
   downloads running.
-- **Ready for Unshackle 6**, and still working with 5.4 and later. Its proxies are allowed to Unshacklarr's key in
-  one click in Settings › Unshackle (on its own when Unshacklarr runs Unshackle), a service waiting for an
-  approval says so in Activity, and a limit of requests set on the key is waited for. Its new download options are
-  offered, each saying it needs 6.0, `--cdm` with the CDM devices you have.
 
 ### Fixed
 
@@ -131,7 +134,6 @@ New options are off until you turn them on, except Upgrades' automatic check (0 
 - **An unreachable Sonarr is told once**, not at every sync.
 - **A run that just ended** no longer shows "Interrupted" until a reload. (#17)
 - **The Output panel** keeps its newest line in view. (#10)
-- **Lighter on the server and the phone** when a server is down or pages stay open in the background.
 - **H.266 (VVC) files** are named as such.
 
 ## [1.4.0] - 2026-10-07
