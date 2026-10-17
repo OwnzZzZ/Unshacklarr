@@ -1509,7 +1509,6 @@
  "Accepted audio languages": "Akzeptierte Audiosprachen",
  "Accepted audio languages of {0}: {1} is not a language code like fr or en-US": "Akzeptierte Audiosprachen von {0}: {1} ist kein Sprachcode wie fr oder en-US",
  "An episode with none of these languages is not downloaded. It is tried again at each sync.": "Eine Episode ohne eine dieser Sprachen wird nicht heruntergeladen. Sie wird bei jeder Synchronisierung erneut versucht.",
- "The episode must have at least one of them. It is checked before the download, then on the file. Empty: the first language of --a-lang or --lang. A series can set its own.": "Die Episode muss mindestens eine davon haben. Das wird vor dem Download und dann an der Datei geprüft. Leer: die erste Sprache von --a-lang oder --lang. Eine Serie kann eigene festlegen.",
  "Example: fr, en": "Beispiel: fr, en",
  "GB": "GB",
  "Header with the user's name": "Header mit dem Benutzernamen",
@@ -1765,7 +1764,6 @@
  "Download": "Herunterladen",
  "Downloaded from {0}": "Heruntergeladen von {0}",
  "Files a service has in better quality": "Dateien, die ein Dienst in besserer Qualität hat",
- "For example fr, en. An episode with none of them is not downloaded. It is tried again at each sync.": "Zum Beispiel fr, en. Eine Episode ohne eine davon wird nicht heruntergeladen. Sie wird bei jeder Synchronisierung erneut versucht.",
  "For example fr. The episode must have full subtitles in at least one of them. Forced subtitles do not count.": "Zum Beispiel fr. Die Episode muss in mindestens einer davon vollständige Untertitel haben. Erzwungene Untertitel zählen nicht.",
  "Get cookies.txt LOCALLY for Chrome ↗": "Get cookies.txt LOCALLY für Chrome ↗",
  "Import": "Importieren",
@@ -2256,5 +2254,7 @@
  "The DRM to license with, for a service that takes both: its device of that kind in the cdm: section.": "Das DRM für die Lizenz, bei einem Dienst, der beide annimmt: sein Gerät dieser Art im Abschnitt cdm:.",
  "Unshackle refuses to pick the CDM device named in --cdm: allow it in unshackle.yaml with serve: cdm_overrides: true (or a list of devices), then restart Unshackle": "Unshackle lehnt das in --cdm genannte CDM-Gerät ab: erlauben Sie es in unshackle.yaml mit serve: cdm_overrides: true (oder einer Geräteliste), dann Unshackle neu starten",
  "Use this CDM device (its name) for the download, over unshackle.yaml's cdm: section. Unshackle refuses it unless unshackle.yaml allows it with serve: cdm_overrides (true, or a list of devices).": "Dieses CDM-Gerät (sein Name) für den Download verwenden, statt des Abschnitts cdm: in unshackle.yaml. Unshackle lehnt es ab, wenn unshackle.yaml es nicht mit serve: cdm_overrides erlaubt (true oder eine Geräteliste).",
- "{0} Unshackle 6.0 or later.": "{0} Unshackle 6.0 oder neuer."
+ "{0} Unshackle 6.0 or later.": "{0} Unshackle 6.0 oder neuer.",
+ "The episode must have at least one of them. It is checked before the download, then on the file. orig is each series' original language, as Sonarr gives it. Empty: the first language of --a-lang or --lang. A series can set its own.": "Die Folge muss mindestens eine davon haben. Geprüft wird vor dem Download und dann an der Datei. orig ist die Originalsprache jeder Serie, wie Sonarr sie angibt. Leer: die erste Sprache von --a-lang oder --lang. Eine Serie kann eigene festlegen.",
+ "For example fr, en, or orig for the series' original language. An episode with none of them is not downloaded. It is tried again at each sync.": "Zum Beispiel fr, en oder orig für die Originalsprache der Serie. Eine Folge ohne eine davon wird nicht heruntergeladen. Sie wird bei jeder Synchronisierung erneut versucht."
 }

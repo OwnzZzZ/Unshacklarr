@@ -2733,3 +2733,14 @@ def test_a_series_that_names_its_cdm_is_not_refused_for_want_of_one(tmp_path, mo
         assert "No CDM" in str(e)
     request = sync.download_request({**show, "options": {"--cdm": "my_l3"}}, config, "S01E01", tmp_path)
     assert request["cdm"] == "my_l3"
+
+
+def test_orig_in_the_accepted_audio_is_the_series_original_language(tmp_path, monkeypatch):
+    # "orig, fr" for every series: an anime takes ja or fr, a French series fr; Sonarr not saying it (v3): orig left out
+    sync = load(tmp_path, monkeypatch)
+    config = {"settings": {"audio_accept": "orig, fr"}}
+    assert sync.accepted_audio({}, config, {"originalLanguage": {"id": 8, "name": "Japanese"}}) == ["ja", "fr"]
+    assert sync.accepted_audio({}, config, {"originalLanguage": {"id": 2, "name": "French"}}) == ["fr"]
+    assert sync.accepted_audio({}, config, {"originalLanguage": {"name": "Portuguese (Brazil)"}}) == ["pt-br", "fr"]
+    assert sync.accepted_audio({}, config, {}) == ["fr"]
+    assert sync.speaks({"ja"}, sync.accepted_audio({}, config, {"originalLanguage": {"name": "Japanese"}}))

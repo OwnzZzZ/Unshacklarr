@@ -1540,7 +1540,6 @@
  "Accepted audio languages": "許容する音声言語",
  "Accepted audio languages of {0}: {1} is not a language code like fr or en-US": "{0} の許容する音声言語：{1} は fr や en-US のような言語コードではありません",
  "An episode with none of these languages is not downloaded. It is tried again at each sync.": "これらの言語をどれも含まないエピソードはダウンロードされません。同期のたびに再試行されます。",
- "The episode must have at least one of them. It is checked before the download, then on the file. Empty: the first language of --a-lang or --lang. A series can set its own.": "エピソードには少なくともいずれか1つが必要です。ダウンロード前とファイルで確認します。空欄：--a-lang または --lang の最初の言語。シリーズごとに設定できます。",
  "Example: fr, en": "例：fr, en",
  "GB": "GB",
  "Header with the user's name": "ユーザー名を含むヘッダー",
@@ -1795,7 +1794,6 @@
  "Counted from the air date in Sonarr. Pick a day before when a streaming platform gets the episodes ahead of the TV channel.": "Sonarr の放送日から数えます。配信プラットフォームがテレビ局より先にエピソードを公開する場合は、前の日を選んでください。",
  "Downloaded from {0}": "{0} からダウンロード済み",
  "Files a service has in better quality": "サービスにより良い画質があるファイル",
- "For example fr, en. An episode with none of them is not downloaded. It is tried again at each sync.": "例：fr, en。どれも含まないエピソードはダウンロードされません。同期のたびに再試行されます。",
  "For example fr. The episode must have full subtitles in at least one of them. Forced subtitles do not count.": "例：fr。エピソードには少なくともいずれか1つの完全な字幕が必要です。強制字幕は数えません。",
  "Its downloads from {0} fail": "{0} からのダウンロードが失敗しています",
  "Joining the parts": "パートを結合中",
@@ -2268,5 +2266,7 @@
  "The DRM to license with, for a service that takes both: its device of that kind in the cdm: section.": "両方を受け付けるサービスで使う DRM：cdm: セクションにあるその種類のデバイス。",
  "Unshackle refuses to pick the CDM device named in --cdm: allow it in unshackle.yaml with serve: cdm_overrides: true (or a list of devices), then restart Unshackle": "Unshackle は --cdm で指定した CDM デバイスを拒否しました：unshackle.yaml で serve: cdm_overrides: true（またはデバイスの一覧）を設定し、Unshackle を再起動してください",
  "Use this CDM device (its name) for the download, over unshackle.yaml's cdm: section. Unshackle refuses it unless unshackle.yaml allows it with serve: cdm_overrides (true, or a list of devices).": "unshackle.yaml の cdm: セクションの代わりに、この CDM デバイス（名前）でダウンロードします。unshackle.yaml が serve: cdm_overrides（true またはデバイスの一覧）で許可していない場合、Unshackle は拒否します。",
- "{0} Unshackle 6.0 or later.": "{0} Unshackle 6.0 以降。"
+ "{0} Unshackle 6.0 or later.": "{0} Unshackle 6.0 以降。",
+ "The episode must have at least one of them. It is checked before the download, then on the file. orig is each series' original language, as Sonarr gives it. Empty: the first language of --a-lang or --lang. A series can set its own.": "エピソードには少なくとも 1 つが必要です。ダウンロード前と、ファイルで確認します。orig は各シリーズの原語（Sonarr が示すもの）です。空欄：--a-lang または --lang の最初の言語。シリーズごとに設定できます。",
+ "For example fr, en, or orig for the series' original language. An episode with none of them is not downloaded. It is tried again at each sync.": "例：fr、en、またはシリーズの原語なら orig。どれも無いエピソードはダウンロードされず、同期のたびに再試行されます。"
 }

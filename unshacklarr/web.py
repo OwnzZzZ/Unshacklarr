@@ -1081,9 +1081,12 @@ LANGUAGE_TAG = re.compile(r"[a-z]{2,3}(-[a-z0-9]{2,8})*", re.IGNORECASE)
 
 
 def check_audio_accept(value, where: str, what: str = "audio") -> str:
-    """The audio (or subtitle, or upgrade) languages of a setting, as "fr, en": language tags only, never orig or all."""
+    """The audio (or subtitle, or upgrade) languages of a setting, as "fr, en": language tags, never all or best; the
+    accepted audio takes orig too, the series' original language as Sonarr gives it."""
     codes = [c for c in re.split(r"[,\s]+", str(value or "").strip()) if c]
     for code in codes:
+        if what == "audio" and code.lower() == "orig":
+            continue
         if not LANGUAGE_TAG.fullmatch(code) or code.lower() in ("orig", "all", "best"):
             if what == "subtitles":  # whole sentences, each its own: they are translated as they are
                 raise web.HTTPBadRequest(text=f"Required subtitle languages of {where}: {code!r} is not a language code like fr or en-US")

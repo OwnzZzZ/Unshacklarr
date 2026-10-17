@@ -6,6 +6,11 @@ Every change worth knowing, newest first. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **orig in the accepted audio languages:** each series' original language as Sonarr gives it, so "orig, fr" works
+  for every series at once (ja or fr for an anime, fr for a French series).
+
 ## [1.5.0] - 2026-10-17
 
 Several Sonarr at once, the audio of your language added to the files you have, Upgrades that run by themselves,
