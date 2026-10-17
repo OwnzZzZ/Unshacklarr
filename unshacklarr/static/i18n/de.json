@@ -2295,5 +2295,9 @@
  "Use this CDM device (its name) for the download, over unshackle.yaml's cdm: section. Unshackle refuses it unless unshackle.yaml allows it with serve: cdm_overrides (true, or a list of devices).": "Dieses CDM-Gerät (sein Name) für den Download verwenden, statt des Abschnitts cdm: in unshackle.yaml. Unshackle lehnt es ab, wenn unshackle.yaml es nicht mit serve: cdm_overrides erlaubt (true oder eine Geräteliste).",
  "{0} Unshackle 6.0 or later.": "{0} Unshackle 6.0 oder neuer.",
  "The episode must have at least one of them. It is checked before the download, then on the file. orig is each series' original language, as Sonarr gives it. Empty: the first language of --a-lang or --lang. A series can set its own.": "Die Folge muss mindestens eine davon haben. Geprüft wird vor dem Download und dann an der Datei. orig ist die Originalsprache jeder Serie, wie Sonarr sie angibt. Leer: die erste Sprache von --a-lang oder --lang. Eine Serie kann eigene festlegen.",
- "For example fr, en, or orig for the series' original language. An episode with none of them is not downloaded. It is tried again at each sync.": "Zum Beispiel fr, en oder orig für die Originalsprache der Serie. Eine Folge ohne eine davon wird nicht heruntergeladen. Sie wird bei jeder Synchronisierung erneut versucht."
+ "For example fr, en, or orig for the series' original language. An episode with none of them is not downloaded. It is tried again at each sync.": "Zum Beispiel fr, en oder orig für die Originalsprache der Serie. Eine Folge ohne eine davon wird nicht heruntergeladen. Sie wird bei jeder Synchronisierung erneut versucht.",
+ "Delete the job": "Auftrag löschen",
+ "Removes every episode of this job from the history": "Entfernt alle Folgen dieses Auftrags aus dem Verlauf",
+ "1 episode deleted from the history": "1 Folge aus dem Verlauf gelöscht",
+ "{0} episodes deleted from the history": "{0} Folgen aus dem Verlauf gelöscht"
 }

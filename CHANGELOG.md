@@ -12,6 +12,7 @@ Every change worth knowing, newest first. The format follows
   for every series at once (ja or fr for an anime, fr for a French series).
 - **The API speaks the service's numbering:** `"numbering": "service"` takes Disney+'s S04E05 for the episode it is in
   Sonarr, and `"audio": "fr"` lets Unshacklarr decide: download, download again, or add the French track.
+- **Delete the job:** a job that is over leaves the history in one click, every episode of it at once.
 
 **🆕 Sonarr 5, on this branch until it is out of beta**
 - **Languages.** Your files without your audio languages, read from Sonarr 5's own tracks: watch them for the
