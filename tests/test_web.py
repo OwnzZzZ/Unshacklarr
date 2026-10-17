@@ -2561,3 +2561,36 @@ def test_the_api_takes_the_services_own_numbering_and_decides_the_audio_upgrade(
             await browser.post("/api/v1/downloads", headers=api, json={"tvdbId": 74796, "episodes": ["S04E05"], "numbering": "service", "audio": "fr"})
             assert added == [(84659, "fr")] and not started  # the French track added to the file it has
     asyncio.run(go())
+
+
+def test_a_job_over_is_deleted_whole_and_one_going_on_is_not(tmp_path, monkeypatch):
+    import asyncio
+    from aiohttp.test_utils import TestClient, TestServer
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    web.write_config({**web.read_config(), "auth": {"password": web.hash_password("password1"), "secret": "s1"}})
+    web.sonarr_sync.RUNS_DIR.mkdir(parents=True)
+    batch = "20261016-234210-000001"
+    for n, outcome in enumerate(["failed", "stopped", "cancelled"], 1):
+        rid = f"20261016-2342{n:02}-000001-1-S01E0{n}"
+        (web.sonarr_sync.RUNS_DIR / f"{rid}.json").write_text(json.dumps({"id": rid, "batch": batch, "tvdbId": 1, "sxxeyy": f"S01E0{n}",
+                                                                         "outcome": outcome, "started": "t", "ended": "t"}))
+    other = "20261016-234300-000001-2-S01E01"
+    (web.sonarr_sync.RUNS_DIR / f"{other}.json").write_text(json.dumps({"id": other, "tvdbId": 2, "sxxeyy": "S01E01", "outcome": "downloaded", "started": "t", "ended": "t"}))
+    web.cards_read = (0, [])
+
+    async def go():
+        async with TestClient(TestServer(web.app)) as browser:
+            page = {"X-Unshackle": "1"}
+            await browser.post("/api/login", json={"password": "password1"}, headers=page)
+            web.sonarr_sync.waiting[99] = {"batch": batch}  # one of it still queued: not deleted
+            assert (await browser.delete(f"/api/jobs/{batch}", headers=page)).status == 409
+            web.sonarr_sync.waiting.pop(99)
+            r = await browser.delete(f"/api/jobs/{batch}", headers=page)
+            assert (r.status, (await r.json())["deleted"]) == (200, 3)
+            assert (await browser.delete(f"/api/jobs/{batch}", headers=page)).status == 404
+    asyncio.run(go())
+    assert [p.stem for p in web.sonarr_sync.RUNS_DIR.glob("*.json")] == [other]  # another download kept

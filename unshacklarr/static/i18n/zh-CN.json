@@ -2273,5 +2273,9 @@
  "Use this CDM device (its name) for the download, over unshackle.yaml's cdm: section. Unshackle refuses it unless unshackle.yaml allows it with serve: cdm_overrides (true, or a list of devices).": "下载时使用此 CDM 设备（其名称），代替 unshackle.yaml 的 cdm: 部分。如果 unshackle.yaml 没有通过 serve: cdm_overrides（true 或设备列表）允许，Unshackle 会拒绝。",
  "{0} Unshackle 6.0 or later.": "{0} 需要 Unshackle 6.0 或更高版本。",
  "The episode must have at least one of them. It is checked before the download, then on the file. orig is each series' original language, as Sonarr gives it. Empty: the first language of --a-lang or --lang. A series can set its own.": "剧集至少要有其中一种。下载前检查一次，下载后再检查文件。orig 表示每部剧的原始语言（以 Sonarr 提供的为准）。留空：--a-lang 或 --lang 的第一种语言。每部剧可以单独设置。",
- "For example fr, en, or orig for the series' original language. An episode with none of them is not downloaded. It is tried again at each sync.": "例如 fr、en，或用 orig 表示该剧的原始语言。一种都没有的剧集不会下载，每次同步时会重试。"
+ "For example fr, en, or orig for the series' original language. An episode with none of them is not downloaded. It is tried again at each sync.": "例如 fr、en，或用 orig 表示该剧的原始语言。一种都没有的剧集不会下载，每次同步时会重试。",
+ "Delete the job": "删除此任务",
+ "Removes every episode of this job from the history": "从历史记录中移除此任务的所有剧集",
+ "1 episode deleted from the history": "已从历史记录删除 1 集",
+ "{0} episodes deleted from the history": "已从历史记录删除 {0} 集"
 }

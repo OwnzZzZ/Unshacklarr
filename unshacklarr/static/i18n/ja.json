@@ -2268,5 +2268,9 @@
  "Use this CDM device (its name) for the download, over unshackle.yaml's cdm: section. Unshackle refuses it unless unshackle.yaml allows it with serve: cdm_overrides (true, or a list of devices).": "unshackle.yaml の cdm: セクションの代わりに、この CDM デバイス（名前）でダウンロードします。unshackle.yaml が serve: cdm_overrides（true またはデバイスの一覧）で許可していない場合、Unshackle は拒否します。",
  "{0} Unshackle 6.0 or later.": "{0} Unshackle 6.0 以降。",
  "The episode must have at least one of them. It is checked before the download, then on the file. orig is each series' original language, as Sonarr gives it. Empty: the first language of --a-lang or --lang. A series can set its own.": "エピソードには少なくとも 1 つが必要です。ダウンロード前と、ファイルで確認します。orig は各シリーズの原語（Sonarr が示すもの）です。空欄：--a-lang または --lang の最初の言語。シリーズごとに設定できます。",
- "For example fr, en, or orig for the series' original language. An episode with none of them is not downloaded. It is tried again at each sync.": "例：fr、en、またはシリーズの原語なら orig。どれも無いエピソードはダウンロードされず、同期のたびに再試行されます。"
+ "For example fr, en, or orig for the series' original language. An episode with none of them is not downloaded. It is tried again at each sync.": "例：fr、en、またはシリーズの原語なら orig。どれも無いエピソードはダウンロードされず、同期のたびに再試行されます。",
+ "Delete the job": "ジョブを削除",
+ "Removes every episode of this job from the history": "このジョブのエピソードをすべて履歴から削除します",
+ "1 episode deleted from the history": "履歴から 1 エピソードを削除しました",
+ "{0} episodes deleted from the history": "履歴から {0} エピソードを削除しました"
 }

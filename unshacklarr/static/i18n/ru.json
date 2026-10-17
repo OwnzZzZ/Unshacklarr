@@ -2265,5 +2265,9 @@
  "Use this CDM device (its name) for the download, over unshackle.yaml's cdm: section. Unshackle refuses it unless unshackle.yaml allows it with serve: cdm_overrides (true, or a list of devices).": "Использовать это устройство CDM (его имя) для загрузки вместо раздела cdm: в unshackle.yaml. Unshackle отказывает, если unshackle.yaml не разрешает это через serve: cdm_overrides (true или список устройств).",
  "{0} Unshackle 6.0 or later.": "{0} Unshackle 6.0 или новее.",
  "The episode must have at least one of them. It is checked before the download, then on the file. orig is each series' original language, as Sonarr gives it. Empty: the first language of --a-lang or --lang. A series can set its own.": "В эпизоде должен быть хотя бы один из них. Проверяется перед загрузкой, затем по файлу. orig — оригинальный язык каждого сериала, как его указывает Sonarr. Пусто: первый язык из --a-lang или --lang. Сериал может задать свои.",
- "For example fr, en, or orig for the series' original language. An episode with none of them is not downloaded. It is tried again at each sync.": "Например fr, en или orig для оригинального языка сериала. Эпизод без них не скачивается. Попытка повторяется при каждой синхронизации."
+ "For example fr, en, or orig for the series' original language. An episode with none of them is not downloaded. It is tried again at each sync.": "Например fr, en или orig для оригинального языка сериала. Эпизод без них не скачивается. Попытка повторяется при каждой синхронизации.",
+ "Delete the job": "Удалить пакет",
+ "Removes every episode of this job from the history": "Удаляет все эпизоды этого пакета из истории",
+ "1 episode deleted from the history": "1 эпизод удалён из истории",
+ "{0} episodes deleted from the history": "Удалено эпизодов из истории: {0}"
 }

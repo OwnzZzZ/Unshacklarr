@@ -69,6 +69,7 @@
  "0: never delete them. Episodes of a series set to Download only are never deleted automatically.": [],
  "1 change": [],
  "1 episode": [],
+ "1 episode deleted from the history": [],
  "1 episode has another number on {0}: Download takes care of it": [
   "svc"
  ],
@@ -619,6 +620,7 @@
  ],
  "Default: the one of Settings, Quality.": [],
  "Delete": [],
+ "Delete the job": [],
  "Delete the key": [],
  "Delete them after": [],
  "Deleted on their own after {0} days (Settings, Automation).": [
@@ -1329,6 +1331,7 @@
  "No such device": [],
  "No such download": [],
  "No such download in the history": [],
+ "No such job in the history": [],
  "No such version": [],
  "No sync running. One starts automatically every {0}, or run one now.": [
   "S.config?.settings?.sync_every_hours == 1 ? \"hour\" : `${S.config?.settings?.sync_every_hours ?? 2} hours`"
@@ -1712,6 +1715,7 @@
  "Remove {0}": [
   "flag"
  ],
+ "Removes every episode of this job from the history": [],
  "Rename": [],
  "Renaming": [],
  "Renumber episodes to a TVDB season order. Services normally use 'official' (aired) order; a series' Streaming Order is 'alternate'. Defaults to the tvdb_order config option.": [],
@@ -2444,6 +2448,7 @@
  "This file holds every secret Unshackle has (logins, API keys). Enter your Unshacklarr password to open it.": [],
  "This is not a valid address": [],
  "This job is over": [],
+ "This job is still going on: stop it first": [],
  "This link may be an episode, not the series.": [],
  "This series on {0}": [
   "label"
@@ -3362,6 +3367,9 @@
   "show['service']",
   "found['time']",
   "when"
+ ],
+ "{0} episodes deleted from the history": [
+  "r.deleted"
  ],
  "{0} episodes have another number on {1}: Download takes care of them": [
   "renumbered",

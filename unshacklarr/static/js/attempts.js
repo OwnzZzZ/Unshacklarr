@@ -27,6 +27,16 @@ async function deleteRun(c, button) {
     openActivity();
   } catch (e) { button.disabled = false; toast(e.message, true); }
 }
+async function deleteJob(j, button) {
+  button.disabled = true;
+  try {
+    const r = await api(`/api/jobs/${encodeURIComponent(j.job)}`, { method: "DELETE" });
+    toast(r.deleted === 1 ? "1 episode deleted from the history" : `${r.deleted} episodes deleted from the history`);
+    picked_run = null;
+    $("#con").classList.remove("open");
+    openActivity();
+  } catch (e) { button.disabled = false; toast(e.message, true); }
+}
 $("#hist-clear").onclick = () => {
   const done = runCards.filter((c) => !isLive(c));
   const failedN = done.filter((c) => c.outcome === "failed").length;

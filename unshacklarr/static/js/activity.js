@@ -266,7 +266,9 @@ function renderJob(j) {
     st.live ? el("button", { className: "btn small danger", textContent: "Stop the job", title: "Stops the current download. The queued episodes don't start",
       onclick: (e) => stopJob(j, e.target) }) : "",
     !st.live && retryable.length ? el("button", { className: "btn small primary", textContent: `Retry ${retryable.length} failed`,
-      title: "Downloads them again, in this job", onclick: (e) => retryJob(j, retryable, e.target) }) : ""].filter(Boolean);
+      title: "Downloads them again, in this job", onclick: (e) => retryJob(j, retryable, e.target) }) : "",
+    !st.live ? el("button", { className: "btn small", textContent: "Delete the job", title: "Removes every episode of this job from the history",
+      onclick: (e) => deleteJob(j, e.target) }) : ""].filter(Boolean);
   $("#cd-foot").replaceChildren(...acts.map((b) => { const copy = b.cloneNode(true); copy.onclick = b.onclick; return copy; }));
   const head = el("div", { className: "cd-head" }, thumb("detail", posterOf(first)),
     el("div", {}, el("h3", { textContent: title }),

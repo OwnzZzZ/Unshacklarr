@@ -2530,6 +2530,21 @@ async def delete_run(request):
     return web.json_response({"deleted": 1})
 
 
+async def delete_job(request):
+    """A job over, out of the history: every attempt of it, as each one's Delete does. One still running or queued in it:
+    stop the job first."""
+    batch = request.match_info["batch"]
+    if not BATCH_ID.fullmatch(batch):
+        raise web.HTTPBadRequest(text="Unknown job")
+    if any(c.get("batch") == batch for c in sonarr_sync.waiting.values()) or \
+            any(c.get("batch") == batch and c["outcome"] == "running" for c in await asyncio.to_thread(run_cards)):
+        raise web.HTTPConflict(text="This job is still going on: stop it first")
+    deleted = await asyncio.to_thread(forget_runs, lambda c: c.get("batch") != batch)
+    if not deleted:
+        raise web.HTTPNotFound(text="No such job in the history")
+    return web.json_response({"deleted": deleted})
+
+
 async def clear_runs(request):
     what = (await json_object(request)).get("what")
     if what not in ("failed", "all"):
@@ -5151,6 +5166,7 @@ app.add_routes([
     web.post("/api/cdm/reprovision", cdm_reprovision),
     web.post(r"/api/runs/{run_id}/stop", stop_run),
     web.post(r"/api/jobs/{batch}/stop", stop_job),
+    web.delete(r"/api/jobs/{batch}", delete_job),
     web.post(r"/api/jobs/{batch}/{action:pause|resume}", pause_job),
     web.post(r"/api/queue/{episode_id:\d+}/remove", unqueue),
     web.post(r"/api/queue/{episode_id:\d+}/add", requeue),
