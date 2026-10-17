@@ -1531,7 +1531,6 @@
  "Accepted audio languages": "Lingue audio accettate",
  "Accepted audio languages of {0}: {1} is not a language code like fr or en-US": "Lingue audio accettate di {0}: {1} non è un codice di lingua come fr o en-US",
  "An episode with none of these languages is not downloaded. It is tried again at each sync.": "Un episodio senza nessuna di queste lingue non viene scaricato. Viene ritentato a ogni sincronizzazione.",
- "The episode must have at least one of them. It is checked before the download, then on the file. Empty: the first language of --a-lang or --lang. A series can set its own.": "L'episodio deve avere almeno una di esse. Viene controllato prima del download, poi sul file. Vuoto: la prima lingua di --a-lang o --lang. Una serie può impostare le sue.",
  "Example: fr, en": "Esempio: fr, en",
  "GB": "GB",
  "Header with the user's name": "Header con il nome dell'utente",
@@ -1787,7 +1786,6 @@
  "Counted from the air date in Sonarr. Pick a day before when a streaming platform gets the episodes ahead of the TV channel.": "Contato dalla data di messa in onda in Sonarr. Scegli il giorno prima quando una piattaforma di streaming riceve gli episodi prima del canale TV.",
  "Downloaded from {0}": "Scaricato da {0}",
  "Files a service has in better quality": "File che un servizio ha in qualità migliore",
- "For example fr, en. An episode with none of them is not downloaded. It is tried again at each sync.": "Ad esempio fr, en. Un episodio senza nessuna di esse non viene scaricato. Viene ritentato a ogni sincronizzazione.",
  "For example fr. The episode must have full subtitles in at least one of them. Forced subtitles do not count.": "Ad esempio fr. L'episodio deve avere sottotitoli completi in almeno una di esse. I sottotitoli forzati non contano.",
  "Its downloads from {0} fail": "I suoi download da {0} falliscono",
  "Joining the parts": "Unione delle parti",
@@ -2301,5 +2299,7 @@
  "The DRM to license with, for a service that takes both: its device of that kind in the cdm: section.": "Il DRM con cui ottenere la licenza, per un servizio che li accetta entrambi: il suo dispositivo di quel tipo nella sezione cdm:.",
  "Unshackle refuses to pick the CDM device named in --cdm: allow it in unshackle.yaml with serve: cdm_overrides: true (or a list of devices), then restart Unshackle": "Unshackle rifiuta il dispositivo CDM indicato in --cdm: consentilo in unshackle.yaml con serve: cdm_overrides: true (o un elenco di dispositivi), poi riavvia Unshackle",
  "Use this CDM device (its name) for the download, over unshackle.yaml's cdm: section. Unshackle refuses it unless unshackle.yaml allows it with serve: cdm_overrides (true, or a list of devices).": "Usa questo dispositivo CDM (il suo nome) per il download, al posto della sezione cdm: di unshackle.yaml. Unshackle lo rifiuta se unshackle.yaml non lo consente con serve: cdm_overrides (true, o un elenco di dispositivi).",
- "{0} Unshackle 6.0 or later.": "{0} Unshackle 6.0 o successivo."
+ "{0} Unshackle 6.0 or later.": "{0} Unshackle 6.0 o successivo.",
+ "The episode must have at least one of them. It is checked before the download, then on the file. orig is each series' original language, as Sonarr gives it. Empty: the first language of --a-lang or --lang. A series can set its own.": "L'episodio deve averne almeno una. Viene controllato prima del download, poi sul file. orig è la lingua originale di ogni serie, come la indica Sonarr. Vuoto: la prima lingua di --a-lang o --lang. Una serie può avere le sue.",
+ "For example fr, en, or orig for the series' original language. An episode with none of them is not downloaded. It is tried again at each sync.": "Per esempio fr, en, oppure orig per la lingua originale della serie. Un episodio senza nessuna non viene scaricato. Viene ritentato a ogni sincronizzazione."
 }

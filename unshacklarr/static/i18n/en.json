@@ -893,7 +893,7 @@
  "For every series": [],
  "For every series it downloads, over the series' own.": [],
  "For every series.": [],
- "For example fr, en. An episode with none of them is not downloaded. It is tried again at each sync.": [],
+ "For example fr, en, or orig for the series' original language. An episode with none of them is not downloaded. It is tried again at each sync.": [],
  "For example fr. The episode must have full subtitles in at least one of them. Forced subtitles do not count.": [],
  "For example http://unshackle:8786 on a shared Docker network.": [],
  "For other programs: a script, Home Assistant, Shortcuts.": [],
@@ -2328,7 +2328,7 @@
  "The downloads folder is almost full": [],
  "The downloads folder, as this Sonarr sees it. Empty: as the main Sonarr sees it.": [],
  "The downloads folder, as this server sees it. Empty: as the main one sees it (Folders, above).": [],
- "The episode must have at least one of them. It is checked before the download, then on the file. Empty: the first language of --a-lang or --lang. A series can set its own.": [],
+ "The episode must have at least one of them. It is checked before the download, then on the file. orig is each series' original language, as Sonarr gives it. Empty: the first language of --a-lang or --lang. A series can set its own.": [],
  "The episode must have full subtitles in at least one of them. Forced subtitles (only a few lines) do not count. Empty: not checked. A series can set its own.": [],
  "The episodes Sonarr is missing, downloaded by Unshackle.": [],
  "The fallback URL of {0} cannot start with '-'": [
@@ -3090,6 +3090,7 @@
  "pause": [],
  "per server": [],
  "pick the day of its first episode": [],
+ "portuguese (brazil)": [],
  "prd": [],
  "property": [],
  "pt-BR": [],
@@ -3147,6 +3148,7 @@
   "day(new Date(st.since))",
   "time(new Date(st.since))"
  ],
+ "spanish (latino)": [],
  "start must be a YYYY-MM-DD date and days a number": [],
  "started by hand": [],
  "status": [],

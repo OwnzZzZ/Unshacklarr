@@ -1537,7 +1537,6 @@
  "Accepted audio languages": "Langues audio acceptées",
  "Accepted audio languages of {0}: {1} is not a language code like fr or en-US": "Langues audio acceptées de {0}: {1} n'est pas un code de langue comme fr ou en-US",
  "An episode with none of these languages is not downloaded. It is tried again at each sync.": "Un épisode qui n'a aucune de ces langues n'est pas téléchargé. Il est réessayé à chaque synchro.",
- "The episode must have at least one of them. It is checked before the download, then on the file. Empty: the first language of --a-lang or --lang. A series can set its own.": "L'épisode doit avoir au moins l'une d'elles. C'est vérifié avant le téléchargement, puis sur le fichier. Vide: la première langue de --a-lang ou --lang. Une série peut avoir les siennes.",
  "Example: fr, en": "Exemple: fr, en",
  "GB": "Go",
  "Header with the user's name": "En-tête avec le nom de l'utilisateur",
@@ -1779,7 +1778,6 @@
  "Unshackle tries at that time, then every 30 s for 10 min. Empty: only the regular syncs (every 2 h).": "Unshackle essaie à cette heure-là, puis toutes les 30 s pendant 10 min. Vide: seulement les synchros habituelles (toutes les 2 h).",
  "Counted from the air date in Sonarr. Pick a day before when a streaming platform gets the episodes ahead of the TV channel.": "Compté à partir de la date de diffusion dans Sonarr. Choisir un jour avant quand une plateforme de streaming reçoit les épisodes avant la chaîne.",
  "The quality and languages an episode needs, and what happens after the download. Default follows the service, then Settings. An empty language field uses Settings, Download options.": "La qualité et les langues qu'il faut à un épisode, et ce qui se passe après le téléchargement. Par défaut suit le service, puis les Réglages. Un champ de langue vide reprend Réglages, Options de téléchargement.",
- "For example fr, en. An episode with none of them is not downloaded. It is tried again at each sync.": "Par exemple fr, en. Un épisode qui n'en a aucune n'est pas téléchargé. Il est réessayé à chaque synchro.",
  "One language, for example fr. An episode downloaded without it is downloaded again when the service has it.": "Une langue, par exemple fr. Un épisode téléchargé sans elle est téléchargé à nouveau dès que le service l'a.",
  "For example fr. The episode must have full subtitles in at least one of them. Forced subtitles do not count.": "Par exemple fr. L'épisode doit avoir des sous-titres complets dans au moins l'une d'elles. Les sous-titres forcés ne comptent pas.",
  "command for this series, and the profiles to log in with.": "pour cette série, et les profils avec lesquels se connecter.",
@@ -2293,5 +2291,7 @@
  "The DRM to license with, for a service that takes both: its device of that kind in the cdm: section.": "Le DRM à utiliser pour la licence, pour un service qui accepte les deux : son appareil de ce type dans la section cdm:.",
  "Unshackle refuses to pick the CDM device named in --cdm: allow it in unshackle.yaml with serve: cdm_overrides: true (or a list of devices), then restart Unshackle": "Unshackle refuse de choisir l'appareil CDM indiqué dans --cdm : autorisez-le dans unshackle.yaml avec serve: cdm_overrides: true (ou une liste d'appareils), puis redémarrez Unshackle",
  "Use this CDM device (its name) for the download, over unshackle.yaml's cdm: section. Unshackle refuses it unless unshackle.yaml allows it with serve: cdm_overrides (true, or a list of devices).": "Utiliser cet appareil CDM (son nom) pour le téléchargement, à la place de la section cdm: d'unshackle.yaml. Unshackle le refuse si unshackle.yaml ne l'autorise pas avec serve: cdm_overrides (true, ou une liste d'appareils).",
- "{0} Unshackle 6.0 or later.": "{0} Unshackle 6.0 ou plus récent."
+ "{0} Unshackle 6.0 or later.": "{0} Unshackle 6.0 ou plus récent.",
+ "The episode must have at least one of them. It is checked before the download, then on the file. orig is each series' original language, as Sonarr gives it. Empty: the first language of --a-lang or --lang. A series can set its own.": "L'épisode doit en avoir au moins une. C'est vérifié avant le téléchargement, puis sur le fichier. orig est la langue originale de chaque série, telle que Sonarr la donne. Vide : la première langue de --a-lang ou --lang. Une série peut avoir les siennes.",
+ "For example fr, en, or orig for the series' original language. An episode with none of them is not downloaded. It is tried again at each sync.": "Par exemple fr, en, ou orig pour la langue originale de la série. Un épisode qui n'en a aucune n'est pas téléchargé. Il est réessayé à chaque synchro."
 }

@@ -346,7 +346,7 @@
         <section class="sx-card">
           <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4V5zM15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg></span><div><h3>Languages</h3><p>An episode with none of these languages is not downloaded. It is tried again at each sync.</p></div></div>
           <div class="sx-grid">
-            <div class="field"><label for="dx-audio">Accepted audio languages</label><input id="dx-audio" type="text" data-set="audio_accept" placeholder="Example: fr, en" spellcheck="false"><small>The episode must have at least one of them. It is checked before the download, then on the file. Empty: the first language of --a-lang or --lang. A series can set its own.</small></div>
+            <div class="field"><label for="dx-audio">Accepted audio languages</label><input id="dx-audio" type="text" data-set="audio_accept" placeholder="Example: fr, en" spellcheck="false"><small>The episode must have at least one of them. It is checked before the download, then on the file. orig is each series' original language, as Sonarr gives it. Empty: the first language of --a-lang or --lang. A series can set its own.</small></div>
             <div class="field"><label for="dx-prefer">Upgrade the audio to</label><input id="dx-prefer" type="text" data-set="audio_prefer" placeholder="Example: fr" spellcheck="false"><small>One language. An episode downloaded in another accepted language (for example English with French subtitles) is downloaded again when the service has this one. Empty: never.</small></div>
             <div class="field"><label for="dx-upgrade-days">Wait for it</label><div class="unit-input"><input id="dx-upgrade-days" type="number" data-set="upgrade_days" data-num min="1" max="365" step="1" inputmode="numeric"><span>days</span></div><small>After the download, the service is checked once a day for this many days. Nothing is downloaded until that language is there. After that, the episode keeps the audio it has.</small></div>
             <div class="field"><label for="dx-subs">Required subtitle languages</label><input id="dx-subs" type="text" data-set="subs_accept" placeholder="Example: fr" spellcheck="false"><small>The episode must have full subtitles in at least one of them. Forced subtitles (only a few lines) do not count. Empty: not checked. A series can set its own.</small></div>
@@ -768,7 +768,7 @@
         <div class="field">
           <label for="d-audio">Accepted audio languages</label>
           <input type="text" id="d-audio" spellcheck="false">
-          <small>For example fr, en. An episode with none of them is not downloaded. It is tried again at each sync.</small>
+          <small>For example fr, en, or orig for the series' original language. An episode with none of them is not downloaded. It is tried again at each sync.</small>
         </div>
         <div class="field">
           <label for="d-prefer">Upgrade the audio to</label>

@@ -1544,7 +1544,6 @@
  "Accepted audio languages": "可接受的音频语言",
  "Accepted audio languages of {0}: {1} is not a language code like fr or en-US": "{0} 的可接受音频语言：{1} 不是 fr 或 en-US 这样的语言代码",
  "An episode with none of these languages is not downloaded. It is tried again at each sync.": "不含这些语言中任何一种的单集不会下载。每次同步时都会重试。",
- "The episode must have at least one of them. It is checked before the download, then on the file. Empty: the first language of --a-lang or --lang. A series can set its own.": "单集必须至少具有其中一种语言。下载前检查一次，下载后再检查文件。留空：--a-lang 或 --lang 的第一种语言。每部剧集可以有自己的设置。",
  "Example: fr, en": "示例：fr, en",
  "GB": "GB",
  "Header with the user's name": "包含用户名的请求头",
@@ -1799,7 +1798,6 @@
  "Counted from the air date in Sonarr. Pick a day before when a streaming platform gets the episodes ahead of the TV channel.": "从 Sonarr 中的播出日期算起。当流媒体平台比电视台更早获得单集时，请选择播出前一天。",
  "Downloaded from {0}": "从 {0} 下载",
  "Files a service has in better quality": "服务上有更好画质的文件",
- "For example fr, en. An episode with none of them is not downloaded. It is tried again at each sync.": "例如 fr, en。不含其中任何一种的单集不会下载。每次同步时都会重试。",
  "For example fr. The episode must have full subtitles in at least one of them. Forced subtitles do not count.": "例如 fr。该集必须至少有其中一种语言的完整字幕。强制字幕不算。",
  "Its downloads from {0} fail": "其从 {0} 的下载失败",
  "Joining the parts": "合并各部分",
@@ -2312,5 +2310,7 @@
  "The DRM to license with, for a service that takes both: its device of that kind in the cdm: section.": "对于两种都支持的服务，用于许可证的 DRM：cdm: 部分中该类型的设备。",
  "Unshackle refuses to pick the CDM device named in --cdm: allow it in unshackle.yaml with serve: cdm_overrides: true (or a list of devices), then restart Unshackle": "Unshackle 拒绝使用 --cdm 中指定的 CDM 设备：请在 unshackle.yaml 中设置 serve: cdm_overrides: true（或设备列表），然后重启 Unshackle",
  "Use this CDM device (its name) for the download, over unshackle.yaml's cdm: section. Unshackle refuses it unless unshackle.yaml allows it with serve: cdm_overrides (true, or a list of devices).": "下载时使用此 CDM 设备（其名称），代替 unshackle.yaml 的 cdm: 部分。如果 unshackle.yaml 没有通过 serve: cdm_overrides（true 或设备列表）允许，Unshackle 会拒绝。",
- "{0} Unshackle 6.0 or later.": "{0} 需要 Unshackle 6.0 或更高版本。"
+ "{0} Unshackle 6.0 or later.": "{0} 需要 Unshackle 6.0 或更高版本。",
+ "The episode must have at least one of them. It is checked before the download, then on the file. orig is each series' original language, as Sonarr gives it. Empty: the first language of --a-lang or --lang. A series can set its own.": "剧集至少要有其中一种。下载前检查一次，下载后再检查文件。orig 表示每部剧的原始语言（以 Sonarr 提供的为准）。留空：--a-lang 或 --lang 的第一种语言。每部剧可以单独设置。",
+ "For example fr, en, or orig for the series' original language. An episode with none of them is not downloaded. It is tried again at each sync.": "例如 fr、en，或用 orig 表示该剧的原始语言。一种都没有的剧集不会下载，每次同步时会重试。"
 }

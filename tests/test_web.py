@@ -1059,7 +1059,7 @@ def test_accepted_audio_languages_are_language_codes(tmp_path, monkeypatch):
     importlib.reload(unshacklarr.sync)
     web = importlib.reload(unshacklarr.web)
     assert web.check_audio_accept(" FR,en-US  de ", "x") == "fr, en-us, de" and web.check_audio_accept(None, "x") == ""
-    for bad in ("orig", "fr;en", "français", "e"):
+    for bad in ("all", "fr;en", "français", "e"):  # orig is taken: the series' original language (Sonarr's)
         try:
             web.check_audio_accept(bad, "x")
             raise AssertionError(f"expected {bad!r} to be refused")
@@ -2566,3 +2566,10 @@ def test_the_cdm_option_offers_the_devices_unshackle_has(tmp_path, monkeypatch):
     assert next(s for s in web.dl_options() if s["flag"] == "--cdm")["choices"] == []  # unseen: typed by hand
     line = options.command_line({"service": "NF", "title_id": "1", "wanted": ["S01E01"], "skip_subtitle_errors": True, "cdm": "my_l3"})
     assert line == "unshackle dl --cdm my_l3 NF 1 -w S01E01"
+
+
+def test_orig_is_taken_in_the_accepted_audio_only():
+    from unshacklarr import web
+    assert web.check_audio_accept("orig, fr", "x") == "orig, fr"
+    assert _raises(lambda: web.check_audio_accept("orig", "x", "subtitles"))
+    assert _raises(lambda: web.check_audio_accept("all", "x"))

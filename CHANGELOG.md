@@ -8,6 +8,9 @@ Every change worth knowing, newest first. The format follows
 
 ### Added
 
+- **orig in the accepted audio languages:** each series' original language as Sonarr gives it, so "orig, fr" works
+  for every series at once (ja or fr for an anime, fr for a French series).
+
 **🆕 Sonarr 5, on this branch until it is out of beta**
 - **Languages.** Your files without your audio languages, read from Sonarr 5's own tracks: watch them for the
   preferred audio, or download them again. In Activity.

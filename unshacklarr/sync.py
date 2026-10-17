@@ -1861,11 +1861,33 @@ def fallback_profiles(show: dict, config: dict) -> list[str]:
     return [p for p in re.split(r"[,\s]+", str(show.get("fallback_profiles") or "")) if p and p != own]
 
 
-def accepted_audio(show: dict, config: dict) -> list[str]:
+# Sonarr's names of a series' original language, as language codes (orig in the accepted audio)
+SONARR_LANGUAGES = {"english": "en", "french": "fr", "spanish": "es", "german": "de", "italian": "it", "danish": "da",
+                    "dutch": "nl", "japanese": "ja", "icelandic": "is", "chinese": "zh", "russian": "ru", "polish": "pl",
+                    "vietnamese": "vi", "swedish": "sv", "norwegian": "no", "finnish": "fi", "turkish": "tr", "portuguese": "pt",
+                    "flemish": "nl", "greek": "el", "korean": "ko", "hungarian": "hu", "hebrew": "he", "lithuanian": "lt",
+                    "czech": "cs", "arabic": "ar", "hindi": "hi", "bulgarian": "bg", "malayalam": "ml", "ukrainian": "uk",
+                    "slovak": "sk", "thai": "th", "portuguese (brazil)": "pt-br", "spanish (latino)": "es-419", "romanian": "ro",
+                    "latvian": "lv", "persian": "fa", "catalan": "ca", "croatian": "hr", "serbian": "sr", "bosnian": "bs",
+                    "estonian": "et", "tamil": "ta", "indonesian": "id", "macedonian": "mk", "slovenian": "sl", "telugu": "te",
+                    "bengali": "bn", "kannada": "kn", "marathi": "mr", "tagalog": "tl", "malay": "ms", "urdu": "ur",
+                    "georgian": "ka", "mongolian": "mn", "azerbaijani": "az", "uzbek": "uz", "albanian": "sq"}
+
+
+def original_language(serie: dict | None) -> str:
+    """A series' original language as a code (ja for an anime), from what Sonarr says of it; "" when it doesn't."""
+    lang = (serie or {}).get("originalLanguage")
+    return SONARR_LANGUAGES.get(str((lang or {}).get("name") if isinstance(lang, dict) else lang or "").strip().lower(), "")
+
+
+def accepted_audio(show: dict, config: dict, serie: dict | None = None) -> list[str]:
     """The audio languages a download must have one of (fr, en): the series' own, else the settings'; none
-    set, the language asked for first, as before."""
+    set, the language asked for first, as before. orig is the series' original language (Sonarr's), left out
+    when Sonarr doesn't say it."""
     raw = show.get("audio_accept") or (config.get("settings") or {}).get("audio_accept") or ""
     accepted = [c.strip().lower() for c in re.split(r"[,\s]+", str(raw)) if c.strip()]
+    orig = original_language(serie)
+    accepted = list(dict.fromkeys(orig if c == "orig" else c for c in accepted if c != "orig" or orig))
     return accepted or [want for want in [wanted_audio(show, config)] if want]
 
 
@@ -2807,7 +2829,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                 on_step,
                 bool(show.get("programmes")),
             )
-            check_audio(out, accepted_audio(show, config))
+            check_audio(out, accepted_audio(show, config, ep.get("series")))
             check_subs(out, accepted_subs(show, config))
             lacking = lacks_preferred(out, show, config)  # read now: Sonarr moves the file away
             run.card["size"] = sum(f.stat().st_size for f in videos_in(out))  # for the job's sum
@@ -2971,7 +2993,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                     run.say(f"{label}: matched to {match['name']} on {show['service']} (by {match['how']})")
                 on_service = f" as {service_sxxeyy}" if service_sxxeyy != sxxeyy else ""
                 run.say(f"{label}: downloading from {show['service']}{on_service}")
-                wanted_langs = {"audio": accepted_audio(show, config) if show.get("audio_accept") or (config.get("settings") or {}).get("audio_accept") else [],
+                wanted_langs = {"audio": accepted_audio(show, config, ep.get("series")) if show.get("audio_accept") or (config.get("settings") or {}).get("audio_accept") else [],
                                 "subtitles": accepted_subs(show, config)}
 
                 def no_language(e: "Missing") -> None:
