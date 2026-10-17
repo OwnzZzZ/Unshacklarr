@@ -101,6 +101,22 @@ best height, a height alone any codec. Through a `--remote` server, where the tr
 them as they are. The series' setup does not change, and Activity shows what was asked. `400` for another codec, or
 a height that is not a whole number from 480 to 4320.
 
+`"numbering": "service"` reads `"episodes"` as the series' service numbers them, not as Sonarr does: a script watching
+the service sends what it sees. Each code is found in Sonarr by the series' last listing on the service (an episode
+found there by its very title, Disney+'s S04E05 being Bleach's S17E45 in Sonarr), else by the series' numbering read
+backwards. A code no Sonarr episode answers to, or more than one, gives `404` naming the code as it was sent:
+
+```json
+{"tvdbId": 74796, "episodes": ["S04E05"], "numbering": "service", "audio": "fr"}
+```
+
+`"audio"` (one language, `"fr"`) says that language has just come on the service, and Unshacklarr decides per episode
+from the file Sonarr has: no file, the episode is downloaded; a file that has it, the service's is downloaded again in
+its place; a file without it gets it as Settings, Download options, *Audio upgrade* says: the track added to the file
+(asked about in the bell first when the file is not from the series' service), or the whole episode again. `"replace"`
+is then not needed. The answer counts each: `{"queued": 3, "downloaded": 1, "replaced": 1, "audio_added": 1}`. Send
+it only when audio in that language has come, not French subtitles alone.
+
 ### `GET /api/v1/downloads?limit=50`
 
 Downloads, the queued and running ones first, then the history from newest to oldest. `limit`: 1
