@@ -1,4 +1,6 @@
 {
+ "\"audio\" is one language code, such as \"fr\"": [],
+ "\"numbering\" is \"service\" (the service's own episode codes) or \"sonarr\"": [],
  "\"proxy\" is a proxy provider and a region, such as \"nordvpn:fr\"": [],
  "\"quality\" is a height from 480 to 4320, such as 1080 or 2160": [],
  "\"vcodec\" is \"H.264\" or \"H.265\"": [],
@@ -1288,6 +1290,10 @@
  "No download matches.": [],
  "No download yet.": [],
  "No earlier version yet": [],
+ "No episode of Sonarr is {0}'s {1} for this series": [
+  "svc",
+  "', '.join(missing)"
+ ],
  "No folder in it.": [],
  "No ladder yet. Create one with New ladder, or bring back the built-in ones.": [],
  "No license": [],

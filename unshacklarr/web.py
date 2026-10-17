@@ -1585,6 +1585,11 @@ def add_or_download(episode_id: int, want: str, anyway: bool = False) -> None:
     run_sync([episode_id], replace=True, kind="upgrade")
 
 
+def add_audio_soon(episode_id: int, lang: str) -> None:
+    """The audio added to the episode's file in the background (add_or_download: the whole episode when it can't)."""
+    threading.Thread(target=add_or_download, args=(episode_id, lang), daemon=True).start()
+
+
 async def confirm_audio(request):
     """The bell's answer for a file from another source: add the audio to it anyway, or download the whole episode."""
     episode_id = int(request.match_info["episode_id"])
@@ -4549,6 +4554,44 @@ def episode_ids_of(tvdb: int, episodes: list[str]) -> list[int]:
     return [known[x] for x in episodes]
 
 
+def sonarr_codes_of_service(tvdb: int, codes: list[str]) -> tuple[dict[str, str], list[str]]:
+    """The service's own episode codes (Disney+'s S04E05) as the main Sonarr numbers them (S17E45): by the series' last
+    listing on the service first (an episode found there by its very title), else by its numbering read backwards.
+    ({service code: Sonarr code}, the codes no Sonarr episode answers to, or more than one)."""
+    show = read_config()["series"].get(tvdb) or {}
+    series = sonarr_sync.sonarr_get("series", tvdbId=tvdb)
+    if not series:
+        raise web.HTTPNotFound(text=f"Sonarr has no series with TVDB id {tvdb}")
+    eps = [e for e in sonarr_sync.sonarr_get("episode", seriesId=series[0]["id"]) if e["seasonNumber"] > 0 or e.get("episodeNumber")]
+    code_of = {e["id"]: f"S{e['seasonNumber']:02}E{e['episodeNumber']:02}" for e in eps}
+    hit = read_json(SERVICE_LISTS, {}).get(str(tvdb)) or {}
+    listed = hit.get("available") or {} if hit.get("service") == show.get("service") and hit.get("title") == str(show.get("title")) \
+        and hit.get("v") == SERVICE_LIST_FORMAT else {}
+    found, missing = {}, []
+    for code in codes:
+        by_list = {int(i) for i, m in listed.items() if str(m.get("service") or "").split(".")[0] == code
+                   and (m.get("match") != "title" or m.get("same")) and int(i) in code_of}
+        if len(by_list) == 1:
+            found[code] = code_of[by_list.pop()]
+            continue
+        # the numbering backwards, an episode the listing puts under another number left out (it is that one, not this)
+        by_number = [e for e in eps if (sonarr_sync.service_episode(show, e["seasonNumber"], e["episodeNumber"]) or "").split(".")[0] == code
+                     and str((listed.get(str(e["id"])) or {}).get("service") or code).split(".")[0] == code]
+        if len(by_number) == 1 and not by_list:
+            found[code] = code_of[by_number[0]["id"]]
+        else:
+            missing.append(code)
+    return found, missing
+
+
+def file_speaks(ep: dict, lang: str) -> bool | None:
+    """Whether the episode's file has audio in this language, from Sonarr's media info; None: no file."""
+    if not ep.get("hasFile"):
+        return None
+    tags = [x.strip() for x in str(((ep.get("episodeFile") or {}).get("mediaInfo") or {}).get("audioLanguages") or "").split("/") if x.strip()]
+    return sonarr_sync.speaks(tags, [lang])
+
+
 # A download's own proxy, as Unshackle's --proxy takes a provider's region: nordvpn:fr, surfshark:tw, protonvpn:us:ny
 PROXY_OVERRIDE = re.compile(r"[a-z]+:[a-z]{2}[a-z0-9:-]{0,30}", re.IGNORECASE)
 # A download's own video codec, by its usual names, as the quality ladders call it
@@ -4569,9 +4612,19 @@ async def v1_start_download(request):
     """Episodes by Sonarr's ids, or by the series' TVDB id and S01E02: downloaded as the page's Download does,
     a file Sonarr has replaced only by a better one. "sonarr": for another Sonarr (its ids), "retry": as a retry,
     "replace": Replace anyway, as the page's button, "proxy": this download's own proxy (nordvpn:fr) over the series',
-    "vcodec" (H.264, H.265) and "quality" (1080): its own video, over the series' quality ladder."""
+    "vcodec" (H.264, H.265) and "quality" (1080): its own video, over the series' quality ladder.
+    "numbering": "service": "episodes" as the series' service numbers them (Disney+'s S04E05), found in Sonarr by its
+    last listing there or the series' numbering. "audio": "fr", that language just came on the service: an episode with no
+    file is downloaded, one whose file has it downloaded again (the service's is better), one whose file lacks it gets
+    it as the audio upgrade setting says (the track added, or the episode again)."""
     body = await json_object(request)
     replace = body.get("replace") is True
+    audio = str(body.get("audio") or "").strip().lower()
+    if audio and not LANGUAGE_TAG.fullmatch(audio):
+        raise web.HTTPBadRequest(text='"audio" is one language code, such as "fr"')
+    by_service = body.get("numbering") == "service"
+    if body.get("numbering") not in (None, "", "sonarr", "service"):
+        raise web.HTTPBadRequest(text='"numbering" is "service" (the service\'s own episode codes) or "sonarr"')
     proxy = body.get("proxy") or ""
     if not isinstance(proxy, str) or (proxy and not PROXY_OVERRIDE.fullmatch(proxy)):
         raise web.HTTPBadRequest(text='"proxy" is a proxy provider and a region, such as "nordvpn:fr"')
@@ -4586,6 +4639,12 @@ async def v1_start_download(request):
             raise web.HTTPNotFound(text=f"Unshacklarr downloads no series with TVDB id {tvdb}: set it up on its page first")
         names = [f"S{int(m[1]):02}E{int(m[2]):02}" for m in (re.fullmatch(r"S(\d+)E(\d+)", x) for x in names)]
         try:
+            if by_service:  # the service's codes, as the main Sonarr numbers them (its listing holds the main one's ids)
+                found, missing = await asyncio.to_thread(sonarr_codes_of_service, tvdb, names)
+                if missing:
+                    svc = (read_config()["series"].get(tvdb) or {}).get("service") or "the service"
+                    raise web.HTTPNotFound(text=f"No episode of Sonarr is {svc}'s {', '.join(missing)} for this series")
+                names = [found[x] for x in names]
             ids = await asyncio.to_thread(on_sonarr, inst, episode_ids_of, tvdb, names)
         except requests.RequestException as e:
             raise web.HTTPBadGateway(text=f"Sonarr is unreachable: {no_credentials(e)}")
@@ -4598,9 +4657,25 @@ async def v1_start_download(request):
     if why := await asyncio.to_thread(still_on_serve, ids, inst["name"] if inst else ""):
         raise web.HTTPConflict(text=why)
     room_for_one_more()
-    run_sync(ids, **({"kind": "retry"} if body.get("retry") is True else {}), **({"sonarr": inst["name"]} if inst else {}),
-             **({"replace": True} if replace else {}), **({"proxy": proxy} if proxy else {}), **({"video": video} if video else {}))
-    return web.json_response({"queued": len(ids)})
+    common = {**({"kind": "retry"} if body.get("retry") is True else {}), **({"sonarr": inst["name"]} if inst else {}),
+              **({"proxy": proxy} if proxy else {}), **({"video": video} if video else {})}
+    if not audio:
+        run_sync(ids, **common, **({"replace": True} if replace else {}))
+        return web.json_response({"queued": len(ids)})
+    # that language just came on the service: Unshacklarr decides per episode from the file Sonarr has
+    eps = await asyncio.to_thread(on_sonarr, inst, lambda: sonarr_sync.sonarr_get("episode", episodeIds=ids, includeEpisodeFile="true"))
+    kinds = {e["id"]: file_speaks(e, audio) for e in eps}
+    fresh, again, lacking = ([i for i in ids if kinds.get(i) is k] for k in (None, True, False))
+    if fresh:
+        run_sync(fresh, **common)
+    if again:
+        run_sync(again, **common, replace=True)
+    for i in lacking:  # the audio upgrade setting: the track added to the file, or the episode again
+        if sonarr_sync.SETTINGS.get("upgrade_mode") == "add_track" and not inst and not common.get("video") and not proxy:
+            add_audio_soon(i, audio)
+        else:
+            run_sync([i], **common, replace=True, **({} if body.get("retry") is True else {"kind": "upgrade"}))
+    return web.json_response({"queued": len(ids), "downloaded": len(fresh), "replaced": len(again), "audio_added": len(lacking)})
 
 
 async def v1_stop(request):

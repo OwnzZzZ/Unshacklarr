@@ -10,6 +10,8 @@ Every change worth knowing, newest first. The format follows
 
 - **orig in the accepted audio languages:** each series' original language as Sonarr gives it, so "orig, fr" works
   for every series at once (ja or fr for an anime, fr for a French series).
+- **The API speaks the service's numbering:** `"numbering": "service"` takes Disney+'s S04E05 for the episode it is in
+  Sonarr, and `"audio": "fr"` lets Unshacklarr decide: download, download again, or add the French track.
 
 ## [1.5.0] - 2026-10-17
 

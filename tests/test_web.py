@@ -2503,3 +2503,61 @@ def test_orig_is_taken_in_the_accepted_audio_only():
     assert web.check_audio_accept("orig, fr", "x") == "orig, fr"
     assert _raises(lambda: web.check_audio_accept("orig", "x", "subtitles"))
     assert _raises(lambda: web.check_audio_accept("all", "x"))
+
+
+def test_the_api_takes_the_services_own_numbering_and_decides_the_audio_upgrade(tmp_path, monkeypatch):
+    # Disney-Watch sends Disney+'s S04E05 ("Te défendre"), Bleach's S17E45 in Sonarr; Sonarr's own S04E05 is another
+    # episode. "numbering": "service" finds S17E45 by the series' last listing; "audio": "fr" lets Unshacklarr decide:
+    # no file, a download; a file with French, the service's again; a file without, the audio upgrade setting
+    import asyncio
+    from aiohttp.test_utils import TestClient, TestServer
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    show = {"service": "DSNP", "title": "https://dsnp/bleach"}
+    web.write_config({**web.read_config(), "auth": {"password": web.hash_password("password1"), "secret": "s1"}, "series": {74796: show}})
+    web.write_atomic(web.SERVICE_LISTS, json.dumps({"74796": {"service": "DSNP", "title": "https://dsnp/bleach", "v": 2, "available": {
+        "84659": {"service": "S04E05", "name": "TE DÉFENDRE", "match": "title", "same": True},
+        "84700": {"service": "S04E06", "name": "X", "match": "title"}}}}))  # a close title only: not taken
+    eps = {45063: {"id": 45063, "seasonNumber": 4, "episodeNumber": 5, "hasFile": False},
+           84659: {"id": 84659, "seasonNumber": 17, "episodeNumber": 45, "hasFile": True, "episodeFile": {"mediaInfo": {"audioLanguages": "jpn"}}},
+           84660: {"id": 84660, "seasonNumber": 17, "episodeNumber": 46, "hasFile": True, "episodeFile": {"mediaInfo": {"audioLanguages": "jpn/fre"}}},
+           84661: {"id": 84661, "seasonNumber": 17, "episodeNumber": 47, "hasFile": False}}
+    show["episode_map"] = {"S17E46": "S04E06", "S17E47": "S04E07"}
+    web.write_config({**web.read_config(), "series": {74796: show}})
+
+    def sonarr_get(path, **p):
+        if path == "series":
+            return [{"id": 9}]
+        if "episodeIds" in p:
+            return [eps[i] for i in p["episodeIds"]]
+        return list(eps.values())
+    monkeypatch.setattr(web.sonarr_sync, "sonarr_get", sonarr_get)
+    started, added = [], []
+    monkeypatch.setattr(web, "run_sync", lambda ids, **k: started.append((ids, k.get("replace", False), k.get("kind"))))
+    monkeypatch.setattr(web, "add_audio_soon", lambda i, lang: added.append((i, lang)))
+    found, missing = web.sonarr_codes_of_service(74796, ["S04E05", "S04E06", "S04E07", "S09E09"])
+    assert found == {"S04E05": "S17E45", "S04E06": "S17E46", "S04E07": "S17E47"} and missing == ["S09E09"]
+
+    async def go():
+        async with TestClient(TestServer(web.app)) as browser:
+            page = {"X-Unshackle": "1"}
+            await browser.post("/api/login", json={"password": "password1"}, headers=page)
+            key = (await (await browser.post("/api/api-key/new", json={"password": "password1"}, headers=page)).json())["key"]
+            api = {"X-Api-Key": key}
+            r = await browser.post("/api/v1/downloads", headers=api, json={"tvdbId": 74796, "episodes": ["S04E05", "S04E06", "S04E07"],
+                                                                           "numbering": "service", "audio": "fr"})
+            assert r.status == 200 and (await r.json())["queued"] == 3
+            r = await browser.post("/api/v1/downloads", headers=api, json={"tvdbId": 74796, "episodes": ["S09E09"], "numbering": "service"})
+            assert r.status == 404 and "DSNP's S09E09" in await r.text()  # the code it was sent, as the service numbers it
+            assert (await browser.post("/api/v1/downloads", headers=api, json={"tvdbId": 74796, "episodes": ["S04E05"], "audio": "français"})).status == 400
+            assert ([84661], False, None) in started and ([84660], True, None) in started  # no file: a download; French already: again
+            assert ([84659], True, "upgrade") in started  # no French: the whole episode again (upgrade_mode redownload)
+            assert not any(45063 in ids for ids, *_ in started)  # Sonarr's own S04E05 is never touched
+            monkeypatch.setitem(web.sonarr_sync.SETTINGS, "upgrade_mode", "add_track")
+            started.clear()
+            await browser.post("/api/v1/downloads", headers=api, json={"tvdbId": 74796, "episodes": ["S04E05"], "numbering": "service", "audio": "fr"})
+            assert added == [(84659, "fr")] and not started  # the French track added to the file it has
+    asyncio.run(go())
