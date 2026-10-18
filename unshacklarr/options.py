@@ -94,7 +94,8 @@ def flag_of(name: str) -> str:
 
 
 def name_of(flag: str) -> str:
-    return NAMES.get(flag) or flag.lstrip("-").replace("-", "_")
+    """An option's parameter name, as click makes it from a flag: dashes off, inner ones as _, lower case (-B: b)."""
+    return NAMES.get(flag) or flag.lstrip("-").replace("-", "_").lower()
 
 
 # Taken by unshackle serve only: `unshackle dl` has no flag for them, so the command shown leaves them out
@@ -163,7 +164,7 @@ def from_dl_config(dl: dict, service: str) -> dict:
 
 def to_params(options: dict, specs: list[dict]) -> dict:
     """{--flag: value} to {name: typed value}; an empty value or a flag set to false is left out."""
-    by_flag = {s["flag"]: s for s in specs}
+    by_flag = {s["flag"]: s for s in specs} | {s["short"]: s for s in specs if s.get("short")}  # -B: its spec's name
     params = {}
     for flag, value in options.items():
         if value in (None, False, ""):
@@ -192,7 +193,7 @@ def command_line(request: dict) -> str:
         value = ",".join(map(str, value)) if isinstance(value, list) else str(value)
         return [flag_of(name), HIDDEN.sub("//***@", value)]
 
-    own = [a for k, v in request.items() if k not in dl_names and k not in ("service", "title_id", "wanted", "output_dir", "debug")
+    own = [a for k, v in request.items() if k not in dl_names and k not in ("service", "title_id", "wanted", "output_dir", "debug", "service_params")
            for a in args(k, v)]
     return shlex.join(["unshackle", "dl", *[a for k, v in request.items() if k in dl_names for a in args(k, v)],
                        request["service"], *own, str(request["title_id"]), "-w", ",".join(request["wanted"])])

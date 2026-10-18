@@ -1654,11 +1654,15 @@ def download_request(show: dict, config: dict, service_sxxeyy: str, out: Path) -
     if not dl.get("--cdm") and (why := no_cdm(show["service"], config)):  # a device named for the run needs no mapping
         raise ValueError(why)
     backend = backend_for(show["service"], config)
+    service = options.to_params(own, options.service_specs(service_entry(show["service"], config)))
+    request = options.to_params(dl, options.dl_specs())
     return {
         # unshackle.yaml's dl: section first, as on the command line: serve does not apply it
         **options.from_dl_config(backend.dl_config(), show["service"]),
-        **options.to_params(own, options.service_specs(service_entry(show["service"], config))),
-        **options.to_params(dl, options.dl_specs()),
+        **service,
+        **request,
+        # through a remote server, serve hands it only the service options under service_params (-B for AMZN)
+        **({"service_params": service} if request.get("remote") and service else {}),
         "service": show["service"],
         "title_id": str(show["title"]),
         "wanted": [service_sxxeyy],

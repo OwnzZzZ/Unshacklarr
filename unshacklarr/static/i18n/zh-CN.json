@@ -2316,5 +2316,6 @@
  "Delete the job": "删除此任务",
  "Removes every episode of this job from the history": "从历史记录中移除此任务的所有剧集",
  "1 episode deleted from the history": "已从历史记录删除 1 集",
- "{0} episodes deleted from the history": "已从历史记录删除 {0} 集"
+ "{0} episodes deleted from the history": "已从历史记录删除 {0} 集",
+ "Add it as written: the service on the remote server may know it": "按原样添加：远程服务器上的服务可能支持它"
 }

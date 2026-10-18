@@ -20,7 +20,7 @@ async function renderServiceDefaults() {
     const own = el("div", { className: "opts" }), dl = el("div", { className: "opts" });
     const specs = await loadServiceOptions(tag);
     optionsEditor(dl, S.dlOptions, levels.options);
-    optionsEditor(own, specs, levels.service_options);
+    optionsEditor(own, specs, levels.service_options, true);
     const count = Object.keys(levels.options).length + Object.keys(levels.service_options).length + (levels.backend ? 1 : 0) + (levels.ladder ? 1 : 0);
     const servers = S.config.settings.backends || [];
     const backend = el("select", { onchange: (e) => { if (e.target.value) levels.backend = e.target.value; else delete levels.backend; dirty(); } },
@@ -35,7 +35,7 @@ async function renderServiceDefaults() {
         ...(servers.length || levels.backend ? [field("Unshackle server", backend, `Where ${tag} downloads.`)] : []),
         field("Quality ladder", ladder, "Default: the one of Settings, Quality.")),
       el("span", { className: "sub", textContent: "Download options" }), dl,
-      ...(specs.length || Object.keys(levels.service_options).length ? [el("span", { className: "sub", textContent: `Options of ${tag}` }), own] : []),
+      el("span", { className: "sub", textContent: `Options of ${tag}` }), own,
       el("div", { className: "dx-cmd" }, el("span", { textContent: `A ${tag} download starts as` }),
         el("code", { className: "dx-svc-cmd", translate: "no", dataset: { tag } }))));
   }

@@ -2297,5 +2297,6 @@
  "Delete the job": "Supprimer le lot",
  "Removes every episode of this job from the history": "Retire tous les épisodes de ce lot de l'historique",
  "1 episode deleted from the history": "1 épisode supprimé de l'historique",
- "{0} episodes deleted from the history": "{0} épisodes supprimés de l'historique"
+ "{0} episodes deleted from the history": "{0} épisodes supprimés de l'historique",
+ "Add it as written: the service on the remote server may know it": "L’ajouter tel quel : le service du serveur distant le connaît peut-être"
 }
