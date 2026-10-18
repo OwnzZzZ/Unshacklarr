@@ -2312,5 +2312,8 @@
  "Removes every episode of this job from the history": "このジョブのエピソードをすべて履歴から削除します",
  "1 episode deleted from the history": "履歴から 1 エピソードを削除しました",
  "{0} episodes deleted from the history": "履歴から {0} エピソードを削除しました",
- "Add it as written: the service on the remote server may know it": "入力どおりに追加：リモートサーバーのサービスが対応している可能性があります"
+ "Add it as written: the service on the remote server may know it": "入力どおりに追加：リモートサーバーのサービスが対応している可能性があります",
+ "Show these episodes": "これらのエピソードを表示",
+ "Hide these episodes": "これらのエピソードを非表示",
+ "Downloads them again, before the episodes still to come": "残りのエピソードより先に、もう一度ダウンロードします"
 }

@@ -581,6 +581,8 @@ def job_episodes(episodes: list, batch: str | None):
                     running_jobs[batch]["closed"] = True
                 return
             ep = episodes[i]
+            if batch in running_jobs:
+                running_jobs[batch]["at"] = i + 1  # where a retry goes: next
         i += 1
         yield ep
 
@@ -597,9 +599,9 @@ def queued_card(ep: dict, show: dict, kind: str, batch: str | None, replace: boo
             **({"video_override": video} if video else {})}  # and its codec and height
 
 
-def add_to_job(batch: str, ep: dict, show: dict, replace: bool = False) -> bool:
+def add_to_job(batch: str, ep: dict, show: dict, replace: bool = False, first: bool = False) -> bool:
     """An episode into a running job's queue (queued again, retried): in its place if it was cancelled
-    before its turn, else at the end, one download at a time. False when the job took its last episode, or
+    before its turn, else at the end, one download at a time; first: next, before the episodes still to come (a retry). False when the job took its last episode, or
     replaces files and this one doesn't (or the other way round): then it starts on its own."""
     with jobs_lock:
         job = running_jobs.get(batch)
@@ -607,6 +609,8 @@ def add_to_job(batch: str, ep: dict, show: dict, replace: bool = False) -> bool:
             return False
         if ep["id"] in unqueued:
             unqueued.discard(ep["id"])  # its turn has not come: it keeps its place
+        elif first:
+            job["episodes"].insert(job.get("at", 0), ep)
         else:
             job["episodes"].append(ep)
         waiting[ep["id"]] = job["stubs"][ep["id"]] = {**queued_card(ep, show, "manual", batch, replace), "paused": batch in paused_jobs}
@@ -834,15 +838,18 @@ slot_jobs: dict[str, list[str]] = {}  # by server name ("" the main one): the jo
 slot_line: dict[str, list[str]] = {}  # by server name: the jobs waiting for one, in the order they asked
 stop_waiting: set[str] = set()  # runs stopped from Activity while they waited for a slot
 slot_active: set[str] = set()  # jobs with an episode downloading now
+lent: set[str] = set()  # jobs that lent their slot to a retry between two episodes: in line, their next not asking yet
 job_order: dict[str, int] = {}  # job -> its place: numbered when picked, so the line keeps the order picks were made
 job_numbers = itertools.count()
+RETRY_FIRST = 10**9  # a retry's number: below every pick's, so it is first in line (in the order retries were asked)
 
 
-def number_job(job: str) -> None:
+def number_job(job: str, retry: bool = False) -> None:
     """A job's place in the line for download slots, taken when it is picked (sync), not when its first episode is
-    ready to download: an episode checks the service first, and a later pick's may be ready sooner (#10)."""
+    ready to download: an episode checks the service first, and a later pick's may be ready sooner (#10). A retry
+    goes before the picks waiting."""
     with slots:
-        job_order.setdefault(job, next(job_numbers))
+        job_order.setdefault(job, next(job_numbers) - (RETRY_FIRST if retry else 0))
 
 
 def slot_job(run: EpisodeRun | None) -> str:
@@ -861,10 +868,14 @@ def download_slot(server: str, run: EpisodeRun | None = None):
         holders = slot_jobs.setdefault(server, [])
         if job not in holders:  # its job doesn't hold a slot yet: in line, first asked, first served
             line = slot_line.setdefault(server, [])
-            job_order.setdefault(job, next(job_numbers))  # an episode on its own: numbered as it comes
+            # an episode on its own: numbered as it comes, a retry first
+            job_order.setdefault(job, next(job_numbers) - (RETRY_FIRST if run and run.card.get("kind") == "retry" else 0))
             told = False
             try:
-                line.append(job)
+                if job in lent:  # a job that lent its slot to a retry is in line already, at its place
+                    lent.discard(job)
+                else:
+                    line.append(job)
                 # in the order picked, whenever each got here; a job paused while it waited lost its number: last
                 line.sort(key=lambda j: job_order.get(j, float("inf")))
                 while (limit := int(SETTINGS.get("downloads_at_once") or 0)) and (len(holders) >= limit or line[0] != job):
@@ -888,17 +899,31 @@ def download_slot(server: str, run: EpisodeRun | None = None):
         batch = run.card.get("batch") if run else None
         if not batch or batch in paused_jobs:  # on its own (or the sync's), or its job paused: the slot goes with it
             release_job(job)
+        else:
+            with slots:  # a retry waits: the job lends its slot between two episodes, and keeps its place in line
+                line = slot_line.setdefault(server, [])
+                if any(job_order.get(j, 0) < 0 for j in line):
+                    release_job(job, keep_place=True)
+                    line.append(job)  # its place kept: after the retry, before the jobs picked after it
+                    lent.add(job)
+                    line.sort(key=lambda j: job_order.get(j, float("inf")))
 
 
-def release_job(job: str | None) -> None:
-    """A job's download slots, back for the next in line: when it ends, or is paused (#10)."""
+def release_job(job: str | None, keep_place: bool = False) -> None:
+    """A job's download slots, back for the next in line: when it ends, or is paused (#10), or lent to a retry."""
     if not job:
         return
     with slots:
         for holders in slot_jobs.values():
             while job in holders:
                 holders.remove(job)
-        job_order.pop(job, None)  # over, or paused: resumed, it is numbered again, at the end of the line
+        if not keep_place:
+            job_order.pop(job, None)  # over, or paused: resumed, it is numbered again, at the end of the line
+            if job in lent:  # and the place it kept after lending its slot, gone
+                lent.discard(job)
+                for line in slot_line.values():
+                    while job in line:
+                        line.remove(job)
         slots.notify_all()
 
 
@@ -2790,7 +2815,7 @@ def sync(config: dict, settings: dict, episodes, manual: bool = False, replace: 
                 with jobs_lock:
                     waiting[ep["id"]] = job["stubs"][ep["id"]] = queued_card(ep, show, kind, batch, replace, proxy, video)
     if batch:
-        number_job(batch)  # its place for a download slot: the order it was picked in (#10)
+        number_job(batch, kind == "retry")  # its place for a download slot: the order it was picked in (#10), a retry first
         with jobs_lock:
             running_jobs[batch] = job  # a job's episode started again once it closed takes its place here
     try:
