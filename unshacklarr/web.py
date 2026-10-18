@@ -2446,8 +2446,8 @@ async def pause_job(request):
     return web.json_response({"paused": batch in sonarr_sync.paused_jobs})
 
 
-async def join_job(batch: str, episode_id: int, replace: bool = False) -> bool:
-    """The episode at the end of its running job's queue (or in its place, if cancelled before its turn)."""
+async def join_job(batch: str, episode_id: int, replace: bool = False, first: bool = False) -> bool:
+    """The episode at the end of its running job's queue (or in its place, if cancelled before its turn); first: next."""
     if batch not in sonarr_sync.running_jobs:
         return False
     try:
@@ -2455,7 +2455,7 @@ async def join_job(batch: str, episode_id: int, replace: bool = False) -> bool:
     except (requests.RequestException, IndexError):
         return False
     show = read_config()["series"].get(ep["series"]["tvdbId"]) or {}
-    return bool(show.get("service")) and sonarr_sync.add_to_job(batch, ep, show, replace)
+    return bool(show.get("service")) and sonarr_sync.add_to_job(batch, ep, show, replace, first)
 
 
 async def requeue(request):
@@ -3630,8 +3630,11 @@ async def download(request):
         replace = replace or await asyncio.to_thread(retried_replace, ids, batch)
     if why := await asyncio.to_thread(still_on_serve, ids, inst["name"] if inst else ""):
         raise web.HTTPConflict(text=why)
-    if batch and len(ids) == 1 and not inst and await join_job(batch, ids[0], replace):  # join_job reads the main Sonarr's ids
-        return web.json_response({"running": True})  # the job still runs: at the end of its queue, one download at a time
+    if batch and not inst:  # the job still runs: in its queue (retries next, in order), one download at a time
+        left = [i for i in reversed(ids) if not await join_job(batch, i, replace, body.get("retry") is True)][::-1]  # main Sonarr's ids
+        if not left:
+            return web.json_response({"running": True})
+        ids = left
     room_for_one_more()
     run_sync(ids, replace=replace, kind="retry" if body.get("retry") is True else "manual", numbering=numbering, batch=batch or None,
              sonarr=inst["name"] if inst else "")

@@ -937,6 +937,10 @@ body.gated > :not(.gate):not(.toasts) { display: none !important; }
 .job-counts { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--muted); }
 .job-counts b { font-size: 20px; color: var(--text); margin-right: 6px; font-variant-numeric: tabular-nums; }
 .job-counts .paused { color: var(--warn); font-weight: 600; }
+.job-counts button { all: unset; cursor: pointer; border-radius: 6px; padding: 2px 6px; margin: -2px -6px; }
+.job-counts button:hover { background: var(--hover, rgba(127,127,127,.12)); }
+.job-counts button:focus-visible { outline: 2px solid var(--accent); }
+.job-counts button.off { opacity: .45; text-decoration: line-through; }
 .job-counts .ok b { color: var(--ok); } .job-counts .now b { color: var(--accent); } .job-counts .err b { color: var(--err); }
 .job-cards { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .jcard { border: 1px solid var(--line); border-radius: 10px; background: var(--bg); overflow: hidden; }  /* no transition: redrawn twice a second, it would replay */

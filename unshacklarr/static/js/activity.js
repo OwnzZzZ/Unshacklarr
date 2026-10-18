@@ -51,15 +51,16 @@ function activityLater() {  // the history asked again, not while the tab is out
   if (document.hidden) runsTimer = setTimeout(activityLater, 15000); else openActivity();
 }
 /* The downloads going on now, pushed by the server as they move; the whole list again when one starts or ends. */
-let liveFeed = null, liveNext = null;
+let liveFeed = null, liveNext = null, liveDrawn = 0;
 function followLive() {
   if (liveFeed || !window.EventSource || document.hidden) return;
   liveFeed = new EventSource("/api/runs/live");
   liveFeed.onmessage = (e) => {
     if ($("#tab-log").hidden) { liveFeed.close(); liveFeed = null; return; }
     if (document.hidden) return;  // nothing drawn out of sight: the next message, once back, draws it
-    // several messages waiting (a slow phone, a tab just back): only the last one is drawn, once per frame
-    if (liveNext === null) requestAnimationFrame(() => { const data = liveNext; liveNext = null; liveTick(data); });
+    // several messages waiting (a slow phone, a tab just back, a long job): only the last one is drawn, once a second
+    if (liveNext === null) setTimeout(() => requestAnimationFrame(() => { const data = liveNext; liveNext = null; liveDrawn = Date.now(); liveTick(data); }),
+      Math.max(0, 1000 - (Date.now() - liveDrawn)));
     liveNext = e.data;
   };
   liveFeed.onerror = () => { liveFeed?.close(); liveFeed = null; };  // polling takes over; the next load tries again
@@ -170,16 +171,20 @@ const itemKey = (i) => (i?.job ? `job:${i.job}` : i?.id);
 const itemRow = (i) => (i.job ? jobRow(i) : listRow(i));
 const FINISHING = new Set(["joining", "finishing", "renaming", "importing"]);
 /* Where a job's episodes stand: counts, and how far it is as a whole. */
+/* Where an episode of a job stands, as its counts say it: waiting for a slot counts as queued (by mj23au, #10). */
+function cardKind(c) {
+  if (c.waiting || (isLive(c) && c.step === "queued")) return "queued";
+  if (isLive(c)) return FINISHING.has(c.step) ? "finishing" : "downloading";
+  if (["downloaded", "kept", "import"].includes(c.outcome)) return "done";
+  return c.outcome === "failed" || c.outcome === "cancelled" ? c.outcome : "stopped";
+}
 function jobState(j) {
   const n = { done: 0, failed: 0, stopped: 0, cancelled: 0, downloading: 0, finishing: 0, queued: 0 };
   let progress = 0;
   for (const c of j.cards) {
-    if (c.waiting || (isLive(c) && c.step === "queued")) n.queued++;  // waiting for a slot counts as queued (by mj23au, #10)
-    else if (isLive(c)) { if (FINISHING.has(c.step)) { n.finishing++; progress += 0.95; } else { n.downloading++; progress += (Number(c.live?.progress) || 0) / 100 * 0.9; } }
-    else if (["downloaded", "kept", "import"].includes(c.outcome)) { n.done++; progress += 1; }
-    else if (c.outcome === "failed") { n.failed++; progress += 1; }
-    else if (c.outcome === "cancelled") { n.cancelled++; progress += 1; }
-    else { n.stopped++; progress += 1; }
+    const kind = cardKind(c);
+    n[kind]++;
+    progress += kind === "queued" ? 0 : kind === "finishing" ? 0.95 : kind === "downloading" ? (Number(c.live?.progress) || 0) / 100 * 0.9 : 1;
   }
   const live = n.queued + n.downloading + n.finishing > 0;
   const paused = j.cards.some((c) => c.waiting && c.paused);
@@ -199,6 +204,8 @@ function jobRow(j) {
       : el("span", { className: `chip o-${st.n.failed ? "failed" : st.n.stopped && !st.n.done ? "stopped" : "downloaded"}`,
           textContent: st.n.failed ? `${st.n.failed} failed` : !st.n.done && (st.n.stopped || st.n.cancelled) ? "Stopped" : `${st.n.done}/${j.cards.length}` }));
 }
+const jobHidden = new Set();  // the kinds of episodes hidden in a job (done, queued…), from its counts
+const jobCards = new Map();  // card id -> {sig, li}: the cards of the job shown, kept while they don't change
 const openCards = new Set();  // a job's cards unfolded: they stay so as the job moves on
 let justOpened = null;  // the card unfolding now: it alone fades in
 let following = null;  // a card unfolded by hand while downloading: once done, the next download unfolds in its place
@@ -265,8 +272,9 @@ function renderJob(j) {
       onclick: (e) => pauseJob(j, !st.paused, e.target) }) : "",
     st.live ? el("button", { className: "btn small danger", textContent: "Stop the job", title: "Stops the current download. The queued episodes don't start",
       onclick: (e) => stopJob(j, e.target) }) : "",
-    !st.live && retryable.length ? el("button", { className: "btn small primary", textContent: `Retry ${retryable.length} failed`,
-      title: "Downloads them again, in this job", onclick: (e) => retryJob(j, retryable, e.target) }) : "",
+    retryable.length ? el("button", { className: "btn small primary", textContent: `Retry ${retryable.length} failed`,
+      title: st.live ? "Downloads them again, before the episodes still to come" : "Downloads them again, in this job",
+      onclick: (e) => retryJob(j, retryable, e.target) }) : "",
     !st.live ? el("button", { className: "btn small", textContent: "Delete the job", title: "Removes every episode of this job from the history",
       onclick: (e) => deleteJob(j, e.target) }) : ""].filter(Boolean);
   $("#cd-foot").replaceChildren(...acts.map((b) => { const copy = b.cloneNode(true); copy.onclick = b.onclick; return copy; }));
@@ -275,16 +283,31 @@ function renderJob(j) {
       el("small", { className: "line1", textContent: `${first.service} · ${KIND[first.kind] || first.kind} · started ${day(started)} ${started.toLocaleTimeString(LOCALE)}` }),
       el("small", { className: "line2" }, el("b", { textContent: first.service }), `${KIND[first.kind] || first.kind} · ${day(started)} ${time(started)}`)),
     el("div", { className: "act" }, ...acts));
-  const overall = el("div", { className: "job-sum" },
-    el("div", { className: "job-counts" }, ...(st.paused ? [el("span", { className: "paused", textContent: "⏸ Paused: the next episode waits" })] : []), ...[["done", "Done", "ok"], ["downloading", "Downloading", "now"], ["finishing", "Finishing", "now"],
-      ["queued", "Queued", ""], ["failed", "Failed", "err"], ["stopped", "Stopped", ""], ["cancelled", "Cancelled", ""]]
-      .filter(([k]) => st.n[k]).map(([k, label, cls]) => el("span", { className: cls }, el("b", { textContent: st.n[k] }), label))),
+  // each count shows or hides its episodes: a job of 200 episodes, its failed ones alone in sight
+  const counts = el("div", { className: "job-counts" }, ...(st.paused ? [el("span", { className: "paused", textContent: "⏸ Paused: the next episode waits" })] : []), ...[["done", "Done", "ok"], ["downloading", "Downloading", "now"], ["finishing", "Finishing", "now"],
+    ["queued", "Queued", ""], ["failed", "Failed", "err"], ["stopped", "Stopped", ""], ["cancelled", "Cancelled", ""]]
+    .filter(([k]) => st.n[k]).map(([k, label, cls]) => el("button", { type: "button", className: `${cls}${jobHidden.has(k) ? " off" : ""}`, ariaPressed: String(!jobHidden.has(k)),
+      title: jobHidden.has(k) ? "Show these episodes" : "Hide these episodes", onclick: () => { jobHidden.has(k) ? jobHidden.delete(k) : jobHidden.add(k); renderConsole(); } },
+      el("b", { textContent: st.n[k] }), label)));
+  const overall = el("div", { className: "job-sum" }, counts,
     el("span", { className: "bar" }, el("i", { style: `width:${st.progress}%`, dataset: { k: `job:${j.job}` } })));
   const isDownloading = (c) => isLive(c) && !c.waiting && !FINISHING.has(c.step) && !isQueued(c);
   const followed = j.cards.find((c) => c.id === following);
   const next = followed && !isDownloading(followed) && !isQueued(followed) && j.cards.find(isDownloading);
   if (next) { openCards.delete(followed.id); openCards.add(next.id); following = next.id; }
-  const cards = el("ol", { className: "job-cards" }, ...j.cards.map((c) => {
+  const shown = j.cards.filter((c) => !jobHidden.has(cardKind(c)));
+  const cards = shown.map((c) => {
+    // a card that doesn't move (done, queued, folded) is the same element as at the last draw: a job of 200 episodes
+    // redrawn each second rebuilt 200 cards and froze the page
+    const still = !openCards.has(c.id) && (c.waiting || !isLive(c));
+    const sig = still && JSON.stringify([c.outcome, c.ended, c.cause, c.size, c.waiting, c.paused]);
+    const kept = still && jobCards.get(c.id);
+    if (kept && kept.sig === sig) return kept.li;
+    const li = jobCard(c);
+    if (still) jobCards.set(c.id, { sig, li }); else jobCards.delete(c.id);
+    return li;
+  });
+  function jobCard(c) {
     const live = isLive(c);
     const label = c.waiting ? "Queued" : live ? (FINISHING.has(c.step) ? { joining: "Joining parts", finishing: "Finishing", renaming: "Renaming", importing: "Importing" }[c.step]
       : isQueued(c) ? "Waiting for a slot" : afterTracks(c) || `Downloading ${Math.round(Number(c.live?.progress) || 0)}%`) : outcomeOf(c);
@@ -327,8 +350,15 @@ function renderJob(j) {
         ...(acts.length ? [el("div", { className: "jacts" }, ...acts)] : []),  // unfolded: its actions in its head, not a line of their own
         el("span", { className: "chev", ariaHidden: "true", textContent: "›", onclick: fold })),  // last, after the actions
       ...(open ? [el("div", { className: "jbody" + (justOpened === c.id ? " opening" : "") }, ...runBody(c))] : []));
-  }));
-  keepPromptFocus(() => $("#cd-main").replaceChildren(el("div", { style: "display:grid;gap:18px" }, head, st.live ? overall : jobDone(j, st), cards)));
+  }
+  // the same job drawn again: its list keeps its elements, only the cards that changed are put in
+  let list = $("#cd-main").querySelector(`ol.job-cards[data-job="${j.job}"]`);
+  if (!list) { list = el("ol", { className: "job-cards", dataset: { job: j.job } }); jobCards.clear(); }
+  cards.forEach((li, i) => { if (list.children[i] !== li) list.insertBefore(li, list.children[i] || null); });
+  while (list.children.length > cards.length) list.lastChild.remove();
+  const sum = st.live ? overall : el("div", { style: "display:grid;gap:12px" }, jobDone(j, st), counts), box = list.parentElement;
+  keepPromptFocus(() => box?.isConnected ? (box.children[0].replaceWith(head), box.children[1].replaceWith(sum))  // the list stays where it is
+    : $("#cd-main").replaceChildren(el("div", { style: "display:grid;gap:18px" }, head, sum, list)));
   glideBars($("#cd-main"));
   $("#cd-raw").hidden = false;
   if ($("#cd-raw").open && termFor !== `job:${j.job}`) streamJob(j.job);

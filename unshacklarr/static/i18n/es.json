@@ -2245,5 +2245,8 @@
  "Removes every episode of this job from the history": "Quita todos los episodios de este lote del historial",
  "1 episode deleted from the history": "1 episodio eliminado del historial",
  "{0} episodes deleted from the history": "{0} episodios eliminados del historial",
- "Add it as written: the service on the remote server may know it": "Añadirla tal cual: puede que el servicio del servidor remoto la conozca"
+ "Add it as written: the service on the remote server may know it": "Añadirla tal cual: puede que el servicio del servidor remoto la conozca",
+ "Show these episodes": "Mostrar estos episodios",
+ "Hide these episodes": "Ocultar estos episodios",
+ "Downloads them again, before the episodes still to come": "Los vuelve a descargar, antes de los episodios que faltan"
 }

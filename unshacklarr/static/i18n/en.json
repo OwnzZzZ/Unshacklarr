@@ -721,6 +721,7 @@
  "Downloads kept": [],
  "Downloads left waiting": [],
  "Downloads per week, the last 8 weeks": [],
+ "Downloads them again, before the episodes still to come": [],
  "Downloads them again, in this job": [],
  "Downloads wait until it is back.": [],
  "Downloads will fail unless it logs in with a username and password.": [],
@@ -941,6 +942,7 @@
  "Hidden titles are blurred until you click or tap them. Default follows Settings, Interface, No spoilers.": [],
  "Hide": [],
  "Hide on disk": [],
+ "Hide these episodes": [],
  "Hide this series from the schedule": [],
  "Hide this series from the schedule (Series, Hidden brings it back)": [],
  "Hide {0} from the schedule": [
@@ -1930,6 +1932,7 @@
  "Show more": [],
  "Show name in file names": [],
  "Show the title": [],
+ "Show these episodes": [],
  "Show {0} in the schedule": [
   "name"
  ],
@@ -2852,6 +2855,7 @@
  "default": [],
  "docker compose restart unshackle": [],
  "downloaded": [],
+ "downloading": [],
  "downloads": [],
  "en-GB": [],
  "episode link · {0}": [
@@ -2870,6 +2874,7 @@
   "Math.ceil(left / 60)"
  ],
  "failed its test": [],
+ "finishing": [],
  "for another.": [],
  "for one,": [],
  "for {0}": [

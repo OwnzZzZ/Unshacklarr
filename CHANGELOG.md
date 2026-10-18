@@ -13,11 +13,15 @@ Every change worth knowing, newest first. The format follows
 - **The API speaks the service's numbering:** `"numbering": "service"` takes Disney+'s S04E05 for the episode it is in
   Sonarr, and `"audio": "fr"` lets Unshacklarr decide: download, download again, or add the French track.
 - **Delete the job:** a job that is over leaves the history in one click, every episode of it at once.
+- **Show or hide a job's episodes:** click Done, Queued, Failed… in a job to hide those episodes or show them again.
+- **Retry the failed episodes while the job runs:** Retry N failed is there before the job ends, too.
+- **A retry comes first:** it goes before the episodes still to come, in its job and for a free download slot.
 - **Any service option:** a flag the remote server's service knows, such as AMZN's `-B`, can be written as is in
   a service's or a series' options.
 
 ### Fixed
 
+- **Activity no longer freezes with a large job:** the episodes that don't change are no longer redrawn every second.
 - **Service options through a remote server:** `-B`, `--atmos` and the others now reach it; it used to download without them.
 
 ## [1.5.0] - 2026-10-17

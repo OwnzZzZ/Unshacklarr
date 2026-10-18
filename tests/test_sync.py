@@ -2755,3 +2755,50 @@ def test_a_remote_servers_service_options_go_under_service_params(tmp_path, monk
     assert "service_params" not in sync.options.command_line(payload)
     local = sync.download_request({**show, "options": {}}, {}, "S01E01", tmp_path / "out")
     assert "service_params" not in local and local["b"] is True  # here, flat as before
+
+
+def test_a_retry_goes_before_the_episodes_still_to_come(tmp_path, monkeypatch):
+    # In its job, a retried episode is next; on its own, it gets the first slot free, the job running lending its own
+    import threading, time
+    sync = load(tmp_path, monkeypatch)
+    started = []
+
+    def download(payload, run=None):
+        sx = payload["wanted"][0]
+        started.append(sx)
+        if sx == "S02E06":  # S02E05 failed: retried while S02E07 and S02E08 wait
+            assert sync.add_to_job(run.card["batch"], episode(111, 2, 5), {"service": "RTLP"}, first=True)
+        raise sync.UnshackleError("no such title")
+
+    monkeypatch.setattr(sync, "run_job_retrying", download)
+    monkeypatch.setattr(sync, "download_request", lambda show, config, sx, out: {"service": "RTLP", "title_id": "t", "wanted": [sx], "output_dir": str(out)})
+    monkeypatch.setattr(sync, "notify", lambda *a, **k: None)
+    sync.sync(sync.read_file(), {}, [episode(111, 2, n) for n in (5, 6, 7, 8)], manual=True, kind="manual")
+    assert started == ["S02E05", "S02E06", "S02E05", "S02E07", "S02E08"]
+
+    monkeypatch.setitem(sync.SETTINGS, "downloads_at_once", 1)
+    order = []
+
+    class Run:
+        def __init__(self, batch, n, kind="manual"): self.card, self.id = {"batch": batch, "kind": kind}, f"{batch}-{n}"
+        def say(self, text): pass
+
+    def job(batch, episodes):
+        sync.number_job(batch)
+        for n in range(1, episodes + 1):
+            with sync.download_slot("", Run(batch, n)):
+                order.append(f"{batch}{n}")
+                time.sleep(.05)
+            time.sleep(.02)
+        sync.release_job(batch)
+
+    def other(name, kind):
+        with sync.download_slot("", Run(None, name, kind)):
+            order.append(name)
+
+    a = threading.Thread(target=job, args=("A", 3)); a.start(); time.sleep(.01)
+    b = threading.Thread(target=job, args=("B", 1)); b.start(); time.sleep(.01)
+    r = threading.Thread(target=other, args=("R", "retry")); r.start()
+    for t in (a, b, r): t.join()
+    assert order == ["A1", "R", "A2", "A3", "B1"]  # the retry between two of A's episodes, A still before B
+    assert sync.slot_jobs[""] == [] and not sync.slot_line.get("")
