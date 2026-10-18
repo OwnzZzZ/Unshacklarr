@@ -557,6 +557,27 @@ jobs_lock = threading.Lock()
 paused_jobs: set[str] = set()  # jobs paused from Activity: the download going on ends, the next waits
 
 
+QUEUE_FILE = DATA / "queue.json"  # the episodes jobs still have to download: picked up again after a restart
+
+
+def queue_snapshot() -> dict:
+    """What each job still has to download, in order, and how: queued episodes only (the one downloading, stopped
+    by a restart, is in the history as interrupted, its Retry there)."""
+    with jobs_lock:
+        return {batch: {"episodes": ids, "paused": batch in paused_jobs,
+                        **{k: job.get(k) for k in ("replace", "kind", "sonarr", "proxy", "video", "numbering") if job.get(k)}}
+                for batch, job in sorted(running_jobs.items())
+                if (ids := [ep["id"] for ep in job["episodes"] if waiting.get(ep["id"]) is job["stubs"].get(ep["id"], False)])}
+
+
+def save_queue(last: str | None = None) -> str:
+    """The queue on disk when it changed; returns what was written, to compare with next time."""
+    text = json.dumps(queue_snapshot())
+    if text != last:
+        write_atomic(QUEUE_FILE, text)
+    return text
+
+
 def pause_job(batch: str, pause: bool) -> None:
     """Pause a job (its next episode waits) or let it go on; its queued episodes say so in Activity."""
     with jobs_lock:
@@ -2807,13 +2828,15 @@ def sync(config: dict, settings: dict, episodes, manual: bool = False, replace: 
     # Episodes picked together are one job in Activity: their cards, and one output for them all
     # (a job's episode queued again once the job was over goes on in that same job)
     batch = batch or (f"{datetime.now(timezone.utc):%Y%m%d-%H%M%S}-{uuid.uuid4().hex[:6]}" if kind != "auto" and len(episodes) > 1 else None)
-    job = {"episodes": episodes, "stubs": {}, "closed": False, "replace": replace}
+    job = {"episodes": episodes, "stubs": {}, "closed": False, "replace": replace,  # the rest: to pick it up after a restart
+           "kind": kind, "sonarr": (instance() or {}).get("name", ""), "proxy": proxy, "video": video, "numbering": numbering}
     if kind != "auto":  # picked by hand: the ones after the first show as queued in Activity
         for ep in episodes:
             show = series.get(ep["series"]["tvdbId"]) or {}
             if show.get("service") and ep["id"] not in waiting:
                 with jobs_lock:
-                    waiting[ep["id"]] = job["stubs"][ep["id"]] = queued_card(ep, show, kind, batch, replace, proxy, video)
+                    waiting[ep["id"]] = job["stubs"][ep["id"]] = {**queued_card(ep, show, kind, batch, replace, proxy, video),
+                                                                  **({"paused": True} if batch in paused_jobs else {})}  # picked up paused
     if batch:
         number_job(batch, kind == "retry")  # its place for a download slot: the order it was picked in (#10), a retry first
         with jobs_lock:

@@ -2664,3 +2664,25 @@ def test_a_job_over_is_deleted_whole_and_one_going_on_is_not(tmp_path, monkeypat
             assert (await browser.delete(f"/api/jobs/{batch}", headers=page)).status == 404
     asyncio.run(go())
     assert [p.stem for p in web.sonarr_sync.RUNS_DIR.glob("*.json")] == [other]  # another download kept
+
+
+def test_a_jobs_queue_is_kept_on_disk_and_picked_up_after_a_restart(tmp_path, monkeypatch):
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    sync = importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    eps = [{"id": n, "seasonNumber": 1, "episodeNumber": n, "series": {"title": "Smallville", "tvdbId": 1}} for n in (1, 2, 3, 4)]
+    job = {"episodes": eps, "stubs": {}, "closed": False, "replace": False, "kind": "manual", "sonarr": "", "proxy": "", "video": None, "numbering": None}
+    for ep in eps[2:]:  # 1 done, 2 downloading, 3 and 4 queued
+        sync.waiting[ep["id"]] = job["stubs"][ep["id"]] = sync.queued_card(ep, {"service": "NF"}, "manual", "20261018-194616-f77846")
+    sync.running_jobs["20261018-194616-f77846"] = job
+    sync.paused_jobs.add("20261018-194616-f77846")
+    sync.save_queue()
+    assert json.loads(sync.QUEUE_FILE.read_text()) == {"20261018-194616-f77846": {"episodes": [3, 4], "paused": True, "kind": "manual"}}
+
+    sync.running_jobs.clear(); sync.waiting.clear(); sync.paused_jobs.clear()  # a restart
+    started = []
+    monkeypatch.setattr(web, "run_sync", lambda ids, **kw: started.append((ids, kw["batch"], kw["kind"])))
+    assert web.resume_queue() == 2
+    assert started == [([3, 4], "20261018-194616-f77846", "manual")] and "20261018-194616-f77846" in sync.paused_jobs  # still paused

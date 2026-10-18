@@ -5239,6 +5239,39 @@ async def security_headers(request, response):
         response.headers.setdefault(name, value)
 
 
+def resume_queue() -> int:
+    """The jobs a restart stopped, queued again in the order they were picked, a paused one still paused."""
+    try:
+        jobs = json.loads(sonarr_sync.QUEUE_FILE.read_text())
+    except (OSError, ValueError):
+        return 0
+    n = 0
+    for batch, job in sorted(jobs.items()) if isinstance(jobs, dict) else []:
+        ids = [i for i in job.get("episodes") or [] if isinstance(i, int) and i > 0]
+        if not ids or not BATCH_ID.fullmatch(batch):
+            continue
+        if job.get("paused"):
+            sonarr_sync.paused_jobs.add(batch)
+        print(f"Picking up job {batch} again: {len(ids)} episode{'s' if len(ids) > 1 else ''}{' (paused)' if job.get('paused') else ''}", flush=True)
+        run_sync(ids, replace=job.get("replace") is True, kind=job.get("kind") or "manual", numbering=job.get("numbering"), batch=batch,
+                 sonarr=job.get("sonarr") or "", proxy=job.get("proxy") or "", video=job.get("video"))
+        n += len(ids)
+    return n
+
+
+async def watch_queue():
+    """The jobs' queue kept on disk every few seconds, so a restart (an update) loses no episode still to come."""
+    await asyncio.to_thread(resume_queue)
+    await asyncio.sleep(30)  # the jobs picked up have built their queue again: not written empty meanwhile
+    last = None
+    while True:
+        try:
+            last = await asyncio.to_thread(sonarr_sync.save_queue, last)
+        except OSError as e:
+            print(f"Could not keep the queue: {e}", flush=True)
+        await asyncio.sleep(5)
+
+
 def background(loop):
     """A loop that runs for as long as the server does, as aiohttp's cleanup context."""
     async def context(app):
@@ -5260,6 +5293,7 @@ app.cleanup_ctx.append(background(watch_upgrades))
 app.cleanup_ctx.append(background(watch_upgrade_checks))
 app.cleanup_ctx.append(background(watch_updates))
 app.cleanup_ctx.append(background(watch_backups))
+app.cleanup_ctx.append(background(watch_queue))
 app.add_routes([
     web.get("/", index),
     *[web.get(path, static_file) for path in STATIC],
