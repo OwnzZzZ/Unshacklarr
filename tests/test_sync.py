@@ -2744,3 +2744,14 @@ def test_orig_in_the_accepted_audio_is_the_series_original_language(tmp_path, mo
     assert sync.accepted_audio({}, config, {"originalLanguage": {"name": "Portuguese (Brazil)"}}) == ["pt-br", "fr"]
     assert sync.accepted_audio({}, config, {}) == ["fr"]
     assert sync.speaks({"ja"}, sync.accepted_audio({}, config, {"originalLanguage": {"name": "Japanese"}}))
+
+
+def test_a_remote_servers_service_options_go_under_service_params(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    monkeypatch.setattr(sync.UNSHACKLE, "dl_config", lambda: {})
+    show = {"service": "AMZN", "title": "x", "options": {"--remote": True}, "service_options": {"-B": True}}
+    payload = sync.download_request(show, {}, "S01E01", tmp_path / "out")
+    assert payload["service_params"] == {"b": True} and payload["remote"] is True  # serve hands a remote server only these
+    assert "service_params" not in sync.options.command_line(payload)
+    local = sync.download_request({**show, "options": {}}, {}, "S01E01", tmp_path / "out")
+    assert "service_params" not in local and local["b"] is True  # here, flat as before
