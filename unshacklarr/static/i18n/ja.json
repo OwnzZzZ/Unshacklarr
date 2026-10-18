@@ -2272,5 +2272,6 @@
  "Delete the job": "ジョブを削除",
  "Removes every episode of this job from the history": "このジョブのエピソードをすべて履歴から削除します",
  "1 episode deleted from the history": "履歴から 1 エピソードを削除しました",
- "{0} episodes deleted from the history": "履歴から {0} エピソードを削除しました"
+ "{0} episodes deleted from the history": "履歴から {0} エピソードを削除しました",
+ "Add it as written: the service on the remote server may know it": "入力どおりに追加：リモートサーバーのサービスが対応している可能性があります"
 }

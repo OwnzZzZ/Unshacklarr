@@ -603,14 +603,16 @@ def check_series_sonarrs(value, body: dict, dl_specs: list[dict], where: str) ->
     return out
 
 
-def check_options(opts: dict, specs: list[dict] | None, where: str) -> dict:
+def check_options(opts: dict, specs: list[dict] | None, where: str, free: bool = False) -> dict:
     """Only options Unshackle defines, with values of their type. None: the service's
-    options are not known (Unshackle unreachable), so only their shape is checked."""
+    options are not known (Unshackle unreachable), so only their shape is checked. free: a service's own options, any
+    flag as written too (-B, a remote server's version of the service may have options this one lacks)."""
     by_flag = {s["flag"]: s for s in specs} if specs is not None else None
     for flag, value in opts.items():
-        if by_flag is not None and flag not in by_flag:
+        shape = r"-{1,2}[A-Za-z0-9][A-Za-z0-9-]*" if free else r"--[a-z0-9][a-z0-9-]*"
+        if by_flag is not None and flag not in by_flag and not free:
             raise web.HTTPBadRequest(text=f"Unknown option {flag} in {where}")
-        if not re.fullmatch(r"--[a-z0-9][a-z0-9-]*", flag) or not isinstance(value, (bool, str, int, float)):
+        if not re.fullmatch(shape, flag) or not isinstance(value, (bool, str, int, float)):
             raise web.HTTPBadRequest(text=f"Invalid option {flag} in {where}")
     try:
         options.to_params(opts, specs or [])
@@ -693,7 +695,7 @@ async def save_config(request):
             "service": service,
             "title": title,
             "options": check_options(show.get("options") or {}, dl_specs, str(key)),
-            "service_options": check_options(show.get("service_options") or {}, service_specs, str(key)),
+            "service_options": check_options(show.get("service_options") or {}, service_specs, str(key), free=True),
         }
         series[int(key)].update(check_numbering(show, str(key)))
         # The automatic sync only takes episodes aired from here on: see sonarr_sync.wanted_automatically.
@@ -753,7 +755,7 @@ async def save_config(request):
     for service, levels in (body.get("service_defaults") or {}).items():
         service_specs = check_service(service, known, "the service defaults")
         opts = check_options(levels.get("options") or {}, dl_specs, service)
-        own = check_options(levels.get("service_options") or {}, service_specs, service)
+        own = check_options(levels.get("service_options") or {}, service_specs, service, free=True)
         picks = {}
         if backend := str(levels.get("backend") or ""):
             if backend not in {b["name"] for b in settings.get("backends") or []}:
@@ -836,7 +838,7 @@ def check_fallback(alt: dict, known: dict | None, dl_specs: list[dict], key: str
     if title.startswith("-"):
         raise web.HTTPBadRequest(text=f"The fallback URL of {key} cannot start with '-'")
     numbering = {k: v for k, v in check_numbering(alt, f"the fallback of {key}").items() if k in sonarr_sync.FALLBACK_NUMBERING}
-    own = check_options(alt.get("service_options") or {}, specs, f"the fallback of {key}")
+    own = check_options(alt.get("service_options") or {}, specs, f"the fallback of {key}", free=True)
     return {"service": service, "title": title, **({"service_options": own} if own else {}), **numbering}
 
 

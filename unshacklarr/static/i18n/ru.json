@@ -2269,5 +2269,6 @@
  "Delete the job": "Удалить пакет",
  "Removes every episode of this job from the history": "Удаляет все эпизоды этого пакета из истории",
  "1 episode deleted from the history": "1 эпизод удалён из истории",
- "{0} episodes deleted from the history": "Удалено эпизодов из истории: {0}"
+ "{0} episodes deleted from the history": "Удалено эпизодов из истории: {0}",
+ "Add it as written: the service on the remote server may know it": "Добавить как написано: сервис на удалённом сервере может её знать"
 }
