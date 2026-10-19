@@ -133,6 +133,7 @@
  "A file from another source": [],
  "A file to attach to a GitHub issue: versions, settings and this attempt's log, without passwords, keys or tokens": [],
  "A first start of Unshackle takes a few seconds": [],
+ "A flag the service on a remote server knows, such as -B, can be written as is.": [],
  "A folder as Unshacklarr sees it": [],
  "A folder as {0} sees it": [
   "libWho || mainSonarr()"
@@ -293,6 +294,7 @@
  "App password": [],
  "App token": [],
  "Apply": [],
+ "Apply to this job": [],
  "Apprise": [],
  "Apprise address": [],
  "Architecture": [],
@@ -669,6 +671,7 @@
   "where"
  ],
  "Download options": [],
+ "Download options for the episodes still to come in this job": [],
  "Download options for {0}": [
   "o.name"
  ],
@@ -880,6 +883,7 @@
  "For example http://unshackle:8786 on a shared Docker network.": [],
  "For other programs: a script, Home Assistant, Shortcuts.": [],
  "For release times and the sync clock.": [],
+ "For the episodes still to come in this job. They go over the series' options; the series itself does not change.": [],
  "For this browser only. The page reloads in the new language.": [],
  "For this series only. They take priority over the options set for its service.": [],
  "For when Authelia, Authentik or another proxy already logs you in. The proxy passes your name in a header, and Unshacklarr opens without asking for its own password.": [],
@@ -1590,10 +1594,13 @@
  ],
  "Optional": [],
  "Optional and free:": [],
+ "Options": [],
+ "Options applied to the episodes still to come in this job": [],
  "Options for every series": [],
  "Options of the service": [],
+ "Options of this job": [],
  "Options of {0}": [
-  "tag"
+  "svcName(service)"
  ],
  "Orange: different from most of this season (hover for details)": [],
  "Origin": [],
@@ -3107,6 +3114,7 @@
  "this computer": [],
  "this device is no longer subscribed": [],
  "this download": [],
+ "this job": [],
  "timeZone": [],
  "title and subtitle": [],
  "title, in its series": [],

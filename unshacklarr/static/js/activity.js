@@ -270,6 +270,8 @@ function renderJob(j) {
     st.live && st.n.queued ? el("button", { className: `btn small${st.paused ? " primary" : ""}`, textContent: st.paused ? "Resume" : "Pause",
       title: st.paused ? "The next episode starts" : "The current download finishes; the next one waits",
       onclick: (e) => pauseJob(j, !st.paused, e.target) }) : "",
+    st.live && st.n.queued ? el("button", { className: "btn small", textContent: "Options", title: "Download options for the episodes still to come in this job",
+      onclick: () => openJobOptions(j) }) : "",
     st.live ? el("button", { className: "btn small danger", textContent: "Stop the job", title: "Stops the current download. The queued episodes don't start",
       onclick: (e) => stopJob(j, e.target) }) : "",
     retryable.length ? el("button", { className: "btn small primary", textContent: `Retry ${retryable.length} failed`,
@@ -889,6 +891,30 @@ document.querySelectorAll(".term-mode button").forEach((b) => b.onclick = (e) =>
   else { const c = runCards.find((x) => x.id === was); if (c) streamRun(c); }
 });
 showTermMode();
+/* A job's own download options, for its episodes still to come: over the series' options, the series unchanged. */
+let jobOpts = null;
+async function openJobOptions(j) {
+  const service = j.cards[0].service;
+  $("#jobopts-err").textContent = "";
+  try {
+    const [now, specs] = await Promise.all([api(`/api/jobs/${encodeURIComponent(j.job)}/options`), loadServiceOptions(service).catch(() => [])]);
+    jobOpts = { job: j.job, service, options: now.options || {}, service_options: now.service_options || {} };
+    optionsEditor($("#jobopts-dl"), S.dlOptions, jobOpts.options);
+    optionsEditor($("#jobopts-own"), specs, jobOpts.service_options, true);
+    $("#jobopts-dialog").showModal();
+  } catch (e) { toast(e.message, true); }
+}
+$("#jobopts-form").onsubmit = async (e) => {
+  if (e.submitter?.value !== "apply" || !jobOpts) return;
+  e.preventDefault();  // open until the server takes them: a wrong value is said here
+  const kept = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== "" && v !== undefined));
+  try {
+    await api(`/api/jobs/${encodeURIComponent(jobOpts.job)}/options`, { method: "POST",
+      body: JSON.stringify({ service: jobOpts.service, options: kept(jobOpts.options), service_options: kept(jobOpts.service_options) }) });
+    $("#jobopts-dialog").close();
+    toast("Options applied to the episodes still to come in this job");
+  } catch (err) { $("#jobopts-err").textContent = err.message; }
+};
 async function pauseJob(j, pause, button) {
   button.disabled = true;
   runCards = runCards.map((c) => (c.batch === j.job && c.waiting ? { ...c, paused: pause } : c));  // at once

@@ -2273,5 +2273,13 @@
  "Add it as written: the service on the remote server may know it": "Добавить как написано: сервис на удалённом сервере может её знать",
  "Show these episodes": "Показать эти эпизоды",
  "Hide these episodes": "Скрыть эти эпизоды",
- "Downloads them again, before the episodes still to come": "Скачивает их снова, раньше оставшихся эпизодов"
+ "Downloads them again, before the episodes still to come": "Скачивает их снова, раньше оставшихся эпизодов",
+ "A flag the service on a remote server knows, such as -B, can be written as is.": "Параметр, который знает сервис на удалённом сервере, например -B, можно написать как есть.",
+ "Apply to this job": "Применить к этому пакету",
+ "Download options for the episodes still to come in this job": "Параметры загрузки для оставшихся эпизодов этого пакета",
+ "For the episodes still to come in this job. They go over the series' options; the series itself does not change.": "Для оставшихся эпизодов этого пакета. Они важнее параметров сериала; сам сериал не меняется.",
+ "Options": "Параметры",
+ "Options applied to the episodes still to come in this job": "Параметры применены к оставшимся эпизодам этого пакета",
+ "Options of this job": "Параметры этого пакета",
+ "this job": "этом пакете"
 }

@@ -16,6 +16,8 @@ Every change worth knowing, newest first. The format follows
 - **Show or hide a job's episodes:** click Done, Queued, Failed… in a job to hide those episodes or show them again.
 - **Retry the failed episodes while the job runs:** Retry N failed is there before the job ends, too.
 - **A retry comes first:** it goes before the episodes still to come, in its job and for a free download slot.
+- **Options of a job:** while it runs, a job's download and service options can be changed for its episodes still to
+  come, the series left as it is.
 - **A job survives a restart:** its queued episodes are kept on disk and queued again when Unshacklarr starts, a paused
   job still paused.
 - **Any service option:** a flag the remote server's service knows, such as AMZN's `-B`, can be written as is in

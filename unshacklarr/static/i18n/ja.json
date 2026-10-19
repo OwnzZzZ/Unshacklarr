@@ -2276,5 +2276,13 @@
  "Add it as written: the service on the remote server may know it": "入力どおりに追加：リモートサーバーのサービスが対応している可能性があります",
  "Show these episodes": "これらのエピソードを表示",
  "Hide these episodes": "これらのエピソードを非表示",
- "Downloads them again, before the episodes still to come": "残りのエピソードより先に、もう一度ダウンロードします"
+ "Downloads them again, before the episodes still to come": "残りのエピソードより先に、もう一度ダウンロードします",
+ "A flag the service on a remote server knows, such as -B, can be written as is.": "リモートサーバーのサービスが対応するオプション（-B など）は、そのまま入力できます。",
+ "Apply to this job": "このジョブに適用",
+ "Download options for the episodes still to come in this job": "このジョブの残りのエピソードのダウンロードオプション",
+ "For the episodes still to come in this job. They go over the series' options; the series itself does not change.": "このジョブの残りのエピソードに適用されます。シリーズのオプションより優先され、シリーズ自体は変わりません。",
+ "Options": "オプション",
+ "Options applied to the episodes still to come in this job": "このジョブの残りのエピソードにオプションを適用しました",
+ "Options of this job": "このジョブのオプション",
+ "this job": "このジョブ"
 }

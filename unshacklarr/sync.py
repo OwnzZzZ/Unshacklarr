@@ -557,6 +557,18 @@ jobs_lock = threading.Lock()
 paused_jobs: set[str] = set()  # jobs paused from Activity: the download going on ends, the next waits
 
 
+job_options: dict[str, dict] = {}  # job -> {"options", "service_options"} set in Activity for its episodes still to come
+
+
+def with_job_options(show: dict, batch: str | None) -> dict:
+    """The series as this job downloads it: the options set for the job over the series' own (false turns one off)."""
+    extra = job_options.get(batch) if batch else None
+    if not extra:
+        return show
+    return {**show, "options": {**(show.get("options") or {}), **(extra.get("options") or {})},
+            "service_options": {**(show.get("service_options") or {}), **(extra.get("service_options") or {})}}
+
+
 QUEUE_FILE = DATA / "queue.json"  # the episodes jobs still have to download: picked up again after a restart
 
 
@@ -564,7 +576,7 @@ def queue_snapshot() -> dict:
     """What each job still has to download, in order, and how: queued episodes only (the one downloading, stopped
     by a restart, is in the history as interrupted, its Retry there)."""
     with jobs_lock:
-        return {batch: {"episodes": ids, "paused": batch in paused_jobs,
+        return {batch: {"episodes": ids, "paused": batch in paused_jobs, **({"options": job_options[batch]} if job_options.get(batch) else {}),
                         **{k: job.get(k) for k in ("replace", "kind", "sonarr", "proxy", "video", "numbering") if job.get(k)}}
                 for batch, job in sorted(running_jobs.items())
                 if (ids := [ep["id"] for ep in job["episodes"] if waiting.get(ep["id"]) is job["stubs"].get(ep["id"], False)])}
@@ -2838,6 +2850,7 @@ def sync(config: dict, settings: dict, episodes, manual: bool = False, replace: 
             if running_jobs.get(batch) is job:
                 running_jobs.pop(batch)
                 paused_jobs.discard(batch)
+                job_options.pop(batch, None)
         release_job(batch)  # the job is over: its download slot goes to the next pick in line (#10)
 
 
@@ -2959,6 +2972,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
             if not manual and not wanted_automatically(show, ep, datetime.now(timezone.utc)):
                 continue
             show = season_page(show, ep["seasonNumber"])  # a season on a page of its own downloads from there
+            show = with_job_options(show, batch)  # options changed for this job from Activity, over the series' own
 
             sxxeyy = f"S{ep['seasonNumber']:02}E{ep['episodeNumber']:02}"
             service_sxxeyy = sxxeyy if show.get("programmes") else service_episode(show, ep["seasonNumber"], ep["episodeNumber"])
