@@ -2998,7 +2998,7 @@ def plain_title(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", text).strip()
 
 
-GENERIC_TITLE = re.compile(r"(tba|tbd|episode|episodio|folge|aflevering|emission)( \d+)?")  # MyTF1's "Émission 7" too
+GENERIC_TITLE = re.compile(r"(tba|tbd|tbc|episode|episodio|folge|aflevering|emission)( \d+)?")  # MyTF1's "Émission 7" too
 
 
 def usable_title(text: str | None) -> str:
