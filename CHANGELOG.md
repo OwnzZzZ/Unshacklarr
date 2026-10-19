@@ -25,6 +25,7 @@ Every change worth knowing, newest first. The format follows
 
 ### Fixed
 
+- **An episode titled "TBC" is found:** it is matched by its number, like "TBA", instead of showing as not on the service.
 - **Activity no longer freezes with a large job:** the episodes that don't change are no longer redrawn every second.
 - **Service options through a remote server:** `-B`, `--atmos` and the others now reach it; it used to download without them.
 

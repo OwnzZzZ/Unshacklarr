@@ -558,6 +558,7 @@ def test_tvdbs_own_titles_in_your_language_match_a_service_that_numbers_nothing(
     assert web.usable_title("E2025 Catherine Deneuve") == "catherine deneuve" and web.usable_title("Episode 3") == ""
     # Ranma 1/2's S03E01 on TMDB before its translations: no title "de" to contradict Netflix's
     assert web.usable_title("修行DEディナー") == "" and web.usable_title("Ранма") == ""
+    assert web.usable_title("TBC") == "" and web.usable_title("TBA") == ""  # Cat's Eyes S02E08: "TBC" until its title comes
     assert web.usable_title("Été à Tokyo") == "ete a tokyo" and web.usable_title("Ranma ½") != ""
 
 
