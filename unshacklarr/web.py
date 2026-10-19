@@ -2441,21 +2441,23 @@ async def job_options(request):
     batch = request.match_info["batch"]
     if not BATCH_ID.fullmatch(batch):
         raise web.HTTPBadRequest(text="Unknown job")
+    shown = lambda o: {k: masked_options((o or {}).get(k)) for k in ("options", "service_options")}  # a proxy's credentials masked
     if request.method == "GET":
-        return web.json_response(sonarr_sync.job_options.get(batch) or {"options": {}, "service_options": {}})
+        return web.json_response(shown(sonarr_sync.job_options.get(batch)))
     if batch not in sonarr_sync.running_jobs:
         raise web.HTTPConflict(text="This job is over")
     body = await json_object(request)
-    service = str(body.get("service") or "")
+    service, was = str(body.get("service") or ""), sonarr_sync.job_options.get(batch) or {}
     known = await asyncio.to_thread(known_services)
-    opts = check_options(body.get("options") if isinstance(body.get("options"), dict) else {}, options.dl_specs(), "this job")
-    own = check_options(body.get("service_options") if isinstance(body.get("service_options"), dict) else {},
-                        (known or {}).get(service) if known is not None else None, "this job", free=True)
+    opts = check_options(real_options(body.get("options") if isinstance(body.get("options"), dict) else {}, was.get("options")),
+                         options.dl_specs(), "this job")
+    own = check_options(real_options(body.get("service_options") if isinstance(body.get("service_options"), dict) else {},
+                                     was.get("service_options")), (known or {}).get(service) if known is not None else None, "this job", free=True)
     sonarr_sync.job_options[batch] = {"options": opts, "service_options": own}
     if not opts and not own:
         sonarr_sync.job_options.pop(batch, None)
     print(f"Job {batch}: its own options for the episodes still to come", flush=True)
-    return web.json_response(sonarr_sync.job_options.get(batch) or {"options": {}, "service_options": {}})
+    return web.json_response(shown(sonarr_sync.job_options.get(batch)))
 
 
 async def pause_job(request):
