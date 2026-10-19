@@ -2686,3 +2686,30 @@ def test_a_jobs_queue_is_kept_on_disk_and_picked_up_after_a_restart(tmp_path, mo
     monkeypatch.setattr(web, "run_sync", lambda ids, **kw: started.append((ids, kw["batch"], kw["kind"])))
     assert web.resume_queue() == 2
     assert started == [([3, 4], "20261018-194616-f77846", "manual")] and "20261018-194616-f77846" in sync.paused_jobs  # still paused
+
+
+def test_a_job_has_its_own_options_for_the_episodes_still_to_come(tmp_path, monkeypatch):
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    sync = importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    batch = "20261018-194616-f77846"
+    monkeypatch.setattr(web, "known_services", lambda: None)  # serve down: the service's options checked by their shape
+
+    class Req:
+        def __init__(self, method, body=None): self.method, self.match_info, self._body = method, {"batch": batch}, body
+        async def json(self): return self._body
+
+    run = lambda req: json.loads(asyncio.run(web.job_options(req)).text)
+    assert _raises(lambda: asyncio.run(web.job_options(Req("POST", {"options": {}}))), web.web.HTTPConflict)  # no such job running
+    sync.running_jobs[batch] = {"episodes": [], "stubs": {}, "closed": False}
+    body = {"service": "AMZN", "options": {"--quality": "720", "--no-subs": False}, "service_options": {"-B": True}}
+    assert run(Req("POST", body)) == {"options": {"--quality": "720", "--no-subs": False}, "service_options": {"-B": True}}
+    assert run(Req("GET")) == {"options": body["options"], "service_options": body["service_options"]}  # kept for the dialog
+    assert _raises(lambda: asyncio.run(web.job_options(Req("POST", {"options": {"--quality": "high"}}))), web.web.HTTPBadRequest)
+
+    show = {"service": "AMZN", "options": {"--quality": "1080", "--no-subs": True}, "service_options": {"--atmos": True}}
+    mixed = sync.with_job_options(show, batch)
+    assert mixed["options"] == {"--quality": "720", "--no-subs": False} and mixed["service_options"] == {"--atmos": True, "-B": True}
+    assert sync.with_job_options(show, None) is show and show["options"]["--quality"] == "1080"  # the series unchanged

@@ -2303,5 +2303,13 @@
  "Add it as written: the service on the remote server may know it": "So hinzufügen, wie geschrieben: Der Dienst auf dem entfernten Server kennt es vielleicht",
  "Show these episodes": "Diese Folgen anzeigen",
  "Hide these episodes": "Diese Folgen ausblenden",
- "Downloads them again, before the episodes still to come": "Lädt sie erneut herunter, vor den noch ausstehenden Folgen"
+ "Downloads them again, before the episodes still to come": "Lädt sie erneut herunter, vor den noch ausstehenden Folgen",
+ "A flag the service on a remote server knows, such as -B, can be written as is.": "Eine Option, die der Dienst auf dem entfernten Server kennt, etwa -B, kann so geschrieben werden, wie sie ist.",
+ "Apply to this job": "Auf diesen Auftrag anwenden",
+ "Download options for the episodes still to come in this job": "Download-Optionen für die noch ausstehenden Folgen dieses Auftrags",
+ "For the episodes still to come in this job. They go over the series' options; the series itself does not change.": "Für die noch ausstehenden Folgen dieses Auftrags. Sie gehen den Optionen der Serie vor; die Serie selbst ändert sich nicht.",
+ "Options": "Optionen",
+ "Options applied to the episodes still to come in this job": "Optionen auf die noch ausstehenden Folgen dieses Auftrags angewendet",
+ "Options of this job": "Optionen dieses Auftrags",
+ "this job": "diesem Auftrag"
 }

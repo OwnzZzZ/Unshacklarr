@@ -2449,6 +2449,29 @@ async def unqueue(request):
     return web.json_response({"unqueued": episode_id})
 
 
+async def job_options(request):
+    """A job's own download options (GET), or new ones (POST) for its episodes still to come: over the series' options,
+    the series left as it is."""
+    batch = request.match_info["batch"]
+    if not BATCH_ID.fullmatch(batch):
+        raise web.HTTPBadRequest(text="Unknown job")
+    if request.method == "GET":
+        return web.json_response(sonarr_sync.job_options.get(batch) or {"options": {}, "service_options": {}})
+    if batch not in sonarr_sync.running_jobs:
+        raise web.HTTPConflict(text="This job is over")
+    body = await json_object(request)
+    service = str(body.get("service") or "")
+    known = await asyncio.to_thread(known_services)
+    opts = check_options(body.get("options") if isinstance(body.get("options"), dict) else {}, options.dl_specs(), "this job")
+    own = check_options(body.get("service_options") if isinstance(body.get("service_options"), dict) else {},
+                        (known or {}).get(service) if known is not None else None, "this job", free=True)
+    sonarr_sync.job_options[batch] = {"options": opts, "service_options": own}
+    if not opts and not own:
+        sonarr_sync.job_options.pop(batch, None)
+    print(f"Job {batch}: its own options for the episodes still to come", flush=True)
+    return web.json_response(sonarr_sync.job_options.get(batch) or {"options": {}, "service_options": {}})
+
+
 async def pause_job(request):
     """Pause a job (the download going on ends, the next one waits) or let it go on."""
     batch = request.match_info["batch"]
@@ -5252,6 +5275,8 @@ def resume_queue() -> int:
             continue
         if job.get("paused"):
             sonarr_sync.paused_jobs.add(batch)
+        if isinstance(job.get("options"), dict):
+            sonarr_sync.job_options[batch] = job["options"]
         print(f"Picking up job {batch} again: {len(ids)} episode{'s' if len(ids) > 1 else ''}{' (paused)' if job.get('paused') else ''}", flush=True)
         run_sync(ids, replace=job.get("replace") is True, kind=job.get("kind") or "manual", numbering=job.get("numbering"), batch=batch,
                  sonarr=job.get("sonarr") or "", proxy=job.get("proxy") or "", video=job.get("video"))
@@ -5375,6 +5400,8 @@ app.add_routes([
     web.post(r"/api/jobs/{batch}/stop", stop_job),
     web.delete(r"/api/jobs/{batch}", delete_job),
     web.post(r"/api/jobs/{batch}/{action:pause|resume}", pause_job),
+    web.get(r"/api/jobs/{batch}/options", job_options),
+    web.post(r"/api/jobs/{batch}/options", job_options),
     web.post(r"/api/queue/{episode_id:\d+}/remove", unqueue),
     web.post(r"/api/queue/{episode_id:\d+}/add", requeue),
     web.delete(r"/api/runs/{run_id}", delete_run),
