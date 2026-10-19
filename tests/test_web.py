@@ -2713,3 +2713,24 @@ def test_a_job_has_its_own_options_for_the_episodes_still_to_come(tmp_path, monk
     mixed = sync.with_job_options(show, batch)
     assert mixed["options"] == {"--quality": "720", "--no-subs": False} and mixed["service_options"] == {"--atmos": True, "-B": True}
     assert sync.with_job_options(show, None) is show and show["options"]["--quality"] == "1080"  # the series unchanged
+
+
+def test_a_jobs_proxy_credentials_are_never_sent_back_to_the_page(tmp_path, monkeypatch):
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    sync = importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    batch = "20261018-194616-f77846"
+    monkeypatch.setattr(web, "known_services", lambda: None)
+    sync.running_jobs[batch] = {"episodes": [], "stubs": {}, "closed": False}
+
+    class Req:
+        def __init__(self, method, body=None): self.method, self.match_info, self._body = method, {"batch": batch}, body
+        async def json(self): return self._body
+
+    run = lambda req: json.loads(asyncio.run(web.job_options(req)).text)
+    shown = run(Req("POST", {"options": {"--proxy": "http://user:secret@host:8080"}}))
+    assert "secret" not in json.dumps(shown) and "secret" not in json.dumps(run(Req("GET")))
+    run(Req("POST", {"options": shown["options"]}))  # sent back masked, as the dialog does: the saved one is kept
+    assert sync.job_options[batch]["options"]["--proxy"] == "http://user:secret@host:8080"
