@@ -25,6 +25,7 @@ Every change worth knowing, newest first. The format follows
 
 ### Fixed
 
+- **Seasons on the service on a phone:** the field gets the full keyboard, so `=` and `,` can be typed.
 - **An episode titled "TBC" is found:** it is matched by its number, like "TBA", instead of showing as not on the service.
 - **Activity no longer freezes with a large job:** the episodes that don't change are no longer redrawn every second.
 - **Service options through a remote server:** `-B`, `--atmos` and the others now reach it; it used to download without them.
