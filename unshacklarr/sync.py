@@ -824,6 +824,10 @@ class JobFailed(Exception):
 def job_cause(job: dict) -> str:
     """Why a job failed, in a line: Unshackle's own error (what it printed on stderr),
     else serve's message without its "Worker exited with code 1:" wrapping."""
+    # through a remote server, a proxy that failed is said in the job's log only, under "exit code 1"
+    proxy = next((re.sub(r"^\d\d:\d\d:\d\d \w+ \S+: ", "", str(x)) for x in reversed(job.get("log") or []) if PROXY_DOWN.search(str(x))), "")
+    if proxy and not PROXY_DOWN.search(job.get("error_message") or ""):
+        return proxy
     stderr = (job.get("worker_stderr") or "")[-20_000:]  # its end: a service may put a whole page in it
     if (m := re.search(r"^Stderr:[ \t]*(.+?)\s*(?:^Worker failed|\Z)", stderr, re.M | re.S)) and m.group(1).strip():
         return m.group(1).strip()
@@ -1179,6 +1183,9 @@ def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float, job_
 TRANSIENT = re.compile(r"timed? ?out|timeout|connection (reset|refused|aborted|error)|remote end closed|temporarily|"
                        r"max retries|\b50[234]\b|service unavailable|bad gateway|name resolution|network is unreachable", re.IGNORECASE)
 RETRY_AFTER = (30, 120)  # seconds before each retry
+# The proxy refused or unreachable: a provider's region (nordvpn:fr) gives another server at each try
+PROXY_DOWN = re.compile(r"INVALID_PROXY|proxy check failed|ProxyError|unable to connect to proxy|407 proxy authentication", re.IGNORECASE)
+PROXY_RETRIES = 3  # tries again at once, each on the server the provider gives then; past them, its job pauses
 SERVE_RETRY_AFTER = (60, 180, 600)  # serve itself too slow to answer (its disks saturated): longer, once more (#10)
 UNREACHABLE = "unshackle serve is unreachable"  # Unshackle.call's words when it can't reach serve, not an answer
 SIGN_IN_HINT = 120  # seconds with no new line from serve and no track before a download says the service may wait for a sign-in
@@ -1233,7 +1240,7 @@ def run_job_retrying(payload: dict, run: EpisodeRun | None = None, sleep=time.sl
     hiccup (a timeout, a 502...), after 1, 3 then 10 min when serve itself did not answer; at once, without them,
     when subtitles asked for are missing. Other failures
     (not found, login, a language missing) end it."""
-    subs_tried, tries = False, 0
+    subs_tried, tries, proxy_tries = False, 0, 0
     while True:
         try:
             job_id = unconfirmed_still_on(run)
@@ -1251,6 +1258,16 @@ def run_job_retrying(payload: dict, run: EpisodeRun | None = None, sleep=time.sl
                     if run:
                         run.say(f"\r\n\x1b[33mSubtitles asked for are missing: downloading again {what}\x1b[0m")
                     continue
+            if getattr(e, "status", "failed") != "cancelled" and PROXY_DOWN.search(cause):
+                if proxy_tries >= PROXY_RETRIES:
+                    e.proxy_down = True  # its job pauses: the next episodes would meet the same proxy
+                    raise
+                proxy_tries += 1
+                if run:
+                    run.say(f"\r\n\x1b[33mThe proxy failed ({cause[:120]}): trying again ({proxy_tries}/{PROXY_RETRIES})\x1b[0m")
+                    run.card["attempts"] = run.card.get("attempts", 1) + 1
+                sleep(5)
+                continue
             if wait is None or getattr(e, "status", "failed") == "cancelled" or not TRANSIENT.search(cause):
                 raise
             if run:
@@ -3161,10 +3178,16 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                     error, cause = str(e), e.cause
                 except (UnshackleError, ValueError) as e:
                     error = cause = str(e)
+                if error and batch and PROXY_DOWN.search(cause or "") and batch not in paused_jobs:
+                    # the proxy failed on every try: its job waits for it to be fixed instead of failing all the rest
+                    pause_job(batch, True)
+                    run.say(f"\r\n\x1b[33m{label}: the proxy failed {PROXY_RETRIES + 1} times: the job is paused. Resume it once the proxy works\x1b[0m")
+                    notify(settings, "warning", f"Job paused: the proxy failed ({ep['series']['title']})",
+                           f"{cause[:200]}\nFix the proxy, then resume the job in Activity and retry this episode.")
 
                 # Its login refused and nothing came: the series' fallback profiles, in their order, until one logs in
                 stopped = waits = False
-                for profile in fallback_profiles(show, config) if error and LOGIN.search(cause or "") and not videos_in(out) else []:
+                for profile in fallback_profiles(show, config) if error and LOGIN.search(cause or "") and not PROXY_DOWN.search(cause or "") and not videos_in(out) else []:
                     run.say(f"{label}: {show['service']} refused the login, trying the profile {profile}")
                     try:
                         ask(service_sxxeyy, profile)

@@ -2813,3 +2813,49 @@ def test_a_retry_goes_before_the_episodes_still_to_come(tmp_path, monkeypatch):
     for t in (a, b, r): t.join()
     assert order == ["A1", "R", "A2", "A3", "B1"]  # the retry between two of A's episodes, A still before B
     assert sync.slot_jobs[""] == [] and not sync.slot_line.get("")
+
+
+def test_a_proxy_that_fails_is_tried_again_then_its_job_pauses(tmp_path, monkeypatch):
+    # nordvpn:fr gives another server at each try: tried again at once, 3 times; past that, the error says so
+    sync = load(tmp_path, monkeypatch)
+    tries, waits = [], []
+    proxy = "The proxy for this session failed: Proxy check failed: no IP lookup got through the proxy (ProxyError)."
+
+    def job(payload, run=None):
+        tries.append(1)
+        if len(tries) < 3:
+            raise sync.JobFailed("x", "failed", proxy)
+        return ["/downloads/x.mkv"]
+
+    monkeypatch.setattr(sync, "run_job", job)
+    assert sync.run_job_retrying({}, sleep=waits.append) == ["/downloads/x.mkv"] and waits == [5, 5]
+
+    tries.clear(); waits.clear()
+    monkeypatch.setattr(sync, "run_job", lambda payload, run=None: (tries.append(1), (_ for _ in ()).throw(sync.JobFailed("x", "failed", proxy)))[1])
+    try:
+        sync.run_job_retrying({}, sleep=waits.append)
+        assert False, "it should give up"
+    except sync.JobFailed as e:
+        assert e.proxy_down and len(tries) == 1 + sync.PROXY_RETRIES
+
+    # through a remote server, the proxy's error is only in the job's log: it is the cause told
+    log = ["15:41:53 INFO download: Using NordVPN Proxy", "15:41:55 ERROR remote_service: Server error [INVALID_PROXY]: " + proxy]
+    cause = sync.job_cause({"status": "failed", "error_message": "Download failed with exit code 1", "log": log})
+    assert cause.startswith("Server error [INVALID_PROXY]") and sync.PROXY_DOWN.search(cause)
+
+
+def test_a_job_pauses_when_its_proxy_keeps_failing(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    paused, said = [], []
+
+    def download(payload, run=None):
+        e = sync.JobFailed("x", "failed", "Server error [INVALID_PROXY]: Proxy check failed: no IP lookup got through the proxy")
+        e.proxy_down = True
+        raise e
+
+    monkeypatch.setattr(sync, "run_job_retrying", download)
+    monkeypatch.setattr(sync, "download_request", lambda show, config, sx, out: {"service": "RTLP", "title_id": "t", "wanted": [sx], "output_dir": str(out)})
+    monkeypatch.setattr(sync, "notify", lambda settings, level, title, message, **k: said.append(title))
+    monkeypatch.setattr(sync, "pause_job", lambda batch, pause: paused.append((batch, pause)))  # not a real pause: the test would wait
+    sync.sync(sync.read_file(), {}, [episode(111, 2, n) for n in (5, 6)], manual=True, kind="manual")
+    assert paused and paused[0][1] is True and any("Job paused: the proxy failed" in t for t in said)
