@@ -25,6 +25,8 @@ Every change worth knowing, newest first. The format follows
 
 ### Fixed
 
+- **No more "Other title" for a translated title:** a service's "Donjon" is Sonarr's "Dungeon", by TVDB's title in your
+  language; "TBC" counts as no title there too.
 - **Seasons on the service on a phone:** the field gets the full keyboard, so `=` and `,` can be typed.
 - **An episode titled "TBC" is found:** it is matched by its number, like "TBA", instead of showing as not on the service.
 - **Activity no longer freezes with a large job:** the episodes that don't change are no longer redrawn every second.
