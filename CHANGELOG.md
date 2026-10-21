@@ -25,6 +25,7 @@ Every change worth knowing, newest first. The format follows
 
 ### Fixed
 
+- **A title numbered as a chapter is found:** TVDB's "PAGE 14 Donjon" is Netflix's "Donjon" (Black Clover), as "E6 …" already was.
 - **No more "Other title" for a translated title:** a service's "Donjon" is Sonarr's "Dungeon", by TVDB's title in your
   language; "TBC" counts as no title there too.
 - **Seasons on the service on a phone:** the field gets the full keyboard, so `=` and `,` can be typed.

@@ -3064,7 +3064,7 @@ GENERIC_TITLE = re.compile(r"(tba|tbd|tbc|episode|episodio|folge|aflevering|emis
 def usable_title(text: str | None) -> str:
     """A title worth comparing, plain; "" for none, a placeholder ("TBA", "Episode 3") or one written mostly
     in another alphabet (TMDB's Japanese title of an anime, before its translations). An episode number
-    ahead of the name goes (Molotov's "E6 Franck Dubosc")."""
+    ahead of the name goes (Molotov's "E6 Franck Dubosc", TVDB's "PAGE 14 Donjon" for Netflix's "Donjon")."""
     letters = [c for c in text or "" if c.isalpha()]
     latin = sum(unicodedata.normalize("NFKD", c).encode("ascii", "ignore").isalpha() for c in letters)
     if letters and latin * 2 < len(letters):  # another alphabet: "修行DEディナー" is not a title "de"
@@ -3072,7 +3072,7 @@ def usable_title(text: str | None) -> str:
     plain = plain_title(text or "")
     if GENERIC_TITLE.fullmatch(plain):
         return ""
-    return re.sub(r"^e\d+ (?=\w)", "", plain)
+    return re.sub(r"^(e|ep|episode|page|chapter|chapitre|capitulo|kapitel) ?\d+ (?=\w)", "", plain)
 
 
 TVDB_TITLES = sonarr_sync.DATA / "tvdb_titles.json"
