@@ -2848,3 +2848,12 @@ def test_a_job_pauses_when_its_proxy_keeps_failing(tmp_path, monkeypatch):
     monkeypatch.setattr(sync, "pause_job", lambda batch, pause: paused.append((batch, pause)))  # not a real pause: the test would wait
     sync.sync(sync.read_file(), {}, [episode(111, 2, n) for n in (5, 6)], manual=True, kind="manual")
     assert paused and paused[0][1] is True and any("Job paused: the proxy failed" in t for t in said)
+
+
+def test_a_video_track_says_its_codec(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    assert sync.codec_in("Black.Clover.S01E20.MULTi.NF.1080p.WEB.H265.AAC2.0-TiNA.mkv") == "H.265"
+    assert sync.codec_in("Ranma.S03E01.MULTi.NF.1080p.WEB.H.264.AAC2.0-TiNA.mkv") == "H.264" and sync.codec_in("Show.S01E01.mkv") == ""
+    assert sync.with_codec("video 1080p SDR", "H.265") == "video 1080p SDR H.265"
+    assert sync.with_codec("Part 2 · video 1080p SDR", "H.264") == "Part 2 · video 1080p SDR H.264"
+    assert sync.with_codec("audio fr 2.0", "H.265") == "audio fr 2.0" and sync.with_codec("video 1080p SDR", "") == "video 1080p SDR"

@@ -18,6 +18,8 @@ Every change worth knowing, newest first. The format follows
 - **A retry comes first:** it goes before the episodes still to come, in its job and for a free download slot.
 - **A proxy that fails is tried again:** at once, 3 times, each on another server of the provider (nordvpn:fr); if it
   still fails, its job pauses and you are told, instead of failing every episode left.
+- **The video's codec in Activity:** an episode's video track says its codec (Video 1080p SDR H.265): the one asked
+  while it downloads, the one the file came in once made.
 - **Options of a job:** while it runs, a job's download and service options can be changed for its episodes still to
   come, the series left as it is.
 - **A job survives a restart:** its queued episodes are kept on disk and queued again when Unshacklarr starts, a paused

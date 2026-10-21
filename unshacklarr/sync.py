@@ -835,6 +835,22 @@ class JobFailed(Exception):
         self.cause = cause or message
 
 
+FILE_CODEC = re.compile(r"\.(H\.?264|H\.?265|H\.?266|x264|x265|AVC|HEVC|AV1|VP9)\.", re.IGNORECASE)
+CODEC_NAMES = {"h264": "H.264", "x264": "H.264", "avc": "H.264", "h265": "H.265", "x265": "H.265", "hevc": "H.265",
+               "h266": "H.266", "av1": "AV1", "vp9": "VP9"}
+
+
+def codec_in(name: str) -> str:
+    """The video codec a file name says (Show.S01E01.WEB.H265.DDP5.1-TiNA.mkv: H.265); "" when none."""
+    m = FILE_CODEC.search(name)
+    return CODEC_NAMES.get(m.group(1).replace(".", "").lower(), "") if m else ""
+
+
+def with_codec(label: str, codec: str) -> str:
+    """A video track's label with its codec (video 1080p SDR H.265); any other track as it is."""
+    return f"{label} {codec}" if codec and re.match(r"(Part \d+ · )?video\b", label) else label
+
+
 def job_cause(job: dict) -> str:
     """Why a job failed, in a line: Unshackle's own error (what it printed on stderr),
     else serve's message without its "Worker exited with code 1:" wrapping."""
@@ -1058,6 +1074,8 @@ def mux_progress(folder: Path) -> dict | None:
 def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float, job_id: str | None = None) -> list[str]:
     root = work_root() if run and not backend.name else None  # another server's work folder is out of reach
     before, work = task_folders(root), None
+    asked = payload.get("vcodec") or []  # one codec asked: the video's, until the file says which came
+    codec = CODEC_NAMES.get(str(asked[0]).replace(".", "").lower(), str(asked[0])) if len(asked) == 1 else ""
     if job_id:
         trace(f"unshackle serve{f' {backend.name}' if backend.name else ''} still has job {job_id}: followed again")
         if run:
@@ -1140,7 +1158,7 @@ def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float, job_
                 if value >= 100 and clock[1] is None:
                     clock[1] = time.monotonic()
             part = lambda key: f"Part {titles.index(key.split('|')[0]) + 1} · " if len(titles) > 1 and key.split("|")[0] in titles else ""
-            run.card["tracks"] = [{"label": part(k) + labels[k], "progress": round(v, 1),
+            run.card["tracks"] = [{"label": part(k) + with_codec(labels[k], codec), "progress": round(v, 1),
                                    **({"took": round(timed[k][1] - timed[k][0])} if timed[k][1] is not None else {})} for k, v in seen.items()]
             run.card["live"] = {k: job.get(k) for k in ("status", "progress", "speed", "completed_tracks", "total_tracks", "phase")}
             if job.get("cdm") or job.get("proxy"):  # what serve went through, once it says (no proxy is an answer too)
@@ -1189,6 +1207,9 @@ def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float, job_
         stderr = "\n".join((job.get("worker_stderr") or "").strip().splitlines()[-15:])
         raise JobFailed("\n".join(filter(None, [job.get("error_message") or status, detail, stderr])), status, job_cause(job))
     files = job.get("output_files") or []
+    if run and (made := codec_in(" ".join(Path(f).name for f in files))):  # the codec it came in, over the one asked
+        run.card["tracks"] = [{**t, "label": with_codec(re.sub(r" (H\.26[456]|AV1|VP9|VC-1|MPEG-2)$", "", t["label"]), made)}
+                              for t in run.card.get("tracks") or []]
     trace(f"Unshackle made {len(files)} file{'s' if len(files) != 1 else ''}: " + ", ".join(Path(f).name for f in files))
     return files
 
