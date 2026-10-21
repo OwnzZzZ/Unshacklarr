@@ -324,11 +324,13 @@ let epPages = {};  // Sonarr season -> a show of its own the service has for it,
 let epAvail = null;  // episode id -> what the service calls it, once "What's on <service>?" asked it
 let epTitles = null;  // everything the service lists then: [{key: "S26E11", part, name}]
 let epChecked = null;  // when that was
-/* TVDB's titles in your language (its website), over Sonarr's where it has none ("TBA"): a French series reads. */
+/* TVDB's titles in your language (its website), over Sonarr's where it has none ("TBA"): a French series reads. Kept
+   on each episode too: a service naming it in your language ("Donjon") is Sonarr's English one ("Dungeon"). */
 function localTitles(names) {
   for (const e of Object.values(epSeasons || {}).flat()) {
     const name = names?.[e.id];
-    if (name && (!e.title || e.title === "TBA")) { e.title = name; e.localTitle = true; }
+    if (name) e.localName = name;
+    if (name && (!e.title || /^(tba|tbc)$/i.test(e.title))) { e.title = name; e.localTitle = true; }
   }
 }
 const svcName = (tag) => S.serviceNames?.[tag] || tag;  // "RMC+" for RMCP
@@ -840,9 +842,10 @@ const elsewhere = (e) => ["title", "absolute"].includes(epAvail?.[e.id]?.match);
 function agreement(e, theirs, found, svc) {
   if (!theirs) return "";
   if (!found.length) return el("span", { className: "st bad", textContent: `Not on ${svc}` });
-  const ours = plainTitle(e.title), other = plainTitle(found[0].name), generic = /^(tba|tbd|episode( \d+)?)$/;
+  const ours = plainTitle(e.title), other = plainTitle(found[0].name), generic = /^(tba|tbd|tbc|episode( \d+)?)$/;
   const titled = epAvail?.[e.id]?.match === "title" && epAvail[e.id].service === theirs;
-  if (titled || (ours && other && (ours === other || ours.includes(other) || other.includes(ours))))
+  const meets = (a) => a && other && (a === other || a.includes(other) || other.includes(a));
+  if (titled || meets(ours) || meets(plainTitle(e.localName)))  // Sonarr's title, or TVDB's in your language
     return el("span", { className: "st ok", textContent: "✓ Same title" });
   if (!ours || !other || generic.test(ours) || generic.test(other)) return "";
   return el("span", { className: "st warn", textContent: "Other title", title: `In Sonarr: ${e.title}\nOn ${svc}: ${found[0].name}` });
