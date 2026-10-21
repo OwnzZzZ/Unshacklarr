@@ -2737,3 +2737,26 @@ def test_a_jobs_proxy_credentials_are_never_sent_back_to_the_page(tmp_path, monk
     assert "secret" not in json.dumps(shown) and "secret" not in json.dumps(run(Req("GET")))
     run(Req("POST", {"options": shown["options"]}))  # sent back masked, as the dialog does: the saved one is kept
     assert sync.job_options[batch]["options"]["--proxy"] == "http://user:secret@host:8080"
+
+
+def test_a_job_that_could_not_be_picked_up_again_is_kept_for_the_next_start(tmp_path, monkeypatch):
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import threading
+    import unshacklarr.sync
+    import unshacklarr.web
+    sync = importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    entry = {"episodes": [3, 3, 4], "paused": True, "kind": "manual", "replace": True}  # a retried episode twice
+    sync.QUEUE_FILE.write_text(json.dumps({"20261021-121217-33d6d0": entry}))
+    asked = []
+    def run_sync(ids, **kw):  # Sonarr down: the job never starts
+        asked.append(ids)
+        t = threading.Thread(target=lambda: None); t.start(); t.join()
+        return t
+    monkeypatch.setattr(web, "run_sync", run_sync)
+    web.resume_queue()
+    assert asked == [[3, 4]]  # each episode once
+    sync.save_queue()
+    assert json.loads(sync.QUEUE_FILE.read_text()) == {"20261021-121217-33d6d0": entry}  # not written empty: kept
+    monkeypatch.setattr(sync, "sonarr_get", lambda path, **kw: [{"id": i, "seriesId": 1, "seasonNumber": 1, "episodeNumber": i} for i in kw["episodeIds"]])
+    assert [e["id"] for e in sync.chosen_episodes([5, 5, 6])] == [5, 6]

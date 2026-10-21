@@ -32,6 +32,8 @@ Every change worth knowing, newest first. The format follows
   language; "TBC" counts as no title there too.
 - **Seasons on the service on a phone:** the field gets the full keyboard, so `=` and `,` can be typed.
 - **An episode titled "TBC" is found:** it is matched by its number, like "TBA", instead of showing as not on the service.
+- **A job picked up after a restart is no longer lost:** a retried episode listed twice made Sonarr refuse the list; a job that
+  cannot start is kept for the next start instead of the queue being written empty.
 - **Activity no longer freezes with a large job:** the episodes that don't change are no longer redrawn every second.
 - **Service options through a remote server:** `-B`, `--atmos` and the others now reach it; it used to download without them.
 

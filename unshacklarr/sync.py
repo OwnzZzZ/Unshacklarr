@@ -540,8 +540,10 @@ def missing_episodes(now: datetime | None = None) -> list[dict]:
 
 
 def chosen_episodes(ids: list[int]):
-    """Episodes picked by hand in the web page, shaped like /wanted/missing records."""
-    episodes = sonarr_get("episode", episodeIds=ids, includeSeries="true")
+    """Episodes picked by hand in the web page, shaped like /wanted/missing records. Each id once: Sonarr answers
+    a 500 to a list with one twice (a job's queue had a retried episode twice), 100 at a time for the URL's length."""
+    ids = list(dict.fromkeys(ids))
+    episodes = [e for i in range(0, len(ids), 100) for e in sonarr_get("episode", episodeIds=ids[i:i + 100], includeSeries="true")]
     return sorted(episodes, key=lambda e: (e["seriesId"], e["seasonNumber"], e["episodeNumber"]))
 
 
@@ -579,12 +581,24 @@ def queue_snapshot() -> dict:
         return {batch: {"episodes": ids, "paused": batch in paused_jobs, **({"options": job_options[batch]} if job_options.get(batch) else {}),
                         **{k: job.get(k) for k in ("replace", "kind", "sonarr", "proxy", "video", "numbering") if job.get(k)}}
                 for batch, job in sorted(running_jobs.items())
-                if (ids := [ep["id"] for ep in job["episodes"] if waiting.get(ep["id"]) is job["stubs"].get(ep["id"], False)])}
+                if (ids := list(dict.fromkeys(ep["id"] for ep in job["episodes"] if waiting.get(ep["id"]) is job["stubs"].get(ep["id"], False))))}
+
+
+restoring: dict[str, tuple] = {}  # job -> (its thread, its entry in the file) while picked up again after a restart
 
 
 def save_queue(last: str | None = None) -> str:
-    """The queue on disk when it changed; returns what was written, to compare with next time."""
-    text = json.dumps(queue_snapshot())
+    """The queue on disk when it changed; returns what was written, to compare with next time. A job picked up again
+    after a restart stays as it was in the file until it runs: if it could not start (Sonarr down), the next start
+    tries again, instead of the queue written empty losing it."""
+    queue = queue_snapshot()
+    for batch, (thread, entry) in list(restoring.items()):
+        if batch not in queue:
+            queue[batch] = entry
+            if thread is not None and not thread.is_alive():
+                print(f"Job {batch} could not be picked up again: kept for the next start", flush=True)
+                restoring[batch] = (None, entry)  # said once
+    text = json.dumps(queue)
     if text != last:
         write_atomic(QUEUE_FILE, text)
     return text
@@ -2870,6 +2884,7 @@ def sync(config: dict, settings: dict, episodes, manual: bool = False, replace: 
         number_job(batch, kind == "retry")  # its place for a download slot: the order it was picked in (#10), a retry first
         with jobs_lock:
             running_jobs[batch] = job  # a job's episode started again once it closed takes its place here
+            restoring.pop(batch, None)  # picked up again after a restart: it runs, its queue is its own now
     try:
         return run_episodes(config, settings, episodes, manual, replace, kind, batch, numbering)
     finally:

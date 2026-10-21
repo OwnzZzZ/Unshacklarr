@@ -5280,8 +5280,10 @@ def resume_queue() -> int:
         if isinstance(job.get("options"), dict):
             sonarr_sync.job_options[batch] = job["options"]
         print(f"Picking up job {batch} again: {len(ids)} episode{'s' if len(ids) > 1 else ''}{' (paused)' if job.get('paused') else ''}", flush=True)
-        run_sync(ids, replace=job.get("replace") is True, kind=job.get("kind") or "manual", numbering=job.get("numbering"), batch=batch,
-                 sonarr=job.get("sonarr") or "", proxy=job.get("proxy") or "", video=job.get("video"))
+        thread = run_sync(list(dict.fromkeys(ids)), replace=job.get("replace") is True, kind=job.get("kind") or "manual",
+                          numbering=job.get("numbering"), batch=batch, sonarr=job.get("sonarr") or "", proxy=job.get("proxy") or "",
+                          video=job.get("video"))
+        sonarr_sync.restoring[batch] = (thread, job)  # kept in the file until it runs
         n += len(ids)
     return n
 
