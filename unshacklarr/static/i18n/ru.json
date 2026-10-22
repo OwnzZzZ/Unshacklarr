@@ -2320,5 +2320,12 @@
  "Options applied to the episodes still to come in this job": "Параметры применены к оставшимся эпизодам этого пакета",
  "Options of this job": "Параметры этого пакета",
  "this job": "этом пакете",
- "For the episodes still to come in this job. It starts from the options they have now; what you change is for this job only, the series itself does not change.": "Для оставшихся эпизодов этого пакета. За основу берутся их текущие параметры; изменения действуют только для этого пакета, сам сериал не меняется."
+ "For the episodes still to come in this job. It starts from the options they have now; what you change is for this job only, the series itself does not change.": "Для оставшихся эпизодов этого пакета. За основу берутся их текущие параметры; изменения действуют только для этого пакета, сам сериал не меняется.",
+ "Pause the job": "Приостановить пакет",
+ "Resume the job": "Возобновить пакет",
+ "Show the output": "Показать вывод",
+ "Job paused: the proxy failed ({0})": "Пакет приостановлен: прокси не работает ({0})",
+ "Fix the proxy, then resume the job in Activity and retry this episode.": "Исправьте прокси, затем возобновите пакет в разделе «Активность» и повторите этот эпизод.",
+ "No such job in the history": "Такого пакета нет в истории",
+ "This job is still going on: stop it first": "Этот пакет ещё выполняется: сначала остановите его"
 }

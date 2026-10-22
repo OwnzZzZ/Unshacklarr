@@ -931,6 +931,34 @@ body.gated > :not(.gate):not(.toasts) { display: none !important; }
 .cd-raw:not([open]) .term-mode { display: none; }
 .cd-raw .term-mode { margin: 0; font-weight: 500; } .cd-raw .term-mode button { padding: 4px 10px; font-size: 12.5px; }
 .cd-raw .term { height: 46vh; border: 0; border-top: 1px solid var(--line); border-radius: 0; }
+/* The bar at the bottom of a job or a download: where it stands, its actions on a phone, and the output over the page */
+.dock { position: sticky; bottom: 12px; z-index: 5; display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 14px;
+  border-radius: 14px; background: rgb(30 38 53 / .96); border: 1px solid var(--line); box-shadow: 0 10px 30px rgb(0 0 0 / .45);
+  backdrop-filter: blur(8px); font-size: 13px; margin-top: auto; }
+.dock .d-ico { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; background: var(--field-bg);
+  border: 1px solid var(--line); color: var(--accent); flex: none; }
+.dock svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.dock .d-mid { flex: 1; min-width: 0; display: grid; gap: 5px; }
+.dock .d-l1 { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
+.dock .d-l1 b { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; white-space: nowrap; }
+.dock .d-l1 span { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
+.dock .d-l1 em { margin-left: auto; font-style: normal; color: var(--accent); font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+.dock .d-l1 em.ok { color: var(--ok); } .dock .d-l1 em.err { color: var(--err); }
+.dock .bar { height: 3px; }
+.dock .d-acts { display: flex; gap: 6px; flex: none; }
+.dock .d-acts button { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--line); background: var(--field-bg); color: var(--text);
+  display: grid; place-items: center; cursor: pointer; padding: 0; }
+.dock .d-acts button:hover { border-color: var(--field-line-hover); }
+.dock .d-acts .stop { color: var(--err); } .dock .d-acts .retry, .dock .d-acts .on { color: var(--accent); }
+.dock .d-sep { width: 1px; height: 24px; background: var(--line); flex: none; }
+.dock .d-open { width: 34px; height: 34px; border-radius: 9px; border: 0; background: var(--accent); color: var(--accent-ink);
+  display: grid; place-items: center; flex: none; cursor: pointer; padding: 0; }
+.dock .d-open svg { stroke-width: 2.4; }
+.con-detail.docked .cd-raw:not(.sheet) { display: none; }  /* the output opens from the bar, over the page */
+.cd-raw.sheet { position: fixed; z-index: 60; left: 50%; transform: translateX(-50%); bottom: 16px; width: min(1100px, calc(100% - 32px));
+  height: min(78vh, 900px); box-shadow: 0 0 0 100vmax rgb(0 0 0 / .5), 0 20px 50px rgb(0 0 0 / .5); }
+.cd-raw.sheet .term { height: calc(min(78vh, 900px) - 46px); }  /* a % of a <details> doesn't resolve */
+@media (min-width: 701px) { .dock .d-acts, .dock .d-sep { display: none; } }  /* the job's actions are in its head there */
 .con-none { margin: auto; text-align: center; color: var(--muted); max-width: 40ch; }
 /* A job: its episodes as cards, one after the other */
 .job-sum { display: grid; gap: 10px; } .job-sum .bar { height: 6px; }
@@ -1408,7 +1436,8 @@ button.pill[aria-pressed="true"] { background: rgb(79 179 191 / .16); border-col
   .sched-filter::-webkit-scrollbar { display: none; }
   .sched-filter::after { content: ""; flex: 0 0 4px; }  /* the last pill clears the edge once scrolled */
   .sched-filter .pill { flex: 1 0 auto; justify-content: center; min-height: 40px; white-space: nowrap; }
-  .con { grid-template-columns: 1fr; height: auto; min-height: 0; border: 0; background: none; border-radius: 0; }
+  .con { grid-template-columns: 1fr; height: auto; min-height: 0; border: 0; background: none; border-radius: 0; overflow: visible; }
+  .con-detail { overflow: visible; }  /* the page scrolls: the bar stays at the bottom of the screen */
   .con-list, #runs-history { overflow: visible; flex: none; }
   .con-list { border-right: 0; padding: 0; background: none; }
   .con .con-detail { display: none; padding: 4px 0 12px; }
@@ -1431,6 +1460,13 @@ button.pill[aria-pressed="true"] { background: rgb(79 179 191 / .16); border-col
   .cd-stats div:nth-child(4) { display: none; }
   .cd-foot { display: flex; gap: 10px; }
   .cd-foot .btn { flex: 1; min-height: 44px; }
+  .dock { bottom: calc(76px + env(safe-area-inset-bottom)); padding: 8px 8px 8px 10px; gap: 8px; }
+  .dock .d-ico, .dock .d-l1 span { display: none; }
+  .dock .d-acts button { width: 32px; height: 32px; }
+  .con-detail.docked-acts .cd-foot { display: none; }  /* the bar has the job's actions */
+  .cd-raw.sheet { left: 0; right: 0; transform: none; width: auto; bottom: 0; height: 86dvh; border-radius: 16px 16px 0 0;
+    padding-bottom: env(safe-area-inset-bottom); }
+  .cd-raw.sheet .term { height: calc(86dvh - 46px - env(safe-area-inset-bottom)); }
   .cd-tracks .t { grid-template-columns: 1fr auto; } .cd-tracks .t .bar { grid-column: 1 / -1; grid-row: 2; }
   .cd-raw .term { height: 60dvh; min-height: 280px; }
   .icon-hide { opacity: .8; width: 36px; height: 36px; }
