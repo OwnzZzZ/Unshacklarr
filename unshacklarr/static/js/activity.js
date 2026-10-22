@@ -809,6 +809,13 @@ function closeSheet() {
   $("#cd-foot").before(raw);  // back in its place, hidden while the bar is there
 }
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("#dock").classList.contains("open")) closeSheet(); });
+$("#dock").addEventListener("click", (e) => {  // the bar's line opens or folds the output, as its arrow does
+  if (e.target.closest(".d-acts, .d-open, .cd-raw")) return;  // its buttons do their own; the output's head folds it
+  $("#dock").classList.contains("open") ? closeSheet() : openSheet();
+});
+document.addEventListener("click", (e) => {  // a click beside the open output folds it (not one in a dialog it opened)
+  if ($("#dock").classList.contains("open") && !$("#dock").contains(e.target) && !e.target.closest("dialog, .toast")) closeSheet();
+});
 /* The same, as round icon buttons for a job's card (the common tooltip says what each does). */
 const ACT_ICONS = {
   stop: '<rect x="6" y="6" width="12" height="12" rx="2"/>', import: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
