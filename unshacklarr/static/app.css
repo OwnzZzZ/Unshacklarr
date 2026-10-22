@@ -940,6 +940,7 @@ body.gated > :not(.gate):not(.toasts) { display: none !important; }
   border: 1px solid var(--line); color: var(--accent); flex: none; }
 .dock svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .dock .d-mid { flex: 1; min-width: 0; display: grid; gap: 5px; }
+.dock .d-ico, .dock .d-mid { cursor: pointer; }  /* the line opens the output too */
 .dock .d-l1 { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
 .dock .d-l1 b { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; white-space: nowrap; }
 .dock .d-l1 span { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
