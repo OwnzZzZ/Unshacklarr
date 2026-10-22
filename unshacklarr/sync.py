@@ -1210,6 +1210,10 @@ def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float, job_
     if run and (made := codec_in(" ".join(Path(f).name for f in files))):  # the codec it came in, over the one asked
         run.card["tracks"] = [{**t, "label": with_codec(re.sub(r" (H\.26[456]|AV1|VP9|VC-1|MPEG-2)$", "", t["label"]), made)}
                               for t in run.card.get("tracks") or []]
+    if run and run.card.get("batch") and NORD_REGION.match(str(payload.get("proxy") or "")) and \
+            (m := next((NORD_SERVER.search(str(x)) for x in reversed(job.get("log") or []) if NORD_SERVER.search(str(x))), None)):
+        job_proxy[run.card["batch"]] = f"nordvpn:{m.group(1).lower()}"  # its next episodes keep this server
+        trace(f"the next episodes of this job go through the same NordVPN server, {m.group(1).lower()}")
     trace(f"Unshackle made {len(files)} file{'s' if len(files) != 1 else ''}: " + ", ".join(Path(f).name for f in files))
     return files
 
@@ -1221,6 +1225,21 @@ RETRY_AFTER = (30, 120)  # seconds before each retry
 # The proxy refused or unreachable: a provider's region (nordvpn:fr) gives another server at each try
 PROXY_DOWN = re.compile(r"INVALID_PROXY|proxy check failed|ProxyError|unable to connect to proxy|407 proxy authentication", re.IGNORECASE)
 PROXY_RETRIES = 3  # tries again at once, each on the server the provider gives then; past them, its job pauses
+# A job keeps the NordVPN server its first episode went through (nordvpn:fr gives another at each download): ponytail:
+# NordVPN only, the one provider whose servers Unshackle takes by name (nordvpn:fr962); another provider changes still
+NORD_REGION = re.compile(r"^nordvpn:([a-z]{2})$", re.IGNORECASE)
+NORD_SERVER = re.compile(r"Using NordVPN Proxy: \S*?([a-z]{2}\d+)\.proxy\.nordvpn\.com", re.IGNORECASE)
+job_proxy: dict[str, str] = {}  # job -> "nordvpn:fr962", the server its episodes keep
+
+
+def kept_proxy(show: dict, config: dict, batch: str | None) -> dict:
+    """The series as this job downloads it: through the NordVPN server its first episode went through, when its proxy
+    is a NordVPN country (nordvpn:fr) and that server is in that country."""
+    server = job_proxy.get(batch or "")
+    region = NORD_REGION.match(str(stacked(show, config)[0].get("--proxy") or ""))
+    if not server or not region or not server.split(":")[1].lower().startswith(region.group(1).lower()):
+        return show
+    return {**show, "options": {**(show.get("options") or {}), "--proxy": server}}
 SERVE_RETRY_AFTER = (60, 180, 600)  # serve itself too slow to answer (its disks saturated): longer, once more (#10)
 UNREACHABLE = "unshackle serve is unreachable"  # Unshackle.call's words when it can't reach serve, not an answer
 SIGN_IN_HINT = 120  # seconds with no new line from serve and no track before a download says the service may wait for a sign-in
@@ -1298,6 +1317,9 @@ def run_job_retrying(payload: dict, run: EpisodeRun | None = None, sleep=time.sl
                     e.proxy_down = True  # its job pauses: the next episodes would meet the same proxy
                     raise
                 proxy_tries += 1
+                if re.fullmatch(r"nordvpn:[a-z]{2}\d+", str(payload.get("proxy") or ""), re.IGNORECASE) and run and job_proxy.get(run.card.get("batch") or "") == payload["proxy"]:
+                    job_proxy.pop(run.card["batch"], None)  # the server the job kept failed: back to its country, another server
+                    payload = {**payload, "proxy": re.sub(r"\d+$", "", payload["proxy"])}
                 if run:
                     run.say(f"\r\n\x1b[33mThe proxy failed ({cause[:120]}): trying again ({proxy_tries}/{PROXY_RETRIES})\x1b[0m")
                     run.card["attempts"] = run.card.get("attempts", 1) + 1
@@ -2918,6 +2940,7 @@ def sync(config: dict, settings: dict, episodes, manual: bool = False, replace: 
                 running_jobs.pop(batch)
                 paused_jobs.discard(batch)
                 job_options.pop(batch, None)
+                job_proxy.pop(batch, None)
         release_job(batch)  # the job is over: its download slot goes to the next pick in line (#10)
 
 
@@ -3045,6 +3068,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                 continue
             show = season_page(show, ep["seasonNumber"])  # a season on a page of its own downloads from there
             show = with_job_options(show, batch)  # options changed for this job from Activity, over the series' own
+            show = kept_proxy(show, config, batch)  # the NordVPN server the job went through so far
 
             sxxeyy = f"S{ep['seasonNumber']:02}E{ep['episodeNumber']:02}"
             service_sxxeyy = sxxeyy if show.get("programmes") else service_episode(show, ep["seasonNumber"], ep["episodeNumber"])

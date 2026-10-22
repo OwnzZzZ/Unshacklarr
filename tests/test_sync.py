@@ -2868,3 +2868,30 @@ def test_a_video_track_says_its_codec(tmp_path, monkeypatch):
     assert sync.with_codec("video 1080p SDR", "H.265") == "video 1080p SDR H.265"
     assert sync.with_codec("Part 2 · video 1080p SDR", "H.264") == "Part 2 · video 1080p SDR H.264"
     assert sync.with_codec("audio fr 2.0", "H.265") == "audio fr 2.0" and sync.with_codec("video 1080p SDR", "") == "video 1080p SDR"
+
+
+def test_a_job_keeps_the_nordvpn_server_of_its_first_episode(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    config = {"defaults": {"--proxy": "nordvpn:fr"}}
+    show = {"service": "NF", "title": "x", "options": {}}
+    assert sync.kept_proxy(show, config, "J") is show  # nothing kept yet: nordvpn:fr, any server
+    sync.job_proxy["J"] = "nordvpn:fr962"
+    assert sync.kept_proxy(show, config, "J")["options"]["--proxy"] == "nordvpn:fr962"
+    assert sync.kept_proxy(show, {"defaults": {"--proxy": "nordvpn:de"}}, "J") == show  # another country: not that server
+    assert sync.kept_proxy(show, {"defaults": {"--proxy": "surfsharkvpn:fr"}}, "J") == show
+    m = sync.NORD_SERVER.search("08:51:55 INFO download: Using NordVPN Proxy: https://user:pw@fr962.proxy.nordvpn.com:89")
+    assert m and m.group(1) == "fr962"
+
+    # the kept server fails: the retry goes back to the country, another server
+    asked = []
+    def job(payload, run=None):
+        asked.append(payload["proxy"])
+        if len(asked) == 1:
+            raise sync.JobFailed("x", "failed", "Server error [INVALID_PROXY]: Proxy check failed")
+        return ["/downloads/x.mkv"]
+    monkeypatch.setattr(sync, "run_job", job)
+    class Run:
+        card = {"batch": "J"}
+        def say(self, text): pass
+    assert sync.run_job_retrying({"proxy": "nordvpn:fr962"}, Run(), sleep=lambda s: None) == ["/downloads/x.mkv"]
+    assert asked == ["nordvpn:fr962", "nordvpn:fr"] and "J" not in sync.job_proxy

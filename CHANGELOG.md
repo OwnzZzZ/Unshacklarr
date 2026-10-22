@@ -16,6 +16,8 @@ Every change worth knowing, newest first. The format follows
 - **Show or hide a job's episodes:** click Done, Queued, Failed… in a job to hide those episodes or show them again.
 - **Retry the failed episodes while the job runs:** Retry N failed is there before the job ends, too.
 - **A retry comes first:** it goes before the episodes still to come, in its job and for a free download slot.
+- **A job keeps its NordVPN server:** with nordvpn:fr, its episodes go through the server the first one used (fr962),
+  back to any French server if that one fails.
 - **A proxy that fails is tried again:** at once, 3 times, each on another server of the provider (nordvpn:fr); if it
   still fails, its job pauses and you are told, instead of failing every episode left.
 - **The video's codec in Activity:** an episode's video track says its codec (Video 1080p SDR H.265): the one asked
