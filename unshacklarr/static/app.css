@@ -217,7 +217,8 @@ body.drawer-open .savebar { display: none; }
 .ep .chip { justify-self: end; }
 .term { height: 60vh; min-height: 320px; background: #0d1219; border: 1px solid var(--line); border-radius: 8px;
   padding: 8px; overflow-x: auto; overflow-y: hidden; }
-.term .xterm { width: max-content; }
+.term .xterm { width: max-content; padding-right: 12px; }  /* its scrollbar beside the text, not under it: at 120 columns
+   wider than the box, the text covered it and a drag selected text instead */
 /* The fit reads the box's height: with border-box it counted the padding too, one row more than shows, so the
    newest line sat under the bottom edge (by mj23au). And a scrollbar that stays, so the output reads as scrollable */
 .term { box-sizing: content-box; }
@@ -954,10 +955,11 @@ body.gated > :not(.gate):not(.toasts) { display: none !important; }
 .dock .d-open { width: 34px; height: 34px; border-radius: 9px; border: 0; background: var(--accent); color: var(--accent-ink);
   display: grid; place-items: center; flex: none; cursor: pointer; padding: 0; }
 .dock .d-open svg { stroke-width: 2.4; }
-.con-detail.docked .cd-raw:not(.sheet) { display: none; }  /* the output opens from the bar, over the page */
-.cd-raw.sheet { position: fixed; z-index: 60; left: 50%; transform: translateX(-50%); bottom: 16px; width: min(1100px, calc(100% - 32px));
-  height: min(78vh, 900px); box-shadow: 0 0 0 100vmax rgb(0 0 0 / .5), 0 20px 50px rgb(0 0 0 / .5); }
-.cd-raw.sheet .term { height: calc(min(78vh, 900px) - 46px); }  /* a % of a <details> doesn't resolve */
+.con-detail.docked > .cd-raw { display: none; }  /* the output opens in the bar */
+.dock.open { flex-wrap: wrap; row-gap: 10px; }
+.dock.open > .cd-raw { flex: 1 0 100%; order: -1; }  /* the bar grows upwards: the output above its line */
+.dock.open > .cd-raw .term { height: min(58vh, 640px); }
+.dock.open .d-open svg { transform: rotate(180deg); }
 @media (min-width: 701px) { .dock .d-acts, .dock .d-sep { display: none; } }  /* the job's actions are in its head there */
 .con-none { margin: auto; text-align: center; color: var(--muted); max-width: 40ch; }
 /* A job: its episodes as cards, one after the other */
@@ -1464,9 +1466,7 @@ button.pill[aria-pressed="true"] { background: rgb(79 179 191 / .16); border-col
   .dock .d-ico, .dock .d-l1 span { display: none; }
   .dock .d-acts button { width: 32px; height: 32px; }
   .con-detail.docked-acts .cd-foot { display: none; }  /* the bar has the job's actions */
-  .cd-raw.sheet { left: 0; right: 0; transform: none; width: auto; bottom: 0; height: 86dvh; border-radius: 16px 16px 0 0;
-    padding-bottom: env(safe-area-inset-bottom); }
-  .cd-raw.sheet .term { height: calc(86dvh - 46px - env(safe-area-inset-bottom)); }
+  .dock.open > .cd-raw .term { height: calc(100dvh - 330px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
   .cd-tracks .t { grid-template-columns: 1fr auto; } .cd-tracks .t .bar { grid-column: 1 / -1; grid-row: 2; }
   .cd-raw .term { height: 60dvh; min-height: 280px; }
   .icon-hide { opacity: .8; width: 36px; height: 36px; }

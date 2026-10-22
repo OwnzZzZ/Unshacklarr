@@ -13,8 +13,8 @@ Every change worth knowing, newest first. The format follows
 - **The API speaks the service's numbering:** `"numbering": "service"` takes Disney+'s S04E05 for the episode it is in
   Sonarr, and `"audio": "fr"` lets Unshacklarr decide: download, download again, or add the French track.
 - **Delete the job:** a job that is over leaves the history in one click, every episode of it at once.
-- **A bar at the bottom of a job:** the episode going on stays in sight however long the job, its output opens over
-  the page in one tap, and on a phone the job's buttons are there too.
+- **A bar at the bottom of a job:** the episode going on stays in sight however long the job, its output opens in it
+  in one tap, and on a phone the job's buttons are there too.
 - **Show or hide a job's episodes:** click Done, Queued, Failed… in a job to hide those episodes or show them again.
 - **Retry the failed episodes while the job runs:** Retry N failed is there before the job ends, too.
 - **A retry comes first:** it goes before the episodes still to come, in its job and for a free download slot.
@@ -33,6 +33,7 @@ Every change worth knowing, newest first. The format follows
 
 ### Fixed
 
+- **The output's scrollbar can be dragged:** the text no longer covers it when the output is wider than its box.
 - **A title numbered as a chapter is found:** TVDB's "PAGE 14 Donjon" is Netflix's "Donjon" (Black Clover), as "E6 …" already was.
 - **No more "Other title" for a translated title:** a service's "Donjon" is Sonarr's "Dungeon", by TVDB's title in your
   language; "TBC" counts as no title there too.
