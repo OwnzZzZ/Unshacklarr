@@ -780,7 +780,7 @@ function renderDock(d) {
     dock.append(el("span", { className: "d-ico" }, svg(DOCK.term)),
       el("div", { className: "d-mid" }, el("div", { className: "d-l1" }, el("b"), el("span"), el("em")), el("span", { className: "bar" }, el("i"))),
       el("div", { className: "d-acts" }), el("span", { className: "d-sep" }),
-      el("button", { type: "button", className: "d-open", ariaLabel: "Show the output", onclick: () => ($("#cd-raw").classList.contains("sheet") ? closeSheet() : openSheet()) }, svg(DOCK.up)));
+      el("button", { type: "button", className: "d-open", ariaLabel: "Show the output", onclick: () => (dock.classList.contains("open") ? closeSheet() : openSheet()) }, svg(DOCK.up)));
   }
   const [b, span, em] = dock.querySelector(".d-l1").children;
   b.textContent = d.ep; span.textContent = d.line; span.title = d.line; em.textContent = d.pct; em.className = d.tone || "";
@@ -793,22 +793,22 @@ function renderDock(d) {
   [...acts.children].forEach((btn, i) => { btn.onclick = () => d.acts[i].go(btn); });  // the latest job state
   dock.querySelector(".d-sep").hidden = !d.acts.length;
 }
+/* The output, in the bar itself: it grows upwards and folds back (not over the page: a terminal under a transform
+   took its scrollbar's drags wrong). */
 function openSheet() {
-  const raw = $("#cd-raw");
-  raw.classList.add("sheet");
+  const raw = $("#cd-raw"), dock = $("#dock");
+  dock.prepend(raw);
+  dock.classList.add("open");
   raw.open = true;  // its toggle streams the output
 }
 function closeSheet() {
-  const raw = $("#cd-raw");
-  if (!raw.classList.contains("sheet")) return;
-  raw.classList.remove("sheet");
+  const raw = $("#cd-raw"), dock = $("#dock");
+  if (!dock.classList.contains("open")) return;
+  dock.classList.remove("open");
   raw.open = false;
+  $("#cd-foot").before(raw);  // back in its place, hidden while the bar is there
 }
-document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("#cd-raw").classList.contains("sheet")) closeSheet(); });
-document.addEventListener("click", (e) => {  // a click beside the output closes it
-  const raw = $("#cd-raw");
-  if (raw.classList.contains("sheet") && !raw.contains(e.target) && !$("#dock").contains(e.target)) closeSheet();
-});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("#dock").classList.contains("open")) closeSheet(); });
 /* The same, as round icon buttons for a job's card (the common tooltip says what each does). */
 const ACT_ICONS = {
   stop: '<rect x="6" y="6" width="12" height="12" rx="2"/>', import: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
