@@ -364,6 +364,15 @@ function renderJob(j) {
   glideBars($("#cd-main"));
   $("#cd-raw").hidden = false;
   if ($("#cd-raw").open && termFor !== `job:${j.job}`) streamJob(j.job);
+  const now = j.cards.find(isDownloading) || j.cards.find((c) => isLive(c) && !c.waiting && !isQueued(c));
+  renderDock({ ...(now ? dockOf(now) : { ep: `${j.cards.length} episodes`, line: st.words.join(" · "),
+    pct: st.live ? `${st.progress}%` : st.n.failed ? `${st.n.failed} failed` : "✓", tone: st.live ? "" : st.n.failed ? "err" : "ok", progress: st.progress }),
+    acts: [
+      st.live && st.n.queued ? { key: "pause", label: st.paused ? "Resume the job" : "Pause the job", icon: st.paused ? DOCK.play : DOCK.pause, cls: st.paused ? "on" : "",
+        go: (b) => pauseJob(j, !st.paused, b) } : null,
+      st.live && st.n.queued ? { key: "opts", label: "Options of this job", icon: DOCK.opts, go: () => openJobOptions(j) } : null,
+      retryable.length ? { key: "retry", label: `Retry ${retryable.length} failed`, icon: DOCK.retry, cls: "retry", go: (b) => retryJob(j, retryable, b) } : null,
+      st.live ? { key: "stop", label: "Stop the job", icon: DOCK.stop, cls: "stop", go: (b) => stopJob(j, b) } : null].filter(Boolean) });
 }
 /* A job over, in a few words: how long, how big. */
 function jobTotals(j) {
@@ -417,7 +426,7 @@ async function showLeftovers() {
   $("#con").classList.add("open");
   document.querySelectorAll(".crow").forEach((r) => r.classList.toggle("sel", r.id === "con-left"));
   $("#cd-top-title").textContent = "Waiting in downloads";
-  $("#cd-raw").hidden = true;
+  $("#cd-raw").hidden = true; renderDock(null);
   $("#cd-foot").replaceChildren();
   let r;
   try { r = await api("/api/leftovers"); } catch (e) { return $("#cd-main").replaceChildren(failed(e.message, showLeftovers)); }
@@ -469,7 +478,7 @@ async function showMissing() {
   $("#con").classList.add("open");
   document.querySelectorAll(".crow").forEach((r) => r.classList.toggle("sel", r.id === "con-missing"));
   $("#cd-top-title").textContent = "Catch up";
-  $("#cd-raw").hidden = true;
+  $("#cd-raw").hidden = true; renderDock(null);
   $("#cd-foot").replaceChildren();
   $("#cd-main").replaceChildren(loading("Asking Sonarr what your series miss…"));
   let r;
@@ -513,7 +522,7 @@ async function showUpgrades(fresh = true) {
   $("#con").classList.add("open");
   document.querySelectorAll(".crow").forEach((r) => r.classList.toggle("sel", r.id === "con-upgrades"));
   $("#cd-top-title").textContent = "Upgrades";
-  $("#cd-raw").hidden = true;
+  $("#cd-raw").hidden = true; renderDock(null);
   $("#cd-foot").replaceChildren();
   let r;
   if (upgradeSonarr && !(S.config.settings.sonarrs || []).some((i) => i.name === upgradeSonarr)) upgradeSonarr = "";
@@ -599,7 +608,7 @@ async function showStats() {
   $("#con").classList.add("open");
   document.querySelectorAll(".crow").forEach((r) => r.classList.toggle("sel", r.id === "con-stats"));
   $("#cd-top-title").textContent = "Stats";
-  $("#cd-raw").hidden = true;
+  $("#cd-raw").hidden = true; renderDock(null);
   $("#cd-foot").replaceChildren();
   let st;
   try { st = await api("/api/stats"); } catch (e) { return $("#cd-main").replaceChildren(failed(e.message, showStats)); }
@@ -673,7 +682,64 @@ function renderDetail(c) {
   glideBars($("#cd-main"));
   $("#cd-raw").hidden = !!c.waiting;  // not started: no output yet
   if ($("#cd-raw").open && !c.waiting && termFor !== c.id) streamRun(c);
+  renderDock(c.waiting ? null : dockOf(c));
 }
+/* The bar at the bottom of a job or a download: the episode going on (or how it ended), the job's actions on a phone
+   (its head has them on a wide screen), and the output, opened over the page. Its elements stay from one draw to the
+   next (a live download redraws each second): a press started on a button is not lost. */
+const DOCK = {
+  term: '<path d="m5 8 4 4-4 4M12 16h7"/>', up: '<path d="M6 15l6-6 6 6"/>', pause: '<path d="M8 5v14M16 5v14"/>', play: '<path d="M7 5v14l11-7z"/>',
+  opts: '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',
+  retry: '<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>', stop: '<rect x="6" y="6" width="12" height="12" rx="2"/>',
+};
+function dockOf(c) {  // one download: where it stands, in a line
+  const live = isLive(c), pct = Math.round(Number(c.live?.progress) || 0);
+  const track = (c.tracks || []).find((t) => t.progress < 100)?.label;
+  const line = live ? [afterTracks(c) || (FINISHING.has(c.step) ? c.step : track && `downloading ${track}`), speedOf(c), timeLeft(c) && `${timeLeft(c)} left`].filter(Boolean).join(" · ")
+    : [outcomeOf(c), c.cause].filter(Boolean).join(" · ");
+  return { ep: c.sxxeyy, line, pct: live ? `${pct}%` : c.outcome === "downloaded" ? "✓" : "", tone: live ? "" : c.outcome === "downloaded" ? "ok" : c.outcome === "failed" ? "err" : "",
+    progress: live ? pct : 100, acts: [] };
+}
+function renderDock(d) {
+  const dock = $("#dock"), detail = $("#con-detail");
+  detail.classList.toggle("docked", !!d);
+  detail.classList.toggle("docked-acts", !!d?.acts.length);
+  dock.hidden = !d;
+  if (!d) return closeSheet();
+  if (!dock.firstChild) {
+    const svg = (path) => { const s = document.createElementNS("http://www.w3.org/2000/svg", "svg"); s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("aria-hidden", "true"); s.innerHTML = path; return s; };
+    dock.append(el("span", { className: "d-ico" }, svg(DOCK.term)),
+      el("div", { className: "d-mid" }, el("div", { className: "d-l1" }, el("b"), el("span"), el("em")), el("span", { className: "bar" }, el("i"))),
+      el("div", { className: "d-acts" }), el("span", { className: "d-sep" }),
+      el("button", { type: "button", className: "d-open", ariaLabel: "Show the output", onclick: () => ($("#cd-raw").classList.contains("sheet") ? closeSheet() : openSheet()) }, svg(DOCK.up)));
+  }
+  const [b, span, em] = dock.querySelector(".d-l1").children;
+  b.textContent = d.ep; span.textContent = d.line; span.title = d.line; em.textContent = d.pct; em.className = d.tone || "";
+  dock.querySelector(".bar i").style.width = `${d.progress}%`;
+  const acts = dock.querySelector(".d-acts"), key = d.acts.map((a) => `${a.key}:${a.label}`).join("|");
+  if (acts.dataset.key !== key) {  // rebuilt only when they change: a press is not lost to a redraw
+    acts.dataset.key = key;
+    acts.replaceChildren(...d.acts.map((a) => { const btn = el("button", { type: "button", className: a.cls || "", ariaLabel: a.label }); btn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${a.icon}</svg>`; return btn; }));
+  }
+  [...acts.children].forEach((btn, i) => { btn.onclick = () => d.acts[i].go(btn); });  // the latest job state
+  dock.querySelector(".d-sep").hidden = !d.acts.length;
+}
+function openSheet() {
+  const raw = $("#cd-raw");
+  raw.classList.add("sheet");
+  raw.open = true;  // its toggle streams the output
+}
+function closeSheet() {
+  const raw = $("#cd-raw");
+  if (!raw.classList.contains("sheet")) return;
+  raw.classList.remove("sheet");
+  raw.open = false;
+}
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("#cd-raw").classList.contains("sheet")) closeSheet(); });
+document.addEventListener("click", (e) => {  // a click beside the output closes it
+  const raw = $("#cd-raw");
+  if (raw.classList.contains("sheet") && !raw.contains(e.target) && !$("#dock").contains(e.target)) closeSheet();
+});
 /* The same, as round icon buttons for a job's card (the common tooltip says what each does). */
 const ACT_ICONS = {
   stop: '<rect x="6" y="6" width="12" height="12" rx="2"/>', import: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
@@ -859,7 +925,7 @@ function setupBox(c) {
     el("div", { className: "cmd" }, el("code", { textContent: c.setup.command }), copy)];
 }
 $("#cd-raw").addEventListener("toggle", () => {
-  if (!$("#cd-raw").open) return;
+  if (!$("#cd-raw").open) return closeSheet();  // its head pressed: down again
   if (picked_run?.startsWith("job:")) { if (termFor !== picked_run) streamJob(picked_run.slice(4)); return; }
   const c = runCards.find((x) => x.id === picked_run);
   if (c && !c.waiting && termFor !== c.id) streamRun(c);

@@ -1637,6 +1637,7 @@
  "Passwords do not match": [],
  "Paste the whole webhook URL: it starts with https://discord.com/api/webhooks/": [],
  "Pause": [],
+ "Pause the job": [],
  "Paused for {0}: choose a quality ladder in Settings, Sonarr.": [
   "paused.join(\", \")"
  ],
@@ -1771,6 +1772,7 @@
  "Restore its settings from a backup instead of setting it up again.": [],
  "Restoring, then testing Sonarr and Unshackle…": [],
  "Resume": [],
+ "Resume the job": [],
  "Retry": [],
  "Retry {0} failed": [
   "retryable.length"
@@ -1942,6 +1944,7 @@
  "Show me": [],
  "Show more": [],
  "Show name in file names": [],
+ "Show the output": [],
  "Show the title": [],
  "Show these episodes": [],
  "Show {0} in the schedule": [
@@ -2867,6 +2870,9 @@
  "docker compose restart unshackle": [],
  "downloaded": [],
  "downloading": [],
+ "downloading {0}": [
+  "track"
+ ],
  "downloads": [],
  "en-GB": [],
  "episode link · {0}": [
@@ -3106,6 +3112,9 @@
   "old_key[1]",
   "new_q['name']",
   "new_key[1]"
+ ],
+ "the next episodes of this job go through the same NordVPN server, {0}": [
+  "m.group(1).lower()"
  ],
  "the oldest {0}": [
   "ago(oldest)"

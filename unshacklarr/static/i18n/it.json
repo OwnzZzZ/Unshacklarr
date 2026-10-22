@@ -2278,5 +2278,12 @@
  "Options applied to the episodes still to come in this job": "Opzioni applicate agli episodi ancora da scaricare in questo lotto",
  "Options of this job": "Opzioni di questo lotto",
  "this job": "questo lotto",
- "For the episodes still to come in this job. It starts from the options they have now; what you change is for this job only, the series itself does not change.": "Per gli episodi ancora da scaricare in questo lotto. Si parte dalle opzioni che hanno ora; ciò che cambi vale solo per questo lotto, la serie non cambia."
+ "For the episodes still to come in this job. It starts from the options they have now; what you change is for this job only, the series itself does not change.": "Per gli episodi ancora da scaricare in questo lotto. Si parte dalle opzioni che hanno ora; ciò che cambi vale solo per questo lotto, la serie non cambia.",
+ "Pause the job": "Metti in pausa il lotto",
+ "Resume the job": "Riprendi il lotto",
+ "Show the output": "Mostra l’output",
+ "Job paused: the proxy failed ({0})": "Lotto in pausa: il proxy non funziona ({0})",
+ "Fix the proxy, then resume the job in Activity and retry this episode.": "Ripara il proxy, poi riprendi il lotto in Attività e riprova questo episodio.",
+ "No such job in the history": "Questo lotto non è nella cronologia",
+ "This job is still going on: stop it first": "Questo lotto è ancora in corso: fermalo prima"
 }
