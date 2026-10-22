@@ -21,7 +21,7 @@ Every change worth knowing, newest first. The format follows
 - **The video's codec in Activity:** an episode's video track says its codec (Video 1080p SDR H.265): the one asked
   while it downloads, the one the file came in once made.
 - **Options of a job:** while it runs, a job's download and service options can be changed for its episodes still to
-  come, the series left as it is.
+  come, starting from the ones they have now; only what you change is kept, the series left as it is.
 - **A job survives a restart:** its queued episodes are kept on disk and queued again when Unshacklarr starts, a paused
   job still paused.
 - **Any service option:** a flag the remote server's service knows, such as AMZN's `-B`, can be written as is in

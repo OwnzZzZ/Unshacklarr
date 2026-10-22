@@ -2307,9 +2307,9 @@
  "A flag the service on a remote server knows, such as -B, can be written as is.": "Eine Option, die der Dienst auf dem entfernten Server kennt, etwa -B, kann so geschrieben werden, wie sie ist.",
  "Apply to this job": "Auf diesen Auftrag anwenden",
  "Download options for the episodes still to come in this job": "Download-Optionen für die noch ausstehenden Folgen dieses Auftrags",
- "For the episodes still to come in this job. They go over the series' options; the series itself does not change.": "Für die noch ausstehenden Folgen dieses Auftrags. Sie gehen den Optionen der Serie vor; die Serie selbst ändert sich nicht.",
  "Options": "Optionen",
  "Options applied to the episodes still to come in this job": "Optionen auf die noch ausstehenden Folgen dieses Auftrags angewendet",
  "Options of this job": "Optionen dieses Auftrags",
- "this job": "diesem Auftrag"
+ "this job": "diesem Auftrag",
+ "For the episodes still to come in this job. It starts from the options they have now; what you change is for this job only, the series itself does not change.": "Für die noch ausstehenden Folgen dieses Auftrags. Ausgangspunkt sind ihre aktuellen Optionen; was Sie ändern, gilt nur für diesen Auftrag, die Serie selbst ändert sich nicht."
 }

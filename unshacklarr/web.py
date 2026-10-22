@@ -2449,6 +2449,22 @@ async def unqueue(request):
     return web.json_response({"unqueued": episode_id})
 
 
+def job_base_options(batch: str) -> dict:
+    """The options a job's episodes download with before its own: the defaults, its service's, its series' (for another
+    Sonarr, with that Sonarr's own); empty when the job is over."""
+    job = sonarr_sync.running_jobs.get(batch) or {}
+    if not job.get("episodes"):
+        return {}
+    config = sonarr_sync.read_file()
+    inst = sonarr_sync.SONARRS.get(job.get("sonarr") or "")
+    config = sonarr_sync.instance_config(inst, config) if inst else config
+    show = (config.get("series") or {}).get(job["episodes"][0]["series"]["tvdbId"])
+    if not show or not show.get("service"):
+        return {}
+    dl, own = sonarr_sync.stacked(show, config)
+    return {"options": dl, "service_options": own}
+
+
 async def job_options(request):
     """A job's own download options (GET), or new ones (POST) for its episodes still to come: over the series' options,
     the series left as it is."""
@@ -2456,8 +2472,8 @@ async def job_options(request):
     if not BATCH_ID.fullmatch(batch):
         raise web.HTTPBadRequest(text="Unknown job")
     shown = lambda o: {k: masked_options((o or {}).get(k)) for k in ("options", "service_options")}  # a proxy's credentials masked
-    if request.method == "GET":
-        return web.json_response(shown(sonarr_sync.job_options.get(batch)))
+    if request.method == "GET":  # with the options its episodes have without them, for the dialog to start from
+        return web.json_response({**shown(sonarr_sync.job_options.get(batch)), "base": shown(await asyncio.to_thread(job_base_options, batch))})
     if batch not in sonarr_sync.running_jobs:
         raise web.HTTPConflict(text="This job is over")
     body = await json_object(request)
