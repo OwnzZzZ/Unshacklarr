@@ -2285,9 +2285,9 @@
  "A flag the service on a remote server knows, such as -B, can be written as is.": "远程服务器上的服务支持的选项（例如 -B）可以按原样填写。",
  "Apply to this job": "应用到此任务",
  "Download options for the episodes still to come in this job": "此任务中剩余剧集的下载选项",
- "For the episodes still to come in this job. They go over the series' options; the series itself does not change.": "用于此任务中剩余的剧集。它们优先于剧集的选项，剧集本身不变。",
  "Options": "选项",
  "Options applied to the episodes still to come in this job": "已将选项应用到此任务中剩余的剧集",
  "Options of this job": "此任务的选项",
- "this job": "此任务"
+ "this job": "此任务",
+ "For the episodes still to come in this job. It starts from the options they have now; what you change is for this job only, the series itself does not change.": "用于此任务中剩余的剧集。从它们当前的选项开始；你的更改只适用于此任务，剧集本身不变。"
 }

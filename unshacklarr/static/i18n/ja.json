@@ -2280,9 +2280,9 @@
  "A flag the service on a remote server knows, such as -B, can be written as is.": "リモートサーバーのサービスが対応するオプション（-B など）は、そのまま入力できます。",
  "Apply to this job": "このジョブに適用",
  "Download options for the episodes still to come in this job": "このジョブの残りのエピソードのダウンロードオプション",
- "For the episodes still to come in this job. They go over the series' options; the series itself does not change.": "このジョブの残りのエピソードに適用されます。シリーズのオプションより優先され、シリーズ自体は変わりません。",
  "Options": "オプション",
  "Options applied to the episodes still to come in this job": "このジョブの残りのエピソードにオプションを適用しました",
  "Options of this job": "このジョブのオプション",
- "this job": "このジョブ"
+ "this job": "このジョブ",
+ "For the episodes still to come in this job. It starts from the options they have now; what you change is for this job only, the series itself does not change.": "このジョブの残りのエピソード用です。現在のオプションから始まり、変更はこのジョブだけに適用され、シリーズ自体は変わりません。"
 }

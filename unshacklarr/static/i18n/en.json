@@ -862,6 +862,7 @@
  "Finishing": [],
  "First day": [],
  "Fix": [],
+ "Fix the proxy, then resume the job in Activity and retry this episode.": [],
  "Fix what does not answer in Settings: the restore is done.": [],
  "Folder URL": [],
  "Folders": [],
@@ -883,7 +884,7 @@
  "For example http://unshackle:8786 on a shared Docker network.": [],
  "For other programs: a script, Home Assistant, Shortcuts.": [],
  "For release times and the sync clock.": [],
- "For the episodes still to come in this job. They go over the series' options; the series itself does not change.": [],
+ "For the episodes still to come in this job. It starts from the options they have now; what you change is for this job only, the series itself does not change.": [],
  "For this browser only. The page reloads in the new language.": [],
  "For this series only. They take priority over the options set for its service.": [],
  "For when Authelia, Authentik or another proxy already logs you in. The proxy passes your name in a header, and Unshacklarr opens without asking for its own password.": [],
@@ -1050,6 +1051,9 @@
   "rest.join(\" · \")"
  ],
  "Job paused: the current download finishes, then the job waits": [],
+ "Job paused: the proxy failed ({0})": [
+  "ep['series']['title']"
+ ],
  "Job resumed": [],
  "Job stopped": [],
  "Join": [],
@@ -1600,7 +1604,7 @@
  "Options of the service": [],
  "Options of this job": [],
  "Options of {0}": [
-  "svcName(service)"
+  "tag"
  ],
  "Orange: different from most of this season (hover for details)": [],
  "Origin": [],

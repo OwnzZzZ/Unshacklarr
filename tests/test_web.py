@@ -2639,7 +2639,9 @@ def test_a_job_has_its_own_options_for_the_episodes_still_to_come(tmp_path, monk
     sync.running_jobs[batch] = {"episodes": [], "stubs": {}, "closed": False}
     body = {"service": "AMZN", "options": {"--quality": "720", "--no-subs": False}, "service_options": {"-B": True}}
     assert run(Req("POST", body)) == {"options": {"--quality": "720", "--no-subs": False}, "service_options": {"-B": True}}
-    assert run(Req("GET")) == {"options": body["options"], "service_options": body["service_options"]}  # kept for the dialog
+    got = run(Req("GET"))
+    assert {k: got[k] for k in ("options", "service_options")} == {"options": body["options"], "service_options": body["service_options"]}
+    assert got["base"] == {"options": {}, "service_options": {}}  # no episode known here: nothing under it
     assert _raises(lambda: asyncio.run(web.job_options(Req("POST", {"options": {"--quality": "high"}}))), web.web.HTTPBadRequest)
 
     show = {"service": "AMZN", "options": {"--quality": "1080", "--no-subs": True}, "service_options": {"--atmos": True}}
@@ -2690,3 +2692,18 @@ def test_a_job_that_could_not_be_picked_up_again_is_kept_for_the_next_start(tmp_
     assert json.loads(sync.QUEUE_FILE.read_text()) == {"20261021-121217-33d6d0": entry}  # not written empty: kept
     monkeypatch.setattr(sync, "sonarr_get", lambda path, **kw: [{"id": i, "seriesId": 1, "seasonNumber": 1, "episodeNumber": i} for i in kw["episodeIds"]])
     assert [e["id"] for e in sync.chosen_episodes([5, 5, 6])] == [5, 6]
+
+
+def test_a_jobs_dialog_starts_from_the_options_its_episodes_have(tmp_path, monkeypatch):
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    sync = importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    config = {"defaults": {"--quality": "1080", "--vcodec": "H.264"}, "service_defaults": {"NF": {"options": {"--proxy": "nordvpn:fr"}, "service_options": {}}},
+              "series": {331753: {"service": "NF", "title": "x", "options": {"--vcodec": "H.265"}, "service_options": {"--server-identity": True}}}}
+    monkeypatch.setattr(sync, "read_file", lambda: config)
+    sync.running_jobs["20261021-121217-33d6d0"] = {"episodes": [{"id": 1, "series": {"tvdbId": 331753}}], "stubs": {}, "closed": False}
+    assert web.job_base_options("20261021-121217-33d6d0") == {"options": {"--quality": "1080", "--vcodec": "H.265", "--proxy": "nordvpn:fr"},
+                                                             "service_options": {"--server-identity": True}}
+    assert web.job_base_options("20261021-000000-aaaaaa") == {}  # over: nothing to start from

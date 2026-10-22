@@ -898,7 +898,10 @@ async function openJobOptions(j) {
   $("#jobopts-err").textContent = "";
   try {
     const [now, specs] = await Promise.all([api(`/api/jobs/${encodeURIComponent(j.job)}/options`), loadServiceOptions(service).catch(() => [])]);
-    jobOpts = { job: j.job, service, options: now.options || {}, service_options: now.service_options || {} };
+    // the options its episodes have now: the series' and the ones above it, then the job's own; one the job turned off
+    // (false, "") is not shown
+    const shownNow = (k) => Object.fromEntries(Object.entries({ ...(now.base?.[k] || {}), ...(now[k] || {}) }).filter(([, v]) => v !== false && v !== ""));
+    jobOpts = { job: j.job, service, base: now.base || {}, options: shownNow("options"), service_options: shownNow("service_options") };
     optionsEditor($("#jobopts-dl"), S.dlOptions, jobOpts.options);
     optionsEditor($("#jobopts-own"), specs, jobOpts.service_options, true);
     $("#jobopts-dialog").showModal();
@@ -907,10 +910,16 @@ async function openJobOptions(j) {
 $("#jobopts-form").onsubmit = async (e) => {
   if (e.submitter?.value !== "apply" || !jobOpts) return;
   e.preventDefault();  // open until the server takes them: a wrong value is said here
-  const kept = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== "" && v !== undefined));
+  // only what differs from what its episodes would have anyway; one taken away turns that option off for the job
+  const changes = (k) => {
+    const base = jobOpts.base[k] || {}, now = Object.fromEntries(Object.entries(jobOpts[k]).filter(([, v]) => v !== "" && v !== undefined));
+    const out = Object.fromEntries(Object.entries(now).filter(([f, v]) => base[f] !== v));
+    for (const [f, v] of Object.entries(base)) if (!(f in now) && v !== false && v !== "") out[f] = v === true ? false : "";
+    return out;
+  };
   try {
     await api(`/api/jobs/${encodeURIComponent(jobOpts.job)}/options`, { method: "POST",
-      body: JSON.stringify({ service: jobOpts.service, options: kept(jobOpts.options), service_options: kept(jobOpts.service_options) }) });
+      body: JSON.stringify({ service: jobOpts.service, options: changes("options"), service_options: changes("service_options") }) });
     $("#jobopts-dialog").close();
     toast("Options applied to the episodes still to come in this job");
   } catch (err) { $("#jobopts-err").textContent = err.message; }
