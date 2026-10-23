@@ -6,45 +6,50 @@ Every change worth knowing, newest first. The format follows
 
 ## [Unreleased]
 
+Long jobs you can steer while they run, proxies that hold, and a security update of aiohttp: update soon if
+Unshacklarr can be reached from outside your network.
+
+### Security
+
+- **aiohttp 3.14.4.** The server no longer waits without end for a request's headers, and can no longer be made to use
+  too much memory or CPU (two high-severity advisories); a shared cookie keeps its Secure attribute. (#24)
+
 ### Added
 
-- **orig in the accepted audio languages:** each series' original language as Sonarr gives it, so "orig, fr" works
-  for every series at once (ja or fr for an anime, fr for a French series).
-- **The API speaks the service's numbering:** `"numbering": "service"` takes Disney+'s S04E05 for the episode it is in
+**📦 Long jobs**
+- **A bar at the bottom of a job.** The episode going on stays in sight however long the job; one tap on the bar opens
+  its output, a click beside folds it. On a phone, the job's buttons are in it too.
+- **Show or hide a job's episodes.** Click Done, Queued, Failed… in a job to hide those episodes or show them again.
+- **Options of a job.** While it runs, its download and service options can be changed for the episodes still to
+  come, starting from the ones they have now; the series stays as it is.
+- **Retry the failed episodes while the job runs**, and a retry goes before the episodes still to come.
+- **A job survives a restart.** Its queued episodes are kept on disk and queued again when Unshacklarr starts; a paused
+  job stays paused.
+- **Delete the job.** A job that is over leaves the history in one click.
+- **The video's codec in Activity.** Video 1080p SDR H.265: the codec asked while it downloads, the file's once made.
+
+**🌐 Proxies**
+- **A proxy that fails is tried again**, at once, 3 times, each on another server of the provider (nordvpn:fr). If it
+  still fails, the job pauses and you are told, instead of failing every episode left.
+- **A job keeps its NordVPN server.** With nordvpn:fr, its episodes go through the server the first one used, and back
+  to any French server if that one fails.
+
+**🎧 Services and languages**
+- **orig in the accepted audio languages.** Each series' original language as Sonarr gives it, so "orig, fr" works for
+  every series at once. In Settings › Download options.
+- **Any service option.** A flag the service on a remote server knows, such as AMZN's `-B`, can be written as is in a
+  service's or a series' options.
+- **The API speaks the service's numbering.** `"numbering": "service"` takes Disney+'s S04E05 for the episode it is in
   Sonarr, and `"audio": "fr"` lets Unshacklarr decide: download, download again, or add the French track.
-- **Delete the job:** a job that is over leaves the history in one click, every episode of it at once.
-- **A bar at the bottom of a job:** the episode going on stays in sight however long the job, its output opens in it
-  in one tap on the bar, a click beside folds it, and on a phone the job's buttons are there too.
-- **Show or hide a job's episodes:** click Done, Queued, Failed… in a job to hide those episodes or show them again.
-- **Retry the failed episodes while the job runs:** Retry N failed is there before the job ends, too.
-- **A retry comes first:** it goes before the episodes still to come, in its job and for a free download slot.
-- **A job keeps its NordVPN server:** with nordvpn:fr, its episodes go through the server the first one used (fr962),
-  back to any French server if that one fails.
-- **A proxy that fails is tried again:** at once, 3 times, each on another server of the provider (nordvpn:fr); if it
-  still fails, its job pauses and you are told, instead of failing every episode left.
-- **The video's codec in Activity:** an episode's video track says its codec (Video 1080p SDR H.265): the one asked
-  while it downloads, the one the file came in once made.
-- **Options of a job:** while it runs, a job's download and service options can be changed for its episodes still to
-  come, starting from the ones they have now; only what you change is kept, the series left as it is.
-- **A job survives a restart:** its queued episodes are kept on disk and queued again when Unshacklarr starts, a paused
-  job still paused.
-- **Any service option:** a flag the remote server's service knows, such as AMZN's `-B`, can be written as is in
-  a service's or a series' options.
 
 ### Fixed
 
-- **aiohttp 3.14.4:** fixes a server that waited without end for a request's headers and could be made to use too much
-  memory or CPU (two high-severity advisories), and a shared cookie's Secure attribute.
-- **The output's scrollbar can be dragged:** the text no longer covers it when the output is wider than its box.
-- **A title numbered as a chapter is found:** TVDB's "PAGE 14 Donjon" is Netflix's "Donjon" (Black Clover), as "E6 …" already was.
-- **No more "Other title" for a translated title:** a service's "Donjon" is Sonarr's "Dungeon", by TVDB's title in your
-  language; "TBC" counts as no title there too.
-- **Seasons on the service on a phone:** the field gets the full keyboard, so `=` and `,` can be typed.
-- **An episode titled "TBC" is found:** it is matched by its number, like "TBA", instead of showing as not on the service.
-- **A job picked up after a restart is no longer lost:** a retried episode listed twice made Sonarr refuse the list; a job that
-  cannot start is kept for the next start instead of the queue being written empty.
-- **Activity no longer freezes with a large job:** the episodes that don't change are no longer redrawn every second.
-- **Service options through a remote server:** `-B`, `--atmos` and the others now reach it; it used to download without them.
+- **Service options now reach a remote server.** `-B`, `--atmos` and the others were left out of a download through it.
+- **Activity no longer freezes with a large job.** The episodes that don't change are no longer redrawn every second.
+- **More episodes found by their title.** "TBC" counts as no title, like "TBA"; TVDB's "PAGE 14 Donjon" is Netflix's
+  "Donjon"; a title only translated ("Dungeon", "Donjon") is no longer marked *Other title*.
+- **The output's scrollbar can be dragged.** The text covered it when the output was wider than its box.
+- **Seasons on the service on a phone.** The field gets the full keyboard, so `=` and `,` can be typed.
 
 **🆕 Sonarr 5, on this branch until it is out of beta**
 - **Languages.** Your files without your audio languages, read from Sonarr 5's own tracks: watch them for the

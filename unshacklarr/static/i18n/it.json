@@ -2324,5 +2324,7 @@
  "Job paused: the proxy failed ({0})": "Lotto in pausa: il proxy non funziona ({0})",
  "Fix the proxy, then resume the job in Activity and retry this episode.": "Ripara il proxy, poi riprendi il lotto in Attività e riprova questo episodio.",
  "No such job in the history": "Questo lotto non è nella cronologia",
- "This job is still going on: stop it first": "Questo lotto è ancora in corso: fermalo prima"
+ "This job is still going on: stop it first": "Questo lotto è ancora in corso: fermalo prima",
+ "orig in the accepted audio languages": "orig nelle lingue audio accettate",
+ "Any service option": "Qualsiasi opzione del servizio"
 }

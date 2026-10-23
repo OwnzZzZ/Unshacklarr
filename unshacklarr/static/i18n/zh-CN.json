@@ -2335,5 +2335,7 @@
  "Job paused: the proxy failed ({0})": "任务已暂停：代理失败（{0}）",
  "Fix the proxy, then resume the job in Activity and retry this episode.": "修复代理后，在“活动”中继续任务并重试此剧集。",
  "No such job in the history": "历史记录中没有此任务",
- "This job is still going on: stop it first": "此任务仍在进行：请先停止它"
+ "This job is still going on: stop it first": "此任务仍在进行：请先停止它",
+ "orig in the accepted audio languages": "可接受的音频语言中的 orig",
+ "Any service option": "任意服务选项"
 }
