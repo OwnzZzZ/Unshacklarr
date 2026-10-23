@@ -2279,5 +2279,7 @@
  "Job paused: the proxy failed ({0})": "Auftrag pausiert: Der Proxy ist ausgefallen ({0})",
  "Fix the proxy, then resume the job in Activity and retry this episode.": "Beheben Sie den Proxy, setzen Sie dann den Auftrag in Aktivität fort und wiederholen Sie diese Folge.",
  "No such job in the history": "Kein solcher Auftrag im Verlauf",
- "This job is still going on: stop it first": "Dieser Auftrag läuft noch: Stoppen Sie ihn zuerst"
+ "This job is still going on: stop it first": "Dieser Auftrag läuft noch: Stoppen Sie ihn zuerst",
+ "orig in the accepted audio languages": "orig in den akzeptierten Audiosprachen",
+ "Any service option": "Beliebige Dienstoption"
 }

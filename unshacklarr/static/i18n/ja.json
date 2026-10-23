@@ -2291,5 +2291,7 @@
  "Job paused: the proxy failed ({0})": "ジョブを一時停止しました：プロキシが失敗しました（{0}）",
  "Fix the proxy, then resume the job in Activity and retry this episode.": "プロキシを直してから、アクティビティでジョブを再開し、このエピソードを再試行してください。",
  "No such job in the history": "そのジョブは履歴にありません",
- "This job is still going on: stop it first": "このジョブはまだ実行中です。先に停止してください"
+ "This job is still going on: stop it first": "このジョブはまだ実行中です。先に停止してください",
+ "orig in the accepted audio languages": "許可する音声言語に orig",
+ "Any service option": "任意のサービスオプション"
 }

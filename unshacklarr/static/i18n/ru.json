@@ -2288,5 +2288,7 @@
  "Job paused: the proxy failed ({0})": "Пакет приостановлен: прокси не работает ({0})",
  "Fix the proxy, then resume the job in Activity and retry this episode.": "Исправьте прокси, затем возобновите пакет в разделе «Активность» и повторите этот эпизод.",
  "No such job in the history": "Такого пакета нет в истории",
- "This job is still going on: stop it first": "Этот пакет ещё выполняется: сначала остановите его"
+ "This job is still going on: stop it first": "Этот пакет ещё выполняется: сначала остановите его",
+ "orig in the accepted audio languages": "orig в допустимых языках аудио",
+ "Any service option": "Любой параметр сервиса"
 }
