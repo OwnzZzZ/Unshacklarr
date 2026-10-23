@@ -33,6 +33,8 @@ Every change worth knowing, newest first. The format follows
 
 ### Fixed
 
+- **aiohttp 3.14.4:** fixes a server that waited without end for a request's headers and could be made to use too much
+  memory or CPU (two high-severity advisories), and a shared cookie's Secure attribute.
 - **The output's scrollbar can be dragged:** the text no longer covers it when the output is wider than its box.
 - **A title numbered as a chapter is found:** TVDB's "PAGE 14 Donjon" is Netflix's "Donjon" (Black Clover), as "E6 …" already was.
 - **No more "Other title" for a translated title:** a service's "Donjon" is Sonarr's "Dungeon", by TVDB's title in your
