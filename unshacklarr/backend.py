@@ -280,6 +280,13 @@ class Unshackle:
         except requests.RequestException as e:
             raise UnshackleError(no_credentials(f"unshackle serve is unreachable at {url}: {e}")) from e
         if r.status_code == 401:
+            try:
+                body = r.json()
+            except ValueError:
+                body = {}
+            if isinstance(body, dict) and body.get("error_code"):  # a service's login that failed (AUTH_FAILED), not
+                message = str(body.get("message") or body["error_code"]).strip()[:500]  # the key: serve said why (by mj23au, #25)
+                raise UnshackleError(f"unshackle serve: {message}")
             raise UnshackleError("unshackle serve refused the API key")
         if r.status_code == 429:  # a limit set on the key (Unshackle 6): waited for, not a lost job
             err = UnshackleError("unshackle serve is busy: its limit of requests for this key is reached")

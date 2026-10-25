@@ -11,8 +11,11 @@ Unshacklarr can be reached from outside your network.
 
 ### Security
 
-- **aiohttp 3.14.4.** The server no longer waits without end for a request's headers, and can no longer be made to use
-  too much memory or CPU (two high-severity advisories); a shared cookie keeps its Secure attribute. (#24)
+- **aiohttp 3.14.4.** Eight advisories fixed, three of them high: the server no longer waits without end for a
+  request's headers, can no longer be made to use too much memory, CPU or file descriptors, and parses requests more
+  strictly. (#24)
+- **certifi 2026.10.23.** The emSign root certificates, whose intermediate keys were compromised, are no longer
+  trusted for Unshacklarr's own HTTPS connections (a critical advisory).
 
 ### Added
 
@@ -44,6 +47,8 @@ Unshacklarr can be reached from outside your network.
 
 ### Fixed
 
+- **A service's failed login is no longer called a refused API key.** Serve's own reason is shown instead, so you
+  don't look for a fault in a key that works. (#25, by mj23au)
 - **Service options now reach a remote server.** `-B`, `--atmos` and the others were left out of a download through it.
 - **Activity no longer freezes with a large job.** The episodes that don't change are no longer redrawn every second.
 - **More episodes found by their title.** "TBC" counts as no title, like "TBA"; TVDB's "PAGE 14 Donjon" is Netflix's
