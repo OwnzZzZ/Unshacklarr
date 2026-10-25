@@ -317,3 +317,24 @@ def test_a_cdm_named_for_the_download_is_sent_and_its_refusal_said(tmp_path):
         raise AssertionError("refused")
     except UnshackleError as e:
         assert "cdm_overrides" in str(e)
+
+
+@responses.activate
+def test_a_service_login_serve_could_not_finish_is_not_called_a_refused_key(tmp_path):
+    # by mj23au (#25): serve answers 401 for two things: a wrong key ({"status": 401, "message": "Secret Key is Invalid."})
+    # and a service whose login failed (AUTH_FAILED, with an error_code). The second was shown as "refused the API key"
+    backend = Unshackle(tmp_path)
+    backend.configure({"unshackle_url": "http://backend:8786", "unshackle_api_key": "test-api-secret"})
+    responses.post("http://backend:8786/api/search", status=401, json={"status": "error", "error_code": "AUTH_FAILED",
+                   "message": "Authentication failed: This login needs the user, and only a download job or a remote session can reach the user"})
+    responses.get("http://backend:8786/api/services", status=401, json={"status": 401, "message": "Secret Key is Invalid."})
+    try:
+        backend.call("POST", "/api/search", json={"service": "X", "query": "q"})
+        raise AssertionError("login failed")
+    except UnshackleError as e:
+        assert "This login needs the user" in str(e) and "API key" not in str(e)
+    try:
+        backend.call("GET", "/api/services")
+        raise AssertionError("key refused")
+    except UnshackleError as e:
+        assert str(e) == "unshackle serve refused the API key"
