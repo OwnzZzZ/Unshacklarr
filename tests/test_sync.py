@@ -2884,3 +2884,12 @@ def test_a_job_keeps_the_nordvpn_server_of_its_first_episode(tmp_path, monkeypat
         def say(self, text): pass
     assert sync.run_job_retrying({"proxy": "nordvpn:fr962"}, Run(), sleep=lambda s: None) == ["/downloads/x.mkv"]
     assert asked == ["nordvpn:fr962", "nordvpn:fr"] and "J" not in sync.job_proxy
+def test_the_next_episode_of_an_evening_is_tried_after_its_airing(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    episodes = [{"id": n, "seriesId": 7, "seasonNumber": 1, "episodeNumber": n, "airDateUtc": at}
+                for n, at in ((1, "2026-10-06T19:00:00Z"), (2, "2026-10-13T19:00:00Z"), (3, "2026-10-13T19:00:00Z"))]
+    monkeypatch.setattr(sync, "sonarr_get", lambda path, **kw: episodes)
+    show = {"release_time": "21:10", "release_gap": 50}
+    assert [sync.release_slot(show, e).isoformat() for e in episodes] == [
+        "2026-10-06T21:10:00+02:00", "2026-10-13T21:10:00+02:00", "2026-10-13T22:00:00+02:00"]
+    assert sync.release_slot({"release_time": "21:10"}, episodes[2]).isoformat() == "2026-10-13T21:10:00+02:00"  # no gap: together

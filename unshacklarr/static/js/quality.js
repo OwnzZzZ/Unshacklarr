@@ -176,7 +176,7 @@ $("#ql-add").onclick = () => {
 $("#ql-reset").onclick = (e) => {
   if (e.target.dataset.sure !== "1") { e.target.dataset.sure = "1"; e.target.textContent = "Sure? Your own ladders will be deleted"; return; }
   delete e.target.dataset.sure;
-  e.target.textContent = "Reset to the built-in ladders";
+  e.target.textContent = "Reset ladders";
   const keep = new Set(S.builtinLadders.map((l) => l.name));
   for (const l of ladders()) if (!keep.has(l.name)) renameRefs("ladder", l.name, "");
   S.config.quality_ladders = structuredClone(S.builtinLadders);

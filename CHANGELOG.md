@@ -45,6 +45,10 @@ Unshacklarr can be reached from outside your network.
 - **The API speaks the service's numbering.** `"numbering": "service"` takes Disney+'s S04E05 for the episode it is in
   Sonarr, and `"audio": "fr"` lets Unshacklarr decide: download, download again, or add the French track.
 
+**⏰ Release times**
+- **Next episode.** Two episodes the same evening, published one after the other: the second is tried that many
+  minutes later. In a series' When.
+
 ### Fixed
 
 - **A service's failed login is no longer called a refused API key.** Serve's own reason is shown instead, so you

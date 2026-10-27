@@ -31,6 +31,7 @@ command line; a flag set to true is on, false or empty is left out:
           days: [1]
           per_evening: 1         #   so many episodes an evening,
           evenings: {2026-10-07: 2, 2026-10-21: 0}  # but so many on these (0: no broadcast)
+        release_gap: 50          # two the same evening: the next one tried 50 min later (its airing)
         release_day: 0           # from then on, every 30 s for 10 min; 1 = the day after airing,
                                  # -3 = three days before it airs (a platform ahead of the channel)
         join_parts: true         # join an episode's parts into one file (default)
@@ -1408,15 +1409,22 @@ def broadcast_plans(config: dict, fresh: bool = False) -> list[tuple[dict, list[
     shows = {tvdb: s for tvdb, s in (config.get("series") or {}).items() if s.get("service") and s.get("broadcast")}
     if not shows:
         return []
-    plans, name = [], (instance() or {}).get("name", "")
+    plans = []
     for tvdb, serie in sonarr_series(set(shows)).items():
         if tvdb in shows:
-            fetched, episodes = _broadcast_episodes.get((name, serie["id"]), (0.0, []))
-            if fresh or not fetched or time.monotonic() - fetched > BROADCAST_KEEP:
-                episodes = sonarr_get("episode", seriesId=serie["id"])
-                _broadcast_episodes[(name, serie["id"])] = (time.monotonic(), episodes)
+            episodes = series_episodes(serie["id"], fresh)
             plans.append((serie, episodes, broadcast_dates(shows[tvdb], episodes)))
     return plans
+
+
+def series_episodes(series_id: int, fresh: bool = False) -> list[dict]:
+    """A Sonarr series' episodes, kept 5 minutes (fresh: asked again)."""
+    key = ((instance() or {}).get("name", ""), series_id)
+    fetched, episodes = _broadcast_episodes.get(key, (0.0, []))
+    if fresh or not fetched or time.monotonic() - fetched > BROADCAST_KEEP:
+        episodes = sonarr_get("episode", seriesId=series_id)
+        _broadcast_episodes[key] = (time.monotonic(), episodes)
+    return episodes
 
 
 _series_by_tvdb: dict[str, tuple[float, dict]] = {}  # by Sonarr ("" the main one): (fetched, series by TVDB id)
@@ -1471,7 +1479,21 @@ def release_slot(show: dict, ep: dict) -> datetime | None:
         return None
     hour, minute = map(int, str(show.get("release_time") or "00:00").split(":"))
     aired = parse_time(ep["airDateUtc"]).astimezone(LOCAL).date() + timedelta(days=day)
-    return datetime.combine(aired, datetime.min.time(), LOCAL).replace(hour=hour, minute=minute)
+    slot = datetime.combine(aired, datetime.min.time(), LOCAL).replace(hour=hour, minute=minute)
+    gap = int(show.get("release_gap") or 0)
+    return slot + timedelta(minutes=gap * evening_rank(show, ep)) if gap else slot
+
+
+def evening_rank(show: dict, ep: dict) -> int:
+    """How many episodes of its series air the same evening before it (by the series' own schedule, else Sonarr's
+    dates): with `release_gap`, a service that puts each one out after its airing gets them that far apart."""
+    if not ep.get("seriesId"):
+        return 0
+    episodes = series_episodes(ep["seriesId"])
+    planned = broadcast_dates(show, episodes)
+    evening = lambda e: (at := planned.get(e["id"]) or (e.get("airDateUtc") and parse_time(e["airDateUtc"]))) and at.astimezone(LOCAL).date()
+    mine, number = evening(ep), (ep.get("seasonNumber", 0), ep.get("episodeNumber", 0))
+    return sum(1 for e in episodes if e.get("seasonNumber", 0) > 0 and (e["seasonNumber"], e["episodeNumber"]) < number and evening(e) == mine)
 
 
 def early_episodes(config: dict, now: datetime) -> list[dict]:

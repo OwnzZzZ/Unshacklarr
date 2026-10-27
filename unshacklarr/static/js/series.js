@@ -27,6 +27,12 @@ $("#d-epname").onchange = (e) => { advConf().episode_name = e.target.value; advD
 $("#d-parts").onchange = (e) => { advConf().parts = Number(e.target.value) || undefined; advDirty(); };
 $("#d-release").oninput = (e) => { S.config.series[current.tvdbId].release_time = e.target.value; dirty(); renderReleaseNext(); };  // at once: Save shows then, not on leaving the field
 $("#d-audio").oninput = (e) => { S.config.series[current.tvdbId].audio_accept = e.target.value.trim() || undefined; dirty(); };
+$("#d-release-gap").oninput = (e) => {
+  const v = e.target.value === "" ? 0 : Number(e.target.value), bad = !Number.isInteger(v) || v < 0 || v > 600;
+  e.target.setCustomValidity(bad ? "A whole number of minutes, from 0 to 600" : "");
+  e.target.reportValidity();
+  if (!bad) { S.config.series[current.tvdbId].release_gap = v || undefined; dirty(); renderReleaseNext(); }
+};
 $("#d-release-day").onchange = (e) => { S.config.series[current.tvdbId].release_day = Number(e.target.value); dirty(); renderReleaseNext(); };
 /* The day a service publishes, from the day Sonarr says an episode airs: that day, the day after, or up to two weeks
    before (a platform ahead of the channel: sync.EARLY_DAYS_MAX). */
@@ -155,6 +161,10 @@ function releaseSlot(conf, ep) {
   at.setDate(at.getDate() + day);
   const [h, m] = (time || "00:00").split(":").map(Number);
   at.setHours(h, m, 0, 0);
+  const gap = Number(conf.release_gap || 0), evening = new Date(ep.airDateUtc).toDateString(), number = ep.seasonNumber * 1e4 + ep.episodeNumber;
+  const rank = gap ? Object.values(epSeasons || {}).flat().filter((e) => e.seasonNumber > 0 && e.airDateUtc
+    && new Date(e.airDateUtc).toDateString() === evening && e.seasonNumber * 1e4 + e.episodeNumber < number).length : 0;  // sync.evening_rank
+  at.setMinutes(at.getMinutes() + gap * rank);
   return at;
 }
 function renderReleaseNext() {

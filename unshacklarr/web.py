@@ -445,6 +445,7 @@ def series_entry(s: dict) -> dict:
             "year": s.get("year"),
             "monitored": s.get("monitored"),
             "status": s.get("status"),  # continuing, ended, upcoming: Suggest services looks at the living ones
+            "runtime": s.get("runtime"),  # minutes: the gap between two episodes of an evening, when none is set
             "network": s.get("network"),  # its channel: its catch-up service when TMDB links to none
             "missing": max(0, stats.get("episodeCount", 0) - stats.get("episodeFileCount", 0)),
             "poster": poster,
@@ -710,6 +711,14 @@ async def save_config(request):
             if not re.fullmatch(r"([01]\d|2[0-3]):[0-5]\d", release_time):
                 raise web.HTTPBadRequest(text=f"The release time of {key} must look like 23:30")
             series[int(key)]["release_time"] = release_time
+        try:  # minutes between two episodes of the same evening
+            gap = int(show.get("release_gap") or 0)
+        except (TypeError, ValueError):
+            raise web.HTTPBadRequest(text=f"The gap between episodes of {key} must be a whole number of minutes") from None
+        if not 0 <= gap <= 600:
+            raise web.HTTPBadRequest(text=f"The gap between episodes of {key} must be from 0 to 600 minutes")
+        if gap and release_time:
+            series[int(key)]["release_gap"] = gap
         if day and (release_time or day < 0):  # the day after means nothing without a time; days before do
             series[int(key)]["release_day"] = day
         if show.get("broadcast"):

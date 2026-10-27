@@ -431,6 +431,9 @@ async function openDrawer(s, tab, fromRoute = false) {
   knownProfiles(conf.service);
   $("#d-release").value = conf.release_time || "";
   $("#d-release-day").value = String(conf.release_day || 0);
+  $("#d-release-gap").value = conf.release_gap || "";
+  $("#d-release-gap-help").textContent = "Two episodes the same evening, published one after the other. Empty: same time."
+    + (s.runtime ? ` Sonarr: ${s.runtime} min.` : "");
   $("#d-audio").value = conf.audio_accept || "";
   $("#d-audio").placeholder = S.config.settings?.audio_accept || "Example: fr, en";
   bcMonth = null;  // its own schedule's month: from its first day's

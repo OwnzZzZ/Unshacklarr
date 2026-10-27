@@ -3,6 +3,7 @@
    too. A new install starts with nothing new. The window shows the release notes, read from the CHANGELOG, one
    release per row; a change whose title is an option's below gets a way to it. */
 const NEWS = [
+  { id: "release-gap", version: "1.6.0", title: "Next episode", series: true, target: 'label[for="d-release-gap"]' },
   { id: "download-window", version: "1.5.0", title: "Download window", sec: "automation", target: "#ax-window-card" },
   { id: "learn-release", version: "1.5.0", title: "Auto release times", sec: "automation", target: "#ax-learn-card" },
   { id: "add-audio", version: "1.5.0", title: "Add audio track", sec: "downloads", target: ".up-mode" },
