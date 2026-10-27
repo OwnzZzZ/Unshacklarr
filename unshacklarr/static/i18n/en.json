@@ -16,7 +16,6 @@
  "(step {0})": [
   "it.fileStep"
  ],
- "(the release time counts from these days)": [],
  "({0} is out)": [
   "st.latest"
  ],
@@ -164,6 +163,7 @@
  "A sync is running.": [],
  "A topic: letters, digits, - and _": [],
  "A user key is 30 letters and digits": [],
+ "A whole number of minutes, from 0 to 600": [],
  "A {0} download starts as": [
   "tag"
  ],
@@ -387,6 +387,7 @@
  "Blocked in this browser's settings for this site.": [],
  "Bot token": [],
  "Broadcast schedule": [],
+ "Browser URL": [],
  "Browse…": [],
  "Bucket": [],
  "Build": [],
@@ -687,7 +688,6 @@
  "Download options for {0}": [
   "o.name"
  ],
- "Download the whole episode again": [],
  "Download the {0}": [
   "r.items.length"
  ],
@@ -820,6 +820,7 @@
  "Escape": [],
  "Español": [],
  "Essentials": [],
+ "Events": [],
  "Every": [],
  "Every 12 hours": [],
  "Every 2 hours": [],
@@ -866,6 +867,7 @@
  "Failing": [],
  "Failures only": [],
  "Fair": [],
+ "Fallback profiles": [],
  "Fallback service": [],
  "File": [],
  "Files Sonarr did not take": [],
@@ -962,7 +964,6 @@
  "HEVC": [],
  "HLG": [],
  "HYBRID": [],
- "Header with the user's name": [],
  "Here, a remote CDM can be Widevine (pywidevine serve), PlayReady or Decrypt Labs. Add other kinds in unshackle.yaml": [],
  "Hidden": [],
  "Hidden episode title. Press to show it.": [],
@@ -1086,7 +1087,7 @@
  "Job resumed": [],
  "Job stopped": [],
  "Join": [],
- "Join the parts into one file": [],
+ "Join parts": [],
  "Joining parts": [],
  "Joining the parts": [],
  "Keep completed segment files across runs and resume a previously failed download.": [],
@@ -1291,6 +1292,7 @@
  "New server": [],
  "Next": [],
  "Next automatic sync at": [],
+ "Next episode": [],
  "Next month": [],
  "Next sync at {0}": [
   "time(next)"
@@ -1553,7 +1555,6 @@
  ],
  "Numbering": [],
  "Numbering and file names": [],
- "Numbering and file names, for this download": [],
  "Numbering is correct": [],
  "OK": [],
  "Off": [],
@@ -1696,13 +1697,13 @@
  "Polish": [],
  "Portuguese": [],
  "Português (Brasil)": [],
+ "Preview": [],
  "Previous month": [],
  "Problems": [],
  "Processing the tracks": [],
  "Product": [],
  "Profile": [],
  "Profile to use for Credentials and Cookies (if available).": [],
- "Profiles to fall back on": [],
  "Programme URLs": [],
  "Progress": [],
  "Proxy": [],
@@ -1735,6 +1736,7 @@
  "Reading the notifications…": [],
  "Rebuilding an install?": [],
  "Recently sent": [],
+ "Redownload": [],
  "Refresh": [],
  "Refresh what's on {0}": [
   "svc"
@@ -1800,7 +1802,7 @@
  "Required subtitle languages. Downloads all subtitles only if these languages exist. Cannot be used with --s-lang.": [],
  "Res.": [],
  "Reset": [],
- "Reset to the built-in ladders": [],
+ "Reset ladders": [],
  "Restart": [],
  "Restart Unshackle when nothing is downloading, so that it reads it.": [],
  "Restart it or read its log where it runs": [],
@@ -1816,6 +1818,7 @@
  "Retry {0} failed": [
   "retryable.length"
  ],
+ "Reverse proxy": [],
  "Revoked": [],
  "Room kept free": [],
  "Run a sync now": [],
@@ -1919,8 +1922,7 @@
  "Sent: the download goes on": [],
  "Separate programmes": [],
  "Series": [],
- "Series URL on that service": [],
- "Series URL on the service": [],
+ "Series URL": [],
  "Series finale": [],
  "Series hidden from the Schedule": [],
  "Series links from": [],
@@ -1998,7 +2000,6 @@
  "Shown in Unshacklarr's log when it starts (docker logs unshacklarr), or the SETUP_TOKEN you set.": [],
  "Shown on its series, and used at the start of its download folder names. Example: sonarr-2.": [],
  "Sign in": [],
- "Sign in through a reverse proxy": [],
  "Signal": [],
  "Signed in": [],
  "Signed in by your reverse proxy as {0}": [
@@ -2153,7 +2154,6 @@
  "Sonarr {0}: sync stopped": [
   "inst['name']"
  ],
- "Sonarr's address in your browser": [],
  "Sonarr's calendar": [],
  "Sonarr's episode = the service's episode, comma-separated. Takes priority over the settings above. Add .2 to take only part 2 of a split episode.": [],
  "Sonarr's import asked (command {0}), moving {1} file{2}{3}": [
@@ -2173,6 +2173,9 @@
   "IMPORT_WAIT // 60"
  ],
  "Sonarr's season = the service's season, comma-separated.": [],
+ "Sonarr: {0} min.": [
+  "s.runtime"
+ ],
  "Sort": [],
  "Sort by missing episodes": [],
  "Sort by title": [],
@@ -2384,6 +2387,12 @@
  "The first language in this list that the episode has is downloaded (en also matches en-GB). Not used when empty, or when the series or its service sets --a-lang.": [],
  "The folder does not exist on the WebDAV server: create it first": [],
  "The folder with unshackle.yaml and the WVD and PRD files, for Settings, CDM. Empty: Unshacklarr asks Unshackle, which works when both run on this computer.": [],
+ "The gap between episodes of {0} must be a whole number of minutes": [
+  "key"
+ ],
+ "The gap between episodes of {0} must be from 0 to 600 minutes": [
+  "key"
+ ],
  "The group your downloads carry at the end of their file names (-unshackle), which Sonarr reads as the release group. Set it in Download options, Group Tag: Unshacklarr then knows it, and every download carries it.": [],
  "The header your proxy sets: Remote-User for Authelia, X-authentik-username for Authentik. Empty: off.": [],
  "The history in Activity has Unshackle's full output.": [],
@@ -2614,6 +2623,7 @@
  "Two Unshackle servers are named {0}": [
   "name"
  ],
+ "Two episodes the same evening, published one after the other. Empty: same time.": [],
  "Two quality ladders are named {0}": [
   "name"
  ],
@@ -2731,7 +2741,6 @@
  "Use an https:// address: over http://, the WebDAV password would cross the network unencrypted": [],
  "Use exact language matching (no variants). With this flag, -l es-419 matches ONLY es-419, not es-ES or other variants.": [],
  "Use it": [],
- "Use its own schedule": [],
  "Use these folders": [],
  "Use this AniList ID for tagging instead of an automatic search, or a MyAnimeList ID as mal:12345. Add --enrich to also take its title, year and original language. Combines with one of --tmdb, --imdb or --tvdb, which AniList does not know.": [],
  "Use this CDM device (its name) for the download, over unshackle.yaml's cdm: section. Unshackle refuses it unless unshackle.yaml allows it with serve: cdm_overrides (true, or a list of devices).": [],
@@ -2739,6 +2748,7 @@
  "Use this TMDB ID for tagging instead of an automatic search. Add --enrich to also take its title, year and original language.": [],
  "Use this TVDB ID for --tvdb-order and tagging instead of looking the series up automatically. Add --enrich to also take its title, year and original language.": [],
  "Use this folder": [],
+ "Use this schedule": [],
  "Use this show": [],
  "Use {0} titles": [
   "want"
@@ -2757,6 +2767,7 @@
  "Used in the file name and the MKV title. Leave empty to use the name Sonarr gives the series.": [],
  "Used when the main service doesn't have the episode yet, or not in an accepted language.": [],
  "Useful to spot an episode the service will never have, or a numbering that does not match.": [],
+ "User header": [],
  "User key": [],
  "User name": [],
  "VC-1": [],
@@ -2817,13 +2828,11 @@
  ],
  "What Activity keeps": [],
  "What Unshacklarr does on its own: look for new episodes, try them at their release time, tidy up.": [],
- "What a message looks like": [],
  "What downloads the episodes": [],
  "What happens, warnings and errors": [],
  "What is kept": [],
  "What is sent for this series' episodes. The bell in the page always keeps everything.": [],
  "What to get": [],
- "What to send, and when": [],
  "What {0} gets": [
   "appOf(t.url)"
  ],
@@ -3040,6 +3049,7 @@
  "message (“Still unavailable”) per episode.": [],
  "mid-season finale": [],
  "min": [],
+ "min later": [],
  "mkvmerge could not add the audio: {0}": [
   "done.stdout.strip()[-300:]"
  ],
@@ -3288,7 +3298,7 @@
   "self.tail()"
  ],
  "unshackle serve: {0}": [
-  "message.strip()[:500]"
+  "message"
  ],
  "unshackle serve{0} still has job {1}: followed again": [
   "f' {backend.name}' if backend.name else ''",

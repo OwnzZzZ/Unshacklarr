@@ -222,7 +222,7 @@
         <section class="sx-card">
           <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></span><div><h3>In your browser</h3><p>Used for the links from a series to its page in Sonarr.</p></div></div>
           <div class="sx-grid">
-            <div class="field"><label for="sx-web">Sonarr's address in your browser</label><input id="sx-web" type="url" data-set="sonarr_public_url" placeholder="https://sonarr.example.com"><small>Empty: the URL above, if your browser can open it.</small></div>
+            <div class="field"><label for="sx-web">Browser URL</label><input id="sx-web" type="url" data-set="sonarr_public_url" placeholder="https://sonarr.example.com"><small>Empty: the URL above, if your browser can open it.</small></div>
           </div>
         </section>
         <section class="sx-card">
@@ -353,7 +353,7 @@
           </div>
           <div class="up-mode">
             <span class="sub">Audio upgrade</span>
-            <div class="ax-seg" id="dx-upmode" role="radiogroup" aria-label="Audio upgrade"><button type="button" role="radio" data-mode="redownload">Download the whole episode again</button><button type="button" role="radio" data-mode="add_track">Add the audio track</button></div>
+            <div class="ax-seg" id="dx-upmode" role="radiogroup" aria-label="Audio upgrade"><button type="button" role="radio" data-mode="redownload">Redownload</button><button type="button" role="radio" data-mode="add_track">Add the audio track</button></div>
             <p class="rt-who" id="dx-upmode-say"></p>
             <div id="dx-library">
               <div id="dx-lib-who"></div>
@@ -374,7 +374,7 @@
           <span class="sx-logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20v-5M10 20V10M16 20V6M22 20V3"/></svg></span>
           <div class="sx-id"><h2>Quality</h2><p class="ax-lead">Before each download, Unshacklarr lists the episode's tracks on the service. It downloads the first step of the ladder that the service has, and nothing outside the ladder.</p></div>
           <div class="sx-state" id="ql-state"><span class="dot"></span><span><b></b><small></small></span></div>
-          <div class="sx-actions"><button class="btn small primary" id="ql-add" type="button">New ladder</button><button class="btn small" id="ql-reset" type="button">Reset to the built-in ladders</button></div>
+          <div class="sx-actions"><button class="btn small primary" id="ql-add" type="button">New ladder</button><button class="btn small" id="ql-reset" type="button">Reset ladders</button></div>
         </section>
         <section class="sx-card">
           <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><div><h3>Every series downloads by</h3><p>Unless its service (Download options, Per service) or the series itself picks another. Off: <code>--quality</code> and the other options decide, as without a ladder.</p></div></div>
@@ -448,7 +448,7 @@
           <div class="nt-targets" id="nt-targets"></div>
         </section>
         <section class="sx-card">
-          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M10 18h4"/></svg></span><div><h3>What to send, and when</h3><p>A kind of message turned off here goes to no address and not to this device. The bell in the page still shows them all.</p></div></div>
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M10 18h4"/></svg></span><div><h3>Events</h3><p>A kind of message turned off here goes to no address and not to this device. The bell in the page still shows them all.</p></div></div>
           <div class="nt-levels">
             <label class="nt-level ok"><i></i><span><b>Downloaded</b><small>An episode is downloaded and handed to Sonarr</small></span><input type="checkbox" class="switch" data-level="success"></label>
             <label class="nt-level warn"><i></i><span><b>Needs a look</b><small>An episode is late, a replacement kept the old file, or a code must be entered</small></span><input type="checkbox" class="switch" data-level="warning"></label>
@@ -477,7 +477,7 @@
           </div>
         </section>
         <section class="sx-card">
-          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span><div><h3>What a message looks like</h3><p>As shown on Discord, and on a phone (this device, ntfy, Telegram, Pushover…).</p></div></div>
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span><div><h3>Preview</h3><p>As shown on Discord, and on a phone (this device, ntfy, Telegram, Pushover…).</p></div></div>
           <div class="ax-seg" role="radiogroup" aria-label="Which message" id="nt-pv-pick"><button type="button" data-pv="success">Downloaded</button><button type="button" data-pv="warning">Needs a look</button><button type="button" data-pv="error">Failed</button></div>
           <div class="nt-preview" id="nt-preview"></div>
         </section>
@@ -567,9 +567,9 @@
           </div>
         </section>
         <section class="sx-card">
-          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5l-8-3z"/><path d="m9 12 2 2 4-4"/></svg></span><div><h3>Sign in through a reverse proxy</h3><p>For when Authelia, Authentik or another proxy already logs you in. The proxy passes your name in a header, and Unshacklarr opens without asking for its own password.<br>Your password is still asked before the most sensitive changes.</p></div></div>
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5l-8-3z"/><path d="m9 12 2 2 4-4"/></svg></span><div><h3>Reverse proxy</h3><p>For when Authelia, Authentik or another proxy already logs you in. The proxy passes your name in a header, and Unshacklarr opens without asking for its own password.<br>Your password is still asked before the most sensitive changes.</p></div></div>
           <div class="sx-grid">
-            <div class="field"><label for="ac-proxy-header">Header with the user's name</label><input id="ac-proxy-header" type="text" data-set="proxy_auth_header" placeholder="Remote-User" spellcheck="false" autocomplete="off"><small>The header your proxy sets: Remote-User for Authelia, X-authentik-username for Authentik. Empty: off.</small></div>
+            <div class="field"><label for="ac-proxy-header">User header</label><input id="ac-proxy-header" type="text" data-set="proxy_auth_header" placeholder="Remote-User" spellcheck="false" autocomplete="off"><small>The header your proxy sets: Remote-User for Authelia, X-authentik-username for Authentik. Empty: off.</small></div>
             <div class="field"><label for="ac-proxy-from">The proxy's addresses</label><input id="ac-proxy-from" type="text" data-set="proxy_auth_from" placeholder="172.18.0.0/16" spellcheck="false" autocomplete="off"><small>The addresses the proxy connects from, as Unshacklarr sees them (its container's network). The header is trusted only from there, since anyone else could send it.</small></div>
           </div>
         </section>
@@ -676,7 +676,7 @@
           <select id="d-service"></select>
         </div>
         <div class="field">
-          <label for="d-url">Series URL on the service</label>
+          <label for="d-url">Series URL</label>
           <input type="text" id="d-url" placeholder="URL or ID of the series">
         </div>
       </div>
@@ -700,7 +700,7 @@
         <summary><b>Fallback service</b><small>Used when the main service doesn't have the episode yet, or not in an accepted language.</small></summary>
         <div class="sx-grid ds-svc">
           <div class="field"><label for="d-fb-service">Service</label><select id="d-fb-service"></select></div>
-          <div class="field"><label for="d-fb-url">Series URL on that service</label><input type="text" id="d-fb-url" placeholder="URL or ID of the series" spellcheck="false"><small id="d-fb-say">If this service numbers episodes differently, set its numbering in config.yaml.</small></div>
+          <div class="field"><label for="d-fb-url">Series URL</label><input type="text" id="d-fb-url" placeholder="URL or ID of the series" spellcheck="false"><small id="d-fb-say">If this service numbers episodes differently, set its numbering in config.yaml.</small></div>
         </div>
       </details>
       <div class="card-foot"><button class="btn danger" id="d-stop" hidden>Stop downloading this series</button></div>
@@ -719,12 +719,17 @@
           <select id="d-release-day"></select>
           <small>Counted from the air date in Sonarr. Pick a day before when a streaming platform gets the episodes ahead of the TV channel.</small>
         </div>
+        <div class="field">
+          <label for="d-release-gap">Next episode</label>
+          <div class="unit-input"><input type="number" id="d-release-gap" min="0" max="600" step="1" inputmode="numeric"><span>min later</span></div>
+          <small id="d-release-gap-help">Two episodes the same evening, published one after the other. Empty: same time.</small>
+        </div>
       </div>
       <div class="release-next" id="d-release-next" hidden></div>
       <div class="release-seen" id="d-release-seen" hidden></div>
       <details class="ds-sub" id="d-bc" data-nav="broadcast">
         <summary><b>Broadcast schedule</b><small>For when Sonarr's dates are wrong or missing: set the days the episodes air, used instead of Sonarr's.</small></summary>
-        <label class="check bc-on"><input type="checkbox" id="d-bc-on"> Use its own schedule <small>(the release time counts from these days)</small></label>
+        <label class="check bc-on"><input type="checkbox" id="d-bc-on"> Use this schedule</label>
         <div class="bc-form" id="d-bc-form" hidden>
           <div class="bc-grid">
             <label class="field"><span>From</span><select id="d-bc-from"></select></label>
@@ -798,7 +803,7 @@
         <small>For this series only. They take priority over the options set for its service.</small>
       </div>
       <div class="field">
-        <label for="d-fallback">Profiles to fall back on</label>
+        <label for="d-fallback">Fallback profiles</label>
         <input type="text" id="d-fallback" spellcheck="false" autocomplete="off" placeholder="Example: alt, backup">
         <small>If the service refuses the login, the download is tried again with these profiles, in order. Useful for a second account while the first one's cookies are renewed.</small>
         <div class="fb-known" id="d-fallback-known" hidden></div>
@@ -872,7 +877,7 @@
         </div>
         <div class="field">
           <span>Joining the parts</span>
-          <label class="check"><input type="checkbox" id="d-join"> Join the parts into one file</label>
+          <label class="check"><input type="checkbox" id="d-join"> Join parts</label>
           <small>Turn off when Sonarr counts each part as its own episode, and map the parts above instead.</small>
         </div>
       </div>
@@ -924,7 +929,7 @@
   </form>
 </dialog>
 <dialog class="modal wide" id="oneoff-dialog" aria-labelledby="oneoff-title">
-  <div class="modal-head"><h2 id="oneoff-title">Numbering and file names, for this download</h2>
+  <div class="modal-head"><h2 id="oneoff-title">Numbering</h2>
     <button class="inbox-x" id="oneoff-x" type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   <p>Only for the episodes picked now. The series keeps its own settings.</p>
   <div id="oneoff-cdm"></div>
@@ -970,7 +975,7 @@
       <div class="field"><label for="sel-audio">Accepted audio languages</label><input type="text" id="sel-audio" placeholder="Unchanged" spellcheck="false"></div>
       <div class="field"><label for="sel-prefer">Upgrade the audio to</label><input type="text" id="sel-prefer" placeholder="Unchanged" spellcheck="false"></div>
       <div class="field"><label for="sel-subs">Required subtitle languages</label><input type="text" id="sel-subs" placeholder="Unchanged" spellcheck="false"></div>
-      <div class="field"><label for="sel-fallback">Profiles to fall back on</label><input type="text" id="sel-fallback" placeholder="Unchanged" spellcheck="false"></div>
+      <div class="field"><label for="sel-fallback">Fallback profiles</label><input type="text" id="sel-fallback" placeholder="Unchanged" spellcheck="false"></div>
     </div>
     <div class="field"><span>Download options</span><div class="opts" id="sel-options"></div><small>Added to each series' own options. An option a series already has is replaced.</small></div>
     <div class="modal-actions"><button class="btn" value="cancel" formnovalidate>Cancel</button><button class="btn primary" value="apply" id="sel-apply">Apply</button></div>
