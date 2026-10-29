@@ -349,3 +349,22 @@ def test_load_balancer_and_short_technical_cookies_say_nothing_of_the_login(tmp_
     path.write_text(f"# Netscape HTTP Cookie File\n.bellmedia.ca\tTRUE\t/\tTRUE\t{soon}\tAWSALBTG\tx\n"
                     f".apple.com\tTRUE\t/\tTRUE\t{soon}\tutsdc\tx\n.apple.com\tTRUE\t/\tTRUE\t0\tmyacinfo\tx\n")
     assert cookies.summary(path)["expires"] is None
+
+
+@responses.activate
+def test_a_remote_servers_services_come_from_unshackles_own_api_else_the_forks(tmp_path):
+    # After 6.0.0: the names in /api/config, each server's services in /api/services?remote=; 6.0.0 has neither
+    from responses import matchers
+    backend = Unshackle(tmp_path)
+    backend.configure({"unshackle_url": "http://backend:8786", "unshackle_api_key": "test-api-secret"})
+    responses.get("http://backend:8786/api/config", json={"config": {"dl": {}, "remote_services": ["community", "down"]}})
+    nf = {"tag": "NF", "remote": "community", "cli_params": []}
+    responses.get("http://backend:8786/api/services", match=[matchers.query_param_matcher({"remote": "community"})], json={"services": [nf]})
+    responses.get("http://backend:8786/api/services", match=[matchers.query_param_matcher({"remote": "down"})], status=503, json={})
+    assert backend.remote_services() == [{"name": "community", "services": [nf]}]  # the server down left out
+
+    fork = Unshackle(tmp_path)
+    fork.configure({"unshackle_url": "http://fork:8786", "unshackle_api_key": "test-api-secret"})
+    responses.get("http://fork:8786/api/config", json={"config": {"dl": {}}})
+    responses.get("http://fork:8786/api/remote/services", json={"servers": [{"name": "community", "services": [nf]}]})
+    assert fork.remote_services() == [{"name": "community", "services": [nf]}]

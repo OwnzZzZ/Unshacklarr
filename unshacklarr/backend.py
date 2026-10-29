@@ -319,13 +319,26 @@ class Unshackle:
 
     def remote_services(self) -> list[dict]:
         """The servers of Unshackle's remote_services and the services each offers (for --remote), kept
-        10 minutes; none when this Unshackle cannot tell (no such route, or unreachable)."""
+        10 minutes: their names in /api/config and each one's /api/services?remote= (Unshackle after 6.0.0), else
+        the fork's /api/remote/services; none when this Unshackle cannot tell (6.0.0, or unreachable)."""
         fetched, servers = self._remote
         if time.monotonic() - fetched > 600:
+            servers = []
             try:
-                servers = self.call("GET", "/api/remote/services").get("servers") or []
+                names = self.config().get("remote_services")
             except UnshackleError:
-                servers = []
+                names = None
+            if isinstance(names, list):
+                for name in names:
+                    try:
+                        servers.append({"name": name, "services": self.call("GET", "/api/services", params={"remote": name}).get("services") or []})
+                    except UnshackleError:
+                        pass  # that server down: the others' options still shown
+            else:
+                try:
+                    servers = self.call("GET", "/api/remote/services").get("servers") or []
+                except UnshackleError:
+                    pass
             self._remote = (time.monotonic(), servers)
         return servers
 

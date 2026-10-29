@@ -2298,5 +2298,6 @@
  "Use this schedule": "このスケジュールを使用",
  "User header": "ユーザーヘッダー",
  "min later": "分後",
- "{0} cookies expire in 1 day": "{0} の Cookie はあと 1 日で期限切れになります"
+ "{0} cookies expire in 1 day": "{0} の Cookie はあと 1 日で期限切れになります",
+ "The remote server's options are not known with this Unshackle: write them as they are.": "この Unshackle ではリモートサーバーのオプションが分かりません。そのまま入力してください。"
 }

@@ -2270,5 +2270,6 @@
  "Use this schedule": "Usar este horario",
  "User header": "Cabecera de usuario",
  "min later": "min después",
- "{0} cookies expire in 1 day": "Las cookies de {0} caducan en 1 día"
+ "{0} cookies expire in 1 day": "Las cookies de {0} caducan en 1 día",
+ "The remote server's options are not known with this Unshackle: write them as they are.": "Las opciones del servidor remoto no se conocen con este Unshackle: escríbelas tal cual."
 }

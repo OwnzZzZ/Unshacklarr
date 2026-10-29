@@ -59,6 +59,8 @@ Unshacklarr can be reached from outside your network.
   "Donjon"; a title only translated ("Dungeon", "Donjon") is no longer marked *Other title*.
 - **The output's scrollbar can be dragged.** The text covered it when the output was wider than its box.
 - **Seasons on the service on a phone.** The field gets the full keyboard, so `=` and `,` can be typed.
+- **A remote server's own options with the official Unshackle.** Its options are read from Unshackle's own API (after
+  6.0.0), not only from a fork; with 6.0.0, Per service says they are not known and to write them as they are.
 - **No more false cookie warnings.** Crave's load balancer cookies (a week) and Apple's `utsdc` (an hour) no longer
   count as the date the login ends.
 

@@ -2295,5 +2295,6 @@
  "Use this schedule": "Использовать этот график",
  "User header": "Заголовок пользователя",
  "min later": "мин спустя",
- "{0} cookies expire in 1 day": "Cookies {0} истекают через 1 день"
+ "{0} cookies expire in 1 day": "Cookies {0} истекают через 1 день",
+ "The remote server's options are not known with this Unshackle: write them as they are.": "Параметры удалённого сервера неизвестны для этой версии Unshackle: впишите их как есть."
 }
