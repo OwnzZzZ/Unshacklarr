@@ -2302,5 +2302,6 @@
  "Two episodes the same evening, published one after the other. Empty: same time.": "同一晚两集，先后发布。留空：同一时间。",
  "Use this schedule": "使用此时间表",
  "User header": "用户请求头",
- "min later": "分钟后"
+ "min later": "分钟后",
+ "{0} cookies expire in 1 day": "{0} 的 Cookie 将在 1 天后过期"
 }

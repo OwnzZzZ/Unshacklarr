@@ -2294,5 +2294,6 @@
  "Two episodes the same evening, published one after the other. Empty: same time.": "Два эпизода в один вечер, выходят один за другим. Пусто: в одно время.",
  "Use this schedule": "Использовать этот график",
  "User header": "Заголовок пользователя",
- "min later": "мин спустя"
+ "min later": "мин спустя",
+ "{0} cookies expire in 1 day": "Cookies {0} истекают через 1 день"
 }

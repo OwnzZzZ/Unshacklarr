@@ -4,6 +4,7 @@ import json
 import os
 import stat
 import threading
+import time
 from pathlib import Path
 
 import pytest
@@ -338,3 +339,13 @@ def test_a_service_login_serve_could_not_finish_is_not_called_a_refused_key(tmp_
         raise AssertionError("key refused")
     except UnshackleError as e:
         assert str(e) == "unshackle serve refused the API key"
+
+
+def test_load_balancer_and_short_technical_cookies_say_nothing_of_the_login(tmp_path):
+    # Crave's AWSALBTG lasts a week, Apple's utsdc an hour, whatever the login: a file of session cookies stays undated
+    from unshacklarr import cookies
+    soon = int(time.time()) + 3600
+    path = tmp_path / "c.txt"
+    path.write_text(f"# Netscape HTTP Cookie File\n.bellmedia.ca\tTRUE\t/\tTRUE\t{soon}\tAWSALBTG\tx\n"
+                    f".apple.com\tTRUE\t/\tTRUE\t{soon}\tutsdc\tx\n.apple.com\tTRUE\t/\tTRUE\t0\tmyacinfo\tx\n")
+    assert cookies.summary(path)["expires"] is None

@@ -2297,5 +2297,6 @@
  "Two episodes the same evening, published one after the other. Empty: same time.": "同じ夜に 2 話、順番に公開。空欄：同じ時刻。",
  "Use this schedule": "このスケジュールを使用",
  "User header": "ユーザーヘッダー",
- "min later": "分後"
+ "min later": "分後",
+ "{0} cookies expire in 1 day": "{0} の Cookie はあと 1 日で期限切れになります"
 }

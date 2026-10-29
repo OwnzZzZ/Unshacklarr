@@ -2285,5 +2285,6 @@
  "Two episodes the same evening, published one after the other. Empty: same time.": "Zwei Folgen am selben Abend, nacheinander veröffentlicht. Leer: gleiche Zeit.",
  "Use this schedule": "Diesen Sendeplan verwenden",
  "User header": "Benutzer-Header",
- "min later": "Min. später"
+ "min later": "Min. später",
+ "{0} cookies expire in 1 day": "Die {0}-Cookies laufen in 1 Tag ab"
 }
