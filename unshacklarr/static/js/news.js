@@ -24,6 +24,7 @@ const NEWS = [
   { id: "orig-audio", version: "1.6.0", title: "orig in the accepted audio languages", sec: "downloads", target: "#dx-audio" },
   { id: "any-service-option", version: "1.6.0", title: "Any service option", sec: "downloads", target: "#svc-defaults" },
   { id: "generate-dv", version: "1.6.0", title: "--generate-dv", sec: "downloads", target: "#dx-cmd" },
+  { id: "include-sample", version: "1.6.0", title: "--include-sample", sec: "downloads", target: "#dx-cmd" },
 ];
 const NEWS_KINDS = { new: "New", improved: "Improved", fix: "Fix", security: "Security", note: "Note" };
 const versionKey = (v) => String(v || "0").split(".").map((n) => parseInt(n, 10) || 0).reduce((a, n) => a * 1000 + n, 0);

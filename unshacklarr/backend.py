@@ -370,15 +370,15 @@ class Unshackle:
                 raise UnshackleError("Unshackle is still downloading: restart it once it is done")
         self.local.restart(str(self.settings.get("unshackle_command") or ""))
 
-    def errors(self, dashboard_key: str) -> dict:
-        """Its errors since it started, by service then by error code (after 6.0.0, with serve.dashboard.key);
-        {} when it cannot tell."""
+    def dashboard(self, dashboard_key: str, what: str = "status", **params) -> dict | None:
+        """/api/dashboard/<what>: its stats, log, remote sessions (after 6.0.0, with serve.dashboard.key);
+        None when it cannot tell."""
         if not dashboard_key:
-            return {}
+            return None
         try:
-            return self.call("GET", "/api/dashboard/status", secret=dashboard_key).get("errors") or {}
+            return self.call("GET", f"/api/dashboard/{what}", secret=dashboard_key, params=params or None)
         except UnshackleError:
-            return {}
+            return None
 
     def remote_logins(self) -> list[dict]:
         """The logins a remote server waits on (an OTP, a PIN) while a listing goes through it (after 6.0.0)."""

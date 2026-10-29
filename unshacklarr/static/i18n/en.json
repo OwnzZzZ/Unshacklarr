@@ -143,7 +143,6 @@
  "A notification address changed meanwhile: reload the page": [],
  "A remote CDM's name: letters, digits, _ . - @": [],
  "A remote unshackle serve is restarted where it runs": [],
- "A remote unshackle serve keeps its log where it runs": [],
  "A second Sonarr, with its own library. The series set up here are also downloaded for it when it has them, with its own quality ladder. Its new episodes are downloaded at their release time and by the automatic sync, as for the Sonarr above.": [],
  "A series you set up with episodes already on disk is checked within the hour, without waiting for the next automatic check.": [],
  "A service is waiting for you to sign in before Unshackle can go on. Open this link on any device and enter the code.": [],
@@ -484,6 +483,7 @@
  "Clear failed ({0})": [
   "failedN"
  ],
+ "Clear finished": [],
  "Clear temp": [],
  "Clear the history": [],
  "Clear the notifications already seen": [],
@@ -601,6 +601,7 @@
  "DV": [],
  "Daily": [],
  "Danish": [],
+ "Dashboard": [],
  "Days kept": [],
  "Days of the week": [],
  "Debug mode": [],
@@ -664,6 +665,8 @@
  "Download options for {0}": [
   "o.name"
  ],
+ "Download questions": [],
+ "Download the full title, then also cut a 60 second sample from each muxed file into a Sample folder next to it.": [],
  "Download the {0}": [
   "r.items.length"
  ],
@@ -897,6 +900,7 @@
  ],
  "For, in minutes": [],
  "Force disable all proxy use.": [],
+ "Forgets the finished downloads Unshackle lists": [],
  "Found": [],
  "Found by its title, under another number: Download asks the service for {0}": [
   "found.service"
@@ -1030,6 +1034,7 @@
   "sick.failing",
   "sick.cause ? `: ${sick.cause}` : \"\""
  ],
+ "Its log needs serve: dashboard: key: in unshackle.yaml (Unshackle after 6.0.0)": [],
  "Its log, last lines": [],
  "Its path on Sonarr's side, e.g. inside Sonarr's container.": [],
  "Its path on Sonarr's side, e.g. inside Sonarr's container. Empty: the same path as for Unshacklarr.": [],
@@ -1237,8 +1242,11 @@
  "Name of the remote server from remote_services, when several are configured. Only with --remote.": [],
  "Name the Sonarr with a letter, then letters, digits or dashes, like sonarr-1080p": [],
  "Needed to manage them in Settings, Cookies. Empty: Unshacklarr asks Unshackle, which works when both run on this computer.": [],
+ "Needs Unshackle 6": [],
+ "Needs Unshackle after 6.0.0": [],
  "Needs a look": [],
  "Needs a look is turned off above, so this message will not be sent.": [],
+ "Needs serve: dashboard: key:": [],
  "Neither a Netscape cookie file nor a JSON export": [],
  "Network: {0}": [
   "net.name"
@@ -1725,6 +1733,8 @@
  "Remote CDMs": [],
  "Remote backup": [],
  "Remote backup failed": [],
+ "Remote logins": [],
+ "Remote sessions": [],
  "Remove": [],
  "Remove it when parts were joined": [],
  "Remove this step": [],
@@ -1882,6 +1892,9 @@
  "Series finale": [],
  "Series hidden from the Schedule": [],
  "Series links from": [],
+ "Series of {0} use it: their downloads will fail. Update Unshackle to a version after 6.0.0.": [
+  "', '.join(services)"
+ ],
  "Series settings": [],
  "Series to check": [],
  "Series whose last 3 downloads failed": [],
@@ -2179,6 +2192,10 @@
  "Success rate": [],
  "Suggest services": [],
  "Sun": [],
+ "Supports: {0} of {1}": [
+  "st.caps.filter((c) => c.ok).length",
+  "st.caps.length"
+ ],
  "Sure?": [],
  "Sure? Delete the file": [],
  "Sure? It is in use": [],
@@ -2813,6 +2830,7 @@
  "Without the preferred audio": [],
  "Wrong passphrase, or the file is damaged": [],
  "Wrong password": [],
+ "Wrong serve: dashboard: key:": [],
  "Wrong setup code: Unshacklarr prints it when it starts (docker logs unshacklarr)": [],
  "Wrong setup code: it is in Unshacklarr's log": [],
  "Yesterday": [],

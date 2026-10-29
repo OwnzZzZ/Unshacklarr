@@ -80,10 +80,11 @@ document.querySelectorAll("[data-health]").forEach((b) => b.onclick = () => {
 
 function renderUnshackleStatus(st) {
   const local = st.mode === "local";
+  const dashboard = (st.caps || []).some((c) => c.name === "Dashboard" && c.ok);  // a remote serve's log, with its dashboard key
   $("#ux-run").replaceChildren(...(local ? [
     el("button", { className: "btn small", textContent: st.ok ? "Restart" : "Start", onclick: restartUnshackle }),
     el("button", { className: "btn small", textContent: "View log", onclick: showServeLog }),
-  ] : []));
+  ] : dashboard ? [el("button", { className: "btn small", textContent: "View log", onclick: showServeLog })] : []));
   const missing = (st.tools || []).filter((t) => !t.installed && t.required);
   const maint = (action, label, why) => el("button", { className: "btn small", textContent: label, title: why, onclick: async (e) => {
     e.target.disabled = true;
@@ -108,11 +109,14 @@ function renderUnshackleStatus(st) {
         } }))))] : [el("small", { className: "muted", textContent: "Nothing is downloading or waiting." })])),
     ...(Object.keys(st.errors || {}).length ? [el("div", { className: "st-sect" }, el("b", { textContent: "Errors since it started" }),
       el("small", { className: "muted", textContent: Object.entries(st.errors).sort((a, b) => b[1] - a[1]).map(([svc, n]) => `${svc} ${n}`).join(" · ") }))] : []),
+    ...(st.sessions?.length ? [el("div", { className: "st-sect" }, el("b", { textContent: "Remote sessions" }),
+      ...st.sessions.map((x) => el("small", { className: "muted", textContent: [x.owner, x.service, x.title || x.title_id].filter(Boolean).join(" · ") })))] : []),
     el("div", { className: "st-sect" }, el("b", { textContent: "Maintenance" }),
       el("div", { className: "st-maint" },
         maint("refresh-services", "Reload services", "After adding or updating a service in its services folder"),
         maint("clear-temp", "Clear temp", "Deletes the leftovers of interrupted downloads"),
-        maint("clear-cache", "Clear cache", "Deletes Unshackle's cache, logins included: services log in again next time"))),
+        maint("clear-cache", "Clear cache", "Deletes Unshackle's cache, logins included: services log in again next time"),
+        maint("clear-finished", "Clear finished", "Forgets the finished downloads Unshackle lists"))),
     // the commands name the bundled compose's container: shown only for its address (http://unshackle:8786)
     ...(local || !/^https?:\/\/unshackle(:\d+)?\/?$/.test(S.config.settings.unshackle_url || "") ? [] : [el("div", { className: "st-sect" }, el("b", { textContent: "Restart it or read its log where it runs" }),
       el("div", { className: "st-cmds" }, copyCmd("docker compose restart unshackle"), copyCmd("docker logs -f --tail 200 unshackle")))]),
@@ -137,6 +141,10 @@ function renderUnshackleStatus(st) {
     ...proxies,
     ...(missing.length ? [el("p", { className: "status-err", textContent: `Missing: ${missing.map((t) => t.name).join(", ")}. Install them, then check again.` })] : []),
     ...extra,
+    ...(st.caps ? [el("details", { className: "tools-box" },
+      el("summary", { className: "ok", textContent: `Supports: ${st.caps.filter((c) => c.ok).length} of ${st.caps.length}` }),
+      el("div", { className: "tools" }, ...st.caps.map((c) => el("span", { className: c.ok ? "" : "optional-missing", title: c.ok ? "" : c.why,
+        textContent: c.ok ? `✓ ${c.name}` : `— ${c.name}: ${c.why}` }))))] : []),
     ...(st.tools ? [el("details", { className: "tools-box" },
       el("summary", { className: missing.length ? "bad" : "ok", textContent: missing.length ? `Tools: ${missing.length} missing` : `Tools: all ${st.tools.filter((t) => t.required).length} required ones found` }),
       el("div", { className: "tools" }, ...st.tools.map((t) => el("span", { className: t.installed ? "" : t.required ? "missing" : "optional-missing",

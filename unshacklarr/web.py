@@ -1703,7 +1703,12 @@ def unshackle_health(full: bool = False) -> dict:
             state["jobs"] = [{"id": j["job_id"], "service": j.get("service"), "title": j.get("current_title") or j.get("title") or j.get("title_id"),
                               "status": j["status"], "progress": round(float(j.get("progress") or 0))}
                              for j in jobs if j["status"] in ("queued", "downloading")]
-            state["errors"] = {svc: sum(codes.values()) for svc, codes in UNSHACKLE.errors(dashboard_key()).items() if isinstance(codes, dict)}
+            key = dashboard_key()
+            status = UNSHACKLE.dashboard(key) or {}
+            state["errors"] = {svc: sum(codes.values()) for svc, codes in (status.get("errors") or {}).items() if isinstance(codes, dict)}
+            state["sessions"] = [{k: x.get(k) for k in ("owner", "service", "title", "title_id")}
+                                 for x in ((UNSHACKLE.dashboard(key, "sessions") or {}).get("sessions") or [])] if status else []
+            state["caps"] = unshackle_caps(h, bool(status), bool(key))
             state["tools"] = UNSHACKLE.tools() + [
                 {"name": f"{name} (for Unshacklarr)", "installed": bool(shutil.which(name)), "required": True}
                 for name in ("mkvmerge", "mkvpropedit")]
@@ -1847,6 +1852,9 @@ def check_alerts(now: datetime | None = None) -> None:
             problems["library"] = ("error", "A library folder is almost full",
                                    f"Less than {keep:g} GB free in {', '.join(full_roots)}: nothing is downloaded for its series. Make room, "
                                    "or lower the room kept free in Settings, Unshackle, Folders.")
+    if events.get("precheck", True) and (services := remote_unsupported(read_config())):
+        problems["remote"] = ("error", "--remote is not supported", f"Series of {', '.join(services)} use it: their downloads will fail. "
+                                                                   "Update Unshackle to a version after 6.0.0.")
     if events.get("cookies", True):
         try:
             state = cookie_state()
@@ -1889,6 +1897,38 @@ async def status(request):
     if request.query.get("full"):
         health["unshackle"] = {**await asyncio.to_thread(unshackle_health, True), "checked": datetime.now(timezone.utc).isoformat()}
     return web.json_response(health)
+
+
+def unshackle_caps(health: dict, dashboard: bool, keyed: bool) -> list[dict]:
+    """What this Unshackle lets Unshacklarr do, asked to it: each with what is missing when it cannot."""
+    after = "Needs Unshackle after 6.0.0"
+    try:
+        remote = isinstance(UNSHACKLE.config().get("remote_services"), list)
+    except UnshackleError:
+        remote = False
+    try:
+        UNSHACKLE.remote_logins()
+        logins = True
+    except UnshackleError:
+        logins = False
+    major = re.match(r"(\d+)", str(health.get("version") or ""))
+    return [{"name": "Download questions", "ok": bool(major and int(major[1]) >= 6), "why": "Needs Unshackle 6"},
+            {"name": "--remote", "ok": remote, "why": after},
+            {"name": "Remote logins", "ok": logins, "why": after},
+            {"name": "Dashboard", "ok": dashboard, "why": "Wrong serve: dashboard: key:" if keyed else "Needs serve: dashboard: key:"}]
+
+
+def remote_unsupported(config: dict) -> list[str]:
+    """The services whose series are set to --remote while this Unshackle cannot run it (6.0.0)."""
+    shows = [s for s in config["series"].values() if s.get("service") and sonarr_sync.stacked(s, config)[0].get("--remote")]
+    if not shows:
+        return []
+    try:
+        if isinstance(UNSHACKLE.config().get("remote_services"), list):
+            return []
+    except UnshackleError:
+        return []  # down: told apart
+    return sorted({str(s["service"]) for s in shows})
 
 
 def dashboard_key() -> str:
@@ -2295,7 +2335,7 @@ async def allow_proxies(_):
     return web.json_response({"saved": new != text})
 
 
-MAINTENANCE = {"clear-cache", "clear-temp", "refresh-services"}  # serve's own /api/maintenance actions
+MAINTENANCE = {"clear-cache", "clear-temp", "refresh-services", "clear-finished"}  # serve's own maintenance actions
 
 
 async def unshackle_maintenance(request):
@@ -2303,7 +2343,8 @@ async def unshackle_maintenance(request):
     if action not in MAINTENANCE:
         raise web.HTTPNotFound(text="Unknown maintenance action")
     try:
-        result = await asyncio.to_thread(UNSHACKLE.call, "POST", f"/api/maintenance/{action}")
+        path = "/api/download/jobs/clear-finished" if action == "clear-finished" else f"/api/maintenance/{action}"
+        result = await asyncio.to_thread(UNSHACKLE.call, "POST", path)
     except UnshackleError as e:
         raise web.HTTPBadGateway(text=str(e))
     if action == "refresh-services":
@@ -2323,9 +2364,14 @@ async def cancel_job(request):
 
 
 async def unshackle_log(_):
-    if UNSHACKLE.mode == "remote":
-        raise web.HTTPBadRequest(text="A remote unshackle serve keeps its log where it runs")
-    return web.json_response({"log": UNSHACKLE.local.tail(400, "\n")})
+    if UNSHACKLE.mode != "remote":
+        return web.json_response({"log": UNSHACKLE.local.tail(400, "\n")})
+    found = await asyncio.to_thread(UNSHACKLE.dashboard, await asyncio.to_thread(dashboard_key), "logs")
+    if found is None:
+        raise web.HTTPBadRequest(text="Its log needs serve: dashboard: key: in unshackle.yaml (Unshackle after 6.0.0)")
+    lines = [f"{datetime.fromtimestamp(float(r.get('ts') or 0)).strftime('%H:%M:%S')} {r.get('level')} {r.get('logger')}: {r.get('msg')}"
+             for r in found.get("records") or [] if not str(r.get("logger") or "").startswith("aiohttp.access")]  # not every request
+    return web.json_response({"log": "\n".join(lines[-400:])})
 
 
 async def stop_run(request):
@@ -4800,7 +4846,7 @@ def file_speaks(ep: dict, lang: str) -> bool | None:
 
 
 # A download's own proxy, as Unshackle's --proxy takes a provider's region: nordvpn:fr, surfshark:tw, protonvpn:us:ny
-PROXY_OVERRIDE = re.compile(r"[a-z]+:[a-z]{2}[a-z0-9:-]{0,30}", re.IGNORECASE)
+PROXY_OVERRIDE = re.compile(r"[a-z]+:[a-z]{2}[a-z0-9:-]{0,30}(?:@-?[\w.-]{1,40})?", re.IGNORECASE)  # @: a network or IP (after 6.0.0)
 # A download's own video codec, by its usual names, as the quality ladders call it
 VCODEC_OVERRIDE = {"h.264": "AVC", "avc": "AVC", "h.265": "HEVC", "hevc": "HEVC"}
 

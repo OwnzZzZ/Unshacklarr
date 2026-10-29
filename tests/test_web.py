@@ -776,6 +776,7 @@ def test_the_api_takes_a_download_s_own_proxy_and_refuses_a_malformed_one(tmp_pa
     ok, region, bad = asyncio.run(go())
     assert ok == region == 200 and bad == [400] * 6
     assert started == [([5], {"proxy": "nordvpn:fr"}), ([6], {"proxy": "protonvpn:us:ny"}), ([8], {})]  # empty: the series' own
+    assert all(web.PROXY_OVERRIDE.fullmatch(p) for p in ("nordvpn:fr@187.14.108.15", "nordvpn:ca@-datacamp"))  # a network or IP
 
 
 def test_the_api_takes_a_download_s_own_codec_and_height_and_refuses_others(tmp_path, monkeypatch):
@@ -2777,3 +2778,18 @@ def test_a_jobs_dialog_starts_from_the_options_its_episodes_have(tmp_path, monke
     assert web.job_base_options("20261021-121217-33d6d0") == {"options": {"--quality": "1080", "--vcodec": "H.265", "--proxy": "nordvpn:fr"},
                                                              "service_options": {"--server-identity": True}}
     assert web.job_base_options("20261021-000000-aaaaaa") == {}  # over: nothing to start from
+
+
+def test_series_on_remote_are_told_when_unshackle_cannot_run_it(tmp_path, monkeypatch):
+    # 6.0.0 has no remote_services in /api/config: the services whose series use --remote are named; none after 6.0.0
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    config = {"defaults": {}, "service_defaults": {"NF": {"options": {"--remote": True}, "service_options": {}}},
+              "series": {"1": {"service": "NF", "title": "x"}, "2": {"service": "MAX", "title": "y"}}}
+    monkeypatch.setattr(web.UNSHACKLE, "config", lambda: {"dl": {}})
+    assert web.remote_unsupported(config) == ["NF"]
+    monkeypatch.setattr(web.UNSHACKLE, "config", lambda: {"dl": {}, "remote_services": ["box"]})
+    assert web.remote_unsupported(config) == []

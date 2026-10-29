@@ -401,7 +401,7 @@ def test_serves_passing_errors_say_their_code_and_a_restart_waits_for_its_downlo
         backend.call("POST", "/api/list-titles", json={"service": "NF", "title_id": "1"})
 
     responses.get("http://backend:8786/api/dashboard/status", json={"errors": {"NF": {"SERVICE_ERROR": 2}}})
-    assert backend.errors("") == {} and backend.errors("dash-key") == {"NF": {"SERVICE_ERROR": 2}}
+    assert backend.dashboard("") is None and backend.dashboard("dash-key") == {"errors": {"NF": {"SERVICE_ERROR": 2}}}
     assert responses.calls[-1].request.headers["X-Secret-Key"] == "dash-key"  # the dashboard's own key, not the API's
 
     monkeypatch.setattr(Unshackle, "mode", property(lambda self: "local"))  # serve run by Unshacklarr: restarted by it
