@@ -2308,5 +2308,6 @@
  "Two episodes the same evening, published one after the other. Empty: same time.": "Dos episodios la misma noche, publicados uno tras otro. Vacío: a la misma hora.",
  "Use this schedule": "Usar este horario",
  "User header": "Cabecera de usuario",
- "min later": "min después"
+ "min later": "min después",
+ "{0} cookies expire in 1 day": "Las cookies de {0} caducan en 1 día"
 }

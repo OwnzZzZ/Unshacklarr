@@ -59,6 +59,8 @@ Unshacklarr can be reached from outside your network.
   "Donjon"; a title only translated ("Dungeon", "Donjon") is no longer marked *Other title*.
 - **The output's scrollbar can be dragged.** The text covered it when the output was wider than its box.
 - **Seasons on the service on a phone.** The field gets the full keyboard, so `=` and `,` can be typed.
+- **No more false cookie warnings.** Crave's load balancer cookies (a week) and Apple's `utsdc` (an hour) no longer
+  count as the date the login ends.
 
 **🆕 Sonarr 5, on this branch until it is out of beta**
 - **Languages.** Your files without your audio languages, read from Sonarr 5's own tracks: watch them for the

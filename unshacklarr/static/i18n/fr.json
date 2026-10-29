@@ -2322,5 +2322,6 @@
  "Two episodes the same evening, published one after the other. Empty: same time.": "Deux épisodes le même soir, publiés l'un après l'autre. Vide: même heure.",
  "Use this schedule": "Utiliser cette grille",
  "User header": "En-tête utilisateur",
- "min later": "min après"
+ "min later": "min après",
+ "{0} cookies expire in 1 day": "Cookies {0}: expirent dans 1 jour"
 }

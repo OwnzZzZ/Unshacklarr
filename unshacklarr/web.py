@@ -1860,7 +1860,8 @@ def check_alerts(now: datetime | None = None) -> None:
                 if f.get("expired"):
                     problems[f"cookies:{name}"] = ("error", f"{name} cookies have expired", "Its downloads will fail: replace them in Settings, Cookies.")
                 elif left is not None and 0 <= left < 7:
-                    problems[f"cookies:{name}"] = ("warning", f"{name} cookies expire in {max(1, round(left))} days",
+                    days = round(left)
+                    problems[f"cookies:{name}"] = ("warning", f"{name} cookies expire in {days} days" if days > 1 else f"{name} cookies expire in 1 day",
                                                     "Replace them before they expire, in Settings, Cookies.")
     if events.get("cdm", True):
         try:

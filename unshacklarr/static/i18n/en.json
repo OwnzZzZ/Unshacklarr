@@ -3434,9 +3434,12 @@
  "{0} contains a symbolic link: nothing was joined or renamed. Check the folder": [
   "out.name"
  ],
+ "{0} cookies expire in 1 day": [
+  "name"
+ ],
  "{0} cookies expire in {1} days": [
   "name",
-  "max(1, round(left))"
+  "days"
  ],
  "{0} cookies have expired": [
   "name"
