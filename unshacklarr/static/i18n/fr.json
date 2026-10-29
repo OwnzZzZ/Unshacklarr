@@ -2323,5 +2323,6 @@
  "Use this schedule": "Utiliser cette grille",
  "User header": "En-tête utilisateur",
  "min later": "min après",
- "{0} cookies expire in 1 day": "Cookies {0}: expirent dans 1 jour"
+ "{0} cookies expire in 1 day": "Cookies {0}: expirent dans 1 jour",
+ "The remote server's options are not known with this Unshackle: write them as they are.": "Les options du serveur distant ne sont pas connues avec cet Unshackle: écrivez-les telles quelles."
 }

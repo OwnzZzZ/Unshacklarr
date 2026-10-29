@@ -8,6 +8,10 @@ function renderCommands() {
     const l = S.config.service_defaults?.[c.dataset.tag] || {};
     c.textContent = ["unshackle dl", ...argsOf({ ...S.config.defaults, ...l.options }), c.dataset.tag, ...argsOf(l.service_options), "<series>"].join(" ");
   });
+  document.querySelectorAll(".dx-remote-note").forEach((n) => {  // --remote on, its server's options not listed (Unshackle 6.0.0)
+    const l = S.config.service_defaults?.[n.dataset.tag] || {};
+    n.hidden = n.dataset.known === "1" || !{ ...S.config.defaults, ...l.options }["--remote"];
+  });
 }
 
 /* Options per service: defaults < service < series, for every series on that service. */
@@ -36,6 +40,8 @@ async function renderServiceDefaults() {
         field("Quality ladder", ladder, "Default: the one of Settings, Quality.")),
       el("span", { className: "sub", textContent: "Download options" }), dl,
       el("span", { className: "sub", textContent: `Options of ${tag}` }), own,
+      el("small", { className: "help dx-remote-note", hidden: true, dataset: { tag, known: specs.some((s) => s.remote) ? "1" : "" },
+        textContent: "The remote server's options are not known with this Unshackle: write them as they are." }),
       el("div", { className: "dx-cmd" }, el("span", { textContent: `A ${tag} download starts as` }),
         el("code", { className: "dx-svc-cmd", translate: "no", dataset: { tag } }))));
   }

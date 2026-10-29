@@ -2342,5 +2342,6 @@
  "Use this schedule": "使用此时间表",
  "User header": "用户请求头",
  "min later": "分钟后",
- "{0} cookies expire in 1 day": "{0} 的 Cookie 将在 1 天后过期"
+ "{0} cookies expire in 1 day": "{0} 的 Cookie 将在 1 天后过期",
+ "The remote server's options are not known with this Unshackle: write them as they are.": "此 Unshackle 无法获取远程服务器的选项：请按原样填写。"
 }
