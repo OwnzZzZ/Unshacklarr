@@ -322,7 +322,7 @@ class Unshackle:
         10 minutes: their names in /api/config and each one's /api/services?remote= (Unshackle after 6.0.0), else
         the fork's /api/remote/services; none when this Unshackle cannot tell (6.0.0, or unreachable)."""
         fetched, servers = self._remote
-        if time.monotonic() - fetched > 600:
+        if not fetched or time.monotonic() - fetched > 600:  # monotonic counts from boot: never fresh before a first ask
             servers = []
             try:
                 names = self.config().get("remote_services")
