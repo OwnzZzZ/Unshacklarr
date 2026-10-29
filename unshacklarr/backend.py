@@ -319,8 +319,8 @@ class Unshackle:
 
     def remote_services(self) -> list[dict]:
         """The servers of Unshackle's remote_services and the services each offers (for --remote), kept
-        10 minutes: their names in /api/config and each one's /api/services?remote= (Unshackle after 6.0.0), else
-        the fork's /api/remote/services; none when this Unshackle cannot tell (6.0.0, or unreachable)."""
+        10 minutes: their names in /api/config and each one's /api/services?remote= (Unshackle after 6.0.0);
+        none when this Unshackle cannot tell (6.0.0, or unreachable)."""
         fetched, servers = self._remote
         if not fetched or time.monotonic() - fetched > 600:  # monotonic counts from boot: never fresh before a first ask
             servers = []
@@ -328,17 +328,11 @@ class Unshackle:
                 names = self.config().get("remote_services")
             except UnshackleError:
                 names = None
-            if isinstance(names, list):
-                for name in names:
-                    try:
-                        servers.append({"name": name, "services": self.call("GET", "/api/services", params={"remote": name}).get("services") or []})
-                    except UnshackleError:
-                        pass  # that server down: the others' options still shown
-            else:
+            for name in names if isinstance(names, list) else []:
                 try:
-                    servers = self.call("GET", "/api/remote/services").get("servers") or []
+                    servers.append({"name": name, "services": self.call("GET", "/api/services", params={"remote": name}).get("services") or []})
                 except UnshackleError:
-                    pass
+                    pass  # that server down: the others' options still shown
             self._remote = (time.monotonic(), servers)
         return servers
 
@@ -375,6 +369,14 @@ class Unshackle:
         return config
 
     def download(self, payload: dict) -> str:
+        if payload.get("remote") is True:  # dl's --remote [--server X]: serve takes the server's name in "remote"
+            names = self.config().get("remote_services")
+            names = names if isinstance(names, list) else []
+            server = payload.get("server") or (names[0] if len(names) == 1 else None)
+            if not server:
+                raise UnshackleError("--remote needs --server: name one of remote_services in unshackle.yaml" if names
+                                     else "--remote needs a server in remote_services of unshackle.yaml (and Unshackle after 6.0.0)")
+            payload = {**{k: v for k, v in payload.items() if k != "server"}, "remote": server}
         if not payload.get("remote"):
             # A service that failed to import is in serve's load_errors (Unshackle after 5.4.0; none before): told
             # now, not once the job fails. Asked afresh each time, not the cached list: serve may have restarted.

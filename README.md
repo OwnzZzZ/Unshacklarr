@@ -75,7 +75,7 @@ flowchart LR
   </tr>
   <tr>
     <td valign="top">🧩 <b>Episodes in parts</b><br>Joined into one file, or kept apart when Sonarr counts each part, and never imported half when a series waits for all of them.</td>
-    <td valign="top">🍪 <b>Cookies and CDMs</b><br>Unshackle's cookie files with their expiry, its Widevine and PlayReady devices with a test license, and the device of each service.</td>
+    <td valign="top">🍪 <b>Cookies and CDMs</b><br>Unshackle's cookie files with their expiry, its Widevine and PlayReady devices, and the device of each service.</td>
   </tr>
   <tr>
     <td valign="top">🔔 <b>Notifications</b><br>Discord, Telegram, ntfy, Pushover, e-mail and <a href="https://github.com/caronc/apprise#supported-notifications">100 more</a>, each address with the messages you tick for it, and quiet hours.</td>
@@ -125,10 +125,8 @@ You need:
 - 🎞️ **MKVToolNix** (`mkvmerge`, `mkvpropedit`), which Unshackle needs too; the Docker image has it.
 
 > [!NOTE]
-> A few extras need what Unshackle itself does not have yet: describing, testing and reprovisioning
-> CDM devices, downloading through a remote server (`--remote`), a TV login's link and code, and
-> Unshackle's own log, live in Activity. Without them, everything else works. Answering a service's
-> question during a download (a code sent by e-mail) needs Unshackle 6.0 or later.
+> Answering a service's question during a download (a code sent by e-mail) needs Unshackle 6.0 or later;
+> downloading through a remote server (`--remote`) needs a version after 6.0.0.
 >
 > **Unshackle 6** lets an API key use the proxies of `unshackle.yaml` (a country code such as `au`, or a
 > provider) only once it is allowed. Run by Unshacklarr on the same computer, its key always is; with
@@ -377,9 +375,6 @@ download. Unshacklarr must see those files:
 - **with Docker**, mount Unshackle's config folder in both containers and set
   `UNSHACKLE_CONFIG_DIR`, as `docker-compose.example.yml` does;
 - a `serve` on **another machine** with no shared folder keeps them to itself.
-
-Describing, testing and reprovisioning devices goes through `unshackle serve`, which has the DRM
-libraries.
 
 **One device for a series or a service** (Unshackle 6): the `--cdm` option, its value picked among the devices
 above, overrides the `cdm:` section for those downloads. Unshackle takes it only once `unshackle.yaml` allows it:

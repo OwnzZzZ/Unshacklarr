@@ -855,33 +855,11 @@ def with_codec(label: str, codec: str) -> str:
 def job_cause(job: dict) -> str:
     """Why a job failed, in a line: Unshackle's own error (what it printed on stderr),
     else serve's message without its "Worker exited with code 1:" wrapping."""
-    # through a remote server, a proxy that failed is said in the job's log only, under "exit code 1"
-    proxy = next((re.sub(r"^\d\d:\d\d:\d\d \w+ \S+: ", "", str(x)) for x in reversed(job.get("log") or []) if PROXY_DOWN.search(str(x))), "")
-    if proxy and not PROXY_DOWN.search(job.get("error_message") or ""):
-        return proxy
     stderr = (job.get("worker_stderr") or "")[-20_000:]  # its end: a service may put a whole page in it
     if (m := re.search(r"^Stderr:[ \t]*(.+?)\s*(?:^Worker failed|\Z)", stderr, re.M | re.S)) and m.group(1).strip():
         return m.group(1).strip()
     message = job.get("error_message") or job.get("status") or "failed"
     return re.sub(r"^(?:Worker exited with code \d+:\s*)+", "", message).strip()
-
-
-def ask_for_action(run: EpisodeRun, need: dict | None) -> None:
-    """What the service needs from the person to go on (a TV login: a link and a code), on the
-    run's card for Activity and sent once per code; gone from the card once done."""
-    had = run.card.get("action")
-    if need and need.get("code") and need.get("code") != (had or {}).get("code"):
-        run.card["action"] = {k: need.get(k) for k in ("service", "message", "url", "code", "expires_at")}
-        left = max(1, round((float(need.get("expires_at") or time.time() + 600) - time.time()) / 60))
-        what = f"open {need.get('url')} and enter {need.get('code')}"
-        run.say(f"\r\n\x1b[33m{need.get('service') or run.card['service']}: {need.get('message') or 'action needed'}: {what} (within {left} min)\x1b[0m")
-        notify((read_file().get("notifications") or {}), "warning", f"{need.get('service') or run.card['service']} needs you: {need.get('code')}",
-               f"{need.get('message') or 'Action needed'}: {what} within {left} min, for {run.card['series']} {run.card['sxxeyy']}.",
-               action=run.card["action"])
-    elif not need and had:
-        del run.card["action"]
-        inbox_resolve(had.get("code"))
-        run.say(f"\r\n\x1b[32m{had.get('service') or run.card['service']}: done, going on\x1b[0m")
 
 
 def ask_for_input(run: EpisodeRun, prompt: str | None) -> None:
@@ -1087,12 +1065,12 @@ def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float, job_
     if run:  # what Activity's Stop button cancels
         run.card["job_id"] = job_id
         run.save()
-    last_status, line, logged, saved = None, "", 0, ""
+    last_status, line, saved = None, "", ""
     seen: dict[str, float] = {}  # serve lists only the tracks downloading now: keep the others
     timed: dict[str, list] = {}  # each track's [first seen, done]: how long it took
     labels: dict[str, str] = {}  # a track's key (its part and its place, or its label from an older serve): its label
     titles: list[str] = []
-    misses, since, hinted, quiet_count = 0, time.monotonic(), False, 0
+    misses, since, hinted = 0, time.monotonic(), False
     while True:
         try:
             job = backend.job(job_id)
@@ -1134,8 +1112,8 @@ def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float, job_
                     # at its very end serve deletes the tracks before it moves the file: what goes in never shrinks
                     now["total"] = max(now["total"], (run.card.get("mux") or {}).get("total") or 0)
                     run.card["mux"] = now
-        if job.get("track_progress") or int(job.get("log_count") or 0) != quiet_count:  # serve says something: it moves
-            since, quiet_count = time.monotonic(), int(job.get("log_count") or 0)
+        if job.get("track_progress"):  # serve says something: it moves
+            since = time.monotonic()
         if run and not hinted and status not in ("queued", *TERMINAL) and time.monotonic() - since > SIGN_IN_HINT:
             # nothing new from serve, no track, for 2 minutes: the service may wait for a sign-in
             hinted = True
@@ -1162,11 +1140,8 @@ def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float, job_
             run.card["tracks"] = [{"label": part(k) + with_codec(labels[k], codec), "progress": round(v, 1),
                                    **({"took": round(timed[k][1] - timed[k][0])} if timed[k][1] is not None else {})} for k, v in seen.items()]
             run.card["live"] = {k: job.get(k) for k in ("status", "progress", "speed", "completed_tracks", "total_tracks", "phase")}
-            if job.get("cdm") or job.get("proxy"):  # what serve went through, once it says (no proxy is an answer too)
-                run.card.update(proxy=job.get("proxy"), cdm=job.get("cdm"))
             if status == "downloading" and run.card["step"] == "queued":
                 run.card["step"] = "downloading"
-            ask_for_action(run, job.get("action_needed") if status not in TERMINAL else None)
             ask_for_input(run, job.get("input_prompt") if status not in TERMINAL else None)
             notice = job.get("notice") if status not in TERMINAL else None  # Unshackle 6: an approval waited for, no answer
             if notice != run.card.get("notice"):
@@ -1178,14 +1153,6 @@ def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float, job_
             if (snapshot := json.dumps(run.card)) != saved:  # unchanged: not written again every half second, which
                 run.save()                                   # would make every reader parse the whole history again
                 saved = snapshot
-        if run and (count := int(job.get("log_count") or 0)) > logged:  # Unshackle's own log, as it goes
-            lines = (job.get("log") or [])[-(count - logged):]
-            if count - logged > len(lines):
-                run.raw(f"\r\x1b[2K\x1b[90m… {count - logged - len(lines)} lines of Unshackle's log skipped\x1b[0m\r\n".encode())
-            for text in lines:
-                colour = "31" if " ERROR " in text or " CRITICAL " in text else "33" if " WARNING " in text else "90"
-                run.raw(f"\r\x1b[2K\x1b[{colour}m  {text}\x1b[0m\r\n".encode())
-            logged, line = count, ""  # the progress line is drawn again under them
         if DEBUG and run and status != last_status:
             trace("job: " + json.dumps({k: v for k, v in job.items() if k not in ("log", "track_progress", "parameters")})[:1500], debug=True)
         if status != last_status and run:
@@ -1211,10 +1178,6 @@ def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float, job_
     if run and (made := codec_in(" ".join(Path(f).name for f in files))):  # the codec it came in, over the one asked
         run.card["tracks"] = [{**t, "label": with_codec(re.sub(r" (H\.26[456]|AV1|VP9|VC-1|MPEG-2)$", "", t["label"]), made)}
                               for t in run.card.get("tracks") or []]
-    if run and run.card.get("batch") and NORD_REGION.match(str(payload.get("proxy") or "")) and \
-            (m := next((NORD_SERVER.search(str(x)) for x in reversed(job.get("log") or []) if NORD_SERVER.search(str(x))), None)):
-        job_proxy[run.card["batch"]] = f"nordvpn:{m.group(1).lower()}"  # its next episodes keep this server
-        trace(f"the next episodes of this job go through the same NordVPN server, {m.group(1).lower()}")
     trace(f"Unshackle made {len(files)} file{'s' if len(files) != 1 else ''}: " + ", ".join(Path(f).name for f in files))
     return files
 
@@ -1226,24 +1189,9 @@ RETRY_AFTER = (30, 120)  # seconds before each retry
 # The proxy refused or unreachable: a provider's region (nordvpn:fr) gives another server at each try
 PROXY_DOWN = re.compile(r"INVALID_PROXY|proxy check failed|ProxyError|unable to connect to proxy|407 proxy authentication", re.IGNORECASE)
 PROXY_RETRIES = 3  # tries again at once, each on the server the provider gives then; past them, its job pauses
-# A job keeps the NordVPN server its first episode went through (nordvpn:fr gives another at each download): ponytail:
-# NordVPN only, the one provider whose servers Unshackle takes by name (nordvpn:fr962); another provider changes still
-NORD_REGION = re.compile(r"^nordvpn:([a-z]{2})$", re.IGNORECASE)
-NORD_SERVER = re.compile(r"Using NordVPN Proxy: \S*?([a-z]{2}\d+)\.proxy\.nordvpn\.com", re.IGNORECASE)
-job_proxy: dict[str, str] = {}  # job -> "nordvpn:fr962", the server its episodes keep
-
-
-def kept_proxy(show: dict, config: dict, batch: str | None) -> dict:
-    """The series as this job downloads it: through the NordVPN server its first episode went through, when its proxy
-    is a NordVPN country (nordvpn:fr) and that server is in that country."""
-    server = job_proxy.get(batch or "")
-    region = NORD_REGION.match(str(stacked(show, config)[0].get("--proxy") or ""))
-    if not server or not region or not server.split(":")[1].lower().startswith(region.group(1).lower()):
-        return show
-    return {**show, "options": {**(show.get("options") or {}), "--proxy": server}}
 SERVE_RETRY_AFTER = (60, 180, 600)  # serve itself too slow to answer (its disks saturated): longer, once more (#10)
 UNREACHABLE = "unshackle serve is unreachable"  # Unshackle.call's words when it can't reach serve, not an answer
-SIGN_IN_HINT = 120  # seconds with no new line from serve and no track before a download says the service may wait for a sign-in
+SIGN_IN_HINT = 120  # seconds with no track before a download says the service may wait for a sign-in
 POLL_MISSES = 12  # job statuses missed in a row (5 s apart at least) before the job counts as lost
 # The service turned Unshackle away: cookies or credentials out of date, most of the time.
 LOGIN = re.compile(r"\b40[13]\b|unauthori[sz]ed|forbidden|not logged|log ?in|sign ?in|cookie|expired|session|"
@@ -1318,9 +1266,6 @@ def run_job_retrying(payload: dict, run: EpisodeRun | None = None, sleep=time.sl
                     e.proxy_down = True  # its job pauses: the next episodes would meet the same proxy
                     raise
                 proxy_tries += 1
-                if re.fullmatch(r"nordvpn:[a-z]{2}\d+", str(payload.get("proxy") or ""), re.IGNORECASE) and run and job_proxy.get(run.card.get("batch") or "") == payload["proxy"]:
-                    job_proxy.pop(run.card["batch"], None)  # the server the job kept failed: back to its country, another server
-                    payload = {**payload, "proxy": re.sub(r"\d+$", "", payload["proxy"])}
                 if run:
                     run.say(f"\r\n\x1b[33mThe proxy failed ({cause[:120]}): trying again ({proxy_tries}/{PROXY_RETRIES})\x1b[0m")
                     run.card["attempts"] = run.card.get("attempts", 1) + 1
@@ -1821,7 +1766,6 @@ def download_request(show: dict, config: dict, service_sxxeyy: str, out: Path) -
         "title_id": str(show["title"]),
         "wanted": [service_sxxeyy],
         "output_dir": seen_by("unshackle_downloads", out, backend.settings),
-        **({"debug": True} if DEBUG else {}),  # the job's log at DEBUG
     }
 
 
@@ -2948,7 +2892,6 @@ def sync(config: dict, settings: dict, episodes, manual: bool = False, replace: 
                 running_jobs.pop(batch)
                 paused_jobs.discard(batch)
                 job_options.pop(batch, None)
-                job_proxy.pop(batch, None)
         release_job(batch)  # the job is over: its download slot goes to the next pick in line (#10)
 
 
@@ -3071,7 +3014,6 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                 continue
             show = season_page(show, ep["seasonNumber"])  # a season on a page of its own downloads from there
             show = with_job_options(show, batch)  # options changed for this job from Activity, over the series' own
-            show = kept_proxy(show, config, batch)  # the NordVPN server the job went through so far
 
             sxxeyy = f"S{ep['seasonNumber']:02}E{ep['episodeNumber']:02}"
             service_sxxeyy = sxxeyy if show.get("programmes") else service_episode(show, ep["seasonNumber"], ep["episodeNumber"])

@@ -261,7 +261,7 @@ def test_a_service_that_failed_to_load_is_refused_before_the_job_others_go_on(tm
         backend.download({"service": "AMZN"})
     assert not any(call.request.method == "POST" for call in responses.calls)
     assert backend.download({"service": "BINGE"}) == "queued"
-    assert backend.download({"service": "AMZN", "remote": True}) == "queued"
+    assert backend.download({"service": "AMZN", "remote": "box"}) == "queued"
 
     responses.replace(responses.GET, "http://backend:8786/api/services",
                       json={"services": [{"tag": "AMZN"}], "load_errors": []})
@@ -352,7 +352,7 @@ def test_load_balancer_and_short_technical_cookies_say_nothing_of_the_login(tmp_
 
 
 @responses.activate
-def test_a_remote_servers_services_come_from_unshackles_own_api_else_the_forks(tmp_path):
+def test_a_remote_servers_services_come_from_unshackles_own_api(tmp_path):
     # After 6.0.0: the names in /api/config, each server's services in /api/services?remote=; 6.0.0 has neither
     from responses import matchers
     backend = Unshackle(tmp_path)
@@ -363,8 +363,26 @@ def test_a_remote_servers_services_come_from_unshackles_own_api_else_the_forks(t
     responses.get("http://backend:8786/api/services", match=[matchers.query_param_matcher({"remote": "down"})], status=503, json={})
     assert backend.remote_services() == [{"name": "community", "services": [nf]}]  # the server down left out
 
-    fork = Unshackle(tmp_path)
-    fork.configure({"unshackle_url": "http://fork:8786", "unshackle_api_key": "test-api-secret"})
-    responses.get("http://fork:8786/api/config", json={"config": {"dl": {}}})
-    responses.get("http://fork:8786/api/remote/services", json={"servers": [{"name": "community", "services": [nf]}]})
-    assert fork.remote_services() == [{"name": "community", "services": [nf]}]
+    old = Unshackle(tmp_path)
+    old.configure({"unshackle_url": "http://old:8786", "unshackle_api_key": "test-api-secret"})
+    responses.get("http://old:8786/api/config", json={"config": {"dl": {}}})
+    assert old.remote_services() == []  # 6.0.0: no names, nothing asked
+
+
+@responses.activate
+def test_remote_names_its_server_as_serve_takes_it(tmp_path):
+    # dl's --remote [--server X] goes to serve as remote: "X"; the one server of remote_services when none is named
+    import json
+    backend = Unshackle(tmp_path)
+    backend.configure({"unshackle_url": "http://backend:8786", "unshackle_api_key": "test-api-secret"})
+    responses.get("http://backend:8786/api/config", json={"config": {"remote_services": ["community"]}})
+    responses.post("http://backend:8786/api/download", json={"job_id": "j"})
+    backend.download({"service": "NF", "remote": True})
+    backend.download({"service": "NF", "remote": True, "server": "other"})
+    sent = [json.loads(c.request.body) for c in responses.calls if c.request.method == "POST"]
+    assert sent == [{"service": "NF", "remote": "community"}, {"service": "NF", "remote": "other"}]
+
+    responses.replace(responses.GET, "http://backend:8786/api/config", json={"config": {"remote_services": ["a", "b"]}})
+    backend._config = (0.0, {})
+    with pytest.raises(UnshackleError, match="--server"):
+        backend.download({"service": "NF", "remote": True})

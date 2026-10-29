@@ -34,8 +34,6 @@ Unshacklarr can be reached from outside your network.
 **🌐 Proxies**
 - **A proxy that fails is tried again**, at once, 3 times, each on another server of the provider (nordvpn:fr). If it
   still fails, the job pauses and you are told, instead of failing every episode left.
-- **A job keeps its NordVPN server.** With nordvpn:fr, its episodes go through the server the first one used, and back
-  to any French server if that one fails.
 
 **🎧 Services and languages**
 - **orig in the accepted audio languages.** Each series' original language as Sonarr gives it, so "orig, fr" works for
@@ -59,10 +57,18 @@ Unshacklarr can be reached from outside your network.
   "Donjon"; a title only translated ("Dungeon", "Donjon") is no longer marked *Other title*.
 - **The output's scrollbar can be dragged.** The text covered it when the output was wider than its box.
 - **Seasons on the service on a phone.** The field gets the full keyboard, so `=` and `,` can be typed.
-- **A remote server's own options with the official Unshackle.** Its options are read from Unshackle's own API (after
-  6.0.0), not only from a fork; with 6.0.0, Per service says they are not known and to write them as they are.
+- **`--remote` with the official Unshackle.** A download through a remote server and its options now go through
+  Unshackle's own API (after 6.0.0); with 6.0.0, Per service says the options are not known and to write them as is.
 - **No more false cookie warnings.** Crave's load balancer cookies (a week) and Apple's `utsdc` (an hour) no longer
   count as the date the login ends.
+
+### Removed
+
+What only a fork of Unshackle gave: Unshacklarr now needs nothing but the official Unshackle.
+- **The CDM devices' test, details and reprovisioning**, and the *A CDM device fails* alert. Adding, deleting and
+  choosing a device stay.
+- **The TV login code box.** Disney+ now shows its code as Unshackle's own notice on the download.
+- **Unshackle's log in Activity**, and the proxy and CDM a download went through.
 
 ## [1.5.0] - 2026-10-17
 

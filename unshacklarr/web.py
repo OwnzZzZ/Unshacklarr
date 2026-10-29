@@ -1012,7 +1012,7 @@ def check_quiet(quiet) -> dict | None:
     return {"from": quiet["from"], "to": quiet["to"]}
 
 
-EVENTS = ("down", "cookies", "cdm", "precheck", "disk")  # what else is watched and told: Unshackle or Sonarr down, cookies, CDM devices, a check before a release
+EVENTS = ("down", "cookies", "precheck", "disk")  # what else is watched and told: Unshackle or Sonarr down, cookies, a check before a release
 
 
 def check_broadcast(plan: dict, key: str) -> dict:
@@ -1814,12 +1814,10 @@ async def watch_updates():
 
 
 ALERTS_FILE = sonarr_sync.DATA / "alerts.json"  # what was told already: {key: state}, told again only when it changes
-CDM_TEST_EVERY = timedelta(days=1)
 
 
 def check_alerts(now: datetime | None = None) -> None:
-    """Cookies about to expire or expired, and CDM devices in use that fail their test (tested once a day):
-    each told once, told again only if it changes."""
+    """Cookies about to expire or expired: each told once, told again only if it changes."""
     now = now or datetime.now(timezone.utc)
     settings = read_config()["notifications"]
     events = settings.get("events") or {}
@@ -1849,27 +1847,6 @@ def check_alerts(now: datetime | None = None) -> None:
                     days = round(left)
                     problems[f"cookies:{name}"] = ("warning", f"{name} cookies expire in {days} days" if days > 1 else f"{name} cookies expire in 1 day",
                                                     "Replace them before they expire, in Settings, Cookies.")
-    if events.get("cdm", True):
-        try:
-            state = cdm_state()
-        except UnshackleError:
-            state, unknown = None, unknown + ["cdm:"]
-        for d in (state or {}).get("devices", []):
-            if not d.get("used_by") or d.get("folder") or (d.get("info") or {}).get("unreadable"):
-                continue
-            test = d.get("test")
-            if not test or now - datetime.fromisoformat(test["at"]) > CDM_TEST_EVERY:
-                try:
-                    result = UNSHACKLE.call("POST", "/api/cdm/devices/test", json={"kind": d["kind"].lower(), "name": d["name"]})
-                except UnshackleError:
-                    unknown.append(f"cdm:{d['kind']}:{d['name']}")
-                    continue  # Unshackle down: told apart
-                test = {k: result.get(k) for k in ("ok", "revoked", "error", "keys")} | {"at": now.isoformat()}
-                note_cdm_test(f"{d['kind']}:{d['name']}", test)
-            if not test.get("ok"):
-                word = "was revoked" if test.get("revoked") else "failed its test"
-                problems[f"cdm:{d['kind']}:{d['name']}"] = ("error", f"CDM {d['name']} {word}",
-                                                             f"{test.get('error') or 'No license'}. Used by {', '.join(d['used_by'])}: see Settings, CDM.")
     for key, (level, title, message) in problems.items():
         if told.get(key) != title:
             sonarr_sync.notify(settings, level, title, message)
@@ -1878,7 +1855,7 @@ def check_alerts(now: datetime | None = None) -> None:
 
 
 async def watch_alerts():
-    """Every minute, what the quiet hours kept; every hour, cookies and CDM devices."""
+    """Every minute, what the quiet hours kept; every hour, cookies."""
     last = None
     while True:
         try:
@@ -1989,35 +1966,6 @@ def cdm_paths() -> tuple[Path, Path, Path]:
                          "and set its path in Settings, Unshackle (UNSHACKLE_CONFIG_DIR with Docker)")
 
 
-CDM_TESTS = sonarr_sync.DATA / "cdm_tests.json"  # each device's last test: "Widevine:name": {at, ok, revoked, error, keys}
-cdm_tests_lock = threading.Lock()
-
-
-def cdm_tests() -> dict:
-    return read_json(CDM_TESTS, {})
-
-
-def note_cdm_test(key: str, result: dict | None) -> None:
-    with cdm_tests_lock:
-        tests = cdm_tests()
-        if result is None:
-            tests.pop(key, None)
-        else:
-            tests[key] = result
-        write_atomic(CDM_TESTS, json.dumps(tests))
-
-
-def cdm_details() -> tuple[dict, str | None]:
-    """What each device's certificate says, asked to Unshackle (it has the DRM libraries)."""
-    try:
-        found = UNSHACKLE.call("GET", "/api/cdm/devices")["devices"]
-    except UnshackleError as e:
-        if "404" in str(e) or "not found" in str(e).lower():
-            return {}, "This Unshackle cannot describe or test its devices: it needs the /api/cdm routes (a newer Unshackle)"
-        return {}, str(e)
-    return {(d["kind"], d["name"]): d for d in found}, None
-
-
 def cdm_state() -> dict:
     conf, wvds, prds = cdm_paths()
     try:
@@ -2025,38 +1973,7 @@ def cdm_state() -> dict:
     except UnshackleError:
         services = []
     state = cdm.state(conf, wvds, prds)
-    details, details_error = cdm_details()
-    tests = cdm_tests()
-    for d in state["devices"]:
-        d["info"] = details.get((d["kind"].lower(), d["name"]))
-        d["test"] = tests.get(f"{d['kind']}:{d['name']}")
-    return {"folder": str(conf.parent), **state, "services": services, "details_error": details_error}
-
-
-async def cdm_test(request):
-    """A test license from the DRM's own test server, remembered for the page."""
-    body = await json_object(request)
-    kind, name = str(body.get("kind") or ""), str(body.get("name") or "")
-    if kind not in ("Widevine", "PlayReady"):
-        raise web.HTTPBadRequest(text="The kind is Widevine or PlayReady")
-    try:
-        result = await asyncio.to_thread(UNSHACKLE.call, "POST", "/api/cdm/devices/test", json={"kind": kind.lower(), "name": name})
-    except UnshackleError as e:
-        raise web.HTTPBadGateway(text=str(e))
-    result = {k: result.get(k) for k in ("ok", "revoked", "error", "keys")} | {"at": datetime.now(timezone.utc).isoformat()}
-    await asyncio.to_thread(note_cdm_test, f"{kind}:{name}", result)
-    return web.json_response(result)
-
-
-async def cdm_reprovision(request):
-    body = await json_object(request)
-    name = str(body.get("name") or "")
-    try:
-        done = await asyncio.to_thread(UNSHACKLE.call, "POST", "/api/cdm/devices/reprovision", json={"name": name})
-    except UnshackleError as e:
-        raise web.HTTPBadRequest(text=str(e))
-    await asyncio.to_thread(note_cdm_test, f"PlayReady:{name}", None)  # a new certificate: its old test says nothing now
-    return web.json_response({"backup": done.get("backup"), "state": await asyncio.to_thread(cdm_state)})
+    return {"folder": str(conf.parent), **state, "services": services}
 
 
 async def list_cdm(_):
@@ -2079,7 +1996,6 @@ async def cdm_action(request):
             await asyncio.to_thread(cdm.add, wvds, prds, str(body.get("filename") or ""), content)
         elif action == "delete":
             await asyncio.to_thread(cdm.delete, conf, wvds, prds, str(body.get("name") or ""), str(body.get("kind") or ""))
-            await asyncio.to_thread(note_cdm_test, f"{body.get('kind')}:{body.get('name')}", None)
         elif action == "remote-save":
             await asyncio.to_thread(cdm.remote_save, conf, body.get("form") or {}, str(body["was"]) if body.get("was") else None)
         elif action == "remote-delete":
@@ -5254,10 +5170,8 @@ app.add_routes([
     web.post(r"/api/unshackle/config-file/{action:open|version|save}", unshackle_yaml),
     web.get("/api/cdm", list_cdm),
     web.post(r"/api/cdm/{action:add|delete|choose|remote-save|remote-delete}", cdm_action),
-    web.post("/api/cdm/test", cdm_test),
     web.get("/api/inbox", inbox),
     web.post(r"/api/inbox/{action:read|clear}", inbox_action),
-    web.post("/api/cdm/reprovision", cdm_reprovision),
     web.post(r"/api/runs/{run_id}/stop", stop_run),
     web.post(r"/api/jobs/{batch}/stop", stop_job),
     web.delete(r"/api/jobs/{batch}", delete_job),

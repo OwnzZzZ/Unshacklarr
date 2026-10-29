@@ -32,7 +32,6 @@
   "list.length - 3"
  ],
  ", all managed": [],
- ", all working": [],
  ", and to this device.": [],
  ", as {0}": [
   "c.serviceEpisode"
@@ -49,15 +48,8 @@
   "S.config.settings?.burst_every_seconds ?? 30",
   "S.config.settings?.burst_minutes ?? 10"
  ],
- ", used by {0}: {1}": [
-  "d.used_by.join(\", \")",
-  "cdmStatus(d)[2]"
- ],
  ", {0} airing": [
   "releaseDayLabel(sg.day)"
- ],
- ", {0} not working": [
-  "bad"
  ],
  ", {0} waiting": [
   "st.queue.queued"
@@ -114,7 +106,6 @@
   "r.count",
   "seasons ? ` · ${seasons}` : \"\""
  ],
- "A CDM device fails": [],
  "A PlayReady remote CDM's address ends in /playready": [],
  "A bot token looks like 123456789:AAE…": [],
  "A chat ID is a number (or @channel)": [],
@@ -142,7 +133,6 @@
  "A kind of message turned off here goes to no address and not to this device. The bell in the page still shows them all.": [],
  "A letter, then letters, digits or dashes": [],
  "A library folder is almost full": [],
- "A license from a test server": [],
  "A new remote CDM": [],
  "A new {0} URL needs its API key too": [
   "what"
@@ -184,7 +174,6 @@
  ],
  "Access key": [],
  "Account": [],
- "Action needed": [],
  "Actions": [],
  "Actions for {0}": [
   "r.name"
@@ -298,7 +287,6 @@
  "Apply to this job": [],
  "Apprise": [],
  "Apprise address": [],
- "Architecture": [],
  "Archival": [],
  "ArrowDown": [],
  "ArrowUp": [],
@@ -321,7 +309,6 @@
  "Asked to Unshackle": [],
  "Asking Sonarr what your series miss…": [],
  "Asking the service… (up to a minute)": [],
- "Asking the test server for a license": [],
  "Asking {0}…": [
   "svc"
  ],
@@ -387,15 +374,9 @@
  "Browser URL": [],
  "Browse…": [],
  "Bucket": [],
- "Build": [],
  "Bypass proxy for all downloads. Manifest, license, and auth still use proxy.": [],
  "Bypass title cache for this download.": [],
  "CDM": [],
- "CDM version": [],
- "CDM {0} {1}": [
-  "d['name']",
-  "word"
- ],
  "CHANGELOG.md": [],
  "CHROME": [],
  "Calendar": [],
@@ -409,11 +390,6 @@
  ],
  "Cancelling": [],
  "Catch up": [],
- "Certificate expires": [],
- "Certificate made": [],
- "Certificate serial": [],
- "Certificates in the chain": [],
- "Chain": [],
  "Change": [],
  "Change and download…": [],
  "Change several series": [],
@@ -617,7 +593,6 @@
  "Debug": [],
  "Debug mode": [],
  "Decrypt Labs": [],
- "Decrypting": [],
  "Decrypting and muxing": [],
  "Default": [],
  "Default device: {0}": [
@@ -635,7 +610,6 @@
  "Deletes finished downloads from the history, with their Unshackle output. Downloads in progress stay. Your files and Sonarr are not touched.": [],
  "Deletes the leftovers of interrupted downloads": [],
  "Deutsch": [],
- "Device certificate": [],
  "Device for {0}": [
   "[service, ...also].join(\", \")"
  ],
@@ -831,7 +805,6 @@
  "Example: fr, en": [],
  "Exclude Dolby Atmos audio tracks when selecting audio.": [],
  "Expired": [],
- "Expires": [],
  "Expires in {0}": [
   "days"
  ],
@@ -925,11 +898,6 @@
  "Give up after": [],
  "Give up after, in days": [],
  "Good": [],
- "Got a license ({0} key{1}), {2}. A service may still refuse this device.": [
-  "t.keys",
-  "t.keys === 1 ? \"\" : \"s\"",
-  "when"
- ],
  "Gotify": [],
  "Group": [],
  "HDR10": [],
@@ -1103,7 +1071,6 @@
  "Last sync {0}": [
   "ago(updated)"
  ],
- "Last test": [],
  "Last upload failed ({0}): {1}": [
   "when",
   "last.error"
@@ -1179,8 +1146,6 @@
  "Maintenance": [],
  "Make room in the downloads folder, or lower the room kept free in Settings": [],
  "Make room in the library, or lower the room kept free in Settings": [],
- "Maker": [],
- "Maker and model": [],
  "Managed by Unshackle": [],
  "Managed where unshackle serve runs": [],
  "ManualImport": [],
@@ -1203,7 +1168,6 @@
  "Missing: {0}. Install them, then check again.": [
   "missing.map((t) => t.name).join(\", \")"
  ],
- "Model": [],
  "Mon": [],
  "Monitored": [],
  "More unshackle serve instances, for example one behind a VPN. A service uses the server picked for it in Download options, Per service. The others use this one.": [],
@@ -1253,7 +1217,6 @@
   "new Date(conf.since).toLocaleDateString(LOCALE, { day: \"numeric\", month: \"long\", year: \"numeric\" })"
  ],
  "New episodes are downloaded for each library switched on, with its own quality ladder (Settings, Sonarr).": [],
- "New keys, from its group key": [],
  "New ladder": [],
  "New password": [],
  "New password:": [],
@@ -1312,7 +1275,6 @@
  ],
  "No folder in it.": [],
  "No ladder yet. Create one with New ladder, or bring back the built-in ones.": [],
- "No license": [],
  "No limit: downloads run at any time.": [],
  "No option matches.": [],
  "No place to send backups to": [],
@@ -1461,7 +1423,6 @@
  ],
  "Not running": [],
  "Not set up": [],
- "Not tested": [],
  "Not used yet: pick it above, for a service or a series": [],
  "Not valid YAML{0}: {1}": [
   "where",
@@ -1592,7 +1553,6 @@
  "Open the episodes missing in {0}": [
   "name"
  ],
- "Open the link, log in if asked, and enter this code. The download goes on by itself.": [],
  "Open the series": [],
  "Open the whole list": [],
  "Open {0}": [
@@ -1661,9 +1621,7 @@
  "Português (Brasil)": [],
  "Preview": [],
  "Previous month": [],
- "Problems": [],
  "Processing the tracks": [],
- "Product": [],
  "Profile": [],
  "Profile to use for Credentials and Cookies (if available).": [],
  "Programme URLs": [],
@@ -1696,6 +1654,7 @@
  "Reading the cookie files…": [],
  "Reading the history…": [],
  "Reading the notifications…": [],
+ "Ready": [],
  "Rebuilding an install?": [],
  "Recently sent": [],
  "Redownload": [],
@@ -1754,8 +1713,6 @@
   "it.series",
   "it.sxxeyy"
  ],
- "Reprovision": [],
- "Reprovisionable": [],
  "Required subtitle languages": [],
  "Required subtitle languages of {0}: {1} is not a language code like fr or en-US": [
   "where",
@@ -1781,7 +1738,6 @@
   "retryable.length"
  ],
  "Reverse proxy": [],
- "Revoked": [],
  "Room kept free": [],
  "Run a sync now": [],
  "Run sync now": [],
@@ -1793,7 +1749,6 @@
  "S3-compatible": [],
  "SDR": [],
  "SELECT": [],
- "SL": [],
  "Same as each series": [],
  "Same path": [],
  "Sat": [],
@@ -1852,7 +1807,6 @@
  "Sections of this series' settings": [],
  "Security": [],
  "Security level": [],
- "Security patch": [],
  "See in Activity": [],
  "See on GitHub ↗": [],
  "See the history in Activity for why.": [],
@@ -2145,7 +2099,6 @@
  "Sure?": [],
  "Sure? Delete the file": [],
  "Sure? It is in use": [],
- "Sure? New keys": [],
  "Sure? Programs using it will stop working": [],
  "Sure? Remove it from unshackle.yaml": [],
  "Sure? They log in again": [],
@@ -2188,26 +2141,14 @@
  "Take the parts that are out": [],
  "Telegram": [],
  "Test": [],
- "Test asks the DRM's own test server for a license": [],
  "Test every address": [],
  "Test sent to this device": [],
- "Test server said": [],
  "Test the connection": [],
- "Test the {0} in use": [
-  "inUse.length"
- ],
  "Test this series": [],
  "Test this series below: a URL the service no longer knows, or cookies to update in Settings, Cookies.": [],
- "Test {0} ({1})": [
-  "testable.length === data.devices.length ? \"all\" : \"these\"",
-  "testable.length"
- ],
  "Test: notifications work": [],
  "Tested just now": [],
  "Testing the connection to Sonarr…": [],
- "Testing {0}…": [
-  "cdmTesting"
- ],
  "Testing…": [],
  "Testing… (a first start of Unshackle takes a few seconds)": [],
  "That episode no longer waits for an answer": [],
@@ -2217,7 +2158,7 @@
  "That version is in the editor: Save to restore it": [],
  "That's a year ahead: the end of the list.": [],
  "The": [],
- "The .wvd and .prd files in the CDM folder. Click one for its details; a test asks the DRM's test server for a license.": [],
+ "The .wvd and .prd files in the CDM folder.": [],
  "The API key of unshackle serve is still the example one: put a long random one in UNSHACKLE_API_KEY and in serve: api_secret (openssl rand -hex 32)": [],
  "The Activity tab keeps a card for each download, with its full output.": [],
  "The DRM to license with, for a service that takes both: its device of that kind in the cdm: section.": [],
@@ -2267,8 +2208,6 @@
  "The default CDM cannot be removed, only changed": [],
  "The default device": [],
  "The device's name on the server": [],
- "The devices in use are tested once a day. You are told when one is revoked or refused": [],
- "The devices in use work": [],
  "The download folder {0} holds a link or a file with the same name as the library's file, so the audio was not added": [
   "out.name"
  ],
@@ -2315,7 +2254,6 @@
  "The header your proxy sets: Remote-User for Authelia, X-authentik-username for Authentik. Empty: off.": [],
  "The history in Activity has Unshackle's full output.": [],
  "The history is already empty": [],
- "The kind is Widevine or PlayReady": [],
  "The last": [],
  "The last messages that went out, and whether each address took them.": [],
  "The last try: after it, the regular syncs take over": [],
@@ -2407,9 +2345,6 @@
  "The serve: api_secret of its unshackle.yaml.": [],
  "The serve: api_secret of its unshackle.yaml. Empty keeps the saved one.": [],
  "The server can't be reached.": [],
- "The server's ({0})": [
-  "drm"
- ],
  "The server's address, with https://": [],
  "The service": [],
  "The service Unshackle downloads this series from, and its page there.": [],
@@ -2459,7 +2394,6 @@
   "onDisk"
  ],
  "This Crave link points to an episode. On crave.ca, open the series page and paste that URL here.": [],
- "This Unshackle cannot describe or test its devices: it needs the /api/cdm routes (a newer Unshackle)": [],
  "This Unshackle has no unshackle.yaml yet": [],
  "This address is already there.": [],
  "This backup is encrypted: type its passphrase": [],
@@ -2539,7 +2473,6 @@
  "Two quality ladders are named {0}": [
   "name"
  ],
- "Type": [],
  "Type a new key to replace it": [],
  "Type its secret again: a saved secret is never sent to a new address": [],
  "Type the answer first": [],
@@ -2579,7 +2512,6 @@
  "Unless its service (Download options, Per service) or the series itself picks another. Off:": [],
  "Unless its service or the series itself says otherwise.": [],
  "Unreachable": [],
- "Unreadable": [],
  "Unreleased": [],
  "Unsaved changes": [],
  "Unshacklarr": [],
@@ -2681,7 +2613,6 @@
  "User name": [],
  "VC-1": [],
  "VC1": [],
- "VMP": [],
  "VP8": [],
  "VP9": [],
  "Valid · {0} left": [
@@ -2775,7 +2706,6 @@
  "Widevine": [],
  "Widevine and PlayReady devices": [],
  "Widevine, pywidevine serve": [],
- "Works": [],
  "Wrong passphrase, or the file is damaged": [],
  "Wrong password": [],
  "Wrong setup code: Unshacklarr prints it when it starts (docker logs unshacklarr)": [],
@@ -2798,7 +2728,6 @@
  "Your user key is shown on pushover.net once you log in. Create an application there to get the API token.": [],
  "```json": [],
  "a week before": [],
- "action needed": [],
  "aired {0}": [
   "ago(it.aired)"
  ],
@@ -2811,7 +2740,6 @@
   "time(aired)"
  ],
  "alert": [],
- "all": [],
  "an evening has 0 to 9 episodes": [],
  "and the other options decide, as without a ladder.": [],
  "and {0} more": [
@@ -2896,12 +2824,6 @@
  "every {0} hours": [
   "every"
  ],
- "expired": [],
- "expired: the next try asks for a new code": [],
- "expires in {0} min": [
-  "Math.ceil(left / 60)"
- ],
- "failed its test": [],
  "finishing": [],
  "for another.": [],
  "for one,": [],
@@ -2937,7 +2859,6 @@
  "its title": [],
  "just now": [],
  "key saved": [],
- "license granted": [],
  "limit must be from 1 to 500": [],
  "max-age=31536000, immutable": [],
  "max-age=86400": [],
@@ -2954,8 +2875,6 @@
  ],
  "never": [],
  "next sync": [],
- "no": [],
- "no (no group key: an older .prd)": [],
  "no DRM: no device used": [],
  "no group": [],
  "no ladder chosen": [],
@@ -2978,8 +2897,6 @@
  ],
  "not aired yet": [],
  "not better": [],
- "not found": [],
- "not in the CDM folder: pick another": [],
  "not in use": [],
  "not listed on {0} as {1}": [
   "show['service']",
@@ -3014,10 +2931,6 @@
  "one file, nothing to join": [],
  "oninput": [],
  "only": [],
- "open {0} and enter {1}": [
-  "need.get('url')",
-  "need.get('code')"
- ],
  "or": [],
  "or paste it below": [],
  "orig in the accepted audio languages": [],
@@ -3075,7 +2988,6 @@
  "requested CDM is not permitted": [],
  "resume": [],
  "retried by hand": [],
- "revoked": [],
  "season finale": [],
  "see Activity in Sonarr": [],
  "series finale": [],
@@ -3110,9 +3022,6 @@
  "sx-state {0}": [
   "cls"
  ],
- "tested {0}": [
-  "ago(t.at)"
- ],
  "the day after": [],
  "the day before": [],
  "the day it airs": [],
@@ -3126,9 +3035,6 @@
   "new_q['name']",
   "new_key[1]"
  ],
- "the next episodes of this job go through the same NordVPN server, {0}": [
-  "m.group(1).lower()"
- ],
  "the oldest {0}": [
   "ago(oldest)"
  ],
@@ -3136,7 +3042,6 @@
  "the service": [],
  "the service defaults": [],
  "the settings": [],
- "these": [],
  "this computer": [],
  "this device is no longer subscribed": [],
  "this download": [],
@@ -3227,7 +3132,6 @@
   "name"
  ],
  "value of its unshackle.yaml. Leave empty to keep the saved key.": [],
- "was revoked": [],
  "with subtitles in {0}": [
   "', '.join(fixed['s_lang'])"
  ],
@@ -3238,8 +3142,6 @@
  "wvd": [],
  "yaml": [],
  "years": [],
- "yes": [],
- "yes (it has its group key)": [],
  "yesterday": [],
  "you@gmail.com": [],
  "zh-CN": [],
@@ -3361,15 +3263,6 @@
  "{0} device{1}": [
   "data.devices.length",
   "data.devices.length === 1 ? \"\" : \"s\""
- ],
- "{0} device{1} in use not tested yet": [
-  "untested.length",
-  "untested.length === 1 ? \"\" : \"s\""
- ],
- "{0} device{1} tested{2}": [
-  "list.length",
-  "list.length === 1 ? \"\" : \"s\"",
-  "bad ? `, ${bad} not working` : \", all working\""
  ],
  "{0} did not answer like unshackle serve (no JSON): is the address right?": [
   "url"
@@ -3654,10 +3547,6 @@
   "flag",
   "value"
  ],
- "{0} needs you: {1}": [
-  "need.get('service') or run.card['service']",
-  "need.get('code')"
- ],
  "{0} new": [
   "fresh"
  ],
@@ -3675,8 +3564,8 @@
   "picked.size"
  ],
  "{0} of {1}": [
-  "n + 1",
-  "list.length"
+  "lv.completed_tracks || 0",
+  "lv.total_tracks"
  ],
  "{0} of {1} on disk": [
   "list.filter((e) => e.hasFile).length",
@@ -3891,10 +3780,6 @@
  "{0} · waiting for a slot": [
   "c.service"
  ],
- "{0} · waiting for you: code {1}": [
-  "c.service",
-  "c.action.code"
- ],
  "{0} · waiting for your answer": [
   "c.service"
  ],
@@ -3934,16 +3819,6 @@
  ],
  "{0}. The episode is tried again at each sync, and downloaded when one is there.": [
   "why"
- ],
- "{0}. The list below comes from the files alone.": [
-  "data.details_error"
- ],
- "{0}. Used by {1}: see Settings, CDM.": [
-  "test.get('error') or 'No license'",
-  "', '.join(d['used_by'])"
- ],
- "{0}/ (a folder)": [
-  "d.name"
  ],
  "{0}/{1} tracks": [
   "job.get('completed_tracks', 0)",
@@ -4045,13 +3920,6 @@
  "{0}: recognised from the link": [
   "svcName(tag)"
  ],
- "{0}: reprovisioned, the old file kept as {1}": [
-  "cdmShort(d)",
-  "r.backup"
- ],
- "{0}: reprovisioning…": [
-  "cdmShort(d)"
- ],
  "{0}: saved in unshackle.yaml": [
   "values.name"
  ],
@@ -4083,13 +3951,6 @@
   "label",
   "show['service']",
   "profile"
- ],
- "{0}: {1} within {2} min, for {3} {4}.": [
-  "need.get('message') or 'Action needed'",
-  "what",
-  "left",
-  "run.card['series']",
-  "run.card['sxxeyy']"
  ],
  "{0}: {1}, not downloaded": [
   "label",

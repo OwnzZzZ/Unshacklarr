@@ -520,21 +520,15 @@ def test_two_tracks_named_alike_stay_two(tmp_path, monkeypatch):
     assert [t["label"] for t in card["tracks"]] == ["subtitle fr", "subtitle fr"]
 
 
-def test_the_output_has_unshackles_log_and_debug_only_in_debug_mode(tmp_path, monkeypatch):
+def test_the_output_has_debug_only_in_debug_mode(tmp_path, monkeypatch):
     sync = load(tmp_path, monkeypatch)
     run = sync.EpisodeRun(episode(111, 2, 5), {"service": "RMCP"}, "manual", "S02E05")
-    states = iter([
-        {"status": "downloading", "log_count": 2, "log": ["02:00:01 INFO RMCP: Getting tracks", "02:00:02 WARNING dl: slow segment"]},
-        {"status": "downloading", "log_count": 5, "log": ["b", "c", "02:00:09 ERROR dl: gave up"]},  # 3 new, all sent
-        {"status": "completed", "output_files": ["/downloads/x/Show.S02E05.mkv"], "log_count": 5, "log": []},
-    ])
+    states = iter([{"status": "downloading"}, {"status": "completed", "output_files": ["/downloads/x/Show.S02E05.mkv"]}])
     monkeypatch.setattr(sync.UNSHACKLE, "download", lambda payload: "job1")
     monkeypatch.setattr(sync.UNSHACKLE, "job", lambda job_id: next(states))
     sync.trace("a debug line", debug=True)
     sync.run_job({}, run, poll=0)
     log = (tmp_path / "runs" / f"{run.id}.log").read_text()
-    assert log.index("Getting tracks") < log.index("slow segment") < log.index("gave up")
-    assert "\x1b[33m  02:00:02 WARNING" in log and "\x1b[31m  02:00:09 ERROR" in log
     assert "job job1" in log and "made 1 file: Show.S02E05.mkv" in log and "a debug line" not in log
     monkeypatch.setattr(sync, "DEBUG", True)
     sync.trace("a debug line", debug=True)
@@ -981,24 +975,6 @@ def test_a_click_on_an_episode_waiting_in_downloads_says_why_nothing_happens(tmp
     monkeypatch.setattr(sync, "no_cdm", lambda tag, config=None: "")
     sync.sync(config, {}, [ep], manual=True, kind="manual")
     assert started == [["S02E05"]]  # downloaded again, not refused
-
-
-def test_a_login_code_is_sent_once_and_leaves_the_card_once_done(tmp_path, monkeypatch):
-    sync = load(tmp_path, monkeypatch)
-    sent = []
-    monkeypatch.setattr(sync, "notify", lambda settings, level, title, message, action=None: sent.append((level, title, message)))
-    run = sync.EpisodeRun(episode(111, 2, 5), {"service": "DSNP"}, "auto")
-    need = {"service": "DSNP", "message": "Link this device to your Disney+ account", "url": "https://www.disneyplus.com/start",
-            "code": "ABCD1234", "expires_at": sync.time.time() + 600}
-    sync.ask_for_action(run, need)
-    sync.ask_for_action(run, need)  # the next polls: the same code, not sent again
-    assert run.card["action"]["code"] == "ABCD1234" and len(sent) == 1
-    assert sent[0][1] == "DSNP needs you: ABCD1234" and "https://www.disneyplus.com/start" in sent[0][2] and "within 10 min" in sent[0][2]
-    sync.ask_for_action(run, {**need, "code": "EFGH5678"})  # expired, a new one: sent
-    assert len(sent) == 2
-    sync.ask_for_action(run, None)
-    assert "action" not in run.card
-    run.finish("failed")
 
 
 def test_the_inbox_keeps_every_notification_and_its_action(tmp_path, monkeypatch):
@@ -2375,7 +2351,7 @@ def test_a_job_takes_in_only_episodes_with_its_own_replace_choice(tmp_path, monk
 
 
 def test_the_sign_in_hint_waits_for_two_quiet_minutes(tmp_path, monkeypatch):
-    # A download serve keeps talking about is not waiting for a sign-in, even with no track yet
+    # A download whose tracks move is not waiting for a sign-in
     sync = load(tmp_path, monkeypatch)
     clock = {"t": 0.0}
     monkeypatch.setattr(sync.time, "monotonic", lambda: clock["t"])
@@ -2386,8 +2362,8 @@ def test_the_sign_in_hint_waits_for_two_quiet_minutes(tmp_path, monkeypatch):
     asked = [0]
     monkeypatch.setattr(run, "say", lambda text: said.append((asked[0], text)))
 
-    polls = iter([{"status": "downloading", "log_count": n} for n in (1, 2, 3, 4, 5)] +  # serve talks: no hint
-                 [{"status": "downloading", "log_count": 5}] * 6 + [{"status": "failed", "error": "x"}])
+    polls = iter([{"status": "downloading", "track_progress": [{"label": "video", "progress": n}]} for n in (1, 2, 3, 4, 5)] +  # it moves: no hint
+                 [{"status": "downloading"}] * 6 + [{"status": "failed", "error": "x"}])
 
     class Serve:
         name = ""
@@ -2827,11 +2803,6 @@ def test_a_proxy_that_fails_is_tried_again_then_its_job_pauses(tmp_path, monkeyp
     except sync.JobFailed as e:
         assert e.proxy_down and len(tries) == 1 + sync.PROXY_RETRIES
 
-    # through a remote server, the proxy's error is only in the job's log: it is the cause told
-    log = ["15:41:53 INFO download: Using NordVPN Proxy", "15:41:55 ERROR remote_service: Server error [INVALID_PROXY]: " + proxy]
-    cause = sync.job_cause({"status": "failed", "error_message": "Download failed with exit code 1", "log": log})
-    assert cause.startswith("Server error [INVALID_PROXY]") and sync.PROXY_DOWN.search(cause)
-
 
 def test_a_job_pauses_when_its_proxy_keeps_failing(tmp_path, monkeypatch):
     sync = load(tmp_path, monkeypatch)
@@ -2859,31 +2830,6 @@ def test_a_video_track_says_its_codec(tmp_path, monkeypatch):
     assert sync.with_codec("audio fr 2.0", "H.265") == "audio fr 2.0" and sync.with_codec("video 1080p SDR", "") == "video 1080p SDR"
 
 
-def test_a_job_keeps_the_nordvpn_server_of_its_first_episode(tmp_path, monkeypatch):
-    sync = load(tmp_path, monkeypatch)
-    config = {"defaults": {"--proxy": "nordvpn:fr"}}
-    show = {"service": "NF", "title": "x", "options": {}}
-    assert sync.kept_proxy(show, config, "J") is show  # nothing kept yet: nordvpn:fr, any server
-    sync.job_proxy["J"] = "nordvpn:fr962"
-    assert sync.kept_proxy(show, config, "J")["options"]["--proxy"] == "nordvpn:fr962"
-    assert sync.kept_proxy(show, {"defaults": {"--proxy": "nordvpn:de"}}, "J") == show  # another country: not that server
-    assert sync.kept_proxy(show, {"defaults": {"--proxy": "surfsharkvpn:fr"}}, "J") == show
-    m = sync.NORD_SERVER.search("08:51:55 INFO download: Using NordVPN Proxy: https://user:pw@fr962.proxy.nordvpn.com:89")
-    assert m and m.group(1) == "fr962"
-
-    # the kept server fails: the retry goes back to the country, another server
-    asked = []
-    def job(payload, run=None):
-        asked.append(payload["proxy"])
-        if len(asked) == 1:
-            raise sync.JobFailed("x", "failed", "Server error [INVALID_PROXY]: Proxy check failed")
-        return ["/downloads/x.mkv"]
-    monkeypatch.setattr(sync, "run_job", job)
-    class Run:
-        card = {"batch": "J"}
-        def say(self, text): pass
-    assert sync.run_job_retrying({"proxy": "nordvpn:fr962"}, Run(), sleep=lambda s: None) == ["/downloads/x.mkv"]
-    assert asked == ["nordvpn:fr962", "nordvpn:fr"] and "J" not in sync.job_proxy
 def test_the_next_episode_of_an_evening_is_tried_after_its_airing(tmp_path, monkeypatch):
     sync = load(tmp_path, monkeypatch)
     episodes = [{"id": n, "seriesId": 7, "seasonNumber": 1, "episodeNumber": n, "airDateUtc": at}
