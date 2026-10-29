@@ -274,12 +274,12 @@ class Unshackle:
             return url, key
         return self.local.endpoint(str(self.settings.get("unshackle_command") or ""))
 
-    def call(self, method: str, path: str, **kwargs):
+    def call(self, method: str, path: str, secret: str | None = None, **kwargs):
         if path in ("/api/search", "/api/list-titles", "/api/list-tracks") and isinstance(kwargs.get("json"), dict):
             kwargs["json"] = self.relayed(kwargs["json"])
         url, key = self.endpoint()
         try:
-            r = requests.request(method, f"{url}{path}", headers={"X-Secret-Key": key}, timeout=(5, 60), **kwargs)  # a server down: 5 s, not 60
+            r = requests.request(method, f"{url}{path}", headers={"X-Secret-Key": secret or key}, timeout=(5, 60), **kwargs)  # a server down: 5 s, not 60
         except requests.RequestException as e:
             raise UnshackleError(no_credentials(f"unshackle serve is unreachable at {url}: {e}")) from e
         if r.status_code == 401:
@@ -353,27 +353,30 @@ class Unshackle:
     def jobs(self) -> list[dict]:
         return self.call("GET", "/api/download/jobs")["jobs"]
 
-    def restart(self) -> None:
+    def restart(self, dashboard_key: str = "") -> None:
         if self.mode == "remote":
             raise UnshackleError("A remote unshackle serve is restarted where it runs")
-        try:  # after 6.0.0: no new work while it checks, and never a download cut off by the restart
-            status = self.call("POST", "/api/dashboard/drain")
+        try:  # after 6.0.0, with serve.dashboard.key: no new work while it checks, never a download cut off by the restart
+            status = self.call("POST", "/api/dashboard/drain", secret=dashboard_key) if dashboard_key else None
         except UnshackleError:
             status = None  # 6.0.0, or not running: restarted as before
         if status:
             busy = sum(int((status.get("jobs") or {}).get(s) or 0) for s in ("downloading", "queued")) + int(status.get("sessions") or 0)
             if busy:
                 try:
-                    self.call("DELETE", "/api/dashboard/drain")
+                    self.call("DELETE", "/api/dashboard/drain", secret=dashboard_key)
                 except UnshackleError:
                     pass
                 raise UnshackleError("Unshackle is still downloading: restart it once it is done")
         self.local.restart(str(self.settings.get("unshackle_command") or ""))
 
-    def errors(self) -> dict:
-        """Its errors since it started, by service then by error code (after 6.0.0); {} when it cannot tell."""
+    def errors(self, dashboard_key: str) -> dict:
+        """Its errors since it started, by service then by error code (after 6.0.0, with serve.dashboard.key);
+        {} when it cannot tell."""
+        if not dashboard_key:
+            return {}
         try:
-            return self.call("GET", "/api/dashboard/status").get("errors") or {}
+            return self.call("GET", "/api/dashboard/status", secret=dashboard_key).get("errors") or {}
         except UnshackleError:
             return {}
 
