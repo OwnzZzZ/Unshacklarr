@@ -126,9 +126,11 @@ You need:
 
 > [!NOTE]
 > Answering a service's question during a download (a code sent by e-mail) needs Unshackle 6.0 or later;
-> downloading through a remote server (`--remote`) needs a version after 6.0.0.
+> downloading through a remote server (`--remote`) and answering its login questions need a version after 6.0.0.
 > With a version after 6.0.0, a `serve: dashboard: key:` in `unshackle.yaml` (any long random string) also gives
-> Settings › Unshackle its errors by service, and a restart that waits for the downloads.
+> Settings › Unshackle its log, errors by service and remote sessions, and a restart that waits for the downloads.
+> Settings › Unshackle › *Supports* says which of these your Unshackle allows; a series set to `--remote` on an
+> Unshackle that cannot run it is told in the bell.
 >
 > **Unshackle 6** lets an API key use the proxies of `unshackle.yaml` (a country code such as `au`, or a
 > provider) only once it is allowed. Run by Unshacklarr on the same computer, its key always is; with
