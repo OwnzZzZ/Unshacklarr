@@ -1703,6 +1703,7 @@ def unshackle_health(full: bool = False) -> dict:
             state["jobs"] = [{"id": j["job_id"], "service": j.get("service"), "title": j.get("current_title") or j.get("title") or j.get("title_id"),
                               "status": j["status"], "progress": round(float(j.get("progress") or 0))}
                              for j in jobs if j["status"] in ("queued", "downloading")]
+            state["errors"] = {svc: sum(codes.values()) for svc, codes in UNSHACKLE.errors().items() if isinstance(codes, dict)}
             state["tools"] = UNSHACKLE.tools() + [
                 {"name": f"{name} (for Unshacklarr)", "installed": bool(shutil.which(name)), "required": True}
                 for name in ("mkvmerge", "mkvpropedit")]
@@ -2497,6 +2498,53 @@ async def answer_run(request):
     try:
         await asyncio.to_thread(sonarr_sync.backend_named(card.get("backend")).call, "POST", f"/api/download/jobs/{card['job_id']}/input",
                                 json={"response": answer})
+    except UnshackleError as e:
+        raise web.HTTPBadGateway(text=str(e))
+    return web.json_response({"sent": True})
+
+
+told_logins: dict[str, str] = {}  # remote login id -> the question told, once each
+
+
+def check_remote_logins() -> None:
+    """What a remote server's login waits on (an OTP, a PIN) while a listing goes through it: in the bell, with a
+    field to answer; done once it asks nothing. ponytail: the main Unshackle only, the others' remote servers unseen."""
+    if not UNSHACKLE.remote_services():
+        return
+    try:
+        asking = {str(lg["id"]): lg for lg in UNSHACKLE.remote_logins() if lg.get("prompt")}
+    except UnshackleError:
+        return
+    for lid, lg in asking.items():
+        if told_logins.get(lid) != lg["prompt"]:
+            told_logins[lid] = lg["prompt"]
+            service = lg.get("service") or "The service"
+            sonarr_sync.notify(read_config()["notifications"], "warning", f"{service} asks you something",
+                               f"{lg['prompt']}\nAnswer in Unshacklarr, for the remote server {lg.get('remote')}.",
+                               action={"kind": "input", "id": f"rl-{lid}", "text": lg["prompt"], "service": service, "login": lid})
+    for lid in [k for k in told_logins if k not in asking]:
+        told_logins.pop(lid)
+        sonarr_sync.inbox_resolve(f"rl-{lid}")
+
+
+async def watch_remote_logins():
+    while True:
+        try:
+            if read_config()["auth"]:
+                await asyncio.to_thread(check_remote_logins)
+        except Exception as e:
+            print(f"Remote logins: {e}", flush=True)
+        await asyncio.sleep(3)
+
+
+async def answer_remote_login(request):
+    """The person's answer to what a remote server's login asks, passed to Unshackle."""
+    login = request.match_info["login"]
+    answer = str((await json_object(request)).get("response") or "").strip()
+    if not answer or len(answer) > 200:
+        raise web.HTTPBadRequest(text="Type the answer first")
+    try:
+        await asyncio.to_thread(UNSHACKLE.call, "POST", f"/api/remote/logins/{login}/input", json={"response": answer})
     except UnshackleError as e:
         raise web.HTTPBadGateway(text=str(e))
     return web.json_response({"sent": True})
@@ -5259,6 +5307,7 @@ app.cleanup_ctx.append(background(run_automatic_syncs))
 app.cleanup_ctx.append(stop_unshackle)
 app.cleanup_ctx.append(background(watch_health))
 app.cleanup_ctx.append(background(watch_alerts))
+app.cleanup_ctx.append(background(watch_remote_logins))
 app.cleanup_ctx.append(background(watch_prechecks))
 app.cleanup_ctx.append(background(watch_upgrades))
 app.cleanup_ctx.append(background(watch_upgrade_checks))
@@ -5351,6 +5400,7 @@ app.add_routes([
     web.delete(r"/api/runs/{run_id}", delete_run),
     web.get(r"/api/runs/{run_id}/diagnostic", run_diagnostic),
     web.post(r"/api/runs/{run_id}/input", answer_run),
+    web.post(r"/api/remote-logins/{login:[\w-]+}/input", answer_remote_login),
     web.post(r"/api/audio-upgrade/{episode_id:\d{1,9}}", confirm_audio),
     web.post("/api/runs/clear", clear_runs),
     web.post("/api/password", change_password),

@@ -63,6 +63,7 @@ class UnshackleError(Exception):
 
 
 # Unshackle 6 serves its proxies (a country code, a provider) only to a key allowed to (server_proxy)
+PASSING = ("NETWORK_ERROR", "SERVICE_UNAVAILABLE", "SERVER_DRAINING")  # serve's error codes worth another try
 PROXY_REFUSED = re.compile(r"does not resolve country codes into proxies|in a different region from yours", re.IGNORECASE)
 PROXY_HINT = ("Unshackle 6 doesn't let Unshacklarr use its proxies (a country code such as au, or a provider): "
               "allow it in Settings, Unshackle")
@@ -296,9 +297,12 @@ class Unshackle:
             raise err
         if not r.ok:
             try:
-                message = r.json().get("message") or r.text
-            except ValueError:
-                message = r.text
+                body = r.json()
+                message = body.get("message") or r.text
+            except (ValueError, AttributeError):
+                body, message = {}, r.text
+            if (code := str(body.get("error_code") or "")) in PASSING:  # after 6.0.0: a network or service hitch (424),
+                message = f"{message.strip()[:480]} ({code})"            # or serve draining before a restart (409)
             if "requested CDM is not permitted" in message:  # --cdm, Unshackle 6: the operator's opt-in
                 raise UnshackleError("Unshackle refuses to pick the CDM device named in --cdm: allow it in unshackle.yaml "
                                      "with serve: cdm_overrides: true (or a list of devices), then restart Unshackle")
@@ -352,7 +356,30 @@ class Unshackle:
     def restart(self) -> None:
         if self.mode == "remote":
             raise UnshackleError("A remote unshackle serve is restarted where it runs")
+        try:  # after 6.0.0: no new work while it checks, and never a download cut off by the restart
+            status = self.call("POST", "/api/dashboard/drain")
+        except UnshackleError:
+            status = None  # 6.0.0, or not running: restarted as before
+        if status:
+            busy = sum(int((status.get("jobs") or {}).get(s) or 0) for s in ("downloading", "queued")) + int(status.get("sessions") or 0)
+            if busy:
+                try:
+                    self.call("DELETE", "/api/dashboard/drain")
+                except UnshackleError:
+                    pass
+                raise UnshackleError("Unshackle is still downloading: restart it once it is done")
         self.local.restart(str(self.settings.get("unshackle_command") or ""))
+
+    def errors(self) -> dict:
+        """Its errors since it started, by service then by error code (after 6.0.0); {} when it cannot tell."""
+        try:
+            return self.call("GET", "/api/dashboard/status").get("errors") or {}
+        except UnshackleError:
+            return {}
+
+    def remote_logins(self) -> list[dict]:
+        """The logins a remote server waits on (an OTP, a PIN) while a listing goes through it (after 6.0.0)."""
+        return self.call("GET", "/api/remote/logins").get("logins") or []
 
     def dl_config(self) -> dict:
         """The `dl:` section of its unshackle.yaml (secrets redacted), kept 10 minutes."""

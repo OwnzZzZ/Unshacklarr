@@ -1184,6 +1184,7 @@ def follow_job(backend, payload: dict, run: EpisodeRun | None, poll: float, job_
 
 # Worth another try in a moment: the network or the service stumbled, nothing is wrong with the request.
 TRANSIENT = re.compile(r"timed? ?out|timeout|connection (reset|refused|aborted|error)|remote end closed|temporarily|"
+                       r"NETWORK_ERROR|SERVICE_UNAVAILABLE|SERVER_DRAINING|\b424\b|"
                        r"max retries|\b50[234]\b|service unavailable|bad gateway|name resolution|network is unreachable", re.IGNORECASE)
 RETRY_AFTER = (30, 120)  # seconds before each retry
 # The proxy refused or unreachable: a provider's region (nordvpn:fr) gives another server at each try
