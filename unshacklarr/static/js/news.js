@@ -23,8 +23,7 @@ const NEWS = [
   { id: "downloads-at-once", version: "1.5.0", title: "Downloads at once", sec: "unshackle", target: "#ux-at-once-field" },
   { id: "orig-audio", version: "1.6.0", title: "orig in the accepted audio languages", sec: "downloads", target: "#dx-audio" },
   { id: "any-service-option", version: "1.6.0", title: "Any service option", sec: "downloads", target: "#svc-defaults" },
-  { id: "generate-dv", version: "1.6.0", title: "--generate-dv", sec: "downloads", target: "#dx-cmd" },
-  { id: "include-sample", version: "1.6.0", title: "--include-sample", sec: "downloads", target: "#dx-cmd" },
+  { id: "dl-generate-dv-sample", version: "1.6.0", title: "--generate-dv and --include-sample", sec: "downloads", target: "section.sx-card:has(#defaults)" },
 ];
 const NEWS_KINDS = { new: "New", improved: "Improved", fix: "Fix", security: "Security", note: "Note" };
 const versionKey = (v) => String(v || "0").split(".").map((n) => parseInt(n, 10) || 0).reduce((a, n) => a * 1000 + n, 0);
