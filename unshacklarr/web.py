@@ -1689,7 +1689,7 @@ def unshackle_health(full: bool = False) -> dict:
             state["jobs"] = [{"id": j["job_id"], "service": j.get("service"), "title": j.get("current_title") or j.get("title") or j.get("title_id"),
                               "status": j["status"], "progress": round(float(j.get("progress") or 0))}
                              for j in jobs if j["status"] in ("queued", "downloading")]
-            state["errors"] = {svc: sum(codes.values()) for svc, codes in UNSHACKLE.errors().items() if isinstance(codes, dict)}
+            state["errors"] = {svc: sum(codes.values()) for svc, codes in UNSHACKLE.errors(dashboard_key()).items() if isinstance(codes, dict)}
             state["tools"] = UNSHACKLE.tools() + [
                 {"name": f"{name} (for Unshacklarr)", "installed": bool(shutil.which(name)), "required": True}
                 for name in ("mkvmerge", "mkvpropedit")]
@@ -1877,9 +1877,18 @@ async def status(request):
     return web.json_response(health)
 
 
+def dashboard_key() -> str:
+    """serve.dashboard.key of the unshackle.yaml Unshacklarr sees: its errors and its drain before a restart; "" without."""
+    try:
+        dashboard = (cdm.read(cdm_paths()[0]).get("serve") or {}).get("dashboard")
+    except (UnshackleError, cdm.CdmError, OSError, yaml.YAMLError, AttributeError):
+        return ""
+    return str(dashboard.get("key") or "") if isinstance(dashboard, dict) else ""
+
+
 async def restart_unshackle(_):
     try:
-        await asyncio.to_thread(UNSHACKLE.restart)
+        await asyncio.to_thread(UNSHACKLE.restart, await asyncio.to_thread(dashboard_key))
     except UnshackleError as e:
         raise web.HTTPBadGateway(text=str(e))
     health["unshackle"] = {**await asyncio.to_thread(unshackle_health, True), "checked": datetime.now(timezone.utc).isoformat()}

@@ -46,8 +46,10 @@ Unshacklarr can be reached from outside your network.
 **🧩 Unshackle after 6.0.0**
 - **A remote server's login questions.** An OTP or a PIN its login asks while it lists a series comes to the bell,
   with a field to answer.
-- **Errors by service**, since Unshackle started. In Settings › Unshackle.
-- **Restart waits for the downloads.** Restart in Settings › Unshackle says Unshackle is busy instead of cutting them.
+- **Errors by service**, since Unshackle started. In Settings › Unshackle, once `unshackle.yaml` has a
+  `serve: dashboard: key:` and Unshacklarr sees that file.
+- **Restart waits for the downloads**, with that key too: Restart in Settings › Unshackle says Unshackle is busy
+  instead of cutting them.
 - **`--generate-dv`.** With `-r HYBRID`, Dolby Vision made from the HDR10+ when a title has none. In Download options.
 - **The editor knows the new keys** of `unshackle.yaml`: `codec_names`, `muxing.track_names`, `original_label`…
 
