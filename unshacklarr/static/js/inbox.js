@@ -52,14 +52,13 @@ function inboxRow(g, n) {
     ...(g.kind ? [el("span", { className: "inbox-kind", textContent: g.batch && g.items.length > 1 ? `${g.kind} · job` : g.kind })] : []),
     el("b", { textContent: g.name }),
     ...(g.eps.length ? [el("span", { className: "inbox-eps" }, ...g.eps.slice().sort().map((e) => el("span", { textContent: e })))] : []),
-    ...(i.message ? [el("p", {}, ...linkified(g.items.length > 1 ? i.message.replace(/^Aired \S+, /, "") : i.message))] : []),
-    ...(i.action?.code ? [el("button", { className: "code-chip", type: "button", title: "Copy the code", textContent: `${i.action.code} · ${i.action.done ? "done" : "expired"}`, onclick: (e) => { e.stopPropagation(); copyCode(i.action.code); } })] : []));
+    ...(i.message ? [el("p", {}, ...linkified(g.items.length > 1 ? i.message.replace(/^Aired \S+, /, "") : i.message))] : []));
   const time = el("time", { dateTime: i.at, title: when.toLocaleString(LOCALE, { dateStyle: "full", timeStyle: "short" }),
     textContent: Date.now() - when < 86400000 ? ago(i.at) : when.toLocaleTimeString(LOCALE, { hour: "2-digit", minute: "2-digit" }) });
   const isNew = inboxSeenAt !== null && g.items.some((x) => x.at > inboxSeenAt);
   const props = { className: `inbox-item ${g.level}${isNew ? " new" : ""}`, style: `--i: ${n}` };
   // ponytail: a series is found by its exact title in Sonarr; a renamed one just isn't clickable
-  if (!g.series || i.action?.code) return el("div", props, art, body, time);
+  if (!g.series) return el("div", props, art, body, time);
   // not a <button>: its text can be selected (an error to copy); a click that selects doesn't open the series
   const open = () => { if (String(getSelection()).trim()) return; $("#inbox-dialog").close(); openDrawer(g.series); };
   return el("div", { ...props, className: `${props.className} link`, role: "button", tabIndex: 0, title: `Open ${g.name}`, onclick: open,
@@ -68,7 +67,7 @@ function inboxRow(g, n) {
 function renderInbox(animate = false) {
   const items = inboxData?.items || [];
   const now = Date.now() / 1000;
-  const waiting = items.filter((i) => i.action && !i.action.done && (!i.action.expires_at || i.action.expires_at > now));
+  const waiting = items.filter((i) => ["input", "confirm-audio"].includes(i.action?.kind) && !i.action.done && (!i.action.expires_at || i.action.expires_at > now));
   const rest = items.filter((i) => !waiting.includes(i));
   const count = (lv) => rest.filter((i) => i.level === lv).length;
   const fresh = rest.filter((i) => inboxSeenAt !== null && i.at > inboxSeenAt).length;
@@ -90,8 +89,7 @@ function renderInbox(animate = false) {
   empty.innerHTML = `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${INBOX_ICONS.info}<path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg><p>All quiet. Downloads, failures and anything that waits for you show up here.</p>`;
   keepPromptFocus(() => $("#inbox-list").replaceChildren(
     ...(waiting.length ? [el("div", { className: "inbox-sub", textContent: "Waiting for you" }),
-      ...waiting.map((i) => (i.action.kind === "input" ? promptBox(i.action) : i.action.kind === "confirm-audio" ? audioBox(i.action)
-        : actionBox({ action: i.action, service: i.action.service })))] : []),
+      ...waiting.map((i) => (i.action.kind === "input" ? promptBox(i.action) : audioBox(i.action)))] : []),
     ...days.flatMap((d) => [el("div", { className: "inbox-sub", textContent: d.label }), ...d.groups.map((g) => inboxRow(g, n++))]),
     ...(!items.length ? [empty] : [])));
   $("#inbox-list").classList.toggle("enter", animate);

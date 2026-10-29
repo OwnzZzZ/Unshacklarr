@@ -218,7 +218,7 @@ function afterTracks(c) {
   const lv = c.live || {}, phase = String(lv.phase || "");
   if (phase.startsWith("mux")) return muxPct(c) != null ? `Muxing ${muxPct(c)}%` : "Muxing";
   if (phase.startsWith("repack")) return "Repackaging";
-  if (lv.total_tracks && Number(lv.completed_tracks) >= Number(lv.total_tracks)) return c.cdm ? "Decrypting" : "Processing the tracks";
+  if (lv.total_tracks && Number(lv.completed_tracks) >= Number(lv.total_tracks)) return "Processing the tracks";
   return "";
 }
 /* How far serve's mux is, from the file it writes in its work folder (Unshacklarr reads that folder when it is
@@ -234,24 +234,16 @@ function muxLeft(c) {
   return rate > 0 ? duration(((c.mux.total - c.mux.done) / rate) * 1000) : "";
 }
 const since = (iso) => iso ? duration(Date.now() - new Date(iso)) : "";
-/* The proxy a download goes through: serve's word once it has one, else what was asked; "" for none. */
+/* The proxy asked for a download; "" for none. */
 function proxyOf(c) {
-  if (c.proxy) return c.proxy.provider ? [c.proxy.provider, c.proxy.region?.toUpperCase()].filter(Boolean).join(" · ") : "Custom proxy";
   const asked = c.setup?.proxy;
-  return !asked || asked === "none" || "proxy" in c ? "" : asked.includes("//") ? "Custom proxy" : asked.toUpperCase();
+  return !asked || asked === "none" ? "" : asked.includes("//") ? "Custom proxy" : asked.toUpperCase();
 }
 /* The video asked for this download over the series' ladder: "1080p H.264"; "" when none was. */
 function videoOf(c) {
   const v = c.video_override;
   if (!v) return "";
   return [v.quality && `${v.quality}p`, { AVC: "H.264", HEVC: "H.265" }[v.vcodec] || v.vcodec].filter(Boolean).join(" ");
-}
-/* The CDM a download decrypts with: its device, its DRM and level (L3, SL2000), or the server's. */
-function cdmOf(c) {
-  const d = c.cdm;
-  if (!d) return "";
-  const drm = [d.drm, d.level != null ? `${d.drm === "PlayReady" ? "SL" : "L"}${d.level}` : ""].filter(Boolean).join(" ");
-  return d.server ? `The server's (${drm})` : [d.name, drm].filter(Boolean).join(" · ");
 }
 function metaChip(icon, text) {
   const chip = el("span", { className: "mchip" });
@@ -400,7 +392,7 @@ function jobDone(j, st) {
 function listRow(c) {
   const started = new Date(c.started);
   const sub = isLive(c)
-    ? (c.action ? `${c.service} · waiting for you: code ${c.action.code}` : c.prompt ? `${c.service} · waiting for your answer`
+    ? (c.prompt ? `${c.service} · waiting for your answer`
       : c.waiting ? `${c.service} · in the queue` : isQueued(c) ? `${c.service} · waiting for a slot` : `${c.service} · ${afterTracks(c) || speedOf(c) || c.step}`)
     : c.outcome === "unavailable" && c.checks > 1 ? `${c.service} · checked ${c.checks} times, last ${day(started)} ${time(started)}`
     : `${day(started)} ${time(started)}${c.ended ? ` · ${duration(new Date(c.ended) - started)}` : ""}`;
@@ -901,7 +893,6 @@ function runBody(c) {
       el("span", { className: "l", textContent: STEPS[i] }),
       el("span", { className: "s", textContent: STEPS_SHORT[i] }))]));
   const parts = [steps];
-  if (live && c.action) parts.push(actionBox(c));
   if (live && c.prompt) parts.push(promptBox(c.prompt));
   if (live && c.notice) parts.push(el("div", { className: "cd-note warn" },  // Unshackle 6: waits for an approval, nothing to type
     el("b", { textContent: `${c.service || "The service"} is waiting for you` }), el("span", { textContent: c.notice })));
@@ -991,9 +982,8 @@ function openSetup(c, at) {
   setupPop.style.top = `${r.bottom + 8 + p.height > innerHeight - 8 ? Math.max(8, r.top - p.height - 8) : r.bottom + 8}px`;
 }
 function setupBox(c) {
-  const known = "proxy" in c || c.setup.proxy === "none";
   const rows = [["Runs on", c.setup.via], ["On the service", c.serviceEpisode !== c.sxxeyy && c.serviceEpisode],
-    ["Proxy", proxyOf(c) || (known ? "None" : "")], ["Video asked", videoOf(c)], ["CDM", cdmOf(c)], ["Attempt", c.attempts > 1 && String(c.attempts)]].filter(([, v]) => v);
+    ["Proxy", proxyOf(c) || (c.setup.proxy === "none" ? "None" : "")], ["Video asked", videoOf(c)], ["Attempt", c.attempts > 1 && String(c.attempts)]].filter(([, v]) => v);
   const copy = el("button", { type: "button", className: "jact", ariaLabel: "Copy the command",
     onclick: () => navigator.clipboard.writeText(c.setup.command).then(() => toast("Command copied"), () => toast("The browser refused to copy", true)) });
   copy.innerHTML = ICON_COPY;
@@ -1116,22 +1106,6 @@ async function stopRun(c, button) {
   button.disabled = true;
   try { await api(`/api/runs/${encodeURIComponent(c.id)}/stop`, { method: "POST" }); toast(`Stopping ${c.series} ${c.sxxeyy}`); }
   catch (e) { button.disabled = false; toast(e.message, true); }
-}
-/* What the service waits for from you (a TV login): the link to open and the code to enter. */
-function actionBox(c) {
-  const a = c.action, left = a.expires_at ? Math.max(0, Math.round(a.expires_at - Date.now() / 1000)) : null;
-  const code = el("button", { className: "act-code", type: "button", textContent: a.code, title: "Copy the code", onclick: async () => {
-    try { await navigator.clipboard.writeText(a.code); toast("Code copied"); } catch { /* no clipboard: it is on screen */ }
-  } });
-  return el("div", { className: "act-box", role: "status" },
-    el("b", { textContent: `${a.service || c.service}: ${a.message || "action needed"}` }),
-    el("span", { textContent: "Open the link, log in if asked, and enter this code. The download goes on by itself." }),
-    code,
-    el("div", { className: "act-row" },
-      // a link only to a web page: the service's words are data, never a javascript: URL
-      /^https:\/\/[^\s"<>]+$/.test(a.url || "") ? el("a", { className: "btn primary", href: a.url, target: "_blank", rel: "noopener", textContent: `Open ${a.url.replace(/^https:\/\/(www\.)?/, "")}` })
-        : el("span", { textContent: a.url || "" }),
-      left !== null ? el("small", { textContent: left ? `expires in ${Math.ceil(left / 60)} min` : "expired: the next try asks for a new code" }) : ""));
 }
 /* A question the service asks while downloading (an OTP code, a PIN): a field, and the answer sent to it. */
 const promptDrafts = {};  // what was typed, kept across the page's redraws

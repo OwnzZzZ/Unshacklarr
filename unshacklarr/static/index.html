@@ -428,7 +428,7 @@
           <span class="sx-logo" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4M12 15v2"/></svg></span>
           <div class="sx-id"><h2>CDM</h2><p id="cdm-folder"></p></div>
           <div class="sx-state" id="cdm-state"><span class="dot"></span><span><b>Reading Unshackle's CDMs…</b><small></small></span></div>
-          <div class="sx-actions"><span id="cdm-hero-test"></span><button class="btn small primary" id="cdm-add">Add a device</button><input type="file" id="cdm-file" accept=".wvd,.prd" hidden></div>
+          <div class="sx-actions"><button class="btn small primary" id="cdm-add">Add a device</button><input type="file" id="cdm-file" accept=".wvd,.prd" hidden></div>
           <div class="ux-more" id="cdm-alerts"></div>
         </section>
         <div id="cdm-list" class="sx"></div>
@@ -471,7 +471,6 @@
           <div class="nt-levels">
             <label class="nt-level bad"><i></i><span><b>Unshackle or Sonarr is unreachable</b><small>After two failed checks in a row, and again when it is back</small></span><input type="checkbox" class="switch" data-event="down"></label>
             <label class="nt-level warn"><i></i><span><b>Cookies expire</b><small>7 days before they expire, and again once expired, for the services your series use</small></span><input type="checkbox" class="switch" data-event="cookies"></label>
-            <label class="nt-level bad"><i></i><span><b>A CDM device fails</b><small>The devices in use are tested once a day. You are told when one is revoked or refused</small></span><input type="checkbox" class="switch" data-event="cdm"></label>
             <label class="nt-level bad"><i></i><span><b>Not ready for a release</b><small>3 hours before an episode comes out, its series is checked on its service: a refused login, a missing CDM, or a URL with no episodes</small></span><input type="checkbox" class="switch" data-event="precheck"></label>
             <label class="nt-level bad"><i></i><span><b>The downloads folder is almost full</b><small>Less free space than Settings keeps: nothing is downloaded until there is enough</small></span><input type="checkbox" class="switch" data-event="disk"></label>
           </div>
