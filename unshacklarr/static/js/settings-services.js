@@ -106,6 +106,8 @@ function renderUnshackleStatus(st) {
           try { await api(`/api/unshackle/jobs/${encodeURIComponent(j.id)}/cancel`, { method: "POST" }); toast("Cancelling"); setTimeout(loadUnshackleStatus, 1500); }
           catch (err) { e.target.disabled = false; toast(err.message, true); }
         } }))))] : [el("small", { className: "muted", textContent: "Nothing is downloading or waiting." })])),
+    ...(Object.keys(st.errors || {}).length ? [el("div", { className: "st-sect" }, el("b", { textContent: "Errors since it started" }),
+      el("small", { className: "muted", textContent: Object.entries(st.errors).sort((a, b) => b[1] - a[1]).map(([svc, n]) => `${svc} ${n}`).join(" · ") }))] : []),
     el("div", { className: "st-sect" }, el("b", { textContent: "Maintenance" }),
       el("div", { className: "st-maint" },
         maint("refresh-services", "Reload services", "After adding or updating a service in its services folder"),

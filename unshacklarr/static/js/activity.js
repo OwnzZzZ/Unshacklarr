@@ -1028,9 +1028,10 @@ function promptBox(p) {
     if (!field.value.trim()) return field.focus();
     send.disabled = true;
     try {
-      await api(`/api/runs/${encodeURIComponent(p.run)}/input`, { method: "POST", body: JSON.stringify({ response: field.value }) });
+      await api(p.login ? `/api/remote-logins/${encodeURIComponent(p.login)}/input` : `/api/runs/${encodeURIComponent(p.run)}/input`,
+        { method: "POST", body: JSON.stringify({ response: field.value }) });
       delete promptDrafts[p.id];
-      toast("Sent: the download goes on");
+      toast(p.login ? "Sent" : "Sent: the download goes on");
     } catch (err) { send.disabled = false; toast(err.message, true); }
   } }, field, send);
   return el("div", { className: "act-box", role: "status" },

@@ -22,6 +22,7 @@ DL_OPTIONS = [
     ('vbitrate_range', 'text', "Video Bitrate range in kbps (e.g., '6000-7000'). Selects the highest bitrate within the range.", []),
     ('abitrate_range', 'text', "Audio Bitrate range in kbps (e.g., '128-256'). Selects the highest bitrate within the range.", []),
     ('range', 'list', 'Video Color Range(s) to download, defaults to SDR.', ['SDR', 'HLG', 'HDR10', 'HDR10+', 'DV', 'HYBRID']),
+    ('generate_dv', 'flag', 'With -r HYBRID, make Dolby Vision from the HDR10+ metadata when a title has no Dolby Vision track.', []),
     ('channels', 'number', 'Audio Channel(s) to download. Matches sub-channel layouts like 5.1 with 6.0 implicitly.', []),
     ('no_atmos', 'flag', 'Exclude Dolby Atmos audio tracks when selecting audio.', []),
     ('lang', 'list', "Language(s) wanted for Video and Audio (comma-separated). Use 'orig' to select the original language, e.g. 'orig,en' for both original and English. Prefix a value with '-' to exclude it, e.g. 'all,-es'.", []),

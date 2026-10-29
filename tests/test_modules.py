@@ -389,3 +389,24 @@ def test_remote_names_its_server_as_serve_takes_it(tmp_path):
     backend._config = (0.0, {})
     with pytest.raises(UnshackleError, match="--server"):
         backend.download({"service": "NF", "remote": True})
+
+
+@responses.activate
+def test_serves_passing_errors_say_their_code_and_a_restart_waits_for_its_downloads(tmp_path, monkeypatch):
+    # After 6.0.0 serve answers a network hitch with 424 and drains before a restart: both worth another try
+    backend = Unshackle(tmp_path)
+    backend.configure({"unshackle_url": "http://backend:8786", "unshackle_api_key": "test-api-secret"})
+    responses.post("http://backend:8786/api/list-titles", status=424, json={"error_code": "NETWORK_ERROR", "message": "Connection lost"})
+    with pytest.raises(UnshackleError, match=r"Connection lost \(NETWORK_ERROR\)"):
+        backend.call("POST", "/api/list-titles", json={"service": "NF", "title_id": "1"})
+
+    responses.get("http://backend:8786/api/dashboard/status", json={"errors": {"NF": {"SERVICE_ERROR": 2}}})
+    assert backend.errors() == {"NF": {"SERVICE_ERROR": 2}}
+
+    monkeypatch.setattr(Unshackle, "mode", property(lambda self: "local"))  # serve run by Unshacklarr: restarted by it
+    monkeypatch.setattr(backend, "endpoint", lambda: ("http://backend:8786", "test-api-secret"))
+    responses.post("http://backend:8786/api/dashboard/drain", json={"jobs": {"downloading": 1}, "sessions": 0, "draining": True})
+    responses.delete("http://backend:8786/api/dashboard/drain", json={"draining": False})
+    with pytest.raises(UnshackleError, match="still downloading"):
+        backend.restart()
+    assert responses.calls[-1].request.method == "DELETE"  # the drain called off: it takes new work again

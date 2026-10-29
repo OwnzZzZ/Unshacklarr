@@ -264,6 +264,9 @@
  "Another Sonarr has this name": [],
  "Another ladder has this name": [],
  "Another server has this name": [],
+ "Answer in Unshacklarr, for the remote server {0}.": [
+  "lg.get('remote')"
+ ],
  "Answer in Unshacklarr, for {0} {1}.": [
   "run.card['series']",
   "run.card['sxxeyy']"
@@ -769,6 +772,7 @@
  "Episodes split into parts": [],
  "Episodes that aired, are monitored and have no file in Sonarr, for the series Unshackle downloads. The automatic sync only looks at recent ones.": [],
  "Episodes your series are still missing": [],
+ "Errors since it started": [],
  "Escape": [],
  "Español": [],
  "Events": [],
@@ -1832,6 +1836,7 @@
  ],
  "Sending…": [],
  "Sends": [],
+ "Sent": [],
  "Sent: the download goes on": [],
  "Separate programmes": [],
  "Series": [],
@@ -2553,6 +2558,7 @@
  "Unshackle doesn't let Unshacklarr use its proxies": [],
  "Unshackle downloads the episodes: here, started by Unshacklarr, or elsewhere, as unshackle serve.": [],
  "Unshackle downloads them again, then replaces a file only if the new one ranks higher in the series' quality profile in Sonarr. Otherwise the download waits in the downloads folder and you get a warning.": [],
+ "Unshackle is still downloading: restart it once it is done": [],
  "Unshackle made {0} file{1}:": [
   "len(files)",
   "'s' if len(files) != 1 else ''"
@@ -2702,6 +2708,7 @@
  "Widevine": [],
  "Widevine and PlayReady devices": [],
  "Widevine, pywidevine serve": [],
+ "With -r HYBRID, make Dolby Vision from the HDR10+ metadata when a title has no Dolby Vision track.": [],
  "Wrong passphrase, or the file is damaged": [],
  "Wrong password": [],
  "Wrong setup code: Unshacklarr prints it when it starts (docker logs unshacklarr)": [],

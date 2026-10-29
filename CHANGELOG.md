@@ -43,6 +43,14 @@ Unshacklarr can be reached from outside your network.
 - **The API speaks the service's numbering.** `"numbering": "service"` takes Disney+'s S04E05 for the episode it is in
   Sonarr, and `"audio": "fr"` lets Unshacklarr decide: download, download again, or add the French track.
 
+**🧩 Unshackle after 6.0.0**
+- **A remote server's login questions.** An OTP or a PIN its login asks while it lists a series comes to the bell,
+  with a field to answer.
+- **Errors by service**, since Unshackle started. In Settings › Unshackle.
+- **Restart waits for the downloads.** Restart in Settings › Unshackle says Unshackle is busy instead of cutting them.
+- **`--generate-dv`.** With `-r HYBRID`, Dolby Vision made from the HDR10+ when a title has none. In Download options.
+- **The editor knows the new keys** of `unshackle.yaml`: `codec_names`, `muxing.track_names`, `original_label`…
+
 **⏰ Release times**
 - **Next episode.** Two episodes the same evening, published one after the other: the second is tried that many
   minutes later. In a series' When.
@@ -61,6 +69,8 @@ Unshacklarr can be reached from outside your network.
   Unshackle's own API (after 6.0.0); with 6.0.0, Per service says the options are not known and to write them as is.
 - **A series downloaded through `--remote` is also listed and searched there.** Its episodes no longer start the
   service here, where it may not be set up (NF stopped with "Service NF exited").
+- **Retries with Unshackle after 6.0.0.** A network or service hitch it now answers with 424, and a server about to
+  restart, are tried again as before.
 - **No more false cookie warnings.** Crave's load balancer cookies (a week) and Apple's `utsdc` (an hour) no longer
   count as the date the login ends.
 
