@@ -175,7 +175,7 @@ SETTINGS_DEFAULTS = {
     "download_window_bursts": False,  # release-time downloads follow the download window too
     "spoiler_free": False,       # the page blurs episode titles until clicked (a series can say otherwise)
     "subs_accept": "",           # and one of these subtitle languages, forced ones aside ("fr"); empty: not checked
-    "debug": False,              # Activity's output says more: Unshackle's debug log, every call to Sonarr
+    "debug": False,              # Activity's output says more: every call to Sonarr, the job as serve reports it
     "download_only": False,      # downloaded and tidied, never handed to Sonarr: imported by hand (a series can say otherwise)
     "backends": [],              # other unshackle serve: [{name, url, api_key, downloads (as that serve sees the folder)}]
     "quality_ladder": "",        # the quality ladder every series downloads by (a service or a series can pick another)
@@ -1640,7 +1640,7 @@ def title_key(text: str) -> str:
 def serve_params(show: dict, config: dict) -> dict:
     """A search's or listing's options: the series' profile, proxy and service options, as a download has them."""
     dl, own = stacked(show, config)
-    params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy")}
+    params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy", "remote", "server")}
     params.update(options.to_params(own, options.service_specs(service_entry(show["service"], config))))
     return params
 
@@ -2182,7 +2182,7 @@ def list_tracks(show: dict, config: dict, request: dict, ladder: dict | None = N
     """The episode's tracks on the service, nothing downloaded: one entry per part ([] when the service has no such
     episode). For a quality ladder, the ranges and codecs of its steps are asked for: a service lists only those."""
     _, own = stacked(show, config)
-    keep = {"service", "title_id", "profile", "proxy", "no_proxy", "cdm_type",
+    keep = {"service", "title_id", "profile", "proxy", "no_proxy", "cdm_type", "remote", "server",
             *options.to_params(own, options.service_specs(service_entry(show["service"], config)))}
     asked = {k: v for k, v in request.items() if k in keep}
     if ladder:

@@ -927,33 +927,11 @@ $("#cd-raw").addEventListener("toggle", () => {
   const c = runCards.find((x) => x.id === picked_run);
   if (c && !c.waiting && termFor !== c.id) streamRun(c);
 });
-/* The output in full (Debug) or its essentials: what happens, warnings and errors, without Unshackle's own log. */
-let termMode = (() => { try { return localStorage.getItem("unshacklarr.termMode") || "essentials"; } catch { return "essentials"; } })();
-const DROPPED = /\x1b\[90m {2}\d\d:\d\d:\d\d (?:DEBUG|INFO) |\x1b\[90mdebug · /;  // Unshackle's INFO and DEBUG lines, the debug traces
+/* The output's bytes as text, a character cut between two chunks kept for the next. */
 function termFilter() {
   const decoder = new TextDecoder();
-  let carry = "";
-  return (bytes) => {
-    const text = carry + decoder.decode(bytes, { stream: true }), cut = text.lastIndexOf("\n");
-    let out = cut < 0 ? "" : text.slice(0, cut + 1);
-    carry = cut < 0 ? text : text.slice(cut + 1);
-    if (termMode === "essentials") out = out.split(/(?<=\n)/).filter((line) => !DROPPED.test(line)).join("");
-    if (carry && !/\x1b\[90m {2}\d\d:|\x1b\[90mdebug/.test(carry)) { out += carry; carry = ""; }  // a progress line, redrawn in place: now
-    return out;
-  };
+  return (bytes) => decoder.decode(bytes, { stream: true });
 }
-function showTermMode() { document.querySelectorAll(".term-mode button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === termMode))); }
-document.querySelectorAll(".term-mode button").forEach((b) => b.onclick = (e) => {
-  e.preventDefault();  // in the output's head: a click here doesn't fold it
-  termMode = b.dataset.mode;
-  try { localStorage.setItem("unshacklarr.termMode", termMode); } catch { /* this visit only */ }
-  showTermMode();
-  const was = termFor;
-  termFor = null;
-  if (was?.startsWith("job:")) streamJob(was.slice(4));
-  else { const c = runCards.find((x) => x.id === was); if (c) streamRun(c); }
-});
-showTermMode();
 /* A job's own download options, for its episodes still to come: over the series' options, the series unchanged. */
 let jobOpts = null;
 async function openJobOptions(j) {

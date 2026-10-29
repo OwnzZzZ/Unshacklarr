@@ -648,7 +648,7 @@ async def series_search(request):
     if not show.get("service") or not query:
         raise web.HTTPBadRequest(text="Pick a service and type a name first")
     dl, _ = sonarr_sync.stacked(show, read_config())
-    params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy")}
+    params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy", "remote", "server")}
     try:
         backend = await asyncio.to_thread(sonarr_sync.backend_for, show["service"])
         found = await asyncio.to_thread(backend.call, "POST", "/api/search", json={**params, "service": show["service"], "query": query})
@@ -1369,7 +1369,7 @@ def search_series_url(service: str, title: str) -> str | None:
     """The series' address on its service when its search has exactly one result of that title."""
     show = {"service": service}
     dl, _ = sonarr_sync.stacked(show, read_config())
-    params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy")}
+    params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy", "remote", "server")}
     query = re.sub(r"\s*\(\d{4}\)\s*$", "", title)
     try:
         found = sonarr_sync.backend_for(service).call("POST", "/api/search", json={**params, "service": service, "query": query})
@@ -3118,7 +3118,7 @@ def match_by_title(service_eps: list[dict], sonarr_eps: list[dict], tmdb_eps: li
 def list_titles(show: dict) -> list[dict]:
     """The series' titles on its service, with its profile, proxy and service options: nothing downloaded."""
     dl, own = sonarr_sync.stacked(show, read_config())
-    params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy")}
+    params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy", "remote", "server")}
     params.update(options.to_params(own, options.service_specs(sonarr_sync.service_entry(show["service"]))))
     return sonarr_sync.backend_for(show["service"]).call("POST", "/api/list-titles", json={**params, "service": show["service"], "title_id": str(show["title"])})["titles"]
 
@@ -3169,7 +3169,7 @@ def page_of_season(show: dict, name: str, aired: int) -> dict | None:
     """A show of its own on the series' service for one of its seasons: one search result of that very name, not the
     series' own page, whose listing holds at least half of the season's aired episodes in one of its seasons."""
     dl, _ = sonarr_sync.stacked(show, read_config())  # as search_series_url: the series' profile and proxy
-    params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy")}
+    params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy", "remote", "server")}
     try:
         found = sonarr_sync.backend_for(show["service"]).call("POST", "/api/search", json={**params, "service": show["service"], "query": name})
     except UnshackleError as e:
