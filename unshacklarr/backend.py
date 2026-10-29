@@ -274,6 +274,8 @@ class Unshackle:
         return self.local.endpoint(str(self.settings.get("unshackle_command") or ""))
 
     def call(self, method: str, path: str, **kwargs):
+        if path in ("/api/search", "/api/list-titles", "/api/list-tracks") and isinstance(kwargs.get("json"), dict):
+            kwargs["json"] = self.relayed(kwargs["json"])
         url, key = self.endpoint()
         try:
             r = requests.request(method, f"{url}{path}", headers={"X-Secret-Key": key}, timeout=(5, 60), **kwargs)  # a server down: 5 s, not 60
@@ -368,15 +370,21 @@ class Unshackle:
             self._config = (time.monotonic(), config)
         return config
 
+    def relayed(self, payload: dict) -> dict:
+        """dl's --remote [--server X] as serve takes it: the server's name in "remote", the one of remote_services
+        when none is named. A download, a search and a listing all go through that server."""
+        if payload.get("remote") is not True:
+            return payload
+        names = self.config().get("remote_services")
+        names = names if isinstance(names, list) else []
+        server = payload.get("server") or (names[0] if len(names) == 1 else None)
+        if not server:
+            raise UnshackleError("--remote needs --server: name one of remote_services in unshackle.yaml" if names
+                                 else "--remote needs a server in remote_services of unshackle.yaml (and Unshackle after 6.0.0)")
+        return {**{k: v for k, v in payload.items() if k != "server"}, "remote": server}
+
     def download(self, payload: dict) -> str:
-        if payload.get("remote") is True:  # dl's --remote [--server X]: serve takes the server's name in "remote"
-            names = self.config().get("remote_services")
-            names = names if isinstance(names, list) else []
-            server = payload.get("server") or (names[0] if len(names) == 1 else None)
-            if not server:
-                raise UnshackleError("--remote needs --server: name one of remote_services in unshackle.yaml" if names
-                                     else "--remote needs a server in remote_services of unshackle.yaml (and Unshackle after 6.0.0)")
-            payload = {**{k: v for k, v in payload.items() if k != "server"}, "remote": server}
+        payload = self.relayed(payload)
         if not payload.get("remote"):
             # A service that failed to import is in serve's load_errors (Unshackle after 5.4.0; none before): told
             # now, not once the job fails. Asked afresh each time, not the cached list: serve may have restarted.

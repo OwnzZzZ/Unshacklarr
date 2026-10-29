@@ -59,6 +59,8 @@ Unshacklarr can be reached from outside your network.
 - **Seasons on the service on a phone.** The field gets the full keyboard, so `=` and `,` can be typed.
 - **`--remote` with the official Unshackle.** A download through a remote server and its options now go through
   Unshackle's own API (after 6.0.0); with 6.0.0, Per service says the options are not known and to write them as is.
+- **A series downloaded through `--remote` is also listed and searched there.** Its episodes no longer start the
+  service here, where it may not be set up (NF stopped with "Service NF exited").
 - **No more false cookie warnings.** Crave's load balancer cookies (a week) and Apple's `utsdc` (an hour) no longer
   count as the date the login ends.
 
@@ -76,7 +78,8 @@ What only a fork of Unshackle gave: Unshacklarr now needs nothing but the offici
 - **The CDM devices' test, details and reprovisioning**, and the *A CDM device fails* alert. Adding, deleting and
   choosing a device stay.
 - **The TV login code box.** Disney+ now shows its code as Unshackle's own notice on the download.
-- **Unshackle's log in Activity**, and the proxy and CDM a download went through.
+- **Unshackle's log in Activity**, and the proxy and CDM a download went through. With it, the output's
+  Essentials/Debug switch: Settings' debug mode alone says how much the output shows.
 
 ## [1.5.0] - 2026-10-17
 

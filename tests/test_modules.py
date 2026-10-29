@@ -381,6 +381,9 @@ def test_remote_names_its_server_as_serve_takes_it(tmp_path):
     backend.download({"service": "NF", "remote": True, "server": "other"})
     sent = [json.loads(c.request.body) for c in responses.calls if c.request.method == "POST"]
     assert sent == [{"service": "NF", "remote": "community"}, {"service": "NF", "remote": "other"}]
+    responses.post("http://backend:8786/api/list-titles", json={"titles": []})  # a listing goes through it too
+    backend.call("POST", "/api/list-titles", json={"service": "NF", "title_id": "1", "remote": True})
+    assert json.loads(responses.calls[-1].request.body)["remote"] == "community"
 
     responses.replace(responses.GET, "http://backend:8786/api/config", json={"config": {"remote_services": ["a", "b"]}})
     backend._config = (0.0, {})

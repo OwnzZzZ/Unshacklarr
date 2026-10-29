@@ -928,8 +928,6 @@ body.gated > :not(.gate):not(.toasts) { display: none !important; }
 .cd-raw summary .ico { color: var(--accent); } .cd-raw summary .t { flex: 1; }
 .cd-raw summary .chev { width: 16px; height: 16px; fill: none; stroke: var(--muted); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; transition: transform .15s; }
 .cd-raw[open] summary .chev { transform: rotate(90deg); }
-.cd-raw:not([open]) .term-mode { display: none; }
-.cd-raw .term-mode { margin: 0; font-weight: 500; } .cd-raw .term-mode button { padding: 4px 10px; font-size: 12.5px; }
 .cd-raw .term { height: 46vh; border: 0; border-top: 1px solid var(--line); border-radius: 0; }
 /* The bar at the bottom of a job or a download: where it stands, its actions on a phone, and the output over the page */
 .dock { position: sticky; bottom: 12px; z-index: 5; display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 14px;
