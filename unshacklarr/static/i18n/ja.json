@@ -1629,7 +1629,6 @@
  "The main one (Settings, Unshackle)": "メイン（設定 › Unshackle）",
  "The new address of {0} needs its API key too": "{0} の新しいアドレスには API キーも必要です",
  "The quality ladder {0} has no step": "画質ラダー {0} にステップがありません",
- "The quality ladder {0} needs the episode's track list, which a --remote download does not give": "画質ラダー {0} にはエピソードのトラック一覧が必要ですが、--remote ダウンロードでは取得できません",
  "The quality ladder {0}: a step's lowest height is above its highest": "画質ラダー {0}：あるステップの最小の高さが最大を上回っています",
  "The quality ladder {0}: heights are whole numbers, like 1080": "画質ラダー {0}：高さは 1080 のような整数です",
  "The quality ladder {0}: unknown codec or range": "画質ラダー {0}：不明なコーデックまたはレンジ",

@@ -1593,7 +1593,6 @@
  "The main one (Settings, Unshackle)": "El principal (Ajustes, Unshackle)",
  "The new address of {0} needs its API key too": "La nueva dirección de {0} también necesita su clave de API",
  "The quality ladder {0} has no step": "La escalera de calidad {0} no tiene ningún paso",
- "The quality ladder {0} needs the episode's track list, which a --remote download does not give": "La escalera de calidad {0} necesita la lista de pistas del episodio, que una descarga --remote no da",
  "The quality ladder {0}: a step's lowest height is above its highest": "La escalera de calidad {0}: en un paso la altura mínima supera a la máxima",
  "The quality ladder {0}: heights are whole numbers, like 1080": "La escalera de calidad {0}: las alturas son números enteros, como 1080",
  "The quality ladder {0}: unknown codec or range": "La escalera de calidad {0}: códec o rango desconocido",

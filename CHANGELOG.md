@@ -70,6 +70,9 @@ Unshacklarr can be reached from outside your network.
 - **Activity no longer freezes with a large job.** The episodes that don't change are no longer redrawn every second.
 - **More episodes found by their title.** "TBC" counts as no title, like "TBA"; TVDB's "PAGE 14 Donjon" is Netflix's
   "Donjon"; a title only translated ("Dungeon", "Donjon") is no longer marked *Other title*.
+- **Quality ladders with `--remote`.** A remote download reads the episode's tracks too, so its ladder and languages
+  are checked before it starts instead of failing.
+- **No false alarm before a premiere.** A new series or season with nothing out yet is no longer told to check its URL.
 - **The output's scrollbar can be dragged.** The text covered it when the output was wider than its box.
 - **Seasons on the service on a phone.** The field gets the full keyboard, so `=` and `,` can be typed.
 - **`--remote` with the official Unshackle.** A download through a remote server and its options now go through

@@ -2206,10 +2206,8 @@ def list_tracks(show: dict, config: dict, request: dict, ladder: dict | None = N
 
 def tracks_on_service(show: dict, config: dict, request: dict) -> dict[str, set[str]] | None:
     """The audio and subtitle languages the service offers for the episode, nothing downloaded (forced subtitles,
-    a few lines only, left out); None when it can't tell (a remote service, an error, no answer): the download then
-    goes on, checked once it is in."""
-    if request.get("remote"):
-        return None
+    a few lines only, left out); None when it can't tell (an error, no answer): the download then goes on, checked
+    once it is in."""
     try:
         episodes = list_tracks(show, config, request)
     except UnshackleError as e:
@@ -2314,10 +2312,6 @@ def apply_ladder(show: dict, config: dict, request: dict) -> int | None:
     if asked := show.get("asked_video"):  # asked for this download: Unshackle is told even if the tracks can't be read
         request.update(**({"quality": [asked["quality"]]} if asked.get("quality") else {}),
                        **({"vcodec": [asked["vcodec"]]} if asked.get("vcodec") else {}))
-        if request.get("remote"):
-            return None
-    if request.get("remote"):
-        raise ValueError(f"The quality ladder {ladder['name']} needs the episode's track list, which a --remote download does not give")
     episodes = list_tracks(show, config, request, ladder)
     if not episodes:  # ponytail: not on the service (yet): the download finds nothing either, and says so as usual
         return None

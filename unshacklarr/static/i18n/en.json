@@ -2407,9 +2407,6 @@
  "The quality ladder {0} has no step": [
   "name"
  ],
- "The quality ladder {0} needs the episode's track list, which a --remote download does not give": [
-  "ladder['name']"
- ],
  "The quality ladder {0}: a step's lowest height is above its highest": [
   "name"
  ],
