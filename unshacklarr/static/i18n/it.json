@@ -1622,7 +1622,6 @@
  "The new address of {0} needs its API key too": "Il nuovo indirizzo di {0} richiede anche la sua chiave API",
  "The quality ladder {0} has no step": "La scala di qualità {0} non ha gradini",
  "The quality ladder {0}: a step's lowest height is above its highest": "La scala di qualità {0}: in un gradino l'altezza minima supera la massima",
- "The quality ladder {0}: heights are whole numbers, like 1080": "La scala di qualità {0}: le altezze sono numeri interi, come 1080",
  "The quality ladder {0}: unknown codec or range": "La scala di qualità {0}: codec o gamma sconosciuti",
  "The serve: api_secret of its unshackle.yaml. Empty keeps the saved one.": "Il serve: api_secret del suo unshackle.yaml. Vuoto mantiene quello salvato.",
  "Tried from the top: Unshacklarr downloads the first step the episode has a track for, and the best track within it.": "Provata dall'alto: Unshacklarr scarica il primo gradino per cui l'episodio ha una traccia, e la traccia migliore al suo interno.",
@@ -1910,7 +1909,6 @@
  "No such attempt": "Tentativo inesistente",
  "What is sent for this series' episodes. The bell in the page always keeps everything.": "Cosa viene inviato per gli episodi di questa serie. La campanella della pagina conserva sempre tutto.",
  "default": "predefinito",
- "{0} (default)": "{0} (predefinito)",
  "no {0} subtitles on {1}: downloading {2}": "nessun sottotitolo {0} su {1}: download {2}",
  "with the forced subtitles only": "solo con i sottotitoli forzati",
  "Downloads at once": "Download simultanei",
@@ -2271,5 +2269,13 @@
  "User header": "Header utente",
  "min later": "min dopo",
  "{0} cookies expire in 1 day": "I cookie di {0} scadono tra 1 giorno",
- "The remote server's options are not known with this Unshackle: write them as they are.": "Le opzioni del server remoto non sono note con questo Unshackle: scrivile così come sono."
+ "The remote server's options are not known with this Unshackle: write them as they are.": "Le opzioni del server remoto non sono note con questo Unshackle: scrivile così come sono.",
+ "Edit ladders": "Modifica scale",
+ "Highest bitrate, kbps": "Bitrate massimo, kbps",
+ "Ladders as chips, a bitrate per step": "Scale come chip, un bitrate per gradino",
+ "Set by the ladder: {0}": "Deciso dalla scala: {0}",
+ "The quality ladder {0}: a step's bitrate is in kbps, like 8000": "La scala di qualità {0}: il bitrate di un gradino è in kbps, come 8000",
+ "The quality ladder {0}: heights and bitrates are whole numbers, like 1080": "La scala di qualità {0}: altezze e bitrate sono numeri interi, come 1080",
+ "Video by {0}: {1}": "Video secondo {0}: {1}",
+ "Any": "Qualsiasi"
 }

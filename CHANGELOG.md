@@ -62,6 +62,12 @@ Unshacklarr can be reached from outside your network.
 - **Next episode.** Two episodes the same evening, published one after the other: the second is tried that many
   minutes later. In a series' When.
 
+**📶 Quality ladders, simpler**
+- **Ladders as chips.** A service or a series picks its ladder in one tap; Edit ladders leads to Settings, Quality.
+- **What the ladder takes over is said.** `--quality`, `--vcodec` and `--vbitrate-range` set at that level are flagged
+  with one button to remove them; with a ladder they are no longer applied, and the command shows the ladder's video.
+- **A highest bitrate per step.** 1080p up to 6000 kbps, 4K at its best: a cap on one step only.
+
 ### Fixed
 
 - **A service's failed login is no longer called a refused API key.** Serve's own reason is shown instead, so you

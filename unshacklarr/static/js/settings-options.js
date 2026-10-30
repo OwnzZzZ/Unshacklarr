@@ -3,10 +3,15 @@ const argsOf = (opts) => Object.entries(opts || {}).flatMap(([f, v]) => v === tr
 function renderCommands() {
   const box = $("#dx-cmd");
   if (!box || !S.config.defaults) return;
-  box.textContent = ["unshackle dl", ...argsOf(S.config.defaults), "<service>", "<series>"].join(" ");
+  // a ladder picks the video: the options it takes over are left out, its steps said below
+  const without = (opts, lad) => lad ? Object.fromEntries(Object.entries(opts).filter(([f]) => !LADDER_FLAGS.includes(f))) : opts;
+  const top = ladderNamed(S.config.settings.quality_ladder);
+  box.textContent = ["unshackle dl", ...argsOf(without(S.config.defaults, top)), "<service>", "<series>"].join(" ");
+  ladderLine(box, top);
   document.querySelectorAll(".dx-svc-cmd").forEach((c) => {
-    const l = S.config.service_defaults?.[c.dataset.tag] || {};
-    c.textContent = ["unshackle dl", ...argsOf({ ...S.config.defaults, ...l.options }), c.dataset.tag, ...argsOf(l.service_options), "<series>"].join(" ");
+    const l = S.config.service_defaults?.[c.dataset.tag] || {}, lad = ladderNamed(l.ladder || S.config.settings.quality_ladder);
+    c.textContent = ["unshackle dl", ...argsOf(without({ ...S.config.defaults, ...l.options }, lad)), c.dataset.tag, ...argsOf(l.service_options), "<series>"].join(" ");
+    ladderLine(c, lad);
   });
   document.querySelectorAll(".dx-remote-note").forEach((n) => {  // --remote on, its server's options not listed (Unshackle 6.0.0)
     const l = S.config.service_defaults?.[n.dataset.tag] || {};
@@ -30,14 +35,20 @@ async function renderServiceDefaults() {
     const backend = el("select", { onchange: (e) => { if (e.target.value) levels.backend = e.target.value; else delete levels.backend; dirty(); } },
       el("option", { value: "", textContent: "The main one (Settings, Unshackle)" }), ...servers.map((b) => el("option", { value: b.name, textContent: b.name })));
     backend.value = levels.backend || "";
-    const ladder = ladderSelect(levels.ladder, S.config.settings.quality_ladder, (v) => { if (v) levels.ladder = v; else delete levels.ladder; dirty(); });
+    const clash = el("div", { className: "ladder-clash" });
+    const clashes = () => ladderClash(clash, ladderNamed(levels.ladder || S.config.settings.quality_ladder), levels.options, renderServiceDefaults);
+    const ladder = ladderChips(levels.ladder, S.config.settings.quality_ladder, (v) => {
+      if (v) levels.ladder = v; else delete levels.ladder;
+      clashes(); dirty();
+    });
+    clashes();
     blocks.push(el("div", { className: "svc-block" },
       el("div", { className: "svc-block-head" }, el("b", { textContent: tag }),
         el("small", { textContent: count ? `${count} option${count > 1 ? "s" : ""}` : "Nothing set yet" }),
         el("button", { className: "btn small danger", textContent: "Remove", onclick: () => { delete all[tag]; dirty(); renderServiceDefaults(); } })),
       el("div", { className: "sx-grid svc-picks" },
         ...(servers.length || levels.backend ? [field("Unshackle server", backend, `Where ${tag} downloads.`)] : []),
-        field("Quality ladder", ladder, "Default: the one of Settings, Quality.")),
+        field("Quality ladder", ladder, "Default: the one of Settings, Quality.", clash)),
       el("span", { className: "sub", textContent: "Download options" }), dl,
       el("span", { className: "sub", textContent: `Options of ${tag}` }), own,
       el("small", { className: "help dx-remote-note", hidden: true, dataset: { tag, known: specs.some((s) => s.remote) ? "1" : "" },

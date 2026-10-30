@@ -1634,7 +1634,6 @@
  "The new address of {0} needs its API key too": "{0} 的新地址也需要其 API 密钥",
  "The quality ladder {0} has no step": "画质阶梯 {0} 没有任何级别",
  "The quality ladder {0}: a step's lowest height is above its highest": "画质阶梯 {0}：某一级的最低高度高于最高高度",
- "The quality ladder {0}: heights are whole numbers, like 1080": "画质阶梯 {0}：高度必须是整数，如 1080",
  "The quality ladder {0}: unknown codec or range": "画质阶梯 {0}：未知的编码或动态范围",
  "The serve: api_secret of its unshackle.yaml. Empty keeps the saved one.": "其 unshackle.yaml 中的 serve: api_secret。留空则保留已保存的值。",
  "Tried from the top: Unshacklarr downloads the first step the episode has a track for, and the best track within it.": "从上往下尝试：Unshacklarr 下载该集有轨道的第一个级别，以及其中最好的轨道。",
@@ -1920,7 +1919,6 @@
  "Failures only": "仅失败",
  "No such attempt": "没有这次尝试",
  "What is sent for this series' episodes. The bell in the page always keeps everything.": "为该剧集的剧集发送的内容。页面中的铃铛始终保留全部内容。",
- "{0} (default)": "{0}（默认）",
  "no {0} subtitles on {1}: downloading {2}": "{1} 上没有 {0} 字幕：下载{2}",
  "with the forced subtitles only": "仅含强制字幕",
  "Downloads at once": "同时下载数",
@@ -2281,5 +2279,13 @@
  "User header": "用户请求头",
  "min later": "分钟后",
  "{0} cookies expire in 1 day": "{0} 的 Cookie 将在 1 天后过期",
- "The remote server's options are not known with this Unshackle: write them as they are.": "此 Unshackle 无法获取远程服务器的选项：请按原样填写。"
+ "The remote server's options are not known with this Unshackle: write them as they are.": "此 Unshackle 无法获取远程服务器的选项：请按原样填写。",
+ "Edit ladders": "编辑阶梯",
+ "Highest bitrate, kbps": "最高码率（kbps）",
+ "Ladders as chips, a bitrate per step": "阶梯改为按钮，每级可设码率",
+ "Set by the ladder: {0}": "由阶梯决定：{0}",
+ "The quality ladder {0}: a step's bitrate is in kbps, like 8000": "画质阶梯 {0}：每级码率以 kbps 计，例如 8000",
+ "The quality ladder {0}: heights and bitrates are whole numbers, like 1080": "画质阶梯 {0}：高度和码率须为整数，例如 1080",
+ "Video by {0}: {1}": "按 {0} 选择视频：{1}",
+ "Any": "任意"
 }
