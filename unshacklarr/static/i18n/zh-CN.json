@@ -1633,7 +1633,6 @@
  "The main one (Settings, Unshackle)": "主服务器（设置 › Unshackle）",
  "The new address of {0} needs its API key too": "{0} 的新地址也需要其 API 密钥",
  "The quality ladder {0} has no step": "画质阶梯 {0} 没有任何级别",
- "The quality ladder {0} needs the episode's track list, which a --remote download does not give": "画质阶梯 {0} 需要该集的轨道列表，而 --remote 下载不提供",
  "The quality ladder {0}: a step's lowest height is above its highest": "画质阶梯 {0}：某一级的最低高度高于最高高度",
  "The quality ladder {0}: heights are whole numbers, like 1080": "画质阶梯 {0}：高度必须是整数，如 1080",
  "The quality ladder {0}: unknown codec or range": "画质阶梯 {0}：未知的编码或动态范围",

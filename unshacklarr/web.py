@@ -1512,7 +1512,8 @@ def precheck(now: datetime) -> list[str]:
         problem = "" if sonarr_sync.stacked(show, config)[0].get("--cdm") else sonarr_sync.no_cdm(show["service"])  # its own device
         if not problem:
             try:
-                if not any(t.get("type") == "episode" for t in list_titles(show)):
+                premiere = any(e["episodeNumber"] == 1 for e in eps)  # nothing out yet: an empty list is normal
+                if not any(t.get("type") == "episode" for t in list_titles(show)) and not premiere:
                     problem = f"{show['service']} lists no episodes for this series: is its URL still right?"
             except UnshackleError as e:
                 problem = str(e)

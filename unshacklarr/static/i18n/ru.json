@@ -1625,7 +1625,6 @@
  "The main one (Settings, Unshackle)": "Основной (Настройки, Unshackle)",
  "The new address of {0} needs its API key too": "Для нового адреса {0} нужен и его ключ API",
  "The quality ladder {0} has no step": "В лестнице качества {0} нет ступеней",
- "The quality ladder {0} needs the episode's track list, which a --remote download does not give": "Лестнице качества {0} нужен список дорожек эпизода, а загрузка с --remote его не даёт",
  "The quality ladder {0}: a step's lowest height is above its highest": "Лестница качества {0}: у ступени наименьшая высота больше наибольшей",
  "The quality ladder {0}: heights are whole numbers, like 1080": "Лестница качества {0}: высоты — целые числа, например 1080",
  "The quality ladder {0}: unknown codec or range": "Лестница качества {0}: неизвестный кодек или диапазон",

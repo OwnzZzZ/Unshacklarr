@@ -1103,6 +1103,27 @@ def test_a_series_is_checked_hours_before_its_release_and_told_once(tmp_path, mo
     assert web.precheck(now + timedelta(hours=3)) == []  # turned off
 
 
+def test_an_empty_listing_is_told_only_once_episodes_are_out(tmp_path, monkeypatch):
+    from datetime import datetime, timezone
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    now = datetime(2026, 10, 5, 18, tzinfo=timezone.utc)
+    series = {1: {"service": "ATV", "title": "a", "release_time": "20:00"}, 2: {"service": "ATV", "title": "b", "release_time": "20:00"}}
+    config = {"auth": {"password": "x"}, "series": series, "notifications": {}}
+    monkeypatch.setattr(web, "read_config", lambda: config)
+    monkeypatch.setattr(web.sonarr_sync, "LOCAL", timezone.utc)
+    ep = lambda i, tvdb, n: {"id": i, "seasonNumber": 1, "episodeNumber": n, "airDateUtc": "2026-10-05T19:00:00Z", "hasFile": False,
+                             "series": {"tvdbId": tvdb, "title": f"Show{tvdb}"}}
+    monkeypatch.setattr(web, "calendar_episodes", lambda config, start, end: [ep(1, 1, 1), ep(2, 2, 4)])
+    monkeypatch.setattr(web.sonarr_sync, "no_cdm", lambda tag, config=None: "")
+    monkeypatch.setattr(web, "list_titles", lambda show: [])
+    monkeypatch.setattr(web.sonarr_sync, "notify", lambda *a, **k: None)
+    assert web.precheck(now) == ["Not ready for its release: Show2 S01E04"]  # Show1 S01E01: nothing can be listed yet
+
+
 def test_a_reverse_proxy_lets_in_only_from_its_own_address(tmp_path, monkeypatch):
     import asyncio
     from aiohttp.test_utils import TestClient, TestServer
@@ -2312,6 +2333,7 @@ def test_a_download_keeps_the_services_best_as_its_upgrades_answer(tmp_path, mon
     monkeypatch.setattr(sync, "read_file", lambda: config)
     monkeypatch.setattr(sync, "list_tracks", lambda show, config, request, ladder=None: [{"video": [{"height": 1080, "codec": "AVC", "range": "SDR"}]}])
     request = {"service": "X", "title_id": "t", "wanted": ["S01E01"]}
+    assert sync.apply_ladder(config["series"][1], config, {**request, "remote": True}) == 2  # --remote lists its tracks too
     assert sync.apply_ladder(config["series"][1], config, request) == 2  # the service's best now: step 2
     sync.note_download_answer(11, config["series"][1], config)
     seen = web.read_json(web.upgrades_seen_file(), {})["11"]
