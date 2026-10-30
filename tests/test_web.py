@@ -2315,6 +2315,25 @@ def test_upgrades_are_checked_by_themselves_their_answers_spread_and_a_new_serie
     assert web.newly_set_up(now_series, was) == {2, 3}
 
 
+def test_a_ladder_picks_the_video_over_the_bitrate_options(tmp_path, monkeypatch):
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    sync = importlib.reload(unshacklarr.sync)
+    ladder = {"name": "L", "steps": [{"codec": "HEVC", "range": "DV", "min": 2160, "max": 0},
+                                     {"codec": "HEVC", "range": "SDR", "min": 1080, "max": 1080, "max_kbps": 6000}]}
+    config = {"quality_ladders": [ladder], "settings": {}}
+    show = {"service": "ATV", "title": "t", "ladder": "L"}
+    tracks = [{"height": 1080, "codec": "HEVC", "range": "SDR", "bitrate": b} for b in (5100, 5900, 9000)]
+    monkeypatch.setattr(sync, "list_tracks", lambda show, config, request, ladder=None: [{"video": tracks}])
+    request = {"service": "ATV", "title_id": "t", "wanted": ["S01E01"], "quality": [1080], "vbitrate_range": "5000-5200"}
+    assert sync.apply_ladder(show, config, request) == 2  # no 4K: the 1080p step, 9000 kbps over its cap
+    assert request["vbitrate_range"] == "0-6000" and request["quality"] == [1080]
+    tracks.append({"height": 2160, "codec": "HEVC", "range": "DV", "bitrate": 16000})
+    request = {"service": "ATV", "title_id": "t", "wanted": ["S01E01"], "vbitrate_range": "5000-5200"}
+    assert sync.apply_ladder(show, config, request) == 1 and "vbitrate_range" not in request  # 4K: the options' cap would keep it out
+    assert sync.step_label(ladder["steps"][1]) == "1080p HEVC SDR up to 6000 kbps"
+
+
 def test_a_download_keeps_the_services_best_as_its_upgrades_answer(tmp_path, monkeypatch):
     # by mj23au: what the ladder just read for a download is the episode's answer; the file Sonarr adds after it
     # takes it, so Upgrades doesn't ask the service again for upgrade_recheck_days; an older file doesn't

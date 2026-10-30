@@ -1603,7 +1603,6 @@
  "The new address of {0} needs its API key too": "Die neue Adresse von {0} braucht auch ihren API-Schlüssel",
  "The quality ladder {0} has no step": "Die Qualitätsleiter {0} hat keine Stufe",
  "The quality ladder {0}: a step's lowest height is above its highest": "Die Qualitätsleiter {0}: Bei einer Stufe liegt die kleinste Höhe über der größten",
- "The quality ladder {0}: heights are whole numbers, like 1080": "Die Qualitätsleiter {0}: Höhen sind ganze Zahlen, wie 1080",
  "The quality ladder {0}: unknown codec or range": "Die Qualitätsleiter {0}: unbekannter Codec oder Dynamikumfang",
  "The serve: api_secret of its unshackle.yaml. Empty keeps the saved one.": "Das serve: api_secret seiner unshackle.yaml. Leer behält das gespeicherte.",
  "Tried from the top: Unshacklarr downloads the first step the episode has a track for, and the best track within it.": "Von oben versucht: Unshacklarr lädt die erste Stufe herunter, für die die Episode eine Spur hat, und darin die beste Spur.",
@@ -1892,7 +1891,6 @@
  "No such attempt": "Kein solcher Versuch",
  "What is sent for this series' episodes. The bell in the page always keeps everything.": "Was für die Episoden dieser Serie gesendet wird. Die Glocke auf der Seite behält immer alles.",
  "default": "Standard",
- "{0} (default)": "{0} (Standard)",
  "no {0} subtitles on {1}: downloading {2}": "keine {0}-Untertitel auf {1}: Download {2}",
  "with the forced subtitles only": "nur mit den erzwungenen Untertiteln",
  "Downloads at once": "Gleichzeitige Downloads",
@@ -2227,5 +2225,13 @@
  "User header": "Benutzer-Header",
  "min later": "Min. später",
  "{0} cookies expire in 1 day": "Die {0}-Cookies laufen in 1 Tag ab",
- "The remote server's options are not known with this Unshackle: write them as they are.": "Die Optionen des entfernten Servers sind mit diesem Unshackle nicht bekannt: Schreib sie so, wie sie sind."
+ "The remote server's options are not known with this Unshackle: write them as they are.": "Die Optionen des entfernten Servers sind mit diesem Unshackle nicht bekannt: Schreib sie so, wie sie sind.",
+ "Edit ladders": "Leitern bearbeiten",
+ "Highest bitrate, kbps": "Höchste Bitrate, kbps",
+ "Ladders as chips, a bitrate per step": "Leitern als Chips, eine Bitrate pro Stufe",
+ "Set by the ladder: {0}": "Von der Leiter festgelegt: {0}",
+ "The quality ladder {0}: a step's bitrate is in kbps, like 8000": "Die Qualitätsleiter {0}: Die Bitrate einer Stufe ist in kbps, etwa 8000",
+ "The quality ladder {0}: heights and bitrates are whole numbers, like 1080": "Die Qualitätsleiter {0}: Höhen und Bitraten sind ganze Zahlen, etwa 1080",
+ "Video by {0}: {1}": "Video nach {0}: {1}",
+ "Any": "Beliebig"
 }

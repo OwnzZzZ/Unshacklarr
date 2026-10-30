@@ -1630,7 +1630,6 @@
  "The new address of {0} needs its API key too": "{0} の新しいアドレスには API キーも必要です",
  "The quality ladder {0} has no step": "画質ラダー {0} にステップがありません",
  "The quality ladder {0}: a step's lowest height is above its highest": "画質ラダー {0}：あるステップの最小の高さが最大を上回っています",
- "The quality ladder {0}: heights are whole numbers, like 1080": "画質ラダー {0}：高さは 1080 のような整数です",
  "The quality ladder {0}: unknown codec or range": "画質ラダー {0}：不明なコーデックまたはレンジ",
  "The serve: api_secret of its unshackle.yaml. Empty keeps the saved one.": "その unshackle.yaml の serve: api_secret。空欄なら保存済みのものを保持します。",
  "Tried from the top: Unshacklarr downloads the first step the episode has a track for, and the best track within it.": "上から順に試します：Unshacklarr は、エピソードにトラックがある最初のステップを、その中で最良のトラックでダウンロードします。",
@@ -1915,7 +1914,6 @@
  "Failures only": "失敗のみ",
  "No such attempt": "その試行は見つかりません",
  "What is sent for this series' episodes. The bell in the page always keeps everything.": "このシリーズのエピソードで送信する内容。ページのベルには常にすべて残ります。",
- "{0} (default)": "{0}（既定）",
  "no {0} subtitles on {1}: downloading {2}": "{1} に {0} 字幕なし：{2} でダウンロード",
  "with the forced subtitles only": "強制字幕のみ",
  "Downloads at once": "同時ダウンロード数",
@@ -2237,5 +2235,13 @@
  "User header": "ユーザーヘッダー",
  "min later": "分後",
  "{0} cookies expire in 1 day": "{0} の Cookie はあと 1 日で期限切れになります",
- "The remote server's options are not known with this Unshackle: write them as they are.": "この Unshackle ではリモートサーバーのオプションが分かりません。そのまま入力してください。"
+ "The remote server's options are not known with this Unshackle: write them as they are.": "この Unshackle ではリモートサーバーのオプションが分かりません。そのまま入力してください。",
+ "Edit ladders": "ラダーを編集",
+ "Highest bitrate, kbps": "最大ビットレート（kbps）",
+ "Ladders as chips, a bitrate per step": "ラダーをチップで、段ごとのビットレート",
+ "Set by the ladder: {0}": "ラダーが決定：{0}",
+ "The quality ladder {0}: a step's bitrate is in kbps, like 8000": "品質ラダー {0}：段のビットレートは kbps で指定します（例：8000）",
+ "The quality ladder {0}: heights and bitrates are whole numbers, like 1080": "品質ラダー {0}：高さとビットレートは整数です（例：1080）",
+ "Video by {0}: {1}": "{0} による映像：{1}",
+ "Any": "すべて"
 }

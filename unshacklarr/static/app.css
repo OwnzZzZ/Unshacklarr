@@ -1767,3 +1767,9 @@ input[type=time]:focus:not(.bad) { border-color: var(--accent); box-shadow: 0 0 
 .folder-path { font-family: ui-monospace, monospace; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
 .folder-list { max-height: min(50vh, 360px); margin: 0; } .folder-list .url-hit { grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 8px; }
 .folder-list .url-hit span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .folder-form .status-err:empty { display: none; }
+/* A ladder picker: Edit ladders after its chips; the options it takes over, and the video it picks under a command */
+.ax-seg .ax-edit { align-self: center; margin-left: 4px; font-size: 13px; color: var(--accent); }
+.ladder-clash { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 8px; padding: 8px 12px; border-radius: 9px; font-size: 13px;
+  color: var(--warn); background: color-mix(in srgb, var(--warn) 10%, transparent); border: 1px solid color-mix(in srgb, var(--warn) 35%, var(--line)); }
+.ladder-clash[hidden] { display: none; }
+.dx-cmd .dx-ladder { font-size: 12.5px; color: var(--accent); overflow-wrap: anywhere; }

@@ -2221,7 +2221,8 @@ def tracks_on_service(show: dict, config: dict, request: dict) -> dict[str, set[
 
 
 # Quality ladders: steps tried in order against the episode's video tracks; the first one a track fits is downloaded,
-# nothing outside them. A step: a codec and a range (empty: any), a height from min to max (0: no limit).
+# nothing outside them. A step: a codec and a range (empty: any), a height from min to max (0: no limit), a highest
+# bitrate in kbps (max_kbps, none when absent).
 CODECS = ("AVC", "HEVC", "AV1", "VP9", "VP8", "VC1")  # Unshackle's names: H.264, H.265…
 RANGES = ("SDR", "HDR10", "HDR10P", "DV", "HLG", "HYBRID")  # HYBRID: Unshackle merges a DV track onto an HDR10 one
 HDR_BASES = ("HDR10", "HDR10P")
@@ -2269,7 +2270,8 @@ def fits(step: dict, track: dict) -> bool:
     else:
         ranged = not step.get("range") or track.get("range") == step["range"]
     return ((not step.get("codec") or track.get("codec") == step["codec"]) and ranged
-            and height >= int(step.get("min") or 0) and (not step.get("max") or height <= int(step["max"])))
+            and height >= int(step.get("min") or 0) and (not step.get("max") or height <= int(step["max"]))
+            and (not step.get("max_kbps") or int(track.get("bitrate") or 0) <= int(step["max_kbps"])))
 
 
 def climb(ladder: dict, episodes: list[dict]) -> tuple[int, dict] | None:
@@ -2294,7 +2296,8 @@ def step_of(ladder: dict, track: dict) -> int:
 def step_label(step: dict) -> str:
     height = f"{step.get('min') or 0}-{step['max']}p" if step.get("max") and step.get("max") != step.get("min") else \
         f"{step['max']}p" if step.get("max") else f"{step['min']}p and up" if step.get("min") else "any height"
-    return " ".join(filter(None, [height, step.get("codec") or "any codec", step.get("range") or "any range"]))
+    return " ".join(filter(None, [height, step.get("codec") or "any codec", step.get("range") or "any range",
+                                  f"up to {step['max_kbps']} kbps" if step.get("max_kbps") else ""]))
 
 
 def track_label(t: dict) -> str:
@@ -2320,6 +2323,11 @@ def apply_ladder(show: dict, config: dict, request: dict) -> int | None:
         have = sorted({track_label(t) for ep in episodes for t in ep.get("video") or []})
         raise ValueError(f"None of the quality ladder {ladder['name']}'s steps is on {show['service']} (it has {', '.join(have) or 'no video'})")
     number, track = found
+    # the ladder picks the video: a --vbitrate(-range) of the options would only keep its track out; its step's own cap does
+    request.pop("vbitrate", None)
+    request.pop("vbitrate_range", None)
+    if cap := ladder["steps"][number - 1].get("max_kbps"):
+        request["vbitrate_range"] = f"0-{cap}"
     # its own height: Unshackle's --quality takes a track by it exactly (its 16:9 class may be no exact match there)
     # a --range the series or its service ask for themselves (HYBRID: DV merged onto HDR10) is kept, not the track's
     request.update(quality=[int(track.get("height") or 0) or eq_height(track)], vcodec=[track["codec"]],

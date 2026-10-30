@@ -274,6 +274,7 @@
  "Answers kept {0} days": [
   "days"
  ],
+ "Any": [],
  "Any codec": [],
  "Any of Apprise's 100+ services. Find its address format in Apprise's list (linked at the top of the page).": [],
  "Any other number of downloads": [],
@@ -727,6 +728,7 @@
  "Earlier versions": [],
  "Earlier versions…": [],
  "Edit": [],
+ "Edit ladders": [],
  "Edit unshackle.yaml": [],
  "Edit…": [],
  "Either Sonarr imports each episode, or the episode stays in the downloads folder for you to import by hand. A series can choose otherwise.": [],
@@ -928,6 +930,7 @@
  "Hide {0} from the schedule": [
   "d.series"
  ],
+ "Highest bitrate, kbps": [],
  "Highest height": [],
  "History": [],
  "How Unshacklarr reaches Sonarr, to find the missing episodes and hand it the downloads.": [],
@@ -1061,6 +1064,7 @@
  "Ladder {0}": [
   "n"
  ],
+ "Ladders as chips, a bitrate per step": [],
  "Ladders of resolutions and codecs": [],
  "Language": [],
  "Language wanted for Audio, overrides -l/--lang for audio tracks. Prefix a value with '-' to exclude it, e.g. 'all,-es'.": [],
@@ -1891,6 +1895,9 @@
  "Set by a rule by profile, quality or DRM ({0}): edit it in unshackle.yaml": [
   "v.rule.join(\", \")"
  ],
+ "Set by the ladder: {0}": [
+  "clash.join(\", \")"
+ ],
  "Set it differently for this series only": [],
  "Set the Group Tag to be used, overriding the config tag and any tag rules.": [],
  "Set the address of unshackle serve in Settings, Unshackle": [],
@@ -2325,10 +2332,13 @@
  "The quality ladder {0} has no step": [
   "name"
  ],
+ "The quality ladder {0}: a step's bitrate is in kbps, like 8000": [
+  "name"
+ ],
  "The quality ladder {0}: a step's lowest height is above its highest": [
   "name"
  ],
- "The quality ladder {0}: heights are whole numbers, like 1080": [
+ "The quality ladder {0}: heights and bitrates are whole numbers, like 1080": [
   "name"
  ],
  "The quality ladder {0}: its {1} order is a list of language codes": [
@@ -2641,6 +2651,10 @@
  "Video Codec(s) to download, defaults to any codec.": [],
  "Video Color Range(s) to download, defaults to SDR.": [],
  "Video asked": [],
+ "Video by {0}: {1}": [
+  "lad.name",
+  "lad.steps.map(stepText).join(\" › \")"
+ ],
  "Video languages that must exist. The title fails even with --best-available.": [],
  "View": [],
  "View log": [],
@@ -2876,6 +2890,7 @@
  "its time must look like 20:39": [],
  "its title": [],
  "just now": [],
+ "kbps": [],
  "key saved": [],
  "limit must be from 1 to 500": [],
  "max-age=31536000, immutable": [],
@@ -3138,6 +3153,9 @@
  "until {0}": [
   "until"
  ],
+ "up to {0} kbps": [
+  "step['max_kbps']"
+ ],
  "upgrade on {0}": [
   "svc"
  ],
@@ -3166,9 +3184,6 @@
  "{0} (contains your {1} root folders)": [
   "r",
   "libRoots.length"
- ],
- "{0} (default)": [
-  "label"
  ],
  "{0} (for Unshacklarr)": [
   "name"
@@ -4025,6 +4040,9 @@
   "len(held) - 30"
  ],
  "↓ Replacing": [],
+ "≤ {0} kbps": [
+  "st.max_kbps"
+ ],
  "⏸ Paused: the next episode waits": [],
  "● Connected{0}": [
   "st.version ? ` · Sonarr ${st.version}` : \"\""

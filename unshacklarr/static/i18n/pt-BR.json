@@ -1610,7 +1610,6 @@
  "The new address of {0} needs its API key too": "O novo endereço de {0} também precisa da sua chave de API",
  "The quality ladder {0} has no step": "A escada de qualidade {0} não tem nenhum degrau",
  "The quality ladder {0}: a step's lowest height is above its highest": "A escada de qualidade {0}: em um degrau a altura mínima está acima da máxima",
- "The quality ladder {0}: heights are whole numbers, like 1080": "A escada de qualidade {0}: as alturas são números inteiros, como 1080",
  "The quality ladder {0}: unknown codec or range": "A escada de qualidade {0}: codec ou faixa desconhecidos",
  "The serve: api_secret of its unshackle.yaml. Empty keeps the saved one.": "O serve: api_secret do seu unshackle.yaml. Vazio mantém o salvo.",
  "Tried from the top: Unshacklarr downloads the first step the episode has a track for, and the best track within it.": "Testada de cima para baixo: o Unshacklarr baixa o primeiro degrau para o qual o episódio tem uma faixa, e a melhor faixa dentro dele.",
@@ -1898,7 +1897,6 @@
  "No such attempt": "Tentativa não encontrada",
  "What is sent for this series' episodes. The bell in the page always keeps everything.": "O que é enviado para os episódios desta série. O sino da página sempre guarda tudo.",
  "default": "padrão",
- "{0} (default)": "{0} (padrão)",
  "no {0} subtitles on {1}: downloading {2}": "sem legendas {0} em {1}: baixando {2}",
  "with the forced subtitles only": "só com as legendas forçadas",
  "Downloads at once": "Downloads simultâneos",
@@ -2221,5 +2219,13 @@
  "User header": "Cabeçalho de usuário",
  "min later": "min depois",
  "{0} cookies expire in 1 day": "Os cookies de {0} expiram em 1 dia",
- "The remote server's options are not known with this Unshackle: write them as they are.": "As opções do servidor remoto não são conhecidas com este Unshackle: escreva-as como são."
+ "The remote server's options are not known with this Unshackle: write them as they are.": "As opções do servidor remoto não são conhecidas com este Unshackle: escreva-as como são.",
+ "Edit ladders": "Editar escadas",
+ "Highest bitrate, kbps": "Bitrate máximo, kbps",
+ "Ladders as chips, a bitrate per step": "Escadas em botões, um bitrate por degrau",
+ "Set by the ladder: {0}": "Definido pela escada: {0}",
+ "The quality ladder {0}: a step's bitrate is in kbps, like 8000": "A escada de qualidade {0}: o bitrate de um degrau é em kbps, como 8000",
+ "The quality ladder {0}: heights and bitrates are whole numbers, like 1080": "A escada de qualidade {0}: alturas e bitrates são números inteiros, como 1080",
+ "Video by {0}: {1}": "Vídeo por {0}: {1}",
+ "Any": "Qualquer"
 }

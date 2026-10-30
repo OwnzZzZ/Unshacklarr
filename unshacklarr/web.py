@@ -852,7 +852,8 @@ def check_fallback(alt: dict, known: dict | None, dl_specs: list[dict], key: str
 
 
 def check_ladders(given) -> list[dict]:
-    """Quality ladders: each a name and its steps, in order: a codec and a range (empty: any), a height from min to max (0: no limit)."""
+    """Quality ladders: each a name and its steps, in order: a codec and a range (empty: any), a height from min to max (0: no limit),
+    a highest bitrate in kbps (0: none)."""
     out = []
     for ladder in given if isinstance(given, list) else sonarr_sync.BUILTIN_LADDERS:
         name = str(ladder.get("name") or "").strip()
@@ -866,12 +867,14 @@ def check_ladders(given) -> list[dict]:
             if (codec and codec not in sonarr_sync.CODECS) or (dynamic and dynamic not in sonarr_sync.RANGES):
                 raise web.HTTPBadRequest(text=f"The quality ladder {name}: unknown codec or range")
             try:
-                low, high = int(step.get("min") or 0), int(step.get("max") or 0)
+                low, high, kbps = int(step.get("min") or 0), int(step.get("max") or 0), int(step.get("max_kbps") or 0)
             except (TypeError, ValueError):
-                raise web.HTTPBadRequest(text=f"The quality ladder {name}: heights are whole numbers, like 1080") from None
+                raise web.HTTPBadRequest(text=f"The quality ladder {name}: heights and bitrates are whole numbers, like 1080") from None
             if not (0 <= low <= 10000 and 0 <= high <= 10000) or (high and low > high):
                 raise web.HTTPBadRequest(text=f"The quality ladder {name}: a step's lowest height is above its highest")
-            steps.append({"codec": codec, "range": dynamic, "min": low, "max": high})
+            if not 0 <= kbps <= 1_000_000:
+                raise web.HTTPBadRequest(text=f"The quality ladder {name}: a step's bitrate is in kbps, like 8000")
+            steps.append({"codec": codec, "range": dynamic, "min": low, "max": high, **({"max_kbps": kbps} if kbps else {})})
         if not steps:
             raise web.HTTPBadRequest(text=f"The quality ladder {name} has no step")
         orders = {}

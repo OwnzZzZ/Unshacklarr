@@ -1626,7 +1626,6 @@
  "The new address of {0} needs its API key too": "Для нового адреса {0} нужен и его ключ API",
  "The quality ladder {0} has no step": "В лестнице качества {0} нет ступеней",
  "The quality ladder {0}: a step's lowest height is above its highest": "Лестница качества {0}: у ступени наименьшая высота больше наибольшей",
- "The quality ladder {0}: heights are whole numbers, like 1080": "Лестница качества {0}: высоты — целые числа, например 1080",
  "The quality ladder {0}: unknown codec or range": "Лестница качества {0}: неизвестный кодек или диапазон",
  "The serve: api_secret of its unshackle.yaml. Empty keeps the saved one.": "serve: api_secret из его unshackle.yaml. Пусто — сохранённый остаётся.",
  "Tried from the top: Unshacklarr downloads the first step the episode has a track for, and the best track within it.": "Проверяется сверху вниз: Unshacklarr скачивает первую ступень, для которой у эпизода есть дорожка, и лучшую дорожку в ней.",
@@ -1913,7 +1912,6 @@
  "Failures only": "Только ошибки",
  "No such attempt": "Такой попытки нет",
  "What is sent for this series' episodes. The bell in the page always keeps everything.": "Что отправляется по эпизодам этого сериала. Колокольчик на странице всегда хранит всё.",
- "{0} (default)": "{0} (по умолчанию)",
  "no {0} subtitles on {1}: downloading {2}": "нет субтитров {0} на {1}: загрузка {2}",
  "with the forced subtitles only": "только с принудительными субтитрами",
  "Downloads at once": "Одновременных загрузок",
@@ -2235,5 +2233,13 @@
  "User header": "Заголовок пользователя",
  "min later": "мин спустя",
  "{0} cookies expire in 1 day": "Cookies {0} истекают через 1 день",
- "The remote server's options are not known with this Unshackle: write them as they are.": "Параметры удалённого сервера неизвестны для этой версии Unshackle: впишите их как есть."
+ "The remote server's options are not known with this Unshackle: write them as they are.": "Параметры удалённого сервера неизвестны для этой версии Unshackle: впишите их как есть.",
+ "Edit ladders": "Изменить лестницы",
+ "Highest bitrate, kbps": "Максимальный битрейт, кбит/с",
+ "Ladders as chips, a bitrate per step": "Лестницы кнопками, битрейт на ступень",
+ "Set by the ladder: {0}": "Задаётся лестницей: {0}",
+ "The quality ladder {0}: a step's bitrate is in kbps, like 8000": "Лестница качества {0}: битрейт ступени указывается в кбит/с, например 8000",
+ "The quality ladder {0}: heights and bitrates are whole numbers, like 1080": "Лестница качества {0}: высота и битрейт — целые числа, например 1080",
+ "Video by {0}: {1}": "Видео по {0}: {1}",
+ "Any": "Любое"
 }
