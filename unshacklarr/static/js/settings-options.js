@@ -45,6 +45,15 @@ async function renderServiceDefaults() {
     blocks.push(el("div", { className: "svc-block" },
       el("div", { className: "svc-block-head" }, el("b", { textContent: tag }),
         el("small", { textContent: count ? `${count} option${count > 1 ? "s" : ""}` : "Nothing set yet" }),
+        el("button", { className: "btn small", textContent: "Clear cache", title: `Deletes the logins, tokens and sessions Unshackle keeps for ${tag}: it logs in again next time`,
+          onclick: async (e) => {
+            e.target.disabled = true;
+            try {
+              const r = await api(`/api/unshackle/cache/${encodeURIComponent(tag)}/clear`, { method: "POST" });
+              toast(`${tag} cache cleared: ${r.freed_bytes >= 2 ** 20 ? `${(r.freed_bytes / 2 ** 20).toFixed(0)} MB` : `${Math.ceil(r.freed_bytes / 1024)} KB`} freed`);
+            } catch (err) { toast(err.message, true); }
+            e.target.disabled = false;
+          } }),
         el("button", { className: "btn small danger", textContent: "Remove", onclick: () => { delete all[tag]; dirty(); renderServiceDefaults(); } })),
       el("div", { className: "sx-grid svc-picks" },
         ...(servers.length || levels.backend ? [field("Unshackle server", backend, `Where ${tag} downloads.`)] : []),

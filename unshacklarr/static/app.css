@@ -554,7 +554,8 @@ input[type=checkbox].switch:checked { background: var(--accent); } input[type=ch
 .sx-head .dx-add { margin: 0 0 0 auto; width: auto !important; min-width: 0; align-self: center; cursor: pointer; }
 .sx .svc-block { padding: 16px; margin: 0 0 12px; border-radius: 12px; background: rgb(0 0 0 / .14); }
 .sx .svc-block-head { justify-content: flex-start; gap: 10px; margin-bottom: 2px; } .sx .svc-block-head small { color: var(--muted); font-size: 12.5px; }
-.sx .svc-block-head .btn { margin-left: auto; }
+.sx .svc-block-head { flex-wrap: wrap; } .sx .svc-block-head .btn { white-space: nowrap; }
+.sx .svc-block-head .btn:first-of-type { margin-left: auto; }
 @media (max-width: 900px) {
   .sx .sx-hero.dx-hero { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "logo id" "order order"; }
   .sx-head:has(.dx-add) { flex-wrap: wrap; } .sx-head:has(.dx-add) > div { flex: 1 1 200px; } .sx-head .dx-add { margin: 4px 0 0 50px; }

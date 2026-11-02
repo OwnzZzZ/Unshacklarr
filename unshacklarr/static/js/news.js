@@ -22,6 +22,7 @@ const NEWS = [
   { id: "upgrade-new", version: "1.5.0", title: "Check new series", sec: "upgrades", target: "#ug-new-field" },
   { id: "downloads-at-once", version: "1.5.0", title: "Downloads at once", sec: "unshackle", target: "#ux-at-once-field" },
   { id: "orig-audio", version: "1.6.0", title: "orig in the accepted audio languages", sec: "downloads", target: "#dx-audio" },
+  { id: "service-cache", version: "1.6.0", title: "Clear one service's cache", sec: "downloads", target: "#svc-defaults" },
   { id: "any-service-option", version: "1.6.0", title: "Any service option", sec: "downloads", target: "#svc-defaults" },
   { id: "ladder-chips", version: "1.6.0", title: "Ladders as chips, a bitrate per step", sec: "downloads", target: "#svc-defaults" },
   { id: "dl-generate-dv-sample", version: "1.6.0", title: "--generate-dv and --include-sample", sec: "downloads", target: "section.sx-card:has(#defaults)" },

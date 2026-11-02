@@ -38,6 +38,8 @@ Unshacklarr can be reached from outside your network.
 **🎧 Services and languages**
 - **orig in the accepted audio languages.** Each series' original language as Sonarr gives it, so "orig, fr" works for
   every series at once. In Settings › Download options.
+- **Clear one service's cache.** In Settings › Per service, without logging every other service out. Unshacklarr
+  needs to see Unshackle's Cache folder (`CACHE_DIR` with Docker).
 - **Any service option.** A flag the service on a remote server knows, such as AMZN's `-B`, can be written as is in a
   service's or a series' options.
 - **The API speaks the service's numbering.** `"numbering": "service"` takes Disney+'s S04E05 for the episode it is in
