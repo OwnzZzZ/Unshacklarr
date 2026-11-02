@@ -2287,5 +2287,13 @@
  "The quality ladder {0}: a step's bitrate is in kbps, like 8000": "画质阶梯 {0}：每级码率以 kbps 计，例如 8000",
  "The quality ladder {0}: heights and bitrates are whole numbers, like 1080": "画质阶梯 {0}：高度和码率须为整数，例如 1080",
  "Video by {0}: {1}": "按 {0} 选择视频：{1}",
- "Any": "任意"
+ "Any": "任意",
+ "Cache folder": "缓存文件夹",
+ "Needed to clear one service's cache in Settings, Per service. Empty: Unshacklarr asks Unshackle, which works when both run on this computer.": "用于在 设置 › 按服务 中清除单个服务的缓存。留空：Unshacklarr 会询问 Unshackle（两者在同一台电脑上运行时有效）。",
+ "Deletes the logins, tokens and sessions Unshackle keeps for {0}: it logs in again next time": "删除 Unshackle 为 {0} 保存的登录信息、令牌和会话：下次会重新登录",
+ "{0} cache cleared: {1} freed": "已清除 {0} 的缓存：释放 {1}",
+ "A {0} download is running: clear its cache once it is done": "{0} 正在下载：请在完成后再清除其缓存",
+ "{0} downloads on another Unshackle server: clear its cache there": "{0} 在另一台 Unshackle 服务器上下载：请在那里清除其缓存",
+ "Unshacklarr cannot see Unshackle's Cache folder: mount it and set its path in Settings, Unshackle (CACHE_DIR with Docker)": "Unshacklarr 看不到 Unshackle 的 Cache 文件夹：请挂载它，并在 设置 › Unshackle 中填写路径（Docker 中为 CACHE_DIR）",
+ "Clear one service's cache": "只清除单个服务的缓存"
 }

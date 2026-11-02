@@ -153,6 +153,9 @@
  "A topic: letters, digits, - and _": [],
  "A user key is 30 letters and digits": [],
  "A whole number of minutes, from 0 to 600": [],
+ "A {0} download is running: clear its cache once it is done": [
+  "tag"
+ ],
  "A {0} download starts as": [
   "tag"
  ],
@@ -385,6 +388,7 @@
  "CDM": [],
  "CHANGELOG.md": [],
  "CHROME": [],
+ "Cache folder": [],
  "Calendar": [],
  "Cancel": [],
  "Cancel {0}": [
@@ -485,6 +489,7 @@
   "failedN"
  ],
  "Clear finished": [],
+ "Clear one service's cache": [],
  "Clear temp": [],
  "Clear the history": [],
  "Clear the notifications already seen": [],
@@ -623,6 +628,9 @@
  "Deletes Unshackle's cache, logins included: services log in again next time": [],
  "Deletes finished downloads from the history, with their Unshackle output. Downloads in progress stay. Your files and Sonarr are not touched.": [],
  "Deletes the leftovers of interrupted downloads": [],
+ "Deletes the logins, tokens and sessions Unshackle keeps for {0}: it logs in again next time": [
+  "tag"
+ ],
  "Deutsch": [],
  "Device for {0}": [
   "[service, ...also].join(\", \")"
@@ -1245,6 +1253,7 @@
  "Name each other Sonarr with a letter, then letters, digits or dashes, like sonarr-2": [],
  "Name of the remote server from remote_services, when several are configured. Only with --remote.": [],
  "Name the Sonarr with a letter, then letters, digits or dashes, like sonarr-1080p": [],
+ "Needed to clear one service's cache in Settings, Per service. Empty: Unshacklarr asks Unshackle, which works when both run on this computer.": [],
  "Needed to manage them in Settings, Cookies. Empty: Unshacklarr asks Unshackle, which works when both run on this computer.": [],
  "Needs Unshackle 6": [],
  "Needs Unshackle after 6.0.0": [],
@@ -2633,6 +2642,7 @@
  "Unshacklarr can't be reached: {0}": [
   "e.message"
  ],
+ "Unshacklarr cannot see Unshackle's Cache folder: mount it and set its path in Settings, Unshackle (CACHE_DIR with Docker)": [],
  "Unshacklarr cannot see Unshackle's Cookies folder: mount it and set its path in Settings, Unshackle (COOKIES_DIR with Docker)": [],
  "Unshacklarr cannot see Unshackle's config: mount its folder (unshackle.yaml, WVDs, PRDs) and set its path in Settings, Unshackle (UNSHACKLE_CONFIG_DIR with Docker)": [],
  "Unshacklarr downloads no series with TVDB id {0}: set it up on its page first": [
@@ -3355,6 +3365,10 @@
  "{0} audio added to the file": [
   "want"
  ],
+ "{0} cache cleared: {1} freed": [
+  "tag",
+  "r.freed_bytes >= 2 ** 20 ? `${(r.freed_bytes / 2 ** 20).toFixed(0)} MB` : `${Math.ceil(r.freed_bytes / 1024)} KB`"
+ ],
  "{0} can't be searched: paste the series' URL instead": [
   "show['service']"
  ],
@@ -3427,6 +3441,9 @@
  ],
  "{0} downloading": [
   "b.running"
+ ],
+ "{0} downloads on another Unshackle server: clear its cache there": [
+  "tag"
  ],
  "{0} downloads with the Unshackle server {1}, which is not in Settings, Unshackle": [
   "service",

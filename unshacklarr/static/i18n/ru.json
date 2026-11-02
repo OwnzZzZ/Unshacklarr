@@ -2280,5 +2280,13 @@
  "The quality ladder {0}: a step's bitrate is in kbps, like 8000": "Лестница качества {0}: битрейт ступени указывается в кбит/с, например 8000",
  "The quality ladder {0}: heights and bitrates are whole numbers, like 1080": "Лестница качества {0}: высота и битрейт — целые числа, например 1080",
  "Video by {0}: {1}": "Видео по {0}: {1}",
- "Any": "Любое"
+ "Any": "Любое",
+ "Cache folder": "Папка кеша",
+ "Needed to clear one service's cache in Settings, Per service. Empty: Unshacklarr asks Unshackle, which works when both run on this computer.": "Нужна, чтобы очищать кеш одного сервиса в Настройках, «По сервисам». Пусто: Unshacklarr спрашивает Unshackle, что работает, когда оба запущены на этом компьютере.",
+ "Deletes the logins, tokens and sessions Unshackle keeps for {0}: it logs in again next time": "Удаляет входы, токены и сессии, которые Unshackle хранит для {0}: в следующий раз он войдёт заново",
+ "{0} cache cleared: {1} freed": "Кеш {0} очищен: освобождено {1}",
+ "A {0} download is running: clear its cache once it is done": "Идёт загрузка {0}: очистите его кеш, когда она закончится",
+ "{0} downloads on another Unshackle server: clear its cache there": "{0} загружается на другом сервере Unshackle: очистите его кеш там",
+ "Unshacklarr cannot see Unshackle's Cache folder: mount it and set its path in Settings, Unshackle (CACHE_DIR with Docker)": "Unshacklarr не видит папку Cache Unshackle: подключите её и укажите путь в Настройках, Unshackle (CACHE_DIR в Docker)",
+ "Clear one service's cache": "Очистка кеша одного сервиса"
 }

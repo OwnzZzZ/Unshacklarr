@@ -1208,7 +1208,7 @@ def check_settings(body: dict, previous: dict) -> dict:
     if mode not in ("", "local", "remote"):
         raise web.HTTPBadRequest(text="unshackle runs either here (local) or elsewhere (remote)")
     settings["unshackle_mode"] = mode
-    for name in ("unshackle_command", "downloads", "unshackle_downloads", "sonarr_downloads", "cookies_dir", "unshackle_config_dir"):
+    for name in ("unshackle_command", "downloads", "unshackle_downloads", "sonarr_downloads", "cookies_dir", "cache_dir", "unshackle_config_dir"):
         settings[name] = str(body.get(name) or "").strip().rstrip("/\\")
         folder = settings[name]
         if name != "unshackle_command" and folder and (not (posixpath.isabs(folder) or ntpath.isabs(folder))
@@ -2354,6 +2354,43 @@ async def unshackle_maintenance(request):
     if action == "refresh-services":
         UNSHACKLE.configure(sonarr_sync.SETTINGS)  # forget the services it listed before
     return web.json_response(result)
+
+
+def cache_folder() -> Path:
+    if sonarr_sync.SETTINGS.get("cache_dir"):
+        return Path(sonarr_sync.SETTINGS["cache_dir"])
+    if UNSHACKLE.mode == "local":
+        return UNSHACKLE.local.paths(str(sonarr_sync.SETTINGS.get("unshackle_command") or ""))["cache"]
+    raise UnshackleError("Unshacklarr cannot see Unshackle's Cache folder: mount it and set its path "
+                         "in Settings, Unshackle (CACHE_DIR with Docker)")
+
+
+def clear_service_cache(tag: str) -> int:
+    """Empty one service's folder of Unshackle's cache (its logins, tokens and sessions): the bytes freed."""
+    if tag not in {s["tag"] for s in UNSHACKLE.services()}:
+        raise web.HTTPNotFound(text="Unknown service")
+    if ((read_config().get("service_defaults") or {}).get(tag) or {}).get("backend"):
+        raise web.HTTPBadRequest(text=f"{tag} downloads on another Unshackle server: clear its cache there")
+    if any(j.get("service") == tag and j.get("status") in ("queued", "downloading") for j in UNSHACKLE.jobs()):
+        raise web.HTTPConflict(text=f"A {tag} download is running: clear its cache once it is done")
+    folder = cache_folder() / tag
+    freed = 0
+    for item in folder.iterdir() if folder.is_dir() else []:
+        if item.is_dir() and not item.is_symlink():
+            freed += sum(f.stat().st_size for f in item.rglob("*") if f.is_file())
+            shutil.rmtree(item)
+        else:
+            freed += item.lstat().st_size
+            item.unlink()
+    return freed
+
+
+async def clear_cache_of(request):
+    try:
+        freed = await asyncio.to_thread(clear_service_cache, request.match_info["tag"])
+    except UnshackleError as e:
+        raise web.HTTPBadGateway(text=str(e))
+    return web.json_response({"freed_bytes": freed})
 
 
 async def cancel_job(request):
@@ -4370,7 +4407,7 @@ def diagnostic(run_id: str) -> str:
     config = public_config(read_config())
     show = config["series"].get(card.get("tvdbId")) or config["series"].get(str(card.get("tvdbId"))) or {}
     # pasted in a public issue: no address, folder, bucket or account of the user's, the other Sonarrs' and servers' names only
-    private = re.compile(r".*_url$|.*downloads.*|backup_remote_.*|library_.*_root|proxy_auth_from|cookies_dir|unshackle_config_dir")
+    private = re.compile(r".*_url$|.*downloads.*|backup_remote_.*|library_.*_root|proxy_auth_from|cookies_dir|cache_dir|unshackle_config_dir")
     settings = {k: v for k, v in config["settings"].items() if not private.fullmatch(k)}
     for key in ("sonarrs", "backends"):
         if isinstance(settings.get(key), list):
@@ -5428,6 +5465,7 @@ app.add_routes([
     web.post("/api/unshackle/restart", restart_unshackle),
     web.get("/api/unshackle/log", unshackle_log),
     web.post(r"/api/unshackle/maintenance/{action}", unshackle_maintenance),
+    web.post(r"/api/unshackle/cache/{tag}/clear", clear_cache_of),
     web.post("/api/unshackle/allow-proxies", allow_proxies),
     web.post(r"/api/unshackle/jobs/{job_id}/cancel", cancel_job),
     web.get("/api/cookies", list_cookies),

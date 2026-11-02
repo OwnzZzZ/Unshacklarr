@@ -124,6 +124,7 @@ SETTINGS_DEFAULTS = {
     "downloads": "",             # the downloads folder, as Unshacklarr sees it
     "unshackle_downloads": "",   # the same folder, as unshackle serve sees it (empty: the same path)
     "cookies_dir": "",           # Unshackle's Cookies folder, as Unshacklarr sees it (local: asked to unshackle)
+    "cache_dir": "",             # Unshackle's Cache folder, as Unshacklarr sees it (local: asked to unshackle)
     "unshackle_config_dir": "",  # the folder of unshackle.yaml, WVDs and PRDs, as Unshacklarr sees it (local: asked)
     "unshackle_temp_dir": "",    # Unshackle's work folder (directories: temp), read only: how far a mux is (local: asked)
     "sonarr_name": "",           # the main Sonarr's name where libraries are named (empty: Sonarr)
@@ -183,7 +184,7 @@ SETTINGS_DEFAULTS = {
 }
 SETTINGS_FROM_ENV = {
     "unshackle_url": "UNSHACKLE_URL", "unshackle_api_key": "UNSHACKLE_API_KEY", "downloads": "DOWNLOADS",
-    "unshackle_downloads": "UNSHACKLE_DOWNLOADS", "cookies_dir": "COOKIES_DIR", "unshackle_config_dir": "UNSHACKLE_CONFIG_DIR",
+    "unshackle_downloads": "UNSHACKLE_DOWNLOADS", "cookies_dir": "COOKIES_DIR", "cache_dir": "CACHE_DIR", "unshackle_config_dir": "UNSHACKLE_CONFIG_DIR",
     "unshackle_temp_dir": "UNSHACKLE_TEMP_DIR", "sonarr_url": "SONARR_URL", "sonarr_api_key": "SONARR_API_KEY",
     "sonarr_downloads": "SONARR_DOWNLOADS", "timezone": "TZ",
 }

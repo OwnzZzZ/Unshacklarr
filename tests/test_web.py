@@ -134,6 +134,40 @@ def test_maintenance_only_runs_serve_actions_and_jobs_are_checked(tmp_path, monk
     assert calls == [("POST", "/api/maintenance/clear-temp"), ("DELETE", "0f1e2d3c-aaaa-bbbb")]
 
 
+def test_clear_cache_empties_one_service_only(tmp_path, monkeypatch):
+    from aiohttp.test_utils import TestClient, TestServer
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    cache = tmp_path / "Cache"
+    for f in ("NF/ESN.json", "NF/MSL/msl.json", "DSNP/tokens.json"):
+        (cache / f).parent.mkdir(parents=True, exist_ok=True)
+        (cache / f).write_text("x" * 10)
+    web.sonarr_sync.SETTINGS["cache_dir"] = str(cache)
+    jobs = []
+    monkeypatch.setattr(web.UNSHACKLE, "services", lambda: [{"tag": "NF"}, {"tag": "DSNP"}])
+    monkeypatch.setattr(web.UNSHACKLE, "jobs", lambda: jobs)
+    web.app._middlewares = type(web.app._middlewares)([web.same_origin_only])  # logged in, for this test
+
+    async def go():
+        async with TestClient(TestServer(web.app)) as client:
+            async def post(tag):
+                r = await client.post(f"/api/unshackle/cache/{tag}/clear", headers={"X-Unshackle": "1"})
+                return r.status, (await r.json() if r.status == 200 else None)
+            out = [(await post("XX"))[0]]
+            jobs.append({"service": "NF", "status": "downloading"})
+            out.append((await post("NF"))[0])
+            out.append((cache / "NF" / "ESN.json").exists())
+            jobs.clear()
+            out.append(await post("NF"))
+            return out
+
+    assert asyncio.run(go()) == [404, 409, True, (200, {"freed_bytes": 20})]
+    assert list((cache / "NF").iterdir()) == [] and (cache / "DSNP" / "tokens.json").exists()
+
+
 def test_stats_add_up_the_history(tmp_path, monkeypatch):
     from datetime import datetime, timedelta, timezone
     monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))

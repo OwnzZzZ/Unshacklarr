@@ -2272,5 +2272,13 @@
  "The quality ladder {0}: a step's bitrate is in kbps, like 8000": "Die Qualitätsleiter {0}: Die Bitrate einer Stufe ist in kbps, etwa 8000",
  "The quality ladder {0}: heights and bitrates are whole numbers, like 1080": "Die Qualitätsleiter {0}: Höhen und Bitraten sind ganze Zahlen, etwa 1080",
  "Video by {0}: {1}": "Video nach {0}: {1}",
- "Any": "Beliebig"
+ "Any": "Beliebig",
+ "Cache folder": "Cache-Ordner",
+ "Needed to clear one service's cache in Settings, Per service. Empty: Unshacklarr asks Unshackle, which works when both run on this computer.": "Nötig, um den Cache eines Dienstes unter Einstellungen, Pro Dienst zu leeren. Leer: Unshacklarr fragt Unshackle, was klappt, wenn beide auf diesem Computer laufen.",
+ "Deletes the logins, tokens and sessions Unshackle keeps for {0}: it logs in again next time": "Löscht die Anmeldungen, Tokens und Sitzungen, die Unshackle für {0} speichert: Es meldet sich beim nächsten Mal neu an",
+ "{0} cache cleared: {1} freed": "Cache von {0} geleert: {1} frei",
+ "A {0} download is running: clear its cache once it is done": "Ein Download von {0} läuft: Leere den Cache, sobald er fertig ist",
+ "{0} downloads on another Unshackle server: clear its cache there": "{0} lädt auf einem anderen Unshackle-Server: Leere den Cache dort",
+ "Unshacklarr cannot see Unshackle's Cache folder: mount it and set its path in Settings, Unshackle (CACHE_DIR with Docker)": "Unshacklarr sieht Unshackles Cache-Ordner nicht: Binde ihn ein und gib seinen Pfad unter Einstellungen, Unshackle an (CACHE_DIR mit Docker)",
+ "Clear one service's cache": "Den Cache eines einzelnen Dienstes leeren"
 }
