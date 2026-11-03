@@ -1643,7 +1643,8 @@ def serve_params(show: dict, config: dict) -> dict:
     """A search's or listing's options: the series' profile, proxy and service options, as a download has them."""
     dl, own = stacked(show, config)
     params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy", "remote", "server")}
-    params.update(options.to_params(own, options.service_specs(service_entry(show["service"], config))))
+    if service := options.to_params(own, options.service_specs(service_entry(show["service"], config))):
+        params["service_params"] = service
     return params
 
 
@@ -1760,10 +1761,9 @@ def download_request(show: dict, config: dict, service_sxxeyy: str, out: Path) -
     return {
         # unshackle.yaml's dl: section first, as on the command line: serve does not apply it
         **options.from_dl_config(backend.dl_config(), show["service"]),
-        **service,
         **request,
-        # through a remote server, serve hands it only the service options under service_params (-B for AMZN)
-        **({"service_params": service} if request.get("remote") and service else {}),
+        # the service's own options apart: flat, NF's --profile PRK_DO would be dl's --profile (an account)
+        **({"service_params": service} if service else {}),
         "service": show["service"],
         "title_id": str(show["title"]),
         "wanted": [service_sxxeyy],
@@ -2183,9 +2183,7 @@ NOT_LISTED = re.compile(r"No (available )?episodes found", re.IGNORECASE)  # lis
 def list_tracks(show: dict, config: dict, request: dict, ladder: dict | None = None) -> list[dict]:
     """The episode's tracks on the service, nothing downloaded: one entry per part ([] when the service has no such
     episode). For a quality ladder, the ranges and codecs of its steps are asked for: a service lists only those."""
-    _, own = stacked(show, config)
-    keep = {"service", "title_id", "profile", "proxy", "no_proxy", "cdm_type", "remote", "server",
-            *options.to_params(own, options.service_specs(service_entry(show["service"], config)))}
+    keep = {"service", "title_id", "profile", "proxy", "no_proxy", "cdm_type", "remote", "server", "service_params"}
     asked = {k: v for k, v in request.items() if k in keep}
     if ladder:
         ranges = {step.get("range") or "" for step in ladder["steps"]}

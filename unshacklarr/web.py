@@ -3263,7 +3263,8 @@ def list_titles(show: dict) -> list[dict]:
     """The series' titles on its service, with its profile, proxy and service options: nothing downloaded."""
     dl, own = sonarr_sync.stacked(show, read_config())
     params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy", "remote", "server")}
-    params.update(options.to_params(own, options.service_specs(sonarr_sync.service_entry(show["service"]))))
+    if service := options.to_params(own, options.service_specs(sonarr_sync.service_entry(show["service"]))):
+        params["service_params"] = service
     return sonarr_sync.backend_for(show["service"]).call("POST", "/api/list-titles", json={**params, "service": show["service"], "title_id": str(show["title"])})["titles"]
 
 

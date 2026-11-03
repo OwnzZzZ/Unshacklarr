@@ -195,7 +195,6 @@ def command_line(request: dict) -> str:
         value = ",".join(map(str, value)) if isinstance(value, list) else str(value)
         return [flag_of(name), HIDDEN.sub("//***@", value)]
 
-    own = [a for k, v in request.items() if k not in dl_names and k not in ("service", "title_id", "wanted", "output_dir", "debug", "service_params")
-           for a in args(k, v)]
+    own = [a for k, v in (request.get("service_params") or {}).items() for a in args(k, v)]
     return shlex.join(["unshackle", "dl", *[a for k, v in request.items() if k in dl_names for a in args(k, v)],
                        request["service"], *own, str(request["title_id"]), "-w", ",".join(request["wanted"])])
