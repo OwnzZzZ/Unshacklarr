@@ -1416,15 +1416,20 @@ def release_day(show: dict) -> int:
     return max(-EARLY_DAYS_MAX, min(1, int(show.get("release_day") or 0)))
 
 
+def release_time(show: dict) -> str:
+    """The series' release time: the one set, else its broadcast's time (it airs then: the service has it then)."""
+    return str(show.get("release_time") or (show.get("broadcast") or {}).get("time") or "")
+
+
 def release_slot(show: dict, ep: dict) -> datetime | None:
     """When the service publishes this episode: the series' release time on the day it airs, in
     local time (a 00:01 release of a Monday 21:00 episode is Monday 00:01), the day after with
     `release_day` 1, or N days before with -N (a platform ahead of the channel Sonarr follows).
     Days before without a release time count from midnight: the regular syncs take it from then."""
     day = release_day(show)
-    if not ep.get("airDateUtc") or not (show.get("release_time") or day < 0):
+    if not ep.get("airDateUtc") or not (release_time(show) or day < 0):
         return None
-    hour, minute = map(int, str(show.get("release_time") or "00:00").split(":"))
+    hour, minute = map(int, (release_time(show) or "00:00").split(":"))
     aired = parse_time(ep["airDateUtc"]).astimezone(LOCAL).date() + timedelta(days=day)
     slot = datetime.combine(aired, datetime.min.time(), LOCAL).replace(hour=hour, minute=minute)
     gap = int(show.get("release_gap") or 0)
@@ -1643,7 +1648,8 @@ def serve_params(show: dict, config: dict) -> dict:
     """A search's or listing's options: the series' profile, proxy and service options, as a download has them."""
     dl, own = stacked(show, config)
     params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy", "remote", "server")}
-    params.update(options.to_params(own, options.service_specs(service_entry(show["service"], config))))
+    if service := options.to_params(own, options.service_specs(service_entry(show["service"], config))):
+        params["service_params"] = service
     return params
 
 
@@ -1760,10 +1766,9 @@ def download_request(show: dict, config: dict, service_sxxeyy: str, out: Path) -
     return {
         # unshackle.yaml's dl: section first, as on the command line: serve does not apply it
         **options.from_dl_config(backend.dl_config(), show["service"]),
-        **service,
         **request,
-        # through a remote server, serve hands it only the service options under service_params (-B for AMZN)
-        **({"service_params": service} if request.get("remote") and service else {}),
+        # the service's own options apart: flat, NF's --profile PRK_DO would be dl's --profile (an account)
+        **({"service_params": service} if service else {}),
         "service": show["service"],
         "title_id": str(show["title"]),
         "wanted": [service_sxxeyy],
@@ -2183,9 +2188,7 @@ NOT_LISTED = re.compile(r"No (available )?episodes found", re.IGNORECASE)  # lis
 def list_tracks(show: dict, config: dict, request: dict, ladder: dict | None = None) -> list[dict]:
     """The episode's tracks on the service, nothing downloaded: one entry per part ([] when the service has no such
     episode). For a quality ladder, the ranges and codecs of its steps are asked for: a service lists only those."""
-    _, own = stacked(show, config)
-    keep = {"service", "title_id", "profile", "proxy", "no_proxy", "cdm_type", "remote", "server",
-            *options.to_params(own, options.service_specs(service_entry(show["service"], config)))}
+    keep = {"service", "title_id", "profile", "proxy", "no_proxy", "cdm_type", "remote", "server", "service_params"}
     asked = {k: v for k, v in request.items() if k in keep}
     if ladder:
         ranges = {step.get("range") or "" for step in ladder["steps"]}

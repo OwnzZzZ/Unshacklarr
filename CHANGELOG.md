@@ -75,6 +75,9 @@ Unshacklarr can be reached from outside your network.
 - **A service's failed login is no longer called a refused API key.** Serve's own reason is shown instead, so you
   don't look for a fault in a key that works. (#25, by mj23au)
 - **Service options now reach a remote server.** `-B`, `--atmos` and the others were left out of a download through it.
+- **A broadcast's time is the release time when none is set.** An episode is tried the minute it airs, not at the next sync.
+- **A service's `--profile` stays the service's.** Netflix's `--profile PRK_DO` was taken as an account profile and
+  shown before the service in the command.
 - **Activity no longer freezes with a large job.** The episodes that don't change are no longer redrawn every second.
 - **More episodes found by their title.** "TBC" counts as no title, like "TBA"; TVDB's "PAGE 14 Donjon" is Netflix's
   "Donjon"; a title only translated ("Dungeon", "Donjon") is no longer marked *Other title*.

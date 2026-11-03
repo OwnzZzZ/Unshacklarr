@@ -148,7 +148,7 @@ def test_downloads_mapped_episodes_and_imports_them_by_id(tmp_path, monkeypatch)
     assert sync.main() == 0
     assert wanted(calls) == ["S02E05", "S02E06"]
     # defaults, overridden per series, and the service's own option, typed as the API wants them
-    assert calls[0] == {"movie": True, "quality": [1080], "service": "RTLP", "title_id": "https://rtl/show",
+    assert calls[0] == {"service_params": {"movie": True}, "quality": [1080], "service": "RTLP", "title_id": "https://rtl/show",
                         "wanted": ["S02E05"], "output_dir": str(tmp_path / "unshackle-111-S02E05")}
     assert not (tmp_path / "unshackle-111-S02E06").exists()  # retried next run
 
@@ -297,6 +297,10 @@ def test_release_slot(tmp_path, monkeypatch):
     assert sync.release_slot({"release_day": -3}, {"airDateUtc": "2026-10-03T19:00:00Z"}).isoformat() == "2026-09-30T00:00:00+02:00"
     assert sync.release_slot({"release_day": 1}, {"airDateUtc": "2026-10-03T19:00:00Z"}) is None  # the day after needs a time
     assert sync.release_day({"release_day": -40}) == -sync.EARLY_DAYS_MAX
+    # No release time but a broadcast schedule: its time (La Comtesse de Monte-Cristo, 21:25 on Auvio)
+    broadcast = {"broadcast": {"start": "2026-11-03", "time": "21:25"}}
+    assert sync.release_slot(broadcast, {"airDateUtc": "2026-11-03T20:25:00Z"}).isoformat() == "2026-11-03T21:25:00+01:00"
+    assert sync.release_slot({**broadcast, "release_time": "22:00"}, {"airDateUtc": "2026-11-03T20:25:00Z"}).isoformat() == "2026-11-03T22:00:00+01:00"
 
 
 def test_an_episode_out_before_it_airs_joins_the_automatic_sync(tmp_path, monkeypatch):
@@ -374,9 +378,9 @@ def test_options_stack_defaults_then_service_then_series(tmp_path, monkeypatch):
     cmd = sync.unshackle_command(show, config, "S01E02", tmp_path / "out")
     assert cmd[cmd.index("S01E02") + 1 :] == ["--quality", "2160", "--proxy", "ca", "CRAVE", "--movie", "https://crave.ca/x"]
     payload = sync.download_request(show, config, "S01E02", tmp_path / "out")
-    assert (payload["quality"], payload["proxy"], payload["movie"]) == ([2160], "ca", True)
+    assert (payload["quality"], payload["proxy"], payload["service_params"]) == ([2160], "ca", {"movie": True})
     other = sync.download_request({**show, "service": "ATV"}, config, "S01E02", tmp_path / "out")
-    assert other["proxy"] == "fr" and "movie" not in other  # another service only gets the defaults
+    assert other["proxy"] == "fr" and "service_params" not in other  # another service only gets the defaults
 
 
 def test_each_side_sees_the_downloads_folder_at_its_own_path(tmp_path, monkeypatch):
@@ -1051,7 +1055,7 @@ def test_parts_in_counts_part_files_or_one_whole_file(tmp_path, monkeypatch):
 def test_a_download_shows_its_command_where_it_runs_and_its_proxy(tmp_path, monkeypatch):
     sync = load(tmp_path, monkeypatch)
     request = {"quality": [1080], "no_atmos": True, "proxy": "http://user:pw@proxy.example:8080", "service": "RTLP",
-               "movie": True, "title_id": "https://www.rtl.fr/some show", "wanted": ["S02E08"], "output_dir": "/dl", "debug": True}
+               "service_params": {"movie": True}, "title_id": "https://www.rtl.fr/some show", "wanted": ["S02E08"], "output_dir": "/dl", "debug": True}
     setup = sync.setup_of(request)
     assert setup["command"] == ("unshackle dl --quality 1080 --noatmos --proxy 'http://***@proxy.example:8080'"
                                 " RTLP --movie 'https://www.rtl.fr/some show' -w S02E08")
@@ -1312,7 +1316,7 @@ def test_an_episode_in_none_of_the_accepted_languages_waits_undownloaded(tmp_pat
     cards = [json.loads(p.read_text()) for p in (tmp_path / "runs").glob("*.json")]
     assert {c["outcome"] for c in cards if c["sxxeyy"] == "S02E06"} == {"unavailable"}
     assert "de, de-AT" in next(c["cause"] for c in cards if c["sxxeyy"] == "S02E06")
-    assert all(set(a) <= {"service", "title_id", "wanted", "profile", "proxy", "no_proxy", "cdm_type", "movie"} for a in asked)  # only what the official serve takes
+    assert all(set(a) <= {"service", "title_id", "wanted", "profile", "proxy", "no_proxy", "cdm_type", "service_params"} for a in asked)  # only what the official serve takes
 
 
 def test_nothing_is_downloaded_without_room_and_a_click_says_why(tmp_path, monkeypatch):
@@ -2733,7 +2737,7 @@ def test_orig_in_the_accepted_audio_is_the_series_original_language(tmp_path, mo
     assert sync.speaks({"ja"}, sync.accepted_audio({}, config, {"originalLanguage": {"name": "Japanese"}}))
 
 
-def test_a_remote_servers_service_options_go_under_service_params(tmp_path, monkeypatch):
+def test_service_options_go_under_service_params(tmp_path, monkeypatch):
     sync = load(tmp_path, monkeypatch)
     monkeypatch.setattr(sync.UNSHACKLE, "dl_config", lambda: {})
     show = {"service": "AMZN", "title": "x", "options": {"--remote": True}, "service_options": {"-B": True}}
@@ -2741,7 +2745,20 @@ def test_a_remote_servers_service_options_go_under_service_params(tmp_path, monk
     assert payload["service_params"] == {"b": True} and payload["remote"] is True  # serve hands a remote server only these
     assert "service_params" not in sync.options.command_line(payload)
     local = sync.download_request({**show, "options": {}}, {}, "S01E01", tmp_path / "out")
-    assert "service_params" not in local and local["b"] is True  # here, flat as before
+    assert local["service_params"] == {"b": True} and "b" not in local  # the same without --remote
+
+
+def test_a_service_profile_is_not_the_account_profile(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    monkeypatch.setattr(sync.UNSHACKLE, "dl_config", lambda: {})
+    monkeypatch.setattr(sync, "service_entry", lambda tag, config=None: {"tag": tag, "cli_params": [
+        {"kind": "option", "name": "profile", "opts": ["-p", "--profile"], "type": "text"}]})
+    show = {"service": "NF", "title": "https://www.netflix.com/title/1", "service_options": {"--profile": "PRK_DO"}}
+    payload = sync.download_request(show, {}, "S01E01", tmp_path / "out")
+    assert "profile" not in payload and payload["service_params"] == {"profile": "PRK_DO"}  # not an account named PRK_DO
+    line = sync.options.command_line(payload)
+    assert line.index("--profile PRK_DO") > line.index(" NF ")  # after the service: its option, not dl's
+    assert sync.serve_params(show, {})["service_params"] == {"profile": "PRK_DO"}
 
 
 def test_a_retry_goes_before_the_episodes_still_to_come(tmp_path, monkeypatch):
