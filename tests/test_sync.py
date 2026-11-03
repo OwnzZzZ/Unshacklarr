@@ -297,6 +297,10 @@ def test_release_slot(tmp_path, monkeypatch):
     assert sync.release_slot({"release_day": -3}, {"airDateUtc": "2026-10-03T19:00:00Z"}).isoformat() == "2026-09-30T00:00:00+02:00"
     assert sync.release_slot({"release_day": 1}, {"airDateUtc": "2026-10-03T19:00:00Z"}) is None  # the day after needs a time
     assert sync.release_day({"release_day": -40}) == -sync.EARLY_DAYS_MAX
+    # No release time but a broadcast schedule: its time (La Comtesse de Monte-Cristo, 21:25 on Auvio)
+    broadcast = {"broadcast": {"start": "2026-11-03", "time": "21:25"}}
+    assert sync.release_slot(broadcast, {"airDateUtc": "2026-11-03T20:25:00Z"}).isoformat() == "2026-11-03T21:25:00+01:00"
+    assert sync.release_slot({**broadcast, "release_time": "22:00"}, {"airDateUtc": "2026-11-03T20:25:00Z"}).isoformat() == "2026-11-03T22:00:00+01:00"
 
 
 def test_an_episode_out_before_it_airs_joins_the_automatic_sync(tmp_path, monkeypatch):

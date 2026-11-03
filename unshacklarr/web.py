@@ -1460,7 +1460,7 @@ def due_releases(now: datetime, inst: dict | None = None) -> list[int]:
 
 def due_in(now: datetime, inst: dict | None) -> list[int]:
     config = read_config()
-    timed = [s for s in config["series"].values() if s.get("release_time")]
+    timed = [s for s in config["series"].values() if sonarr_sync.release_time(s)]
     if not timed:
         return []  # no series has a release time: no need to ask Sonarr every 30 s
     due = []
@@ -1468,7 +1468,7 @@ def due_in(now: datetime, inst: dict | None) -> list[int]:
         show = config["series"].get(ep["series"]["tvdbId"])
         if show and inst and sonarr_sync.off_in(inst, show):
             continue  # that library switched off for the series
-        slot = show and show.get("service") and show.get("release_time") and sonarr_sync.release_slot(show, ep)  # no time: no burst
+        slot = show and show.get("service") and sonarr_sync.release_time(show) and sonarr_sync.release_slot(show, ep)  # no time: no burst
         burst_for = timedelta(minutes=float(sonarr_sync.SETTINGS["burst_minutes"]))
         if slot and slot <= now < slot + burst_for and not ep["hasFile"] and not sonarr_sync.episode_folder(ep).exists():
             due.append(ep["id"])

@@ -1416,15 +1416,20 @@ def release_day(show: dict) -> int:
     return max(-EARLY_DAYS_MAX, min(1, int(show.get("release_day") or 0)))
 
 
+def release_time(show: dict) -> str:
+    """The series' release time: the one set, else its broadcast's time (it airs then: the service has it then)."""
+    return str(show.get("release_time") or (show.get("broadcast") or {}).get("time") or "")
+
+
 def release_slot(show: dict, ep: dict) -> datetime | None:
     """When the service publishes this episode: the series' release time on the day it airs, in
     local time (a 00:01 release of a Monday 21:00 episode is Monday 00:01), the day after with
     `release_day` 1, or N days before with -N (a platform ahead of the channel Sonarr follows).
     Days before without a release time count from midnight: the regular syncs take it from then."""
     day = release_day(show)
-    if not ep.get("airDateUtc") or not (show.get("release_time") or day < 0):
+    if not ep.get("airDateUtc") or not (release_time(show) or day < 0):
         return None
-    hour, minute = map(int, str(show.get("release_time") or "00:00").split(":"))
+    hour, minute = map(int, (release_time(show) or "00:00").split(":"))
     aired = parse_time(ep["airDateUtc"]).astimezone(LOCAL).date() + timedelta(days=day)
     slot = datetime.combine(aired, datetime.min.time(), LOCAL).replace(hour=hour, minute=minute)
     gap = int(show.get("release_gap") or 0)
