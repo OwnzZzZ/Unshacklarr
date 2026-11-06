@@ -1542,6 +1542,12 @@ def check_upgrades(now: datetime) -> list[str]:
         if show.get("service") != w["service"] or not show.get("title"):
             dropped.append(key)  # another service, or none now: what was waited for there means nothing
             continue
+        season = w.get("season")
+        if type(season) is not int:
+            match = re.search(r"\bS(\d+)E\d+\b", str(w.get("label") or ""))
+            season = int(match.group(1)) if match else 0
+        if season:
+            show = sonarr_sync.season_page(show, season)
         if now - datetime.fromisoformat(w["since"]) > days:
             dropped.append(key)
             sonarr_sync.notify(config["notifications"], "warning", f"Kept without {w['want']} audio: {w['label']}",
@@ -2436,16 +2442,25 @@ async def pause_job(request):
     return web.json_response({"paused": batch in sonarr_sync.paused_jobs})
 
 
-async def join_job(batch: str, episode_id: int, replace: bool = False) -> bool:
+async def join_job(batch: str, episode_id: int, replace: bool = False, sonarr: str = "") -> bool:
     """The episode at the end of its running job's queue (or in its place, if cancelled before its turn)."""
     if batch not in sonarr_sync.running_jobs:
         return False
+    inst = sonarr_sync.SONARRS.get(sonarr) if sonarr else None
+    if sonarr and not inst:
+        return False
+
+    def chosen():
+        with sonarr_sync.on_instance(inst):
+            return sonarr_sync.chosen_episodes([episode_id])
+
     try:
-        ep = (await asyncio.to_thread(sonarr_sync.chosen_episodes, [episode_id]))[0]
+        ep = (await asyncio.to_thread(chosen))[0]
     except (requests.RequestException, IndexError):
         return False
     show = read_config()["series"].get(ep["series"]["tvdbId"]) or {}
-    return bool(show.get("service")) and sonarr_sync.add_to_job(batch, ep, show, replace)
+    with sonarr_sync.on_instance(inst):
+        return bool(show.get("service")) and sonarr_sync.add_to_job(batch, ep, show, replace)
 
 
 async def requeue(request):
@@ -2465,11 +2480,12 @@ async def requeue(request):
         raise web.HTTPConflict(text="This episode is not cancelled any more")
     card.unlink(missing_ok=True)  # queued again: its "cancelled" card goes
     replace = cancelled.get("replace") is True  # picked with Replace anyway: it still replaces
+    sonarr = cancelled.get("instance") if isinstance(cancelled.get("instance"), str) else ""
     proxy = cancelled.get("proxy_override") if isinstance(cancelled.get("proxy_override"), str) else ""  # and its own proxy
     video = cancelled.get("video_override") if isinstance(cancelled.get("video_override"), dict) else None  # codec, height
-    if not await join_job(batch, episode_id, replace):  # its job took its last episode: it starts on its own, in that job
+    if not await join_job(batch, episode_id, replace, sonarr):  # its job took its last episode: it starts on its own, in that job
         run_sync([episode_id], kind="manual", batch=batch, **({"replace": True} if replace else {}), **({"proxy": proxy} if proxy else {}),
-                 **({"video": video} if video else {}))
+                 **({"video": video} if video else {}), **({"sonarr": sonarr} if sonarr else {}))
     return web.json_response({"queued": episode_id})
 
 

@@ -1212,21 +1212,34 @@ def test_an_episode_without_its_preferred_audio_is_got_again_once_it_comes(tmp_p
     import unshacklarr.web
     sync = importlib.reload(unshacklarr.sync)
     web = importlib.reload(unshacklarr.web)
-    config = {"series": {111: {"service": "TF1", "title": "a", "audio_prefer": "fr"}, 222: {"service": "MAX", "title": "b"}}, "notifications": {}}
+    config = {
+        "series": {
+            111: {"service": "TF1", "title": "a", "audio_prefer": "fr", "season_pages": {2: {"url": "season-two"}}},
+            222: {"service": "MAX", "title": "b"},
+        },
+        "notifications": {},
+    }
     monkeypatch.setattr(web, "read_config", lambda: config)
-    ep = lambda i, tvdb: {"id": i, "seasonNumber": 1, "episodeNumber": i, "series": {"tvdbId": tvdb, "title": f"Show{tvdb}"}}
+    ep = lambda i, tvdb: {"id": i, "seasonNumber": 2 if tvdb == 111 else 1, "episodeNumber": i, "series": {"tvdbId": tvdb, "title": f"Show{tvdb}"}}
     assert sync.preferred_audio(config["series"][111], config) == "fr" and sync.preferred_audio(config["series"][222], config) == ""
     sync.note_upgrade(ep(1, 111), config["series"][111], "S01E01", "fr")  # imported in English: watched
     sync.note_upgrade(ep(2, 222), config["series"][222], "S01E02", "fr")
     now = datetime.now(timezone.utc)
     later = now + timedelta(days=1)
-    monkeypatch.setattr(web.sonarr_sync, "download_request", lambda show, config, wanted, out: {"service": show["service"], "wanted": [wanted]})
+    requested = []
+
+    def download_request(show, config, wanted, out):
+        requested.append((show["title"], wanted))
+        return {"service": show["service"], "wanted": [wanted]}
+
+    monkeypatch.setattr(web.sonarr_sync, "download_request", download_request)
     monkeypatch.setattr(web.sonarr_sync, "tracks_on_service", lambda show, config, request: {"audio": {"fr"} if request["service"] == "TF1" else {"en"}, "subtitles": set()})
     started, told = [], []
     monkeypatch.setattr(web, "run_sync", lambda ids, replace=False, kind="manual": started.append((ids, replace, kind)))
     monkeypatch.setattr(web.sonarr_sync, "notify", lambda settings, level, title, *a, **k: told.append(title))
     assert web.check_upgrades(now) == [] and started == []  # checked at its download, a day ago at most: not again yet
-    assert web.check_upgrades(later) == ["Show111 S01E01"] and started == [([1], True, "upgrade")]  # French on TF1: got again, in place
+    assert web.check_upgrades(later) == ["Show111 S02E01"] and started == [([1], True, "upgrade")]  # French on TF1: got again, in place
+    assert ("season-two", "S01E01") in requested
     assert web.check_upgrades(later + timedelta(hours=1)) == []  # once a day
     sync.note_upgrade(ep(1, 111), config["series"][111], "S01E01", "")  # imported in French: off the list
     assert list(json.loads(sync.UPGRADES_FILE.read_text())) == ["2"]
@@ -1812,11 +1825,11 @@ def test_replace_anyway_holds_for_a_retry_and_an_episode_queued_again(monkeypatc
     # a cancelled episode queued again keeps it
     monkeypatch.setattr(web.sonarr_sync, "RUNS_DIR", tmp_path)
     run_id = "20261012-070430-000001-433161-S02E02"
-    (tmp_path / f"{run_id}.json").write_text(json.dumps({"outcome": "cancelled", "episodeId": 6, "batch": "20261012-070357-6b5682", "replace": True}))
+    (tmp_path / f"{run_id}.json").write_text(json.dumps({"outcome": "cancelled", "episodeId": 6, "batch": "20261012-070357-6b5682", "replace": True, "instance": "sonarr-4k"}))
     joined, started = [], []
 
-    async def join(batch, episode_id, replace=False):
-        joined.append(replace)
+    async def join(batch, episode_id, replace=False, sonarr=""):
+        joined.append((replace, sonarr))
         return False
     monkeypatch.setattr(web, "join_job", join)
     monkeypatch.setattr(web, "run_sync", lambda ids, **kw: started.append(kw))
@@ -1827,7 +1840,8 @@ def test_replace_anyway_holds_for_a_retry_and_an_episode_queued_again(monkeypatc
         can_read_body = True
     monkeypatch.setattr(web, "json_object", lambda request: request.json())
     asyncio.run(web.requeue(Request()))
-    assert joined == [True] and started[0].get("replace") is True
+    assert joined == [(True, "sonarr-4k")]
+    assert started[0].get("replace") is True and started[0].get("sonarr") == "sonarr-4k"
 
 
 def test_a_series_with_its_own_schedule_shows_that_one_only(monkeypatch):

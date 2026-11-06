@@ -10,6 +10,10 @@ Every change worth knowing, newest first. The format follows
 
 - Synced the fork with upstream 1.5.0 while retaining its provider-readiness and terminal-disconnect regression coverage.
 
+### Fixed
+
+- Preserved the selected Unshackle backend, Sonarr instance, provider programme, and season page across retries and upgrades.
+
 ## [1.5.0] - 2026-10-17
 
 Several Sonarr at once, the audio of your language added to the files you have, Upgrades that run by themselves,

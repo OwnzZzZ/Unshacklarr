@@ -592,6 +592,7 @@ def queued_card(ep: dict, show: dict, kind: str, batch: str | None, replace: boo
             "sxxeyy": f"S{ep['seasonNumber']:02}E{ep['episodeNumber']:02}", "service": show["service"], "kind": kind,
             "started": datetime.now(timezone.utc).isoformat(), "ended": None, "outcome": "running", "episodeId": ep["id"],
             "step": "queued", "live": {}, "tracks": [], "waiting": True, **({"batch": batch} if batch else {}),
+            **({"instance": instance()["name"]} if instance() else {}),
             **({"replace": True} if replace else {}),  # cancelled then queued again, it keeps Replace anyway
             **({"proxy_override": proxy} if proxy else {}),  # and the proxy asked for this download
             **({"video_override": video} if video else {})}  # and its codec and height
@@ -1555,7 +1556,7 @@ def programme_for(show: dict, ep: dict, config: dict, manual: bool = False) -> d
     taken only when one result has that very title, or one has it before a subtitle ("My Mom Jayne: A Film by...")
     and the year agrees. A match is kept; Unmatched when none is sure."""
     sxxeyy = f"S{ep['seasonNumber']:02}E{ep['episodeNumber']:02}"
-    key = f"{(instance() or {}).get('name', '')}:{ep['id']}"
+    key = f"{(instance() or {}).get('name', '')}:{show['service']}:{ep['id']}"
     pasted = (show.get("programme_map") or {}).get(sxxeyy)
     known = read_json(PROGRAMMES_FILE, {})
     if not pasted and (kept := known.get(key)):
@@ -1951,6 +1952,7 @@ def add_track(episode_id: int, want: str, anyway: bool = False) -> bool:
     show = (config.get("series") or {}).get(ep["series"]["tvdbId"]) or {}
     if not ep.get("episodeFileId") or not show.get("service"):
         return False
+    show = season_page(show, ep["seasonNumber"])
     if show.get("programmes") or int(show.get("parts") or 0) > 1:  # found by title, or in parts: the whole episode again
         print(f"Add the audio: {ep['series']['title']} is {'separate programmes' if show.get('programmes') else 'in parts'}, the episode is downloaded again", flush=True)
         return False
@@ -2034,7 +2036,7 @@ def note_upgrade(ep: dict, show: dict, service_sxxeyy: str, lacking: str) -> Non
             since = (watched.get(key) or {}).get("since") or datetime.now(timezone.utc).isoformat()  # a try again keeps its start
             watched[key] = {"tvdb": ep["series"]["tvdbId"], "label": f"{ep['series']['title']} S{ep['seasonNumber']:02}E{ep['episodeNumber']:02}",
                             "service": show["service"], "serviceEpisode": service_sxxeyy, "want": lacking, "since": since,
-                            "checked": datetime.now(timezone.utc).isoformat()}
+                            "season": ep["seasonNumber"], "checked": datetime.now(timezone.utc).isoformat()}
         write_atomic(UPGRADES_FILE, json.dumps(watched))
 
 
@@ -2986,8 +2988,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                     trace("options: " + (", ".join(f"{k}={options.HIDDEN.sub('//***@', str(v))}" for k, v in asked.items()) or "none"))  # no proxy password in the log
                     backend = backend_for(use["service"], config)
                     run.card["setup"] = setup_of(request, backend)
-                    if backend.name:  # the serve run_job hands it to, and Activity's Stop cancels it on
-                        run.card["backend"] = backend.name
+                    run.card["backend"] = backend.name  # the serve run_job hands it to, and Activity's Stop cancels it on
                     run.save()
                     run_job_retrying(request, run)
 

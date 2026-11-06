@@ -1917,13 +1917,21 @@ def test_a_series_falls_back_on_another_service_when_its_own_has_nothing(tmp_pat
     sync = load(tmp_path, monkeypatch)
     config = sync.read_file()
     config["series"][111].update(season_map={2: 9}, fallback={"service": "MLT", "title": "https://mlt/show", "episode_offset": 1})
+    sync.apply_settings({
+        **sync.SETTINGS,
+        "backends": [{"name": "vpn", "url": "http://vpn:8786", "api_key": "test-key"}],
+    })
+    config.setdefault("service_defaults", {})["RTLP"] = {"backend": "vpn"}
     alt = sync.fallback_show(config["series"][111])
     assert alt["service"] == "MLT" and "season_map" not in alt and alt["episode_offset"] == 1  # its own numbering, not the main one's
     monkeypatch.setattr(sync, "no_cdm", lambda tag, config=None: "")
+    monkeypatch.setattr(sync, "download_request", lambda show, config, wanted, out: {
+        "service": show["service"], "title_id": show["title"], "wanted": [wanted], "output_dir": str(out),
+    })
     asked = []
 
     def download(payload, run=None):
-        asked.append((payload["service"], payload["wanted"][0]))
+        asked.append((payload["service"], payload["wanted"][0], run.card.get("backend")))
         if payload["service"] == "MLT":  # only the fallback has it
             out = Path(payload["output_dir"])
             out.mkdir(parents=True, exist_ok=True)
@@ -1936,7 +1944,7 @@ def test_a_series_falls_back_on_another_service_when_its_own_has_nothing(tmp_pat
     monkeypatch.setattr(sync, "import_episode", lambda ep, out, replace=False: imported.append(ep["id"]))
     monkeypatch.setattr(sync, "notify", lambda *a, **k: None)
     sync.sync(config, {}, [episode(111, 2, 5)], manual=True, kind="manual")
-    assert asked == [("RTLP", "S09E05"), ("MLT", "S02E06")] and imported == [205]
+    assert asked == [("RTLP", "S09E05", "vpn"), ("MLT", "S02E06", "")] and imported == [205]
     card = next(json.loads(p.read_text()) for p in (tmp_path / "runs").glob("*.json"))
     assert card["service"] == "MLT" and card["fallback"] == "RTLP" and card["outcome"] == "downloaded"
 
@@ -1961,6 +1969,9 @@ def test_a_release_time_is_learnt_once_clear_and_never_over_one_set(tmp_path, mo
 
 def test_the_preferred_audio_is_added_to_the_file_it_has(tmp_path, monkeypatch):
     sync = load(tmp_path, monkeypatch)
+    config = sync.read_file()
+    config["series"][111]["season_pages"] = {2: {"url": "https://service/season-two"}}
+    monkeypatch.setattr(sync, "read_file", lambda: config)
     library = tmp_path / "lib" / "Show" / "Season 02"
     library.mkdir(parents=True)
     (library / "Show - S02E05.mkv").write_bytes(b"video")
@@ -1997,6 +2008,7 @@ def test_the_preferred_audio_is_added_to_the_file_it_has(tmp_path, monkeypatch):
     monkeypatch.setattr(sync, "import_episode", lambda e, out, replace=False: imported.append((sorted(f.name for f in out.iterdir()), replace)))
     monkeypatch.setattr(sync, "notify", lambda *a, **k: None)
     assert sync.add_track(205, "fr") is True
+    assert asked[0]["title_id"] == "https://service/season-two" and asked[0]["wanted"] == ["S01E05"]
     assert asked[0]["audio_only"] is True and asked[0]["a_lang"] == ["fr"] and "lang" not in asked[0]
     merge = calls[-1]
     assert merge[:4] == ["mkvmerge", "-q", "-o", str(tmp_path / "unshackle-111-S02E05" / "Show - S02E05.mkv")]
@@ -2372,6 +2384,8 @@ def test_a_job_takes_in_only_episodes_with_its_own_replace_choice(tmp_path, monk
     assert sync.add_to_job("J", ep, show, replace=True) is True
     assert sync.waiting[9]["replace"] is True  # cancelled from here, it is queued again replacing
     sync.waiting.pop(9, None)
+    with sync.on_instance({"name": "sonarr-4k"}):
+        assert sync.queued_card(ep, show, "manual", "J")["instance"] == "sonarr-4k"
 
 
 def test_the_sign_in_hint_waits_for_two_quiet_minutes(tmp_path, monkeypatch):
@@ -2427,6 +2441,10 @@ def test_a_separate_programme_is_found_by_its_title_and_looked_for_once_a_day(tm
     assert (match["title"], match["code"], match["how"]) == ("m01", "S2026E56", "title")  # a film: Sonarr's code
     asked.clear()
     assert sync.programme_for(show, ep, config)["title"] == "m01" and asked == []  # kept: not searched again
+    results[:] = [{"id": "m03", "title": "Britain's Forgotten Girls"}]
+    asked.clear()
+    assert sync.programme_for({**show, "service": "ALT"}, ep, config)["title"] == "m03"
+    assert asked == ["/api/search", "/api/list-titles"]
 
     other = {**ep, "id": 57, "title": "Lost Film"}
     results = [{"id": "a", "title": "Lost Film"}, {"id": "b", "title": "Lost Film"}]  # two alike: not guessed
