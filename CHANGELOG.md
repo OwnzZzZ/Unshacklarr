@@ -6,6 +6,10 @@ Every change worth knowing, newest first. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Synced the fork with upstream 1.5.0 while retaining its provider-readiness and terminal-disconnect regression coverage.
+
 ## [1.5.0] - 2026-10-17
 
 Several Sonarr at once, the audio of your language added to the files you have, Upgrades that run by themselves,
