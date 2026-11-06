@@ -38,7 +38,7 @@ def directory(yaml_file: Path, key: str, default: str) -> Path:
     named = (read(yaml_file).get("directories") or {}).get(key) or default
     name = Path(str(named)).name
     if name in ("", ".", ".."):  # "..", "/" or ".": not a folder next to unshackle.yaml
-        raise CdmError(f"unshackle.yaml's directories: {key}: {named!r} is no folder next to it")
+        raise CdmError(f"unshackle.yaml's directories: {key}: {named!r} is not a folder next to it")
     return yaml_file.parent / name
 
 
@@ -207,7 +207,7 @@ def remote_save(yaml_file: Path, form: dict, was: str | None) -> None:
     if not NAME.fullmatch(name):
         raise CdmError("A remote CDM's name: letters, digits, _ . - @")
     if kind not in REMOTE_KINDS:
-        raise CdmError("A remote CDM is Widevine (pywidevine serve), PlayReady or Decrypt Labs here; others in unshackle.yaml")
+        raise CdmError("Here, a remote CDM can be Widevine (pywidevine serve), PlayReady or Decrypt Labs. Add other kinds in unshackle.yaml")
     old = next((e for e in entries if str(e.get("name")) == was), None) if was else None
     if was and old is None:
         raise CdmError(f"No remote CDM called {was!r}")
@@ -227,7 +227,7 @@ def remote_save(yaml_file: Path, form: dict, was: str | None) -> None:
     secret = str(form.get("secret") or "")
     if not secret and old is not None:  # kept only for the same server: a saved key never follows a new address
         if host.rstrip("/") != str(field(old, "host") or "").rstrip("/") or kind != remote_kind(old):
-            raise CdmError("Type its secret again: a saved secret never goes to a new address")
+            raise CdmError("Type its secret again: a saved secret is never sent to a new address")
         secret = str(field(old, "secret") or "")
     if kind != "decrypt_labs" and not secret:
         raise CdmError("Its secret (API key)")
@@ -310,3 +310,37 @@ def delete(yaml_file: Path, wvds: Path, prds: Path, name: str, kind: str) -> Non
     suffix = ".wvd" if kind == "Widevine" else ".prd"
     path = folder / name if device["folder"] else next(p for p in folder.iterdir() if p.is_file() and p.stem == name and p.suffix.lower() == suffix)
     shutil.rmtree(path) if path.is_dir() else path.unlink()
+
+
+def allow_proxies(text: str, key: str, wvds: list[str], prds: list[str]) -> str:
+    """unshackle.yaml with Unshacklarr's key allowed the server's proxies (Unshackle 6: serve.users.<key>.server_proxy),
+    its serve: block written anew and every other line as it was; checked by reading it back. Unshackle 5 reads no
+    server_proxy and serves as before."""
+    config = yaml.safe_load(text) or {}
+    serve = dict(config.get("serve") or {}) if isinstance(config.get("serve") or {}, dict) else None
+    if serve is None:
+        raise CdmError("unshackle.yaml's serve: is not a section: change it by hand")
+    users = dict(serve.get("users") or {}) if isinstance(serve.get("users") or {}, dict) else None
+    if users is None:
+        raise CdmError("unshackle.yaml's serve: users: is not a section: change it by hand")
+    # a key serve listed by itself (the admin one) had every right: listed now, it keeps them all (5.4 reads server_cdm
+    # and the devices); a key the operator listed keeps what it was given, the proxies added
+    entry = users.get(key) if isinstance(users.get(key), dict) else {
+        "devices": wvds, "playready_devices": prds, "username": "api_user",
+        "admin": True, "server_cdm": True, "server_vault": True, "server_accounts": True}
+    users[key] = {**entry, "server_proxy": True}
+    serve["users"] = users
+    lines = text.splitlines(keepends=True)
+    top = next((i for i, l in enumerate(lines) if re.match(r"serve:\s*(#.*)?$", l.rstrip("\r\n"))), None)
+    block = yaml.safe_dump({"serve": serve}, sort_keys=False, allow_unicode=True, default_flow_style=False)
+    if top is None:
+        new = text + ("" if text.endswith("\n") or not text else "\n") + block
+    else:
+        end = top + 1
+        while end < len(lines) and (not lines[end].strip() or lines[end][0] in " \t-" or lines[end].lstrip().startswith("#")):
+            end += 1
+        new = "".join(lines[:top]) + block + "".join(lines[end:])
+    after = yaml.safe_load(new) or {}
+    if after.get("serve") != serve or {k: v for k, v in after.items() if k != "serve"} != {k: v for k, v in config.items() if k != "serve"}:
+        raise CdmError("Could not change unshackle.yaml safely: change it by hand")
+    return new

@@ -1,0 +1,476 @@
+{
+ "title": "The Lowdown (2025)",
+ "tvdb": 450085,
+ "show": {
+  "service": "DSNP",
+  "title": "https://www.disneyplus.com/browse/entity-9ae53bdf-9248-41ac-83df-f5e93a1f04b0",
+  "release_time": "09:00"
+ },
+ "tmdb_key": true,
+ "country": "FR",
+ "inputs": {
+  "service": [
+   {
+    "type": "episode",
+    "name": "Episode Pilote",
+    "id": "3d73f495-44e5-4889-82e5-c635558cc445",
+    "language": "en",
+    "description": "Un homme étrange d'une famille puissante meurt. Le journaliste citoyen Lee Raybon flaire une complot.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "The Lowdown",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "La mère du Diable",
+    "id": "5144bcc3-7c36-4cd3-9edf-0e5cac97e88d",
+    "language": "en",
+    "description": "L’enquête de Lee révèle de nouveaux dangers.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "The Lowdown",
+    "season": 1,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Mémoire d'un dinosaure",
+    "id": "0a9d23d4-0632-4b1f-b2ab-0f4840e56359",
+    "language": "en",
+    "description": "Les mystères du lac révélés.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "The Lowdown",
+    "season": 1,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "À court de cowboys",
+    "id": "2112a429-33e5-4d9b-bf94-e1577ed7ff3d",
+    "language": "en",
+    "description": "Lee passe une nuit de folie avec une nouvelle rencontre.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "The Lowdown",
+    "season": 1,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Cette terre ?",
+    "id": "077aa8a2-135e-4aa0-a68c-722f119690c3",
+    "language": "en",
+    "description": "Lee passe une journée avec son pire ennemi.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "The Lowdown",
+    "season": 1,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Vieille astuce indienne",
+    "id": "ee0d4deb-d1e4-4dd6-8da6-a521e41b33fd",
+    "language": "en",
+    "description": "Lee cherche un arnaqueur.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "The Lowdown",
+    "season": 1,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Dernières Volontés",
+    "id": "ff0b76ae-1202-4b13-9d02-b6ab63fc0617",
+    "language": "en",
+    "description": "De sombres forces se liguent contre Lee.",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "The Lowdown",
+    "season": 1,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "Le type sensible",
+    "id": "e941cd02-3284-4849-9c29-20c6ac10e46b",
+    "language": "en",
+    "description": "La vérité éclate au grand jour… mais à quel prix ?",
+    "date": null,
+    "cover_url": null,
+    "year": 2025,
+    "series_title": "The Lowdown",
+    "season": 1,
+    "number": 8
+   }
+  ],
+  "episodes": [
+   {
+    "id": 79541,
+    "seasonNumber": 1,
+    "episodeNumber": 1,
+    "title": "Pilot",
+    "airDate": "2025-09-23",
+    "airDateUtc": "2025-09-24T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 1
+   },
+   {
+    "id": 79542,
+    "seasonNumber": 1,
+    "episodeNumber": 2,
+    "title": "The Devil's Mama",
+    "airDate": "2025-09-23",
+    "airDateUtc": "2025-09-24T01:50:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 2
+   },
+   {
+    "id": 79543,
+    "seasonNumber": 1,
+    "episodeNumber": 3,
+    "title": "Dinosaur Memories",
+    "airDate": "2025-09-30",
+    "airDateUtc": "2025-10-01T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 3
+   },
+   {
+    "id": 79544,
+    "seasonNumber": 1,
+    "episodeNumber": 4,
+    "title": "Short on Cowboys",
+    "airDate": "2025-10-07",
+    "airDateUtc": "2025-10-08T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 4
+   },
+   {
+    "id": 79545,
+    "seasonNumber": 1,
+    "episodeNumber": 5,
+    "title": "This Land?",
+    "airDate": "2025-10-14",
+    "airDateUtc": "2025-10-15T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 5
+   },
+   {
+    "id": 79546,
+    "seasonNumber": 1,
+    "episodeNumber": 6,
+    "title": "The Old Indian Trick",
+    "airDate": "2025-10-21",
+    "airDateUtc": "2025-10-22T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 6
+   },
+   {
+    "id": 79547,
+    "seasonNumber": 1,
+    "episodeNumber": 7,
+    "title": "Tulsa Turnaround",
+    "airDate": "2025-10-28",
+    "airDateUtc": "2025-10-29T01:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 7
+   },
+   {
+    "id": 79548,
+    "seasonNumber": 1,
+    "episodeNumber": 8,
+    "title": "The Sensitive Kind",
+    "airDate": "2025-11-04",
+    "airDateUtc": "2025-11-05T02:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 8
+   },
+   {
+    "id": 84781,
+    "seasonNumber": 2,
+    "episodeNumber": 1,
+    "title": "The Rupidoop",
+    "airDate": "2026-10-14",
+    "airDateUtc": "2026-10-15T01:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 84782,
+    "seasonNumber": 2,
+    "episodeNumber": 2,
+    "title": "Whiskey Bent and Hell Bound",
+    "airDate": "2026-10-14",
+    "airDateUtc": "2026-10-15T01:50:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 84783,
+    "seasonNumber": 2,
+    "episodeNumber": 3,
+    "title": "Truth's Easy",
+    "airDate": "2026-10-21",
+    "airDateUtc": "2026-10-22T01:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 84784,
+    "seasonNumber": 2,
+    "episodeNumber": 4,
+    "title": "Raw Milk",
+    "airDate": "2026-10-28",
+    "airDateUtc": "2026-10-29T01:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 84785,
+    "seasonNumber": 2,
+    "episodeNumber": 5,
+    "title": "TBA",
+    "airDate": "2026-11-04",
+    "airDateUtc": "2026-11-05T02:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 84786,
+    "seasonNumber": 2,
+    "episodeNumber": 6,
+    "title": "TBA",
+    "airDate": "2026-11-11",
+    "airDateUtc": "2026-11-12T02:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 84787,
+    "seasonNumber": 2,
+    "episodeNumber": 7,
+    "title": "TBA",
+    "airDate": "2026-11-18",
+    "airDateUtc": "2026-11-19T02:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 84788,
+    "seasonNumber": 2,
+    "episodeNumber": 8,
+    "title": "TBA",
+    "airDate": "2026-11-25",
+    "airDateUtc": "2026-11-26T02:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   }
+  ],
+  "series": {
+   "tvdbId": 450085,
+   "tmdbId": 273247,
+   "title": "The Lowdown (2025)"
+  },
+  "tmdb": [
+   {
+    "names": [
+     "Pilot",
+     "Épisode 1"
+    ],
+    "air_date": "2025-09-23",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "names": [
+     "The Devil's Mama",
+     "Épisode 2"
+    ],
+    "air_date": "2025-09-23",
+    "season": 1,
+    "number": 2
+   },
+   {
+    "names": [
+     "Dinosaur Memories",
+     "Épisode 3"
+    ],
+    "air_date": "2025-09-30",
+    "season": 1,
+    "number": 3
+   },
+   {
+    "names": [
+     "Short on Cowboys",
+     "Épisode 4"
+    ],
+    "air_date": "2025-10-07",
+    "season": 1,
+    "number": 4
+   },
+   {
+    "names": [
+     "This Land?",
+     "Épisode 5"
+    ],
+    "air_date": "2025-10-14",
+    "season": 1,
+    "number": 5
+   },
+   {
+    "names": [
+     "The Old Indian Trick",
+     "Épisode 6"
+    ],
+    "air_date": "2025-10-21",
+    "season": 1,
+    "number": 6
+   },
+   {
+    "names": [
+     "Tulsa Turnaround",
+     "Épisode 7"
+    ],
+    "air_date": "2025-10-28",
+    "season": 1,
+    "number": 7
+   },
+   {
+    "names": [
+     "The Sensitive Kind",
+     "Épisode 8"
+    ],
+    "air_date": "2025-11-04",
+    "season": 1,
+    "number": 8
+   },
+   {
+    "names": [
+     "The Rupidoop",
+     "Épisode 1"
+    ],
+    "air_date": "2026-10-14",
+    "season": 2,
+    "number": 1
+   },
+   {
+    "names": [
+     "Whiskey Bent and Hell Bound",
+     "Épisode 2"
+    ],
+    "air_date": "2026-10-14",
+    "season": 2,
+    "number": 2
+   },
+   {
+    "names": [
+     "Truth's Easy",
+     "Épisode 3"
+    ],
+    "air_date": "2026-10-21",
+    "season": 2,
+    "number": 3
+   },
+   {
+    "names": [
+     "Raw Milk",
+     "Épisode 4"
+    ],
+    "air_date": "2026-10-28",
+    "season": 2,
+    "number": 4
+   },
+   {
+    "names": [
+     "A Dog with Two Tails",
+     "Épisode 5"
+    ],
+    "air_date": "2026-11-04",
+    "season": 2,
+    "number": 5
+   },
+   {
+    "names": [
+     "Leaving and Coming Back",
+     "Épisode 6"
+    ],
+    "air_date": "2026-11-11",
+    "season": 2,
+    "number": 6
+   },
+   {
+    "names": [
+     "Hot Weeners!",
+     "Épisode 7"
+    ],
+    "air_date": "2026-11-18",
+    "season": 2,
+    "number": 7
+   },
+   {
+    "names": [
+     "The Tower",
+     "Épisode 8"
+    ],
+    "air_date": "2026-11-25",
+    "season": 2,
+    "number": 8
+   }
+  ],
+  "tvdb": {
+   "S01E01": "Pilote",
+   "S01E02": "La mère du Diable"
+  }
+ },
+ "expect": {
+  "available": {
+   "79541": {
+    "service": "S01E01",
+    "name": "Episode Pilote"
+   },
+   "79542": {
+    "service": "S01E02",
+    "name": "La mère du Diable",
+    "match": "title",
+    "same": true
+   },
+   "79543": {
+    "service": "S01E03",
+    "name": "Mémoire d'un dinosaure"
+   },
+   "79544": {
+    "service": "S01E04",
+    "name": "À court de cowboys"
+   },
+   "79545": {
+    "service": "S01E05",
+    "name": "Cette terre ?"
+   },
+   "79546": {
+    "service": "S01E06",
+    "name": "Vieille astuce indienne"
+   },
+   "79547": {
+    "service": "S01E07",
+    "name": "Dernières Volontés"
+   },
+   "79548": {
+    "service": "S01E08",
+    "name": "Le type sensible"
+   }
+  },
+  "titlesAgree": false,
+  "season_map": {}
+ }
+}

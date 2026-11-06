@@ -143,10 +143,33 @@
       keep();
       return { configured: true };
     }
+    // The setup from a backup: two made-up ones, restored in words (nothing is written)
+    if (p === "/api/setup/backups") {
+      if (String(body?.setup_code || "").trim().toUpperCase() !== "DEMO") throw new Refused(403, "Wrong setup code: in the demo, it is DEMO");
+      return { saved: [{ name: "unshacklarr-2026-10-06-0300.yaml", at: new Date(Date.now() - 864e5).toISOString(), size: 7300 },
+        { name: "unshacklarr-2026-10-05-0300.yaml", at: new Date(Date.now() - 2 * 864e5).toISOString(), size: 7100 }] };
+    }
+    if (p === "/api/setup/restore") {
+      mem.configured = mem.logged = true;
+      mem.config = copy(R["/api/state"].config);
+      keep();
+      return { logged_in: true, series: Object.keys(mem.config.series || {}).length, sonarr: { ok: true }, unshackle: { ok: false, error: "Not in the demo: there is no Unshackle to test" } };
+    }
     if (!mem.configured || !mem.logged) throw new Refused(401, "Log in first");
     if (p === "/api/logout") { mem.logged = false; keep(); return { logged_in: false }; }
-    if (p === "/api/state") return { ...copy(R["/api/state"]), config: copy(config()) };
+    // Backups: two made-up ones, the setup restores from them in words (nothing is written)
+    const demoBackups = [{ name: "unshacklarr-2026-10-06-0300.yaml", at: new Date(Date.now() - 864e5).toISOString(), size: 7300 },
+      { name: "unshacklarr-2026-10-05-0300.yaml", at: new Date(Date.now() - 2 * 864e5).toISOString(), size: 7100 }];
+    if (p === "/api/state") return { ...copy(R["/api/state"]), config: copy(config()), backups: { count: 2, folder: "/data/backups", latest: demoBackups[0].at, saved: demoBackups } };
     if (p === "/api/config") { mem.config = body; keep(); return { saved: true }; }
+    if (p === "/api/backup/offsite") {  // nothing leaves the demo: the place is kept, the backup said to be sent
+      const c = config(), set = { ...body.settings };
+      for (const k of ["backup_remote_secret", "backup_passphrase"]) { set[`${k}_set`] = !!(set[k] || c.settings[`${k}_set`]) && !!set.backup_remote; delete set[k]; }
+      c.settings = { ...c.settings, ...set }; mem.config = c; keep();
+      const now = new Date(), pad = (n) => String(n).padStart(2, "0");
+      const sent = set.backup_remote ? { ok: true, name: `unshacklarr-${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}.yaml.enc`, at: now.toISOString() } : {};
+      return { sent, settings: c.settings };
+    }
     if (p === "/api/hidden") {
       const c = config(), hidden = new Set(c.hidden_series || []);
       body.hidden ? hidden.add(body.tvdbId) : hidden.delete(body.tvdbId);
@@ -195,6 +218,10 @@
       if (!hit) throw new Refused(502, "In the demo, only the series already set up can be looked up on their service.");
       return { ...copy(hit), checked: now() };
     }
+    if (p.startsWith("/api/profiles/")) return { profiles: ["alt", "default", "family"] };  // a made-up account or three
+    if (p === "/api/series/search") return { results: [  // what a service's search gives: the series, and others like it
+      { id: "demo-1", title: body.query, label: "SERIES", description: "The one you look for.", url: `https://example.com/series/${encodeURIComponent(body.query.toLowerCase().replace(/\s+/g, "-"))}` },
+      { id: "demo-2", title: `${body.query}: the documentary`, label: "MOVIE", description: "Another title with the same name.", url: "https://example.com/movie/demo-2" }] };
     if (p === "/api/status") return copy(R[url.searchParams.get("full") ? "/api/status?full=1" : "/api/status"]);
     if (p.startsWith("/api/cdm") && method === "POST") {
       if (p === "/api/cdm/test") return { ok: true, revoked: null, error: null, keys: 1, at: now() };
@@ -212,6 +239,7 @@
     if (p === "/api/api-key/new") return { key: "demo-" + Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, "0")).join(""), created: now() };
     if (p.startsWith("/api/suggest")) return { links: [], checked: now() };
     if (p.startsWith("/api/networks")) return {};
+    if (p === "/api/backups/download") return { name: body.name, text: "# A made-up backup: this is the demo\n" };
     if (method !== "GET") return {};  // the password, the language, logging out others: done, in words
     if (path in R) return copy(R[path]);
     if (p in R) return copy(R[p]);
@@ -226,6 +254,10 @@
       return realFetch(path.startsWith("/") ? path.slice(1) : input, opts);  // the page's own files, next to it
     }
     await new Promise((r) => setTimeout(r, 120 + Math.random() * 200));  // a server's pace
+    if (/\/api\/runs\/[^/]+\/diagnostic$/.test(path)) {  // a made-up file, as the server would give it
+      return new Response("# Unshacklarr diagnostic (demo)\n\nIn the real app: versions, the series' settings and the settings (secrets masked),\n"
+        + "then the attempt's card and the end of its log, with tokens, keys and e-mail addresses removed.\n", { headers: { "Content-Type": "text/markdown" } });
+    }
     try {
       const body = opts.body ? JSON.parse(opts.body) : null;
       return new Response(JSON.stringify(route((opts.method || "GET").toUpperCase(), path, body)), { headers: { "Content-Type": "application/json" } });

@@ -33,6 +33,8 @@ DL_OPTIONS = [
     ('require_audio', 'list', 'Audio languages that must exist. The title fails even with --best-available.', []),
     ('require_video', 'list', 'Video languages that must exist. The title fails even with --best-available.', []),
     ('forced_s_lang', 'list', "Languages wanted for forced subtitles, implies -fs. Keeps forced subs only in these languages. Prefix a value with '-' to exclude it, e.g. 'all,-es'.", []),
+    ('forced_subs_only', 'flag', 'Download forced subtitle tracks and no other subtitle tracks.', []),
+    ('skip_subtitle_errors', 'flag', 'A subtitle track that fails to download is left out instead of failing the download. Taken by unshackle serve, not by the command line.', []),
     ('exact_lang', 'flag', 'Use exact language matching (no variants). With this flag, -l es-419 matches ONLY es-419, not es-ES or other variants.', []),
     ('sub_format', 'text', "Set Output Subtitle Format, only converting if necessary. Use 'original' to keep source format.", ['subrip', 'srt', 'substationalpha', 'ssa', 'substationalphav4', 'ass', 'timedtextmarkuplang', 'ttml', 'webvtt', 'vtt', 'sami', 'smi', 'microdvd', 'sub', 'mpl2', 'tmp', 'fttml', 'stpp', 'fvtt', 'wvtt', 'original']),
     ('video_only', 'flag', 'Only download video tracks.', []),
@@ -45,9 +47,13 @@ DL_OPTIONS = [
     ('no_video', 'flag', 'Do not download video tracks.', []),
     ('no_attachments', 'flag', 'Do not download or mux attachments (cover art, subtitle fonts, and files the service attaches).', []),
     ('audio_description', 'flag', 'Download audio description tracks.', []),
+    ('audio_description_only', 'flag', 'Download audio description tracks and no standard audio tracks.', []),
     ('slow', 'text', 'Add a delay between each Title download to act more like a real device. Use --slow for a 60-120s delay, or --slow MIN-MAX (e.g., --slow 20-40) for a custom range. Minimum delay is 20 seconds.', []),
     ('split_audio', 'text', 'Create separate output files per audio codec instead of merging all audio.', []),
     ('cdm_only', 'text', 'Only use CDM, or only use Key Vaults for retrieval of Decryption Keys.', []),
+    ('all_drm', 'flag', 'License each track with both Widevine and PlayReady. Needs a CDM for each DRM system.', []),
+    ('cdm', 'text', "Use this CDM device (its name) for the download, over unshackle.yaml's cdm: section. Unshackle refuses it unless unshackle.yaml allows it with serve: cdm_overrides (true, or a list of devices).", []),
+    ('cdm_type', 'text', 'The DRM to license with, for a service that takes both: its device of that kind in the cdm: section.', ['widevine', 'playready']),
     ('proxy', 'text', 'Proxy URI to use. If a 2-letter country is provided, it will try to get a proxy from the config.', []),
     ('no_proxy', 'flag', 'Force disable all proxy use.', []),
     ('proxy_download', 'text', 'Proxy for the downloads only, in the same form as --proxy. Manifest, license, and auth use --proxy.', []),
@@ -91,8 +97,16 @@ def name_of(flag: str) -> str:
     return NAMES.get(flag) or flag.lstrip("-").replace("-", "_")
 
 
+# Taken by unshackle serve only: `unshackle dl` has no flag for them, so the command shown leaves them out
+API_ONLY = {"skip_subtitle_errors", "cdm_type"}
+# Taken by Unshackle 6.0 and later only: an older serve ignores them without a word, so their help says so
+SINCE_6 = {"adaptive_workers", "all_drm", "audio_description_only", "continue_downloads", "download_processes",
+           "forced_subs_only", "no_attachments", "proxy_download", "require_audio", "require_video", "cdm"}
+
+
 def dl_specs() -> list[dict]:
-    return [{"flag": flag_of(n), "short": "", "help": h, "is_flag": k == "flag", "choices": c, "kind": k}
+    return [{"flag": flag_of(n), "short": "", "help": f"{h} Unshackle 6.0 or later." if n in SINCE_6 else h,
+             "is_flag": k == "flag", "choices": c, "kind": k}
             for n, k, h, c in DL_OPTIONS]
 
 
@@ -171,6 +185,8 @@ def command_line(request: dict) -> str:
     dl_names = {name for name, *_ in DL_OPTIONS}
 
     def args(name: str, value) -> list[str]:
+        if name in API_ONLY:  # serve takes it, `unshackle dl` has no such flag: left out of the line
+            return []
         if isinstance(value, bool):
             return [flag_of(name)] if value else []
         value = ",".join(map(str, value)) if isinstance(value, list) else str(value)
