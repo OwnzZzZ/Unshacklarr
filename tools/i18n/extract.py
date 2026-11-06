@@ -1,6 +1,6 @@
 """The English texts a person sees, for translating: python tools/i18n/extract.py
 
-Reads unshacklarr/static/index.html (its markup, then its script's string literals) and the server's
+Reads unshacklarr/static/index.html (its markup, then its scripts' string literals, js/*.js) and the server's
 messages (its strings and f-strings), and writes
 unshacklarr/static/i18n/en.json: every text a user may see, as the page shows it. A template
 literal's ${…} parts become {0}, {1}…, as the page matches them. The translations,
@@ -38,6 +38,8 @@ def wanted(text: str) -> bool:
     if re.fullmatch(r"([a-z0-9-]+ ?)+", text) and all(w in CSS_CLASSES or "-" in w for w in text.split()):
         return False  # "btn small primary": classes
     if re.match(r"^[#.\[/&]|^https?:|^\w+://|^--|^[a-z]+\(|^\$|^%|^@media", text):
+        return False
+    if re.search(r"AWS4-|x-amz-", text) or text == "Authorization":  # an S3 signature's parts
         return False
     if "{" in text and not re.search(r"\s", text):  # run={0}, {0}.wvd, S{0}E{1}: a key or a name, built
         return False
@@ -190,7 +192,7 @@ def extract(page: str) -> dict[str, list[str]]:
     return {t: holes.get(t, []) for t in sorted(found)}
 
 
-SERVER = ["sync.py", "web.py", "backend.py", "cdm.py", "cookies.py", "options.py", "push.py"]
+SERVER = ["sync.py", "web.py", "backend.py", "cdm.py", "cookies.py", "options.py", "push.py", "offsite.py"]
 
 
 def said(text: str) -> bool:
@@ -198,7 +200,7 @@ def said(text: str) -> bool:
     return wanted(text) and not re.fullmatch(r"[a-z]+[A-Z]\w*|[A-Z0-9_]+", text) and "\x1b" not in text
 
 
-NOT_TEXT = {"LAUNCHER", "SECURITY_HEADERS", "EXAMPLE_KEYS", "UPDATE_HEADERS"}  # the server's constants that hold code, not words
+NOT_TEXT = {"LAUNCHER", "SECURITY_HEADERS", "EXAMPLE_KEYS", "UPDATE_HEADERS", "TMDB_HEADERS", "SITES", "NETWORKS"}  # the server's constants that hold code, not words
 
 
 def server_texts(source: str) -> dict[str, list[str]]:
@@ -253,8 +255,18 @@ def server_texts(source: str) -> dict[str, list[str]]:
     return found
 
 
+def whole_page() -> str:
+    """The page as one file again: its stylesheet and its scripts (app.css, js/*.js) put back in place."""
+    page = PAGE.read_text()
+    page = page.replace('<link rel="stylesheet" href="/app.css">', f"<style>{(PAGE.parent / 'app.css').read_text()}</style>")
+    tags = re.findall(r'<script src="/js/([\w-]+\.js)"></script>\n?', page)
+    script = "".join((PAGE.parent / "js" / name).read_text() for name in tags)
+    page = re.sub(r'<script src="/js/[\w-]+\.js"></script>\n?', "", page)
+    return page.replace("</body>", f"<script>{script}</script>\n</body>", 1)
+
+
 def main():
-    texts = extract(PAGE.read_text())
+    texts = extract(whole_page())
     for name in SERVER:
         for text, holes in server_texts((ROOT / "unshacklarr" / name).read_text()).items():
             texts.setdefault(text, holes)

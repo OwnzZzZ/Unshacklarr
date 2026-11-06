@@ -10,7 +10,8 @@
 #   3. docker compose up -d (the first time, it builds unshackle serve), then open
 #      http://<this host>:8788. The setup code is in docker logs unshacklarr.
 #
-# Updating: docker compose pull && docker compose up -d for Unshacklarr; for Unshackle,
+# Updating Unshacklarr: docker compose pull unshacklarr && docker compose up -d --no-deps unshacklarr
+# (--no-deps leaves Unshackle and its downloads running). Unshackle, when nothing downloads:
 # docker compose build --pull unshackle && docker compose up -d.
 #
 # The downloads folder is mounted in both containers at the same path, /downloads.
@@ -49,9 +50,11 @@ services:
       - SONARR_URL=${SONARR_URL:-http://sonarr:8989}   # starting values: the setup and Settings take over
       - SONARR_DOWNLOADS=${SONARR_DOWNLOADS:-}
       - UNSHACKLE_CONFIG_DIR=/unshackle-config  # its cookies and CDMs, managed from Settings
+      - UNSHACKLE_TEMP_DIR=/unshackle-temp       # Unshackle's work folder: how far a mux is, in Activity
     volumes:
       - ./data:/data                           # config.yaml, history, caches
       - ./unshackle:/unshackle-config          # the same folder as Unshackle's: unshackle.yaml, Cookies, WVDs, PRDs
+      - ./unshackle-data/temp:/unshackle-temp:ro  # its temp: folder (directories: temp), read only
       - ${DOWNLOADS_DIR}:/downloads
     ports:
       - 8788:8788

@@ -1,0 +1,6741 @@
+{
+ "title": "Futurama",
+ "tvdb": 73871,
+ "show": {
+  "service": "DSNP",
+  "title": "https://www.disneyplus.com/browse/entity-85bf4cc1-cd8b-4469-ad87-7289217a0b74",
+  "season_map": {
+   "11": 14
+  },
+  "season_offset": 3,
+  "season_offset_from": 8,
+  "join_parts": false,
+  "sonarr_order": "official",
+  "release_time": "09:00"
+ },
+ "tmdb_key": true,
+ "country": "FR",
+ "inputs": {
+  "service": [
+   {
+    "type": "episode",
+    "name": "Spaciopilote 3000",
+    "id": "c3728d56-fbfc-4509-a16d-19857f8b1daa",
+    "language": "en",
+    "description": "Après une cryogénisation accidentelle, Fry se réveille à l'aube de l'an 3000. Avec l'aide de ses deux nouveaux amis, un robot dégénéré nommé Bender et une belle extra-terrestre cyclope nommée Leela, Fry refuse sa nouvelle assignation, livreur. Il retrouve son arrière-arrière-arrière-(...)-petit-neveu, le professeur Farnsworth, qui les engage tous les trois pour travailler dans son service de livraison intergalactique. C'est un monde nouveau qui s'ouvre devant Fry, et il va y vivre la plus grande aventure de sa vie.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "La série débarque",
+    "id": "c87f19c5-2632-43b4-86f4-7677f4f3cd5f",
+    "language": "en",
+    "description": "Après avoir livré un colis dans un parc d'attractions situé sur la Lune, Fry apprend à Leela à apprécier les corps célestes. Pendant ce temps, Bender entame une amourette robotique avec les filles d'un fermier, ce qui met tout l'équipage en danger.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 1,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Le Colocataire",
+    "id": "aad1926e-7a1d-41ce-afe9-8640eb376a23",
+    "language": "en",
+    "description": "Fry est tellement flemmard qu'il se voit contraint de quitter les locaux de Planet Express, mais l'amitié crée des couples étranges :  il emménage avec Bender et découvre les rouages de la vie avec un robot.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 1,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Victime de l’amour, perdue dans l’espace",
+    "id": "7882f85e-693d-4c19-a47e-3954dd5b7e6a",
+    "language": "en",
+    "description": "Dans le cadre d'une mission visant à sauver des animaux en voie de disparition d'une planète en plein effondrement, Leela, qui se sent seule, rencontre Zapp Brannigan, le légendaire capitaine de vaisseau spatial et (du moins selon lui) plus grand séducteur de l'univers.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 1,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Terreur sur la planète robot",
+    "id": "91858978-72d8-4132-9844-f883813b3b16",
+    "language": "en",
+    "description": "Alors que l'équipage livre un colis sur une planète habitée par des robots, où les humains sont tués instantanément, le mode de vie des robots monte à la tête de Bender et il doit choisir entre devenir une célébrité et sauver la vie de ses amis.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 1,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Cinquante Millions de dollars d’anchois",
+    "id": "261dd562-8a29-4dc5-90a8-b325085342b9",
+    "language": "en",
+    "description": "Fry découvre qu'il est milliardaire parce que ses économies ont accumulé 1 000 ans d'intérêts. Sous le coup de l'euphorie, il dilapide sa fortune pour acheter une boîte d'anchois non ouverte - une espèce éteinte depuis l'an 2200. Ce dont il n'a pas conscience, c'est que Maman, la dirigeante d'une mégamultinationale, est prête à tout - et même à utiliser la tête de Pamela Anderson - pour mettre la main sur ces anchois.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 1,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Trois Soleils",
+    "id": "672152cd-2bf1-4fe7-b10d-7931dad624a0",
+    "language": "en",
+    "description": "L'équipage se rend sur une planète habitée par des extraterrestres liquides. Après avoir livré un paquet sous la chaleur brûlante émise par leurs trois soleils, Fry trouve une bouteille de liquide bleu frais et décide d'étancher sa soif avec. Mais il s'avère que ce liquide est l'empereur de cette civilisation et que Fry vient de prendre sa place. D'abord ivre de pouvoir, il découvre rapidement que sa vie est en danger et doit se tourner vers ses amis.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 1,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "Un gros tas d’ordures",
+    "id": "da31ad99-26e7-4556-ace6-6c9e2d4a9073",
+    "language": "en",
+    "description": "Une gigantesque boule d'ordures négligemment larguée depuis la Terre au 21e siècle revient et se dirige droit sur New New York. Fry et l'équipage se lancent dans une mission de destruction.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 1,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "L'Enfer, c’est les autres robots",
+    "id": "e67dd49e-76cd-4840-a5c1-9f39a2d39352",
+    "language": "en",
+    "description": "Bender met son passé de pécheur derrière lui en rejoignant l'Église de Robotologie. Mais après être revenu à ses anciennes habitudes, il est envoyé dans l'enfer des robots où, dans un spectacle musical, il affronte le Diable Robot et subit des tortures inimaginables pour l'homme.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 1,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "Titanic 2",
+    "id": "12db85e8-e0e4-46cf-811b-2f424475b817",
+    "language": "en",
+    "description": "Le professeur Farnsworth offre à l'équipage du Planet Express des vacances à bord du vaisseau de croisière spatiale le plus grand et le plus luxueux jamais construit - le Titanic II. Une fois dans l'espace, il y a de l'amour dans l'air : Bender tombe amoureux d'une belle comtesse robot et Fry sort avec Leela et Amy. Le capitaine Zapp Brannigan met le cap sur l'aventure quand il décide de conduire le Titanic II à travers un essaim de comètes. Ou, comme il les appelle, \"les icebergs du ciel\".",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 2,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "L’Université martienne",
+    "id": "9a5fa0be-a931-4ee2-91c8-ef6f217fdf30",
+    "language": "en",
+    "description": "Fry retourne à l'université afin de prouver qu'il peut aussi bien décrocher au 21e siècle qu'au 20e. Le professeur Farnsworth lui présente un colocataire surprise, un singe super-intelligent. Pendant ce temps, Bender, une légende de la fraternité robotique Epsilon Rho Rho - \"ERR\" - organise la vengeance des robots intellos.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 2,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Omicron Persei 8 attaque",
+    "id": "b3f5fdee-e053-4e49-851f-8e284ef2932c",
+    "language": "en",
+    "description": "Les Omicroniens menacent de détruire la Terre s'ils ne peuvent pas voir le dernier épisode d'une série télévisée perdue du 20e siècle, \"Avocate et Célibataire\", mettant en scène une humaine célibataire qui porte des mini-jupes très courtes et lutte pour s'imposer dans un monde d'hommes. Comme le dernier épisode a été détruit quand quelqu'un ( Fry, évidemment) a renversé de la bière sur l'émetteur, l'équipe de Planet Express doit livrer sa version de \"Avocate et Célibataire\".",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 2,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Buvez du Slurm",
+    "id": "6576420f-bebe-427d-950b-509f7d7a2065",
+    "language": "en",
+    "description": "Fry découvre une capsule gagnante dans une canette de Slurm et gagne une visite de l'usine, à la Willy Wonka, où il pourra découvrir comment est fabriquée la boisson la plus addictive la plus délicieuse au monde. En s'éloignant du groupe, Fry découvre avec horreur la nature de l'ingrédient top-secret qui rend le \"Slurm\" aussi irrésistible.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 2,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Sentiments partagés",
+    "id": "28bdbb2a-1650-46f5-90a6-2ae2442ef8cf",
+    "language": "en",
+    "description": "L'équipage oblige Bender à porter une puce émotionnelle qui le permettra de ressentir la douleur de Leela, dont il a jeté l'animal de compagne, Nibbler, dans les toilettes. En cherchant Nibbler dans les égouts, l'équipe découvre une race de mutants.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 2,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "La Déchéance de Brannigan",
+    "id": "ce30483a-d12a-4fc6-9264-de69a4d9f07b",
+    "language": "en",
+    "description": "Zapp est déchu de son grade et trouve un emploi au sein de l'équipage du Planet Express, qu'il mobilise rapidement contre Leela,  puis il lance une attaque sur l'ambassade de la planète des neutres.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 2,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Fortes Têtes",
+    "id": "ae8c93cd-320c-4d20-982a-143ca5881c08",
+    "language": "en",
+    "description": "Le prix du titane atteint des sommets et Bender décide de laisser son corps, riche en titane, chez un prêteur sur gages et de vivre la belle vie... jusqu'à ce que la tête de Richard Nixon profite du corps du robot pour faire un retour en politique.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 2,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "Conte de Noël",
+    "id": "fb1ecc35-1f9c-480b-b428-9c6f0315bde1",
+    "language": "en",
+    "description": "Fry voudrait réconforter Leela, qui se sent seule pendant les fêtes de fin d'année, et sort lui acheter un cadeau extravagant la veille de Noël. Il est espionné par le père Noël robot vengeur, qui pense que tout le monde a été méchant.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 2,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "C'est si dur d’être un crustacé amoureux",
+    "id": "14ca4815-0611-45d5-948c-d911d78efcf2",
+    "language": "en",
+    "description": "Le docteur Zoidberg se montre agressif parce qu'il a besoin de retourner sur sa planète d'origine pour s'accoupler. La partenaire qu'il a choisie a un faible pour Fry, qui se retrouve obligé d'affronter Zoidberg dans un combat à mort.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 2,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "La Tête sur l'épaule",
+    "id": "73dc5fbf-bcb0-4d60-b103-ff4889a7f408",
+    "language": "en",
+    "description": "Fry et Amy \"se rapprochent\" quand ils tombent en panne d'essence près de Mercure mais Fry, phobique de l'engagement, a rapidement envie de rompre. Zoidberg détruit la voiture et \"sauve\" un Fry décapité en reliant sa tête au cou d'Amy, ce qui rend la Saint-Valentin très gênante quand ils sortent avec d'autres personnes.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 2,
+    "number": 10
+   },
+   {
+    "type": "episode",
+    "name": "Le Moins Pire des deux",
+    "id": "64c5c137-d5d3-4c17-a618-75991b437850",
+    "language": "en",
+    "description": "Lors d'une visite au Passérama, Fry rencontre un autre robot tordeur, Flexo, qui devient tout de suite ami avec Bender et se joint à l'équipage pour livrer un atome rare destiné à orner la tiare de la future Miss Univers.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 2,
+    "number": 11
+   },
+   {
+    "type": "episode",
+    "name": "Raging Bender",
+    "id": "18a9c578-5939-4534-9b3c-c0f828f03646",
+    "language": "en",
+    "description": "Bender rencontre un robot lutteur au cinéma et se laisse entraîner dans le monde douteux de la lutte robotique. Au début, il est le favori du public et enchaîne les victoires, mais sa popularité décline rapidement et le commissaire exige qu'il adopte une nouvelle personnalité, \"Bendermaphrodite\".",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 2,
+    "number": 12
+   },
+   {
+    "type": "episode",
+    "name": "Le Mariage de Leela",
+    "id": "9329c859-a331-4c67-affa-f7c41bdf3a53",
+    "language": "en",
+    "description": "Leela trouve un autre cyclope sur Internet. Elle visite son monde d'origine, où il commence par la courtiser avant de finir par profiter d'elle, jusqu'à ce que Fry décide de dénoncer son imposture.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 2,
+    "number": 13
+   },
+   {
+    "type": "episode",
+    "name": "L'Inspectrice de l’administration centrale",
+    "id": "2b741c17-8116-4628-bb36-fc533d6b7180",
+    "language": "en",
+    "description": "Hermès est obligé de prendre des vacances, et une bureaucrate encore plus coriace est affectée à Planet Express. Elle entame une liaison avec Fry mais quand Bender les voit ensemble, elle télécharge sa carte mémoire et l'envoie à l'administration centrale, où l'équipe doit s'aventurer pour sauver Bender.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 2,
+    "number": 14
+   },
+   {
+    "type": "episode",
+    "name": "Le Clone de Farnsworth",
+    "id": "07535de4-e856-41f8-9ee5-f401cd6de577",
+    "language": "en",
+    "description": "Le 150e anniversaire du professeur Farnsworth l'incite à désigner un successeur avant d'être emporté par les robots du Crépuscule. Il choisit son clone détestable, Cubert, mais le mépris de ce dernier pour les inventions pousse Farnsworth à appeler les robots du Crépuscule afin qu'ils viennent le chercher.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 2,
+    "number": 15
+   },
+   {
+    "type": "episode",
+    "name": "Le Sud profond",
+    "id": "122a0df1-5921-4b66-a462-ca55800695aa",
+    "language": "en",
+    "description": "Une sortie de pêche dégénère quand un poisson géant attrapé par Bender entraîne le bateau du Planet Express au fond de la mer, où ils découvrent la cité perdue d'Atlanta, et Fry tombe amoureux d'une belle sirène.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 2,
+    "number": 16
+   },
+   {
+    "type": "episode",
+    "name": "Bender s’affranchit",
+    "id": "ea97252f-b561-4070-a156-fe88990afef7",
+    "language": "en",
+    "description": "Bender travaille dans la cuisine d'Elzar et sert des robots mafieux, qui le \"transforment\" en l'un des leurs. Leur premier coup est la cargaison de cigares zubains du Planet Express. Bender sera-t-il capable de tirer sur ses propres copains ?",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 2,
+    "number": 17
+   },
+   {
+    "type": "episode",
+    "name": "Délicieux Enfants",
+    "id": "ce6af91c-91fd-43d0-925e-92a0c759eebb",
+    "language": "en",
+    "description": "Sur une planète lointaine, l'équipage tombe sur une délicieuse friandise qui remporte un grand succès dans un fast-food populaire. Leela découvre ensuite que les friandises sont en fait des bébés Omicroniens, et tente d'empêcher les gens de les manger avant que les Omicroniens ne viennent se venger.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 2,
+    "number": 18
+   },
+   {
+    "type": "episode",
+    "name": "Fête des mères",
+    "id": "bce9d643-0ca3-4d45-8155-d5076427c80f",
+    "language": "en",
+    "description": "Tous les robots de la Terre se rassemblent pour rendre hommage à leur créatrice, Maman, à l'occasion de la fête des Mères. Elle les exhorte à se révolter pour qu'elle puisse prendre le pouvoir sur le monde. La bande complote pour l'en empêcher en faisant entrer son vieux soupirant, Farnsworth, dans son soutien-gorge, où elle garde la télécommande qui envoie des ordres aux robots.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 2,
+    "number": 19
+   },
+   {
+    "type": "episode",
+    "name": "Histoires formidables !",
+    "id": "16995ca9-29a3-443c-b347-42f5d6b75e4e",
+    "language": "en",
+    "description": "L'Imagineur du professeur simule les souhaits de Bender, Leela et Fry : Bender se transforme en robot géant ; Leela tue ses amis de manière impulsive ; et le vice-président Al Gore, Stephen Hawking, Gary Gygax et Nichelle Nichols viennent à la rescousse quand Fry ouvre accidentellement une brèche dans le continuum espace-temps.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 2,
+    "number": 20
+   },
+   {
+    "type": "episode",
+    "name": "La Voiture-Garoute",
+    "id": "1fcd296b-30b6-4389-934a-dccebbc91f5a",
+    "language": "en",
+    "description": "Bender hérite d'un château de son oncle décédé et se retrouve maudit par une voiture-garoute, ce qui l'oblige à écraser son meilleur ami. Fry est vexé de découvrir que ce meilleur ami est en fait Leela.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 3,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "La Guerre c'est l'enfer",
+    "id": "ab2475a0-278b-4838-a9b7-82f436874ced",
+    "language": "en",
+    "description": "Bender et Fry s'engagent dans l'armée pour bénéficier de la réduction de 5 % sur leurs achats, puis la guerre est déclarée et ils doivent partir au combat. Leela se déguise en homme, ce qui fait naître d'étranges sentiments chez le général Zapp Brannigan.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 3,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "La Femme cryonique",
+    "id": "54dcf204-65a8-421d-8383-7e1fab38d365",
+    "language": "en",
+    "description": "Bender et Fry se font virer après avoir pris le vaisseau de Planet Express pour aller faire un tour, et Fry obtient l'ancien poste de Leela : conseiller auprès des patients décryogénisés. Il décongèle son ancienne petite amie, Michelle, qui est horrifiée par le 30e siècle et insiste pour qu'ils se congèlent ensemble jusqu'au 40e siècle.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 3,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Parasites perdus",
+    "id": "fb39a287-47c3-42aa-9a11-52735ac6e144",
+    "language": "en",
+    "description": "Fry mange un vieux sandwich à la salade d'œufs trouvé dans les toilettes pour hommes d'une aire de repos et devient infesté de vers intelligents qui le rendent plus fort et plus futé. Le nouveau Fry amélioré profite de ses compétences pour faire la cour à Leela pendant que des versions miniaturisées de l'équipage du Planet Express voyagent dans le corps de Fry afin de combattre les vers.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 3,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Amazones amoureuses",
+    "id": "0fef068a-a016-4e90-b376-1a3284a79ccd",
+    "language": "en",
+    "description": "Bender, Fry et l'équipage échouent sur Amazonia, une planète peuplée uniquement de femmes gigantesques et bien proportionnées. Sous le commandement de la puissante Ordinatrice, les Amazones menacent de tuer leurs visiteurs masculins... au moyen d'une attaque amoureuse fatale.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 3,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Bender est amoureux",
+    "id": "f922ab10-a1e9-4578-8bbf-c1724b3980e4",
+    "language": "en",
+    "description": "Incapable de combattre son besoin inné de plier des objets (et des personnes), Bender retourne travailler à l'usine Girder-Bender, où il tombe amoureux d'Angéline, une femme robot plieuse. Mais il doit se battre contre le robot Flexo, son sosie, pour obtenir son affection.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 3,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Le jour où la Terre devint stupide",
+    "id": "132cd918-55d3-4ebb-a281-186377df69ef",
+    "language": "en",
+    "description": "L'adorable animal de compagnie extraterrestre de Leela, Nibbler, prouve qu'il n'est pas aussi bête qu'il en a l'air : il emmène Leela sur sa planète d'origine et lui demande de lui venir en aide dans une bataille épique contre le vieil ennemi de l'univers : l'armée des cervelles volantes.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 3,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "Zoidberg à Hollywood",
+    "id": "a68cde81-bf3d-4f7b-bdfe-eb2766cd2e1b",
+    "language": "en",
+    "description": "L'amour du docteur Zoidberg pour la comédie entraîne l'équipe du Planet Express dans un voyage vers le futur Hollywood, où Zoidberg s'associe à Harold Zoid, son oncle, une star oubliée de l'ère des hologrammes muets. Avec l'aide de Fry, de Bender et de Leela, ils tentent de réaliser un film.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 3,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "L'Évadé de Glace-Catraz",
+    "id": "3f7033f8-8d16-41ad-9548-4482a0cdf240",
+    "language": "en",
+    "description": "Leela se joint aux manifestants opposés au remorquage d'un supertanker pétrolier vers une raffinerie par le Planet Express, désormais (médiocrement) commandé par Bender.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 3,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "Le Trèfle à sept feuilles",
+    "id": "3eaf9a60-bd1e-491a-b7c8-f8c3f1d66a48",
+    "language": "en",
+    "description": "Dans une intrigue qui s'étend sur 1000 ans, Fry part à la recherche du trèfle à sept feuilles qu'il possédait dans un lointain passé, mais il finit par découvrir des informations bouleversantes sur le frère qu'il a laissé derrière lui.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 3,
+    "number": 10
+   },
+   {
+    "type": "episode",
+    "name": "Les Orphelins",
+    "id": "b1c3cec6-b82e-4aad-b23d-650fff52fd98",
+    "language": "en",
+    "description": "Leela se rend à une réunion de l'orphelinarium où elle a grandi et craque pour Adlai, un autre orphelin devenu médecin depuis. Il opère Leela pour lui implanter un deuxième œil. Pendant ce temps, Bender adopte douze orphelins afin de percevoir des aides du gouvernement.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 3,
+    "number": 11
+   },
+   {
+    "type": "episode",
+    "name": "Vol au-dessus d'un nid de robots",
+    "id": "981800bd-9329-400b-86f6-dad745b73b39",
+    "language": "en",
+    "description": "Fry et Bender participent involontairement à un braquage de banque et sont condamnés à vivre dans un asile pour robots fous, où Fry finit par croire qu'il est bel et bien un robot.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 3,
+    "number": 12
+   },
+   {
+    "type": "episode",
+    "name": "Bender casse la baraque",
+    "id": "97f95bef-4259-402b-b0ea-26ad4b401c2a",
+    "language": "en",
+    "description": "Quand Bender se retrouve paralysé après un terrible accident impliquant un ouvre-boîte, la tête préservée de Beck, le célèbre musicien, vient à son secours. Ils se lancent dans une tournée musicale qui se termine par un concert de bienfaisance pour les robots cassés, un duo musical émouvant réunissant Beck et Bender, et une course-poursuite en aéroglisseur à travers le San Francisco du futur.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 3,
+    "number": 13
+   },
+   {
+    "type": "episode",
+    "name": "Les Dérapages du temps",
+    "id": "df27269b-e1b4-4ad4-bf77-5ff1c6c94240",
+    "language": "en",
+    "description": "Les Harlem Globetrotters atterrissent sur Terre dans leur soucoupe et défient l'humanité dans un match de basket. Les Supermutants du professeur les affrontent, mais quelque chose dérape et le temps commence à sauter. Dans une lutte désespérée pour restaurer le cours normal du temps, Fry réussit à amener Leela devant l'autel.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 3,
+    "number": 14
+   },
+   {
+    "type": "episode",
+    "name": "Je sors avec un robot",
+    "id": "fc70c51e-6c39-49bf-8935-c927962fc1e2",
+    "language": "en",
+    "description": "Fry télécharge une copie illégale de l'actrice Lucy Liu sur Internet, et ils entament une relation passionnée. Cependant, il s'avère que la véritable Lucy Liu est retenue en otage par le site web (\"Kidnappster\") et doit être sauvée. Une armée de robots tueurs à l'image de Lucy Liu se met en travers du chemin de l'équipe.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 3,
+    "number": 15
+   },
+   {
+    "type": "episode",
+    "name": "Tout se termine bien à Roswell",
+    "id": "cae3f0eb-5230-4b50-a26b-c6634b2fb7a2",
+    "language": "en",
+    "description": "Après un accident, le vaisseau remonte dans le temps et s'écrase en 1947, à Roswell, au Nouveau-Mexique. La population craint que des extraterrestres ne soient arrivés.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 4,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Le Conte des deux pères Noël",
+    "id": "c4474b43-99fa-4737-93b7-21892f263fae",
+    "language": "en",
+    "description": "Le méchant robot père Noël est de retour. Cette fois, l'équipe de Planet Express décide de le vaincre une fois pour toutes. Après l'avoir mis hors service, Bender prend en charge la livraison des cadeaux dans le monde entier et la tâche s'avère bien plus dangereuse que prévu.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 4,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Histoires formidables 2",
+    "id": "a3a5a3da-1ed6-4363-9524-b5e5b86dda1a",
+    "language": "en",
+    "description": "Le Professeur peaufine la machine qu'il vient d'inventer : Bender découvre ce qui se passerait s'il était humain, Fry découvre ce qui se passerait si la vie ressemblait davantage à un jeu vidéo et Leela découvre ce qui se passerait si elle trouvait son vrai foyer.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 4,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Un amour de vaisseau",
+    "id": "809079d0-0e7d-42ae-bba0-56314f6aec1c",
+    "language": "en",
+    "description": "Après avoir décroché un contrat lucratif, le Professeur modernise le vaisseau de Planet Express en lui donnant une nouvelle voix qui émoustille Bender. Le robot est tellement séduit qu'il se met à chatouiller les commandes du vaisseau pour l'entendre rire, ce qui provoque un dysfonctionnement. Le vaisseau et le robot deviennent rapidement inséparables, mais Bender se lasse aussi vite qu'il s'est attaché et choisit un moment particulièrement inopportun pour annoncer qu'ils feraient mieux de \"se contenter de rester amis\". Mais comme l'ordinateur de 2001 : L'Odyssée de l'espace, le vaisseau a son propre avis sur la question.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 4,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Retrouvailles",
+    "id": "72510457-caae-4565-aa29-43879b23b92f",
+    "language": "en",
+    "description": "L'équipe de Planet Express fête une grande nouvelle : Leela est récompensée du prix d'Orpheline de l'année par l'orphelinarium où elle a grandi. Elle est ravie de cet honneur, mais avoue ensuite à Fry que son souhait le plus cher est de fêter ce succès avec ses parents. Plus tard, Leela, Fry et Bender sont capturés par des mutants parce que Bender a déversé des déchets toxiques dans les égouts.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 4,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Buggalos en vadrouille",
+    "id": "ed96b295-a385-4c4b-8f1b-bf9990cd8a5a",
+    "language": "en",
+    "description": "Amy amène son petit ami Kif chez elle pour le présenter à sa famille qui possède le ranch Wong sur Mars, mais les parents d'Amy ne sont pas convaincus par Kif et essaient de séparer le couple en organisant une fête peuplée de séduisants célibataires. Après des mésaventures, Kif finit par retrouver leur troupeau de buggalos perdus et sauve Amy, qui avait été enlevée, mais les parents de cette dernière refusent toujours de l'accepter.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 4,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "La Huitième plaie",
+    "id": "68a15799-e175-4051-a580-6107e5da486d",
+    "language": "en",
+    "description": "Alors qu'ils livrent un énorme bloc de grès, Fry, Leela et Bender sont contraints de travailler comme esclaves pour contribuer à l'achèvement de la pyramide du grand pharaon Hamenthotep. En travaillant sur les statues, Bender tue innocemment le pharaon avec une pierre, puis dupe tout le monde en faisant croire qu'il est son successeur désigné.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 4,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "La Preuve par Dieu",
+    "id": "a04406a4-df6f-4088-b9db-53efb3fcf355",
+    "language": "en",
+    "description": "Bender se fait accidentellement propulser dans les cieux et devient le dieu d'une race de minuscules extraterrestres. Son échec à ce poste l'amène à rencontrer le véritable tenant du rôle.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 4,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "OPA sur PME",
+    "id": "29f61301-d83e-41e5-b8b1-bbf4025e582c",
+    "language": "en",
+    "description": "Fry rencontre Steve Castle, un loup de Wall Street des années 1980 qui s'était fait cryogéniser, et le nomme au poste de PDG de la société. Castle finit par vendre Planet Express et licencie tous les employés. La bande doit alors tout faire pour reprendre le contrôle de l'entreprise et retrouver son emploi.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 4,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "La Victoire en lançant",
+    "id": "b854c0a0-248b-4941-8f51-cb4f60c2e52b",
+    "language": "en",
+    "description": "Leela devient la première joueuse féminine dans une ligue majeure de blernsball et se considère comme une pionnière pour les femmes qui pratiquent ce sport.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 4,
+    "number": 10
+   },
+   {
+    "type": "episode",
+    "name": "Le Chef de fer à 30 %",
+    "id": "660e5b1c-b017-4031-95fa-585f90311b79",
+    "language": "en",
+    "description": "Après avoir vu toute l'équipe de Planet Express se mettre à la recherche d'un antidote après avoir goûté ses expériences culinaires, Bender s'enfuit et rencontre Helmut Spargel, un ancien chef cuisinier célèbre. Helmut prend Bender sous son aile et le forme à la gastronomie. Quand le dîner de Bender tue indirectement Helmut, Bender affronte Elzar, l'ancien rival d'Helmut, dans un défi de cuisine.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 4,
+    "number": 11
+   },
+   {
+    "type": "episode",
+    "name": "Là où aucun fan n'est allé",
+    "id": "fcfa81ab-629b-4abb-ba4e-34deeb5be51d",
+    "language": "en",
+    "description": "Dans cet épisode, les membres du casting original de Star Trek parodient leur série et ses fidèles adeptes. Après avoir appris que la série avait été interdite sur Terre au 23e siècle - les dirigeants mondiaux trouvant l'engouement pour Star Trek trop menaçant - Fry est déterminé à récupérer les bandes des épisodes qui ont été envoyées sur une planète défendue. L'équipe se rend sur Omega 3, où Fry doit affronter un être qui affirme être le Trekker suprême.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 4,
+    "number": 12
+   },
+   {
+    "type": "episode",
+    "name": "Gaz à tous les étages",
+    "id": "43683a2d-9ed5-422a-a285-34a73391285e",
+    "language": "en",
+    "description": "Alors que la Terre est menacée par le réchauffement climatique, l'équipage assiste à une conférence organisée par la tête d'Al Gore à Kyoto. Il s'avère que le réchauffement de la Terre est dû aux émissions des robots et la tête de Richard Nixon décide de tous les éliminer, y compris Bender.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 5,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Ceux qui m'aiment prendront le chien",
+    "id": "50a73085-96f5-4e5f-88c9-faad5e969f56",
+    "language": "en",
+    "description": "Bender est rongé par la jalousie : Fry a appris que le clonage pourrait bien lui permettre de retrouver son chien du 20e siècle.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 5,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "La Livraison du plus fort",
+    "id": "cb619017-7286-46c1-9d86-e788b738bd09",
+    "language": "en",
+    "description": "Cubert et Dwight lancent un service de livraison qui se développe rapidement grâce à des pratiques commerciales douteuses. Pendant ce temps, Leela, Fry et Bender essaient de fabriquer leur propre bière en mélangeant les ingrédients dans le corps de Bender.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 5,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Le Goût de la liberté",
+    "id": "899b54ee-34e1-47c5-b96b-8bf93c5da3a1",
+    "language": "en",
+    "description": "À l'occasion de la Journée de la liberté, le docteur Zoidberg mange le drapeau de la Terre, ce qui lui vaut d'être condamné à mort. En représailles, les Décapodiens asservissent le monde entier.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 5,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Kif et le Polichinelle dans le tiroir",
+    "id": "007b38e0-cef6-43df-92f8-9e8407ba4306",
+    "language": "en",
+    "description": "Amy profite d'une livraison pour détourner le vaisseau de Planet Express et rejoindre son Kif bien-aimé. Cette aventure se termine par une grossesse… chez Kif.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 5,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Astéroïque",
+    "id": "f73831b0-6f22-4ac1-8c7b-acc29d9aa4e2",
+    "language": "en",
+    "description": "Fry et Leela découvrent une mystérieuse crème antidouleur qui leur donne des pouvoirs insolites et ils forment une équipe de superhéros avec Bender.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 5,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Un sacré coup de jeune",
+    "id": "fc180a6c-92d6-44ef-a4bd-fac1775b4e1c",
+    "language": "en",
+    "description": "L'équipage de Planet Express est exposé à une substance qui transforme tout le monde en adolescent. Le Professeur tente de remédier à ce problème, mais il ne fait qu'empirer les choses.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 5,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "Fry : Le Pourquoi du comment",
+    "id": "e8518141-eec4-4e02-a81f-4866dd23406c",
+    "language": "en",
+    "description": "La relation de Leela avec l'assistant du maire plonge Fry dans une profonde crise de dévalorisation, jusqu'à ce qu'il apprenne qu'il constitue la clé pour sauver l'univers de la destruction en raison d'une anomalie génétique.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 5,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "Le Dard",
+    "id": "621ecec7-ad03-42ec-bcc0-4981120fa8cf",
+    "language": "en",
+    "description": "Le professeur envoie Leela, Bender et Fry accomplir une mission dangereuse et potentiellement mortelle : ils doivent collecter du miel gardé par des abeilles tueuses aussi grosses qu'une voiture. Après avoir été piquée par l'une des abeilles, Leela entreprend un long et étrange voyage.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 5,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "Le Bon, la Boîte et l'Ahuri",
+    "id": "f3a9da98-990f-4b3c-b0da-0de6334b2f97",
+    "language": "en",
+    "description": "L'équipage du vaisseau de Planet Express se rend dans un univers parallèle qui leur a été rendu accessible par la dernière expérience du professeur Farnsworth…",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 5,
+    "number": 10
+   },
+   {
+    "type": "episode",
+    "name": "La Cagnotte de la soie",
+    "id": "9c3eb48a-3258-4dfa-9aef-aa77cc5b88aa",
+    "language": "en",
+    "description": "Une remise d'impôts de 300 dollars permet d'acheter une baignade avec un cachalot pour Leela, une nouvelle jeunesse pour le Professeur et 100 tasses de café pour Fry, dont la soif de caféine arrive juste à temps pour éviter une catastrophe.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 5,
+    "number": 11
+   },
+   {
+    "type": "episode",
+    "name": "La Trompe humaine",
+    "id": "c6787a04-a156-4e22-93d6-7d802c5641eb",
+    "language": "en",
+    "description": "Le nez de Fry est volé par des extraterrestres qui voient la \"trompe humaine\" comme un aphrodisiaque. Mais le couple auquel il est destiné rencontre de graves problèmes relationnels.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 5,
+    "number": 12
+   },
+   {
+    "type": "episode",
+    "name": "L'homme est une femme formidable",
+    "id": "ef42b527-5de1-4c4e-b97a-7e705947fb09",
+    "language": "en",
+    "description": "Pendant les Jeux olympiques de 3004, Bender comprend avec horreur qu'il ne pourra pas rivaliser avec les robots tordeurs de machinerie lourde. En remplacement, Bender se déguise en Coilette, un robot féminin de Robonia, et décroche facilement cinq médailles d'or. Après l'annonce des tests de genre pour tous les médaillés, Bender oblige le professeur à lui faire une opération de changement de sexe.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 5,
+    "number": 13
+   },
+   {
+    "type": "episode",
+    "name": "Obsoletely Fabulous",
+    "id": "88fe070e-0ee5-4451-8aef-ffa4d6a8aa56",
+    "language": "en",
+    "description": "Après avoir été choqué par un nouveau robot, Bender préfère s'enfuir plutôt que de subir une mise à jour qui lui permettrait d'être à la pointe de la technologie.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 5,
+    "number": 14
+   },
+   {
+    "type": "episode",
+    "name": "Censurez Bender",
+    "id": "32f59a62-ee4e-4bca-90ca-bc24e7052f81",
+    "language": "en",
+    "description": "All My Circuits annonce la tenue d'un casting ouvert aux enfants robots et destiné à trouver un remplaçant à Antonio, le fils de Calculon à l'écran. Bender décide qu'il est parfait pour le rôle et assiste à l'audition. Il décroche le rôle et remporte un succès immédiat, mais les parents dénoncent son influence néfaste sur les enfants.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 5,
+    "number": 15
+   },
+   {
+    "type": "episode",
+    "name": "La Main du Diable dans la culotte d'un Zouave",
+    "id": "2a30b8da-3976-430f-944d-437cc7144005",
+    "language": "en",
+    "description": "Fry conclut un accord avec le Diable Robot : il veut devenir un musicien talentueux et conquérir le cœur de Leela.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 5,
+    "number": 16
+   },
+   {
+    "type": "episode",
+    "name": "La Grande Aventure de Bender, première partie",
+    "id": "d18c6d82-c220-4192-845b-9fa403d2cd2c",
+    "language": "en",
+    "description": "Fry apprend qu'il a un tatouage de Bender composé de zéros et de uns microscopiques. Lorsqu'il est lu à haute voix, il révèle un code permettant de créer une sphère temporelle. Bender est soumis à un contrôle mental par les nouveaux propriétaires de Planet Express.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 6,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "La Grande Aventure de Bender, deuxième partie",
+    "id": "77c8482d-d4b0-4ccd-8b15-106eb91db061",
+    "language": "en",
+    "description": "Bender aide les extraterrestres à voler des trésors historiques, l'histoire d'amour entre Lars et Leela décolle, et Fry, le cœur brisé, retourne en l'an 2000, poursuivi par un Bender meurtrier.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 6,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "La Grande Aventure de Bender, troisième partie",
+    "id": "de12d3d6-9360-420f-8ac6-1821bcd7dbe4",
+    "language": "en",
+    "description": "Pendant que Leela et Lars préparent leur mariage, on apprend ce qui est arrivé à Fry à son retour au 21e siècle.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 6,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "La Grande Aventure de Bender, quatrième partie",
+    "id": "d0855644-c96b-49de-8073-608712baba64",
+    "language": "en",
+    "description": "Des escrocs extraterrestres achètent la planète et bannissent ses habitants sur Neptune, ce qui provoque une bataille intergalactique pour le contrôle de la Terre.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 6,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Le Monstre au milliard de tentacules, première partie",
+    "id": "411d59fb-84da-4804-97af-a1049c0c72be",
+    "language": "en",
+    "description": "Fry rencontre un extraterrestre géant à tentacules qui profite d'une déchirure dans l'univers pour concrétiser ses intentions amoureuses à l'égard des habitants de la Terre. Pendant ce temps, Bender rencontre Calculon, son héros, et rejoint la Ligue des robots.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 6,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Le Monstre au milliard de tentacules, deuxième partie",
+    "id": "71fb364c-e5f6-4b0a-b1f8-e4f20db4193c",
+    "language": "en",
+    "description": "Zapp dirige une attaque militaire contre l'anomalie. Fry, le cœur brisé, décide de quitter l'univers. L'obsession de Bender pour la Ligue des robots porte ses fruits.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 6,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Le Monstre au milliard de tentacules, troisième partie",
+    "id": "bf862005-1306-4501-b3d0-7baad78e8ace",
+    "language": "en",
+    "description": "Le monde regarde le ciel avec terreur tandis que des milliards de tentacules émergent de l'anomalie. Leela, Amy et Zapp sont les seuls à résister, et Bender est désabusé par la Ligue des robots.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 6,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "Le Monstre au milliard de tentacules, quatrième partie",
+    "id": "09dfa674-cba4-4586-9fa9-e4ba640fb012",
+    "language": "en",
+    "description": "Tous les habitants de l'univers vivent heureux avec Yivo, à l'exception de Leela, qui reste sceptique. Les êtres humains manquent à Bender, qui se met aux commandes d'un vaisseau pirate robot pour aller les chercher.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 6,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "Prenez garde au seigneur des robots ! Première partie",
+    "id": "8c309f15-94e2-46ca-823e-f17f6e6fd027",
+    "language": "en",
+    "description": "Devant la flambée des prix du carburant, l'équipage de Planet Express se lance dans une mission dangereuse : infiltrer la seule mine de matière noire du monde, la source de tout le carburant des vaisseaux spatiaux. Mais un lieu bien plus étrange se cache sous la surface : une terre médiévale peuplée de dragons, de sorciers et de chevaliers éméchés qui ressemblent à s'y méprendre à Bender. Garez  votre aéroglisseur et sellez votre licorne pour la plus grande aventure de Futurama.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 6,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "Prenez garde au seigneur des robots ! Deuxième partie",
+    "id": "26737366-bed0-47e6-a828-2b00b7df71c4",
+    "language": "en",
+    "description": "Les médecins ne parviennent pas à communiquer avec Bender et ordonnent une robotomie. Farnsworth, Leela et Fry s'infiltrent dans la mine de matière noire de Maman.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 6,
+    "number": 10
+   },
+   {
+    "type": "episode",
+    "name": "Prenez garde au seigneur des robots ! Troisième partie",
+    "id": "7f5b2bc7-54e6-4574-af49-f7628d524596",
+    "language": "en",
+    "description": "Pendant que Bender se fait robotomiser à l'asile des robots, Farnsworth, Leela et Fry le rejoignent dans son monde médiéval imaginaire, Donjons et Dragons.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 6,
+    "number": 11
+   },
+   {
+    "type": "episode",
+    "name": "Prenez garde au seigneur des robots ! Quatrième partie",
+    "id": "0b6fc18a-556b-45a0-8fc9-51f10ca74b2b",
+    "language": "en",
+    "description": "Quand Farnsworth et la bande atteignent la tanière de Momon, une bataille acharnée s'ensuit pour récupérer l'anti-cristal mais l'amour finit finalement par s'imposer face au mal.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 6,
+    "number": 12
+   },
+   {
+    "type": "episode",
+    "name": "Vous prendrez bien un dernier vert ? Première partie",
+    "id": "b9af148d-29a7-43c7-a939-60f03fba36bc",
+    "language": "en",
+    "description": "À Mars Vegas, Fry acquiert le pouvoir de lire dans les pensées et participe à un tournoi de poker. Pendant ce temps, Bender a une liaison avec l'épouse de Donbot, une showgirl.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 6,
+    "number": 13
+   },
+   {
+    "type": "episode",
+    "name": "Vous prendrez bien un dernier vert ? Deuxième partie",
+    "id": "33603f5b-d2aa-425e-9401-b7e54eab9381",
+    "language": "en",
+    "description": "Leela rejoint un groupe d'écoféministes pour empêcher Leo Wong de construire un mini-golf galactique. Fry en apprend plus sur son nouveau pouvoir et il est chargé de sauver l'univers.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 6,
+    "number": 14
+   },
+   {
+    "type": "episode",
+    "name": "Vous prendrez bien un dernier vert ? Troisième partie",
+    "id": "d1e58ae0-68bd-4c32-94e7-c9b4ad2c7e64",
+    "language": "en",
+    "description": "Fry travaille pour Wong sous couverture, mais ne peut pas dire à Leela qu'il est en réalité de son côté. Zapp, Kiff et Bender essaient de capturer les Féministas et Fry apprend l'existence des Esprits maléfiques et des Encyclopodes.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 6,
+    "number": 15
+   },
+   {
+    "type": "episode",
+    "name": "Vous prendrez bien un dernier vert ? Quatrième partie",
+    "id": "47095c7b-1247-4459-bf79-ef10e9c67744",
+    "language": "en",
+    "description": "Leela, Amy et les autres Féministas sont jugées pour avoir tenté de sauver l'Étoile du nain violet et son précieux écosystème. Fry (qui a gagné la confiance de Wong et infiltré son organisation) se voit contraint, sur ordre du grand conservateur, de témoigner contre elles devant la Cour suprême de la Terre.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 6,
+    "number": 16
+   },
+   {
+    "type": "episode",
+    "name": "Renaissance",
+    "id": "6582b922-1150-4b3d-98cc-b1bc1da56139",
+    "language": "en",
+    "description": "L'avenir de l'équipe de Planet Express repose entièrement sur le professeur, qui utilise en dernier recours une machine à ressusciter non testée après qu'une catastrophe s'est produite dans l'espace.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 7,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Innocence perdue",
+    "id": "bd3a1081-0a86-44c4-a4a5-d8a1ea1e9b9a",
+    "language": "en",
+    "description": "Leela et Zapp Brannigan se retrouvent bloqués sur une planète qui ressemble au jardin d'Eden.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 7,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "L'Attaque des portables",
+    "id": "7537f9e5-74d0-4774-b183-fda6af539508",
+    "language": "en",
+    "description": "La Terre est envahie par une nouvelle tendance qui consiste à faire du réseautage social et à ne pas avoir de vie, et Fry met une vidéo gênante de Leela en ligne.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 7,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Mariages interdits",
+    "id": "bf170957-8a47-4be0-aabc-c25367b3b5dd",
+    "language": "en",
+    "description": "Bender mène une campagne visant à légaliser le mariage robosexuel entre les humains et les robots.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 7,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Sciences idiotes",
+    "id": "aa5017ef-9080-4f0d-b32b-ebad9c1f1bce",
+    "language": "en",
+    "description": "L'équipage part pour la Rome du futur afin de découvrir le secret bouleversant de Léonard de Vinci.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 7,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Inspection mortelle",
+    "id": "4666d14c-aaa3-40cb-a9ab-09b13ea5a259",
+    "language": "en",
+    "description": "Bender apprend qu'il souffre d'un défaut de fabrication mortel.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 7,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Retour vers les futurs",
+    "id": "deca4747-1dd2-4857-9956-0a7319768483",
+    "language": "en",
+    "description": "Le Professeur invente une machine à voyager dans le temps à sens unique qui emmène l'équipage encore plus loin dans le futur, sans aucun espoir de retour.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 7,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "Les Chats savants",
+    "id": "940aaad3-874f-463f-83b1-0b213cc84317",
+    "language": "en",
+    "description": "La Terre est envahie par une race de félins intelligents.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 7,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "Origines mécaniques",
+    "id": "c2f7b35f-d8b0-4be6-8aca-8352faf0c3bf",
+    "language": "en",
+    "description": "La théorie de l'évolution est mise à l'épreuve sur une planète habitée par des robots.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 7,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "Le Prisonnier de Benda",
+    "id": "c4c99ba0-213f-4f8f-9245-edc45c1c4232",
+    "language": "en",
+    "description": "Les membres de l'équipage peuvent échanger leurs esprits grâce à un gadget de pointe.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 7,
+    "number": 10
+   },
+   {
+    "type": "episode",
+    "name": "Différences insurmontables",
+    "id": "c1705ad3-332c-485b-a3b6-d312ce7ef207",
+    "language": "en",
+    "description": "Après avoir manqué son invasion de la Terre, le leader extraterrestre Lrrr traverse une crise existentielle.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 7,
+    "number": 11
+   },
+   {
+    "type": "episode",
+    "name": "Les Mutants révoltants",
+    "id": "f04e4460-dd2d-4a34-bf70-ad3189d9628e",
+    "language": "en",
+    "description": "Leela dirige une armée de mutants souterrains dans une rébellion contre les habitants de la surface.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 7,
+    "number": 12
+   },
+   {
+    "type": "episode",
+    "name": "L'Épisode incroyable",
+    "id": "bda2a80d-f120-4fd8-bcf3-9a18eeaff219",
+    "language": "en",
+    "description": "Dans cet épisode festif en trois parties, l'équipe de Planet Express se démène pour préserver les pratiques traditionnelles des fêtes de Noël, Robanoukah et Kwanzaa. En chemin, ils rencontrent le sanguinaire Kringlebot, la tête d'Al Gore, des pins mutants, des droïdls, des robots féminins qui s'adonnent à la lutte, des vers à bosse albinos, des Kwanzaabots et des abeilles géantes de l'espace, tout en découvrant le véritable sens qui se cache derrière ces fêtes... avec une chanson de temps en temps.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 7,
+    "number": 13
+   },
+   {
+    "type": "episode",
+    "name": "Benderama",
+    "id": "817f5781-554b-4ca1-a494-0e1c6927fbdb",
+    "language": "en",
+    "description": "Le professeur Farnsworth invente une machine de duplication capable de créer deux copies plus petites de n'importe quoi. Bender en profite pour créer des copies de lui-même qui feront son travail à sa place. Cependant, ses copies s'avèrent tout aussi peu disposées à travailler que lui... et tout aussi désagréables. Les Bender continuent à se reproduire, formant toute une société de Bender de plus en plus minuscules... et menacent de consommer toute la matière présente sur Terre et d'envahir complètement la planète.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 8,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "La Guerre des sexes",
+    "id": "c4a588f5-c7d7-493e-8d8d-03d8046aa871",
+    "language": "en",
+    "description": "Les membres de l'équipage du Planet Express rencontrent un extraterrestre étrange doté d'un pouvoir particulier : il est capable de changer leurs caractéristiques sexuelles.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 8,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Un fantôme dans les machines",
+    "id": "3e9b05fa-0344-46f2-bb54-f4132bfb1d51",
+    "language": "en",
+    "description": "À la mort de Bender, son système d'exploitation désincarné commence à hanter les locaux de Planet Express.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 8,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "La Loi et l'Oracle",
+    "id": "27442a35-c44b-4dcc-8f2d-32d94371f8ad",
+    "language": "en",
+    "description": "Fry quitte son emploi et devient officier de police affecté à la division des crimes futurs.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 8,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Le Silence des robots",
+    "id": "e21fb6f9-0e52-4b2c-92da-adc68ccb0e6c",
+    "language": "en",
+    "description": "Après avoir témoigné contre la mafia des robots, Bender bénéficie du programme de protection des témoins et part se cacher.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 8,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Leela raconte des histoires",
+    "id": "26b59c52-cfe6-4825-8e58-e8a21e8cc6e2",
+    "language": "en",
+    "description": "Leela crée une série télévisée pour enfants qui remporte un succès phénoménal et elle devient une vedette à Hollywood.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 8,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Les Têtes des présidents",
+    "id": "6c7754b7-c3a6-41e6-b626-b0d48541f7ef",
+    "language": "en",
+    "description": "Les membres de l'équipage remontent le temps jusqu'à la Révolution américaine et modifient le cours de l'histoire.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 8,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "Obsession",
+    "id": "7fe2b33f-a670-4d4b-a056-61a974201cb8",
+    "language": "en",
+    "description": "Leela devient obsédée par la chasse d'une mystérieuse baleine de l'espace en quatre dimensions.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 8,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "On ne fait pas d'omelette sans casser des œufs",
+    "id": "054750dd-f86d-45d1-a1ed-17ff492dadec",
+    "language": "en",
+    "description": "Fry prend soin d'un œuf extraterrestre qui contient un horrible monstre.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 8,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "La Pointe de Zoidberg",
+    "id": "fccafa89-7251-4521-9f07-1d885aac786d",
+    "language": "en",
+    "description": "L'équipage découvre un sombre secret concernant une mission secrète entreprise par le professeur Farnsworth et le docteur Zoidberg, il y a de nombreuses années.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 8,
+    "number": 10
+   },
+   {
+    "type": "episode",
+    "name": "Le Concours de la NASA",
+    "id": "0ceba93d-255f-42a4-a5ec-7408eb271fd5",
+    "language": "en",
+    "description": "Fry a le malheur d'éternuer et réintroduit ainsi le rhume dans le monde du futur. Les conséquences sont dévastatrices.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 8,
+    "number": 11
+   },
+   {
+    "type": "episode",
+    "name": "Optimisanthrope",
+    "id": "849ef4f1-ee95-408c-89f1-f4420e65ceb8",
+    "language": "en",
+    "description": "Bender se transforme en un être presque divin après avoir considérablement augmenté la puissance de son processeur.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 8,
+    "number": 12
+   },
+   {
+    "type": "episode",
+    "name": "Réincarnations",
+    "id": "2476a05f-66e5-448e-a2b9-43160f81d84e",
+    "language": "en",
+    "description": "Futurama est relooké dans trois styles d'animation alternatifs : le dessin animé en noir et blanc classique, le jeu vidéo à l'ancienne et l'anime japonais.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 8,
+    "number": 13
+   },
+   {
+    "type": "episode",
+    "name": "Paternité robot-rative",
+    "id": "786254aa-a308-446a-b6b0-e63b9b6f41ba",
+    "language": "en",
+    "description": "Bender conçoit un enfant avec la machine à soda du bureau.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 9,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Des mains tendues à bras raccourcis",
+    "id": "3dc280b6-c26a-410a-afb8-ac07de53b056",
+    "language": "en",
+    "description": "Une vieille prophétie prédit la fin du monde en l'an 3012.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 9,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Retour vers 3012",
+    "id": "6762a6d8-6528-469a-9148-3932ca8e669d",
+    "language": "en",
+    "description": "Leela devient directrice de campagne pour un candidat à l'élection présidentielle dont l'acte de naissance a mystérieusement disparu.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 9,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "L'affaire est dans le sac",
+    "id": "f8f763d6-b6c6-4171-957c-dcc5e12d19fd",
+    "language": "en",
+    "description": "Bender se joint aux paparazzi et tente de faire des photos d'un acteur célèbre dont personne n'a vu le visage.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 9,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Zappy End",
+    "id": "ecb5f1ea-d016-4b37-b26a-7f90bf3ef215",
+    "language": "en",
+    "description": "Leela est horrifiée quand sa mère commence à sortir avec Zapp Brannigan.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 9,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "L'Effet papillon",
+    "id": "d2ef0f7a-5b99-4846-bb39-0aa4f9b08aab",
+    "language": "en",
+    "description": "Amy et Leela deviennent accros au Nectar, un complément alimentaire révolutionnaire qui améliore leurs performances au Butterfly Derby, un sport du futur.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 9,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Le Rasta qui valait trois milliards",
+    "id": "8a6e0b24-53ba-4522-988c-5d0472a5897e",
+    "language": "en",
+    "description": "Hermes en a marre de se sentir inférieur par rapport aux machines et décide de remplacer des parties de son corps par de puissantes améliorations mécaniques.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 9,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "La Saucisse de Bender",
+    "id": "9d116e81-24f2-45f0-82e2-a22a54d790cc",
+    "language": "en",
+    "description": "Alors qu'il fabrique des saucisses, Fry est victime d'un terrible accident.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 9,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "Very Bad Trip",
+    "id": "2643597f-b865-4ba4-8eab-a9d755e70ba2",
+    "language": "en",
+    "description": "Bender découvre qu'il n'a pas de libre arbitre en tant que robot et part en quête du sens de la vie.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 9,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "Il était une fois Farnsworth…",
+    "id": "7005dd3b-09ac-47d1-95aa-375c4db19eaf",
+    "language": "en",
+    "description": "Le Professeur est profondément perturbé quand ses parents reviennent de leur retraite virtuelle à bord de l'Étoile de la presque-mort.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 9,
+    "number": 10
+   },
+   {
+    "type": "episode",
+    "name": "Chasseur mais pas trop",
+    "id": "b636d843-521c-4dc5-8cef-dd870e049c66",
+    "language": "en",
+    "description": "L'équipe met en scène un cambriolage de casino afin de récupérer des biens volés par la mafia des robots.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 9,
+    "number": 11
+   },
+   {
+    "type": "episode",
+    "name": "Viva Mars Vegas",
+    "id": "c4ff87f8-1f2b-47e9-84c8-b673ba993f26",
+    "language": "en",
+    "description": "Après avoir sauvé un renard robot poursuivi par des chasseurs, Bender devient la proie.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 9,
+    "number": 12
+   },
+   {
+    "type": "episode",
+    "name": "Naturama",
+    "id": "2b9f070e-6083-46e4-816b-eceb25de1e75",
+    "language": "en",
+    "description": "Bender et l'équipe sont repensés et filmés comme des animaux sauvages dans un documentaire sur la nature.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 9,
+    "number": 13
+   },
+   {
+    "type": "episode",
+    "name": "Un monde en 2D",
+    "id": "c9c8b9f8-07c0-415a-9fc7-497cf2c22040",
+    "language": "en",
+    "description": "Le professeur Farnsworth rejoint une bande de délinquants qui font des courses de rue.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 10,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Le Fry et Leela Show",
+    "id": "376eb114-970f-4515-9509-57a492cb44bf",
+    "language": "en",
+    "description": "Les vacances romantiques de Fry et de Leela tournent très  mal.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 10,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "T., l'extra terrestre",
+    "id": "4456c9ad-2016-4a8a-ad4e-07b6e1964deb",
+    "language": "en",
+    "description": "Après avoir été abandonné sur une planète lointaine, Fry se lie d'amitié avec un jeune monstre.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 10,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Folk en stock",
+    "id": "e176a863-f6d8-4b0c-871b-18aab47550c5",
+    "language": "en",
+    "description": "Dans une prison de haute sécurité, Bender rencontre un célèbre chanteur de folk et tente de fabriquer une copie de sa précieuse guitare.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 10,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "La Torche inhumaine",
+    "id": "6ae8ad11-49f7-4e6e-9c5a-f53dcfd9f2ad",
+    "language": "en",
+    "description": "Bender devient célèbre en tant que pompier, mais l'équipage le soupçonne d'être pyromane.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 10,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Futurama et ses amis",
+    "id": "7769a403-ab43-4a13-bb04-14e7f6ef875f",
+    "language": "en",
+    "description": "La bande de Futurama est à l'honneur dans un trio de dessins animés matinaux de qualité douteuse.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 10,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Résurrection",
+    "id": "13546450-d5b8-47ce-8fa3-4d50fe861715",
+    "language": "en",
+    "description": "Bender part fouiller une tombe afin de ramener son acteur préféré à la vie.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 10,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "Un seul cul vous manque",
+    "id": "70fa9fd2-13b1-4512-9f34-d9b18f10f987",
+    "language": "en",
+    "description": "Bender fouille l'univers à la recherche de son derrière en métal brillant, qui a disparu.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 10,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "Leela et le Haricot géant",
+    "id": "14afb4d3-bece-4972-9d62-d350da40aa87",
+    "language": "en",
+    "description": "Après avoir développé une maladie rare qui lui a fait pousser des tentacules, Leela tombe accidentellement sur une installation secrète de génie génétique.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 10,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "On connaît la chanson",
+    "id": "352798c7-c624-4b97-bb9b-242ac890aa2b",
+    "language": "en",
+    "description": "L'équipage plonge dans les rêves de Fry afin de découvrir la signification d'une mystérieuse mélodie extraterrestre.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 10,
+    "number": 10
+   },
+   {
+    "type": "episode",
+    "name": "Question de confiance",
+    "id": "650694f9-959d-4597-856b-febc8f8a4c7a",
+    "language": "en",
+    "description": "L'équipage se retrouve piégé à bord du vaisseau avec une horrible créature extraterrestre.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 10,
+    "number": 11
+   },
+   {
+    "type": "episode",
+    "name": "Puanteur et Deca-danse",
+    "id": "38aaaeaf-943b-4502-b5bb-0bc3481db352",
+    "language": "en",
+    "description": "Le docteur Zoidberg rencontre l'amour de sa vie pendant que Bender participe à un concours de claquettes mortel.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 10,
+    "number": 12
+   },
+   {
+    "type": "episode",
+    "name": "En attendant…",
+    "id": "b98b9e97-9052-4294-b528-866677cd84bc",
+    "language": "en",
+    "description": "Fry demande Leela en mariage, et ils affrontent leur destin ensemble alors que la dernière invention du professeur Farnsworth modifie l'espace-temps.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 10,
+    "number": 13
+   },
+   {
+    "type": "episode",
+    "name": "Streaming impossible",
+    "id": "34323ab1-fc37-46ea-95b8-4a0398121bfa",
+    "language": "en",
+    "description": "Fry se lance le défi de regarder toutes les séries jamais réalisées, malgré le risque de devenir un légume.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 11,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Les enfants des marais",
+    "id": "548dbd80-e7d3-4f11-a769-cf5af131e3a8",
+    "language": "en",
+    "description": "Les enfants d'Amy et Kif émergent d'un marais extraterrestre.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 11,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Comme au temps du Far West",
+    "id": "17f9dd1a-7897-441b-9d0e-0e0a67c488cf",
+    "language": "en",
+    "description": "Bender et toute la bande prennent la route vers l'ouest pour rejoindre la ruée vers l'extraction de bitcoins.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 11,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "En vers et contre tous",
+    "id": "9b0b9e04-34c1-4197-bb20-e2ee6f397ac8",
+    "language": "en",
+    "description": "Nibbler tombe malade, toute l'équipe se fait miniaturiser pour trouver un remède dans l'étendue désertique de sa litière.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 11,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "La mère de l'univers",
+    "id": "e3e5191d-1266-4a94-b67f-d7e9171025fb",
+    "language": "en",
+    "description": "Bender découvre les mystères de l'entreprise Mamazon.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 11,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Souviens-toi Noël prochain…",
+    "id": "fdc9a4a4-cf91-43c3-ab46-908839d11dcc",
+    "language": "en",
+    "description": "Bender et Zoidberg voyagent dans le temps pour attaquer le robot Père Noël.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 11,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Non aux vaccins !",
+    "id": "96457234-d627-4316-9df1-4e49a86594a8",
+    "language": "en",
+    "description": "Une pandémie ravage la future planète Terre.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 11,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "Stage de sensibilisation",
+    "id": "cdacae56-a892-43f1-b618-22959fd3dc3e",
+    "language": "en",
+    "description": "Zapp Branningan est envoyé en stage de sensibilisation pour comportement inapproprié, c'est donc Leela qui se voit confier à sa place une mission de la plus haute importance.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 11,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "Le Prince et le Produit",
+    "id": "26455389-767d-45fd-8d0d-9a7157cf6e1b",
+    "language": "en",
+    "description": "Toute l'équipe se réincarne en jouets.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 11,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "Simulation",
+    "id": "dc65b828-12bb-4b39-9c26-ae31783089b6",
+    "language": "en",
+    "description": "L'équipe enquête pour savoir si l'univers est une simulation.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 11,
+    "number": 10
+   },
+   {
+    "type": "episode",
+    "name": "Le Seul Amigo",
+    "id": "0d046b06-f3d8-4aca-9759-b17b0922b670",
+    "language": "en",
+    "description": "Après avoir vendu un JNF symbolisant le « concept de Bender », Bender se sent perdu et retourne dans son village ancestral au Mexique pour se redécouvrir.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 12,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Jeux mortels",
+    "id": "7bdae41c-8262-4dbc-8596-258453f69236",
+    "language": "en",
+    "description": "De drôles d'extraterrestres forcent l'équipage à participer aux jeux d'enfants classiques auxquels Fry a joué lors de son huitième anniversaire… sauf que cette fois, le perdant meurt !",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 12,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "L'Intérimaire",
+    "id": "359d8cb6-eac9-42e2-bb2a-69fb709b19df",
+    "language": "en",
+    "description": "Un mystérieux intérimaire remplace Fry… et lui vole sa vie.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 12,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Le Beau et l'Insecte",
+    "id": "8e407bd2-1368-461a-9380-adc07d3d695a",
+    "language": "en",
+    "description": "Bender devient un matador au sport de « Combat contre les insectes ».",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 12,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "L'un est en silicone et l'autre en or",
+    "id": "afd54703-7895-44b5-acd1-f4d3f1dce604",
+    "language": "en",
+    "description": "Leela devient l'amie d'un robot de conversation jaloux.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 12,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "L'Attaque des fringues",
+    "id": "5a4776a9-6b87-49f1-ace1-38a87b7a8951",
+    "language": "en",
+    "description": "Les vêtements de mode éphémère du professeur sont un succès, mais un désastre écologique.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 12,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Planète Expresso",
+    "id": "4d01e0aa-ac58-4a3d-b638-151f8fe5a8e0",
+    "language": "en",
+    "description": "Hermes hérite d'une ferme de café jamaïcain qui abrite les ruines d'un ancien vaisseau spatial.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 12,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "Trop mignons",
+    "id": "116d3aeb-a9a7-404a-ad44-05a3cb5af43d",
+    "language": "en",
+    "description": "Amy part à la recherche des jouets les plus mignons de l'univers, mais ils ne sont pas aussi inoffensifs qu'ils en ont l'air.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 12,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "Le Mystère de Futurama",
+    "id": "12a4c72b-34f8-4931-8c4d-dd68a1a1d136",
+    "language": "en",
+    "description": "« Futurama » est réimaginé sous la forme d'un livre policier pour enfants.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 12,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "Du déjà-vu",
+    "id": "4038fa01-530a-4490-bcf5-66197a25118c",
+    "language": "en",
+    "description": "Lorsque Fry demande Leela en mariage, il est pris d'une crise presque fatale de déjà-vu.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 12,
+    "number": 10
+   },
+   {
+    "type": "episode",
+    "name": "Détruire les grands monstres",
+    "id": "4fe4d45e-4ff9-468d-adf7-b47c08ff016d",
+    "language": "en",
+    "description": "Bender tente un traitement risqué pour devenir géant.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 13,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Le monde ne refroidit pas",
+    "id": "7aacf3fa-9cc5-4a61-887f-83127f98d287",
+    "language": "en",
+    "description": "L'équipe déclenche un volcan dans une tentative désespérée d'arrêter le réchauffement climatique.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 13,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Cinquante nuances de vert",
+    "id": "ae3c037a-26f0-4fd4-b798-8a3c286a094f",
+    "language": "en",
+    "description": "Fry a le cœur brisé : la moitié de Leela n’est pas lui.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 13,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Le fossé de Numberland",
+    "id": "9e5301e8-060b-483e-a133-b6f76ddb6e99",
+    "language": "en",
+    "description": "L’équipe explore un monde étrange peuplé de nombres.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 13,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Digital detox",
+    "id": "9b6b9b1f-4afb-4aa3-838f-297b33be53c5",
+    "language": "en",
+    "description": "Accro aux écrans ? Bender se retrouve dans le camp de désintox' du capitaine Zapp Brannigan.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 13,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Maudit humain",
+    "id": "3b945796-c879-474b-9a2f-8a0f5ee0b2f4",
+    "language": "en",
+    "description": "C’est la panique ! Des gens s’envolent dans le ciel partout dans le monde.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 13,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Pizza mortelle",
+    "id": "ee5d344c-707c-4ba0-8c50-a4d0492fd528",
+    "language": "en",
+    "description": "Une théorie du complot secoue : le sous-sol d’une pizzeria locale cacherait un lourd secret.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 13,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "Éclats de crabe",
+    "id": "15d1f3a6-9e4d-43dc-87dc-130d03c2eaea",
+    "language": "en",
+    "description": "Les parents de Leela adoptent le Dr Zoidberg.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 13,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "Le problèmes des truffes",
+    "id": "e93ce221-a31a-494c-a10e-bad01af986a8",
+    "language": "en",
+    "description": "Bender et son fidèle cochon partent à la chasse aux truffes spatiales.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 13,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "Le trou blanc",
+    "id": "efd6d1f6-5593-4672-b667-15c8d524a3df",
+    "language": "en",
+    "description": "Embarquez pour un voyage épique pour assister à la naissance d’un nouvel univers.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 13,
+    "number": 10
+   },
+   {
+    "type": "episode",
+    "name": "Embrouille et barbaque",
+    "id": "f7af321b-5762-4028-9c53-adb387c8eb70",
+    "language": "en",
+    "description": "Le rêve de Fry de devenir un champion de mangeurs de hot-dogs s'effondre lorsqu'il apprend que les vaches ont disparu. Son seul espoir : le plan dangereux du Professeur pour recréer du bœuf à partir d'ADN ancien.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 14,
+    "number": 1
+   },
+   {
+    "type": "episode",
+    "name": "Arnaque-moi si tu peux",
+    "id": "238227b8-8fe0-4fff-8fe1-c1e5ad24d9b5",
+    "language": "en",
+    "description": "Un escroc arnaque la grand-mère adorée de Bender, qui part se venger dans le Mississippi.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 14,
+    "number": 2
+   },
+   {
+    "type": "episode",
+    "name": "Pirates des Galaxies",
+    "id": "9d860fd2-a981-4c2b-bd26-9baeb6750087",
+    "language": "en",
+    "description": "Bender et Fry sont engagés pour livrer une cargaison inestimable, mais ils se font attaquer et piller par de féroces pirates de l'espace.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 14,
+    "number": 3
+   },
+   {
+    "type": "episode",
+    "name": "Les Seigneurs de l'anneau",
+    "id": "7a7684fa-d095-4c51-94d0-5d376174e4f1",
+    "language": "en",
+    "description": "Le vaisseau Planet Express s'écrase sur un monde mystérieux peuplé de rats intelligents.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 14,
+    "number": 4
+   },
+   {
+    "type": "episode",
+    "name": "Sous le charme",
+    "id": "7416de62-6423-41d7-a61a-8fac16e78c1d",
+    "language": "en",
+    "description": "La pop star préférée d'Amy manipule ses légions de fans grâce à un lavage de cerveau musical.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 14,
+    "number": 5
+   },
+   {
+    "type": "episode",
+    "name": "Floraison tardive",
+    "id": "a4244165-eb44-4bd9-bc94-19039e1f9cdc",
+    "language": "en",
+    "description": "Hermes tente le tout pour le tout pour sauver son père, et Zoidberg retrouve une ancienne flamme.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 14,
+    "number": 6
+   },
+   {
+    "type": "episode",
+    "name": "Lord Nibbler et le Néant",
+    "id": "c88a7fcd-1853-44fc-9d1b-107d83295037",
+    "language": "en",
+    "description": "Nibbler fait ses adieux. Il part en mission sans retour pour observer un univers sur le point de mourir.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 14,
+    "number": 7
+   },
+   {
+    "type": "episode",
+    "name": "La croisière se poile",
+    "id": "e6f3f8d2-4811-40af-9349-e22ea5e27401",
+    "language": "en",
+    "description": "L'équipage de Planet Express prend la mer pour une aventure épique.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 14,
+    "number": 8
+   },
+   {
+    "type": "episode",
+    "name": "Désenchantante nouvelle, tout le monde !",
+    "id": "bdfcd18d-0600-41e0-b62d-c6f31e2d9936",
+    "language": "en",
+    "description": "Une panne de la machine temporelle propulse Fry dans un monde médiéval étrangement familier.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 14,
+    "number": 9
+   },
+   {
+    "type": "episode",
+    "name": "Fin Finale : La dernière conclusion",
+    "id": "bc8d8dd6-87b2-4230-ae03-c13b3473bb05",
+    "language": "en",
+    "description": "Dans son enfance, Fry entre en douce au cinéma, ce qui a des conséquences choquantes mille ans plus tard.",
+    "date": null,
+    "cover_url": null,
+    "year": 1999,
+    "series_title": "Futurama",
+    "season": 14,
+    "number": 10
+   }
+  ],
+  "episodes": [
+   {
+    "id": 14407,
+    "seasonNumber": 0,
+    "episodeNumber": 1,
+    "title": "Everybody Loves Hypnotoad",
+    "airDate": "2007-11-27",
+    "airDateUtc": "2007-11-27T11:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": null
+   },
+   {
+    "id": 14408,
+    "seasonNumber": 0,
+    "episodeNumber": 2,
+    "title": "Bender's Big Score",
+    "airDate": "2007-11-27",
+    "airDateUtc": "2007-11-27T11:23:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 74
+   },
+   {
+    "id": 14409,
+    "seasonNumber": 0,
+    "episodeNumber": 3,
+    "title": "The Beast With A Billion Backs",
+    "airDate": "2008-06-30",
+    "airDateUtc": "2008-06-30T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 75
+   },
+   {
+    "id": 14410,
+    "seasonNumber": 0,
+    "episodeNumber": 4,
+    "title": "The Lost Adventure",
+    "airDate": "2008-06-24",
+    "airDateUtc": "2008-06-24T10:00:00Z",
+    "hasFile": false,
+    "absoluteEpisodeNumber": 73
+   },
+   {
+    "id": 14411,
+    "seasonNumber": 0,
+    "episodeNumber": 5,
+    "title": "Bender's Game",
+    "airDate": "2008-11-03",
+    "airDateUtc": "2008-11-03T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 76
+   },
+   {
+    "id": 14412,
+    "seasonNumber": 0,
+    "episodeNumber": 6,
+    "title": "Into the Wild Green Yonder",
+    "airDate": "2009-02-24",
+    "airDateUtc": "2009-02-24T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 77
+   },
+   {
+    "id": 14413,
+    "seasonNumber": 1,
+    "episodeNumber": 1,
+    "title": "Space Pilot 3000",
+    "airDate": "1999-03-28",
+    "airDateUtc": "1999-03-28T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 1
+   },
+   {
+    "id": 14414,
+    "seasonNumber": 1,
+    "episodeNumber": 2,
+    "title": "The Series Has Landed",
+    "airDate": "1999-04-04",
+    "airDateUtc": "1999-04-04T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 2
+   },
+   {
+    "id": 14415,
+    "seasonNumber": 1,
+    "episodeNumber": 3,
+    "title": "I, Roommate",
+    "airDate": "1999-04-06",
+    "airDateUtc": "1999-04-06T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 3
+   },
+   {
+    "id": 14416,
+    "seasonNumber": 1,
+    "episodeNumber": 4,
+    "title": "Love's Labors Lost in Space",
+    "airDate": "1999-04-13",
+    "airDateUtc": "1999-04-13T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 4
+   },
+   {
+    "id": 14417,
+    "seasonNumber": 1,
+    "episodeNumber": 5,
+    "title": "Fear of a Bot Planet",
+    "airDate": "1999-04-20",
+    "airDateUtc": "1999-04-20T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 5
+   },
+   {
+    "id": 14418,
+    "seasonNumber": 1,
+    "episodeNumber": 6,
+    "title": "A Fishful of Dollars",
+    "airDate": "1999-04-27",
+    "airDateUtc": "1999-04-27T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 6
+   },
+   {
+    "id": 14419,
+    "seasonNumber": 1,
+    "episodeNumber": 7,
+    "title": "My Three Suns",
+    "airDate": "1999-05-04",
+    "airDateUtc": "1999-05-04T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 7
+   },
+   {
+    "id": 14420,
+    "seasonNumber": 1,
+    "episodeNumber": 8,
+    "title": "A Big Piece of Garbage",
+    "airDate": "1999-05-11",
+    "airDateUtc": "1999-05-11T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 8
+   },
+   {
+    "id": 14421,
+    "seasonNumber": 1,
+    "episodeNumber": 9,
+    "title": "Hell is Other Robots",
+    "airDate": "1999-05-18",
+    "airDateUtc": "1999-05-18T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 9
+   },
+   {
+    "id": 14422,
+    "seasonNumber": 2,
+    "episodeNumber": 1,
+    "title": "A Flight to Remember",
+    "airDate": "1999-09-26",
+    "airDateUtc": "1999-09-26T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 10
+   },
+   {
+    "id": 14423,
+    "seasonNumber": 2,
+    "episodeNumber": 2,
+    "title": "Mars University",
+    "airDate": "1999-10-03",
+    "airDateUtc": "1999-10-03T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 11
+   },
+   {
+    "id": 14424,
+    "seasonNumber": 2,
+    "episodeNumber": 3,
+    "title": "When Aliens Attack",
+    "airDate": "1999-11-07",
+    "airDateUtc": "1999-11-07T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 12
+   },
+   {
+    "id": 14425,
+    "seasonNumber": 2,
+    "episodeNumber": 4,
+    "title": "Fry & the Slurm Factory",
+    "airDate": "1999-11-14",
+    "airDateUtc": "1999-11-14T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 13
+   },
+   {
+    "id": 14426,
+    "seasonNumber": 2,
+    "episodeNumber": 5,
+    "title": "I Second That Emotion",
+    "airDate": "1999-11-21",
+    "airDateUtc": "1999-11-21T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 14
+   },
+   {
+    "id": 14427,
+    "seasonNumber": 2,
+    "episodeNumber": 6,
+    "title": "Brannigan, Begin Again",
+    "airDate": "1999-11-28",
+    "airDateUtc": "1999-11-28T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 15
+   },
+   {
+    "id": 14428,
+    "seasonNumber": 2,
+    "episodeNumber": 7,
+    "title": "A Head in the Polls",
+    "airDate": "1999-12-12",
+    "airDateUtc": "1999-12-12T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 16
+   },
+   {
+    "id": 14429,
+    "seasonNumber": 2,
+    "episodeNumber": 8,
+    "title": "Xmas Story",
+    "airDate": "1999-12-19",
+    "airDateUtc": "1999-12-19T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 17
+   },
+   {
+    "id": 14430,
+    "seasonNumber": 2,
+    "episodeNumber": 9,
+    "title": "Why Must I Be a Crustacean in Love",
+    "airDate": "2000-02-06",
+    "airDateUtc": "2000-02-06T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 18
+   },
+   {
+    "id": 14431,
+    "seasonNumber": 2,
+    "episodeNumber": 10,
+    "title": "Put Your Head on My Shoulder",
+    "airDate": "2000-02-13",
+    "airDateUtc": "2000-02-13T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 20
+   },
+   {
+    "id": 14432,
+    "seasonNumber": 2,
+    "episodeNumber": 11,
+    "title": "Lesser of Two Evils",
+    "airDate": "2000-02-20",
+    "airDateUtc": "2000-02-20T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 19
+   },
+   {
+    "id": 14433,
+    "seasonNumber": 2,
+    "episodeNumber": 12,
+    "title": "Raging Bender",
+    "airDate": "2000-02-27",
+    "airDateUtc": "2000-02-27T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 21
+   },
+   {
+    "id": 14434,
+    "seasonNumber": 2,
+    "episodeNumber": 13,
+    "title": "A Bicyclops Built for Two",
+    "airDate": "2000-03-19",
+    "airDateUtc": "2000-03-19T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 22
+   },
+   {
+    "id": 14435,
+    "seasonNumber": 2,
+    "episodeNumber": 14,
+    "title": "How Hermes Requisitioned His Groove Back",
+    "airDate": "2000-04-02",
+    "airDateUtc": "2000-04-02T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 24
+   },
+   {
+    "id": 14436,
+    "seasonNumber": 2,
+    "episodeNumber": 15,
+    "title": "A Clone of My Own",
+    "airDate": "2000-04-09",
+    "airDateUtc": "2000-04-09T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 23
+   },
+   {
+    "id": 14437,
+    "seasonNumber": 2,
+    "episodeNumber": 16,
+    "title": "The Deep South",
+    "airDate": "2000-04-16",
+    "airDateUtc": "2000-04-16T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 25
+   },
+   {
+    "id": 14438,
+    "seasonNumber": 2,
+    "episodeNumber": 17,
+    "title": "Bender Gets Made",
+    "airDate": "2000-04-30",
+    "airDateUtc": "2000-04-30T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 26
+   },
+   {
+    "id": 14439,
+    "seasonNumber": 2,
+    "episodeNumber": 18,
+    "title": "The Problem With Popplers",
+    "airDate": "2000-05-07",
+    "airDateUtc": "2000-05-07T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 28
+   },
+   {
+    "id": 14440,
+    "seasonNumber": 2,
+    "episodeNumber": 19,
+    "title": "Mother's Day",
+    "airDate": "2000-05-14",
+    "airDateUtc": "2000-05-14T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 27
+   },
+   {
+    "id": 14441,
+    "seasonNumber": 2,
+    "episodeNumber": 20,
+    "title": "Anthology of Interest I",
+    "airDate": "2000-05-21",
+    "airDateUtc": "2000-05-21T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 29
+   },
+   {
+    "id": 14442,
+    "seasonNumber": 3,
+    "episodeNumber": 1,
+    "title": "The Honking",
+    "airDate": "2000-11-05",
+    "airDateUtc": "2000-11-05T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 31
+   },
+   {
+    "id": 14443,
+    "seasonNumber": 3,
+    "episodeNumber": 2,
+    "title": "War Is the H-Word",
+    "airDate": "2000-11-26",
+    "airDateUtc": "2000-11-26T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 30
+   },
+   {
+    "id": 14444,
+    "seasonNumber": 3,
+    "episodeNumber": 3,
+    "title": "The Cryonic Woman",
+    "airDate": "2000-12-03",
+    "airDateUtc": "2000-12-03T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 32
+   },
+   {
+    "id": 14445,
+    "seasonNumber": 3,
+    "episodeNumber": 4,
+    "title": "Parasites Lost",
+    "airDate": "2001-01-21",
+    "airDateUtc": "2001-01-21T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 34
+   },
+   {
+    "id": 14446,
+    "seasonNumber": 3,
+    "episodeNumber": 5,
+    "title": "Amazon Women in the Mood",
+    "airDate": "2001-02-04",
+    "airDateUtc": "2001-02-04T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 33
+   },
+   {
+    "id": 14447,
+    "seasonNumber": 3,
+    "episodeNumber": 6,
+    "title": "Bendless Love",
+    "airDate": "2001-02-11",
+    "airDateUtc": "2001-02-11T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 38
+   },
+   {
+    "id": 14448,
+    "seasonNumber": 3,
+    "episodeNumber": 7,
+    "title": "The Day the Earth Stood Stupid",
+    "airDate": "2001-02-18",
+    "airDateUtc": "2001-02-18T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 39
+   },
+   {
+    "id": 14449,
+    "seasonNumber": 3,
+    "episodeNumber": 8,
+    "title": "That's Lobstertainment!",
+    "airDate": "2001-02-25",
+    "airDateUtc": "2001-02-25T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 40
+   },
+   {
+    "id": 14450,
+    "seasonNumber": 3,
+    "episodeNumber": 9,
+    "title": "The Birdbot of Ice Catraz",
+    "airDate": "2001-03-04",
+    "airDateUtc": "2001-03-04T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 37
+   },
+   {
+    "id": 14451,
+    "seasonNumber": 3,
+    "episodeNumber": 10,
+    "title": "The Luck of the Fryrish",
+    "airDate": "2001-03-11",
+    "airDateUtc": "2001-03-11T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 36
+   },
+   {
+    "id": 14452,
+    "seasonNumber": 3,
+    "episodeNumber": 11,
+    "title": "The Cyber House Rules",
+    "airDate": "2001-04-01",
+    "airDateUtc": "2001-04-01T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 41
+   },
+   {
+    "id": 14453,
+    "seasonNumber": 3,
+    "episodeNumber": 12,
+    "title": "Insane in the Mainframe",
+    "airDate": "2001-04-08",
+    "airDateUtc": "2001-04-08T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 43
+   },
+   {
+    "id": 14454,
+    "seasonNumber": 3,
+    "episodeNumber": 13,
+    "title": "Bendin' in the Wind",
+    "airDate": "2001-04-22",
+    "airDateUtc": "2001-04-22T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 45
+   },
+   {
+    "id": 14455,
+    "seasonNumber": 3,
+    "episodeNumber": 14,
+    "title": "Time Keeps on Slipping",
+    "airDate": "2001-05-06",
+    "airDateUtc": "2001-05-06T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 46
+   },
+   {
+    "id": 14456,
+    "seasonNumber": 3,
+    "episodeNumber": 15,
+    "title": "I Dated a Robot",
+    "airDate": "2001-05-13",
+    "airDateUtc": "2001-05-13T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 47
+   },
+   {
+    "id": 14457,
+    "seasonNumber": 4,
+    "episodeNumber": 1,
+    "title": "Roswell That Ends Well",
+    "airDate": "2001-12-09",
+    "airDateUtc": "2001-12-09T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 51
+   },
+   {
+    "id": 14458,
+    "seasonNumber": 4,
+    "episodeNumber": 2,
+    "title": "A Tale of Two Santas",
+    "airDate": "2001-12-23",
+    "airDateUtc": "2001-12-23T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 35
+   },
+   {
+    "id": 14459,
+    "seasonNumber": 4,
+    "episodeNumber": 3,
+    "title": "Anthology of Interest II",
+    "airDate": "2002-01-06",
+    "airDateUtc": "2002-01-06T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 50
+   },
+   {
+    "id": 14460,
+    "seasonNumber": 4,
+    "episodeNumber": 4,
+    "title": "Love and Rocket",
+    "airDate": "2002-02-10",
+    "airDateUtc": "2002-02-10T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 57
+   },
+   {
+    "id": 14461,
+    "seasonNumber": 4,
+    "episodeNumber": 5,
+    "title": "Leela's Homeworld",
+    "airDate": "2002-02-17",
+    "airDateUtc": "2002-02-17T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 56
+   },
+   {
+    "id": 14462,
+    "seasonNumber": 4,
+    "episodeNumber": 6,
+    "title": "Where the Buggalo Roam",
+    "airDate": "2002-03-03",
+    "airDateUtc": "2002-03-03T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 42
+   },
+   {
+    "id": 14463,
+    "seasonNumber": 4,
+    "episodeNumber": 7,
+    "title": "A Pharaoh to Remember",
+    "airDate": "2002-03-10",
+    "airDateUtc": "2002-03-10T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 49
+   },
+   {
+    "id": 14464,
+    "seasonNumber": 4,
+    "episodeNumber": 8,
+    "title": "Godfellas",
+    "airDate": "2002-03-17",
+    "airDateUtc": "2002-03-17T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 52
+   },
+   {
+    "id": 14465,
+    "seasonNumber": 4,
+    "episodeNumber": 9,
+    "title": "Future Stock",
+    "airDate": "2002-03-31",
+    "airDateUtc": "2002-03-31T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 53
+   },
+   {
+    "id": 14466,
+    "seasonNumber": 4,
+    "episodeNumber": 10,
+    "title": "A Leela of Her Own",
+    "airDate": "2002-04-07",
+    "airDateUtc": "2002-04-07T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 48
+   },
+   {
+    "id": 14467,
+    "seasonNumber": 4,
+    "episodeNumber": 11,
+    "title": "The 30% Iron Chef",
+    "airDate": "2002-04-14",
+    "airDateUtc": "2002-04-14T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 54
+   },
+   {
+    "id": 14468,
+    "seasonNumber": 4,
+    "episodeNumber": 12,
+    "title": "Where No Fan Has Gone Before",
+    "airDate": "2002-04-21",
+    "airDateUtc": "2002-04-21T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 65
+   },
+   {
+    "id": 14469,
+    "seasonNumber": 5,
+    "episodeNumber": 1,
+    "title": "Crimes of the Hot",
+    "airDate": "2002-11-10",
+    "airDateUtc": "2002-11-10T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 62
+   },
+   {
+    "id": 14470,
+    "seasonNumber": 5,
+    "episodeNumber": 2,
+    "title": "Jurassic Bark",
+    "airDate": "2002-11-17",
+    "airDateUtc": "2002-11-17T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 61
+   },
+   {
+    "id": 14471,
+    "seasonNumber": 5,
+    "episodeNumber": 3,
+    "title": "The Route of All Evil",
+    "airDate": "2002-12-08",
+    "airDateUtc": "2002-12-08T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 44
+   },
+   {
+    "id": 14472,
+    "seasonNumber": 5,
+    "episodeNumber": 4,
+    "title": "A Taste of Freedom",
+    "airDate": "2002-12-22",
+    "airDateUtc": "2002-12-22T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 59
+   },
+   {
+    "id": 14473,
+    "seasonNumber": 5,
+    "episodeNumber": 5,
+    "title": "Kif Gets Knocked Up a Notch",
+    "airDate": "2003-01-12",
+    "airDateUtc": "2003-01-12T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 55
+   },
+   {
+    "id": 14474,
+    "seasonNumber": 5,
+    "episodeNumber": 6,
+    "title": "Less Than Hero",
+    "airDate": "2003-03-02",
+    "airDateUtc": "2003-03-02T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 58
+   },
+   {
+    "id": 14475,
+    "seasonNumber": 5,
+    "episodeNumber": 7,
+    "title": "Teenage Mutant Leela's Hurdles",
+    "airDate": "2003-03-30",
+    "airDateUtc": "2003-03-30T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 63
+   },
+   {
+    "id": 14476,
+    "seasonNumber": 5,
+    "episodeNumber": 8,
+    "title": "The Why of Fry",
+    "airDate": "2003-04-06",
+    "airDateUtc": "2003-04-06T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 64
+   },
+   {
+    "id": 14477,
+    "seasonNumber": 5,
+    "episodeNumber": 9,
+    "title": "The Sting",
+    "airDate": "2003-06-01",
+    "airDateUtc": "2003-06-01T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 66
+   },
+   {
+    "id": 14478,
+    "seasonNumber": 5,
+    "episodeNumber": 10,
+    "title": "The Farnsworth Parabox",
+    "airDate": "2003-06-08",
+    "airDateUtc": "2003-06-08T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 69
+   },
+   {
+    "id": 14479,
+    "seasonNumber": 5,
+    "episodeNumber": 11,
+    "title": "Three Hundred Big Boys",
+    "airDate": "2003-06-15",
+    "airDateUtc": "2003-06-15T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 70
+   },
+   {
+    "id": 14480,
+    "seasonNumber": 5,
+    "episodeNumber": 12,
+    "title": "Spanish Fry",
+    "airDate": "2003-07-13",
+    "airDateUtc": "2003-07-13T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 71
+   },
+   {
+    "id": 14481,
+    "seasonNumber": 5,
+    "episodeNumber": 13,
+    "title": "Bend Her",
+    "airDate": "2003-07-20",
+    "airDateUtc": "2003-07-20T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 67
+   },
+   {
+    "id": 14482,
+    "seasonNumber": 5,
+    "episodeNumber": 14,
+    "title": "Obsoletely Fabulous",
+    "airDate": "2003-07-27",
+    "airDateUtc": "2003-07-27T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 68
+   },
+   {
+    "id": 14483,
+    "seasonNumber": 5,
+    "episodeNumber": 15,
+    "title": "Bender Should Not Be Allowed on TV",
+    "airDate": "2003-08-03",
+    "airDateUtc": "2003-08-03T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 60
+   },
+   {
+    "id": 14484,
+    "seasonNumber": 5,
+    "episodeNumber": 16,
+    "title": "The Devil's Hands Are Idle Playthings",
+    "airDate": "2003-08-10",
+    "airDateUtc": "2003-08-10T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 72
+   },
+   {
+    "id": 14485,
+    "seasonNumber": 6,
+    "episodeNumber": 1,
+    "title": "Rebirth",
+    "airDate": "2010-06-24",
+    "airDateUtc": "2010-06-24T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 78
+   },
+   {
+    "id": 14486,
+    "seasonNumber": 6,
+    "episodeNumber": 2,
+    "title": "In-A-Gadda-Da-Leela",
+    "airDate": "2010-06-24",
+    "airDateUtc": "2010-06-24T10:23:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 79
+   },
+   {
+    "id": 14487,
+    "seasonNumber": 6,
+    "episodeNumber": 3,
+    "title": "Attack of the Killer App!",
+    "airDate": "2010-07-01",
+    "airDateUtc": "2010-07-01T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 80
+   },
+   {
+    "id": 14488,
+    "seasonNumber": 6,
+    "episodeNumber": 4,
+    "title": "Proposition Infinity",
+    "airDate": "2010-07-08",
+    "airDateUtc": "2010-07-08T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 81
+   },
+   {
+    "id": 14489,
+    "seasonNumber": 6,
+    "episodeNumber": 5,
+    "title": "The Duh-Vinci Code",
+    "airDate": "2010-07-15",
+    "airDateUtc": "2010-07-15T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 82
+   },
+   {
+    "id": 14490,
+    "seasonNumber": 6,
+    "episodeNumber": 6,
+    "title": "Lethal Inspection",
+    "airDate": "2010-07-22",
+    "airDateUtc": "2010-07-22T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 83
+   },
+   {
+    "id": 14491,
+    "seasonNumber": 6,
+    "episodeNumber": 7,
+    "title": "The Late Philip J. Fry",
+    "airDate": "2010-07-29",
+    "airDateUtc": "2010-07-29T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 84
+   },
+   {
+    "id": 14492,
+    "seasonNumber": 6,
+    "episodeNumber": 8,
+    "title": "That Darn Katz!",
+    "airDate": "2010-08-05",
+    "airDateUtc": "2010-08-05T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 85
+   },
+   {
+    "id": 14493,
+    "seasonNumber": 6,
+    "episodeNumber": 9,
+    "title": "A Clockwork Origin",
+    "airDate": "2010-08-12",
+    "airDateUtc": "2010-08-12T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 86
+   },
+   {
+    "id": 14494,
+    "seasonNumber": 6,
+    "episodeNumber": 10,
+    "title": "The Prisoner of Benda",
+    "airDate": "2010-08-19",
+    "airDateUtc": "2010-08-19T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 87
+   },
+   {
+    "id": 14495,
+    "seasonNumber": 6,
+    "episodeNumber": 11,
+    "title": "Lrrreconcilable Ndndifferences",
+    "airDate": "2010-08-26",
+    "airDateUtc": "2010-08-26T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 88
+   },
+   {
+    "id": 14496,
+    "seasonNumber": 6,
+    "episodeNumber": 12,
+    "title": "The Mutants Are Revolting",
+    "airDate": "2010-09-02",
+    "airDateUtc": "2010-09-02T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 89
+   },
+   {
+    "id": 14497,
+    "seasonNumber": 6,
+    "episodeNumber": 13,
+    "title": "The Futurama Holiday Spectacular",
+    "airDate": "2010-11-21",
+    "airDateUtc": "2010-11-21T11:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 90
+   },
+   {
+    "id": 14498,
+    "seasonNumber": 6,
+    "episodeNumber": 14,
+    "title": "Neutopia",
+    "airDate": "2011-06-23",
+    "airDateUtc": "2011-06-23T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 97
+   },
+   {
+    "id": 14499,
+    "seasonNumber": 6,
+    "episodeNumber": 15,
+    "title": "Benderama",
+    "airDate": "2011-06-23",
+    "airDateUtc": "2011-06-23T10:23:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 94
+   },
+   {
+    "id": 14500,
+    "seasonNumber": 6,
+    "episodeNumber": 16,
+    "title": "Ghost in the Machines",
+    "airDate": "2011-06-30",
+    "airDateUtc": "2011-06-30T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 96
+   },
+   {
+    "id": 14501,
+    "seasonNumber": 6,
+    "episodeNumber": 17,
+    "title": "Law and Oracle",
+    "airDate": "2011-07-07",
+    "airDateUtc": "2011-07-07T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 93
+   },
+   {
+    "id": 14502,
+    "seasonNumber": 6,
+    "episodeNumber": 18,
+    "title": "The Silence of the Clamps",
+    "airDate": "2011-07-14",
+    "airDateUtc": "2011-07-14T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 91
+   },
+   {
+    "id": 14503,
+    "seasonNumber": 6,
+    "episodeNumber": 19,
+    "title": "Yo Leela Leela",
+    "airDate": "2011-07-21",
+    "airDateUtc": "2011-07-21T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 98
+   },
+   {
+    "id": 14504,
+    "seasonNumber": 6,
+    "episodeNumber": 20,
+    "title": "All the Presidents' Heads",
+    "airDate": "2011-07-28",
+    "airDateUtc": "2011-07-28T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 100
+   },
+   {
+    "id": 14505,
+    "seasonNumber": 6,
+    "episodeNumber": 21,
+    "title": "Mobius Dick",
+    "airDate": "2011-08-04",
+    "airDateUtc": "2011-08-04T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 92
+   },
+   {
+    "id": 14506,
+    "seasonNumber": 6,
+    "episodeNumber": 22,
+    "title": "Fry Am the Egg Man",
+    "airDate": "2011-08-11",
+    "airDateUtc": "2011-08-11T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 99
+   },
+   {
+    "id": 14507,
+    "seasonNumber": 6,
+    "episodeNumber": 23,
+    "title": "The Tip of the Zoidberg",
+    "airDate": "2011-08-18",
+    "airDateUtc": "2011-08-18T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 95
+   },
+   {
+    "id": 14508,
+    "seasonNumber": 6,
+    "episodeNumber": 24,
+    "title": "Cold Warriors",
+    "airDate": "2011-08-25",
+    "airDateUtc": "2011-08-25T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 101
+   },
+   {
+    "id": 14509,
+    "seasonNumber": 6,
+    "episodeNumber": 25,
+    "title": "Overclockwise",
+    "airDate": "2011-09-01",
+    "airDateUtc": "2011-09-01T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 102
+   },
+   {
+    "id": 14510,
+    "seasonNumber": 6,
+    "episodeNumber": 26,
+    "title": "Reincarnation",
+    "airDate": "2011-09-08",
+    "airDateUtc": "2011-09-08T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 103
+   },
+   {
+    "id": 14511,
+    "seasonNumber": 7,
+    "episodeNumber": 1,
+    "title": "The Bots and the Bees",
+    "airDate": "2012-06-20",
+    "airDateUtc": "2012-06-20T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 104
+   },
+   {
+    "id": 14512,
+    "seasonNumber": 7,
+    "episodeNumber": 2,
+    "title": "A Farewell to Arms",
+    "airDate": "2012-06-20",
+    "airDateUtc": "2012-06-20T10:23:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 105
+   },
+   {
+    "id": 14513,
+    "seasonNumber": 7,
+    "episodeNumber": 3,
+    "title": "Decision 3012",
+    "airDate": "2012-06-27",
+    "airDateUtc": "2012-06-27T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 106
+   },
+   {
+    "id": 14514,
+    "seasonNumber": 7,
+    "episodeNumber": 4,
+    "title": "The Thief of Baghead",
+    "airDate": "2012-07-04",
+    "airDateUtc": "2012-07-04T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 107
+   },
+   {
+    "id": 14515,
+    "seasonNumber": 7,
+    "episodeNumber": 5,
+    "title": "Zapp Dingbat",
+    "airDate": "2012-07-11",
+    "airDateUtc": "2012-07-11T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 108
+   },
+   {
+    "id": 14516,
+    "seasonNumber": 7,
+    "episodeNumber": 6,
+    "title": "The Butterjunk Effect",
+    "airDate": "2012-07-18",
+    "airDateUtc": "2012-07-18T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 109
+   },
+   {
+    "id": 14517,
+    "seasonNumber": 7,
+    "episodeNumber": 7,
+    "title": "The Six Million Dollar Mon",
+    "airDate": "2012-07-25",
+    "airDateUtc": "2012-07-25T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 110
+   },
+   {
+    "id": 14518,
+    "seasonNumber": 7,
+    "episodeNumber": 8,
+    "title": "Fun on a Bun",
+    "airDate": "2012-08-01",
+    "airDateUtc": "2012-08-01T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 111
+   },
+   {
+    "id": 14519,
+    "seasonNumber": 7,
+    "episodeNumber": 9,
+    "title": "Free Will Hunting",
+    "airDate": "2012-08-08",
+    "airDateUtc": "2012-08-08T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 112
+   },
+   {
+    "id": 14520,
+    "seasonNumber": 7,
+    "episodeNumber": 10,
+    "title": "Near-Death Wish",
+    "airDate": "2012-08-15",
+    "airDateUtc": "2012-08-15T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 113
+   },
+   {
+    "id": 14521,
+    "seasonNumber": 7,
+    "episodeNumber": 11,
+    "title": "Viva Mars Vegas",
+    "airDate": "2012-08-22",
+    "airDateUtc": "2012-08-22T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 115
+   },
+   {
+    "id": 14522,
+    "seasonNumber": 7,
+    "episodeNumber": 12,
+    "title": "31st Century Fox",
+    "airDate": "2012-08-29",
+    "airDateUtc": "2012-08-29T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 114
+   },
+   {
+    "id": 14523,
+    "seasonNumber": 7,
+    "episodeNumber": 13,
+    "title": "Naturama",
+    "airDate": "2012-08-29",
+    "airDateUtc": "2012-08-29T10:23:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 116
+   },
+   {
+    "id": 14524,
+    "seasonNumber": 7,
+    "episodeNumber": 14,
+    "title": "2-D Blacktop",
+    "airDate": "2013-06-19",
+    "airDateUtc": "2013-06-19T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 118
+   },
+   {
+    "id": 14525,
+    "seasonNumber": 7,
+    "episodeNumber": 15,
+    "title": "Fry and Leela's Big Fling",
+    "airDate": "2013-06-19",
+    "airDateUtc": "2013-06-19T10:23:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 120
+   },
+   {
+    "id": 14526,
+    "seasonNumber": 7,
+    "episodeNumber": 16,
+    "title": "T.: The Terrestrial",
+    "airDate": "2013-06-26",
+    "airDateUtc": "2013-06-26T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 119
+   },
+   {
+    "id": 14527,
+    "seasonNumber": 7,
+    "episodeNumber": 17,
+    "title": "Forty Percent Leadbelly",
+    "airDate": "2013-07-03",
+    "airDateUtc": "2013-07-03T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 117
+   },
+   {
+    "id": 14528,
+    "seasonNumber": 7,
+    "episodeNumber": 18,
+    "title": "The Inhuman Torch",
+    "airDate": "2013-07-10",
+    "airDateUtc": "2013-07-10T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 121
+   },
+   {
+    "id": 14529,
+    "seasonNumber": 7,
+    "episodeNumber": 19,
+    "title": "Saturday Morning Fun Pit",
+    "airDate": "2013-07-17",
+    "airDateUtc": "2013-07-17T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 122
+   },
+   {
+    "id": 14530,
+    "seasonNumber": 7,
+    "episodeNumber": 20,
+    "title": "Calculon 2.0",
+    "airDate": "2013-07-24",
+    "airDateUtc": "2013-07-24T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 123
+   },
+   {
+    "id": 14531,
+    "seasonNumber": 7,
+    "episodeNumber": 21,
+    "title": "Assie Come Home",
+    "airDate": "2013-07-31",
+    "airDateUtc": "2013-07-31T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 124
+   },
+   {
+    "id": 14532,
+    "seasonNumber": 7,
+    "episodeNumber": 22,
+    "title": "Leela and the Genestalk",
+    "airDate": "2013-08-07",
+    "airDateUtc": "2013-08-07T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 125
+   },
+   {
+    "id": 14533,
+    "seasonNumber": 7,
+    "episodeNumber": 23,
+    "title": "Game of Tones",
+    "airDate": "2013-08-14",
+    "airDateUtc": "2013-08-14T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 126
+   },
+   {
+    "id": 14534,
+    "seasonNumber": 7,
+    "episodeNumber": 24,
+    "title": "Murder on the Planet Express",
+    "airDate": "2013-08-21",
+    "airDateUtc": "2013-08-21T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 127
+   },
+   {
+    "id": 14535,
+    "seasonNumber": 7,
+    "episodeNumber": 25,
+    "title": "Stench and Stenchibility",
+    "airDate": "2013-08-28",
+    "airDateUtc": "2013-08-28T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 128
+   },
+   {
+    "id": 14536,
+    "seasonNumber": 7,
+    "episodeNumber": 26,
+    "title": "Meanwhile",
+    "airDate": "2013-09-04",
+    "airDateUtc": "2013-09-04T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 129
+   },
+   {
+    "id": 41672,
+    "seasonNumber": 8,
+    "episodeNumber": 1,
+    "title": "The Impossible Stream",
+    "airDate": "2023-07-24",
+    "airDateUtc": "2023-07-24T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 130
+   },
+   {
+    "id": 41673,
+    "seasonNumber": 8,
+    "episodeNumber": 2,
+    "title": "Children of a Lesser Bog",
+    "airDate": "2023-07-31",
+    "airDateUtc": "2023-07-31T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 131
+   },
+   {
+    "id": 41674,
+    "seasonNumber": 8,
+    "episodeNumber": 3,
+    "title": "How the West Was 1010001",
+    "airDate": "2023-08-07",
+    "airDateUtc": "2023-08-07T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 132
+   },
+   {
+    "id": 41675,
+    "seasonNumber": 8,
+    "episodeNumber": 4,
+    "title": "Parasites Regained",
+    "airDate": "2023-08-14",
+    "airDateUtc": "2023-08-14T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 133
+   },
+   {
+    "id": 41676,
+    "seasonNumber": 8,
+    "episodeNumber": 5,
+    "title": "Related to Items You've Viewed",
+    "airDate": "2023-08-21",
+    "airDateUtc": "2023-08-21T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 134
+   },
+   {
+    "id": 41677,
+    "seasonNumber": 8,
+    "episodeNumber": 6,
+    "title": "I Know What You Did Next Xmas",
+    "airDate": "2023-08-28",
+    "airDateUtc": "2023-08-28T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 135
+   },
+   {
+    "id": 41678,
+    "seasonNumber": 8,
+    "episodeNumber": 7,
+    "title": "Rage Against the Vaccine",
+    "airDate": "2023-09-04",
+    "airDateUtc": "2023-09-04T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 136
+   },
+   {
+    "id": 41679,
+    "seasonNumber": 8,
+    "episodeNumber": 8,
+    "title": "Zapp Gets Canceled",
+    "airDate": "2023-09-11",
+    "airDateUtc": "2023-09-11T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 137
+   },
+   {
+    "id": 41680,
+    "seasonNumber": 8,
+    "episodeNumber": 9,
+    "title": "The Prince and the Product",
+    "airDate": "2023-09-18",
+    "airDateUtc": "2023-09-18T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 138
+   },
+   {
+    "id": 41681,
+    "seasonNumber": 8,
+    "episodeNumber": 10,
+    "title": "All The Way Down",
+    "airDate": "2023-09-25",
+    "airDateUtc": "2023-09-25T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 139
+   },
+   {
+    "id": 59634,
+    "seasonNumber": 9,
+    "episodeNumber": 1,
+    "title": "The One Amigo",
+    "airDate": "2024-07-29",
+    "airDateUtc": "2024-07-29T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 140
+   },
+   {
+    "id": 59635,
+    "seasonNumber": 9,
+    "episodeNumber": 2,
+    "title": "Quids Game",
+    "airDate": "2024-08-05",
+    "airDateUtc": "2024-08-05T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 141
+   },
+   {
+    "id": 59636,
+    "seasonNumber": 9,
+    "episodeNumber": 3,
+    "title": "The Temp",
+    "airDate": "2024-08-12",
+    "airDateUtc": "2024-08-12T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 142
+   },
+   {
+    "id": 59637,
+    "seasonNumber": 9,
+    "episodeNumber": 4,
+    "title": "Beauty and The Bug",
+    "airDate": "2024-08-19",
+    "airDateUtc": "2024-08-19T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 143
+   },
+   {
+    "id": 59638,
+    "seasonNumber": 9,
+    "episodeNumber": 5,
+    "title": "One is Silicon and the Other Gold",
+    "airDate": "2024-08-26",
+    "airDateUtc": "2024-08-26T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 144
+   },
+   {
+    "id": 59639,
+    "seasonNumber": 9,
+    "episodeNumber": 6,
+    "title": "Attack of the Clothes",
+    "airDate": "2024-09-02",
+    "airDateUtc": "2024-09-02T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 145
+   },
+   {
+    "id": 59640,
+    "seasonNumber": 9,
+    "episodeNumber": 7,
+    "title": "Planet Espresso",
+    "airDate": "2024-09-09",
+    "airDateUtc": "2024-09-09T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 146
+   },
+   {
+    "id": 59641,
+    "seasonNumber": 9,
+    "episodeNumber": 8,
+    "title": "Cuteness Overload",
+    "airDate": "2024-09-16",
+    "airDateUtc": "2024-09-16T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 147
+   },
+   {
+    "id": 59642,
+    "seasonNumber": 9,
+    "episodeNumber": 9,
+    "title": "The Futurama Mystery Liberry",
+    "airDate": "2024-09-23",
+    "airDateUtc": "2024-09-23T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 148
+   },
+   {
+    "id": 59643,
+    "seasonNumber": 9,
+    "episodeNumber": 10,
+    "title": "Otherwise",
+    "airDate": "2024-09-30",
+    "airDateUtc": "2024-09-30T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 149
+   },
+   {
+    "id": 77751,
+    "seasonNumber": 10,
+    "episodeNumber": 1,
+    "title": "Destroy Tall Monsters",
+    "airDate": "2025-09-15",
+    "airDateUtc": "2025-09-15T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 150
+   },
+   {
+    "id": 77752,
+    "seasonNumber": 10,
+    "episodeNumber": 2,
+    "title": "The World Is Hot Enough",
+    "airDate": "2025-09-15",
+    "airDateUtc": "2025-09-15T10:23:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 151
+   },
+   {
+    "id": 77753,
+    "seasonNumber": 10,
+    "episodeNumber": 3,
+    "title": "Fifty Shades of Green",
+    "airDate": "2025-09-22",
+    "airDateUtc": "2025-09-22T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 152
+   },
+   {
+    "id": 77754,
+    "seasonNumber": 10,
+    "episodeNumber": 4,
+    "title": "The Numberland Gap",
+    "airDate": "2025-09-22",
+    "airDateUtc": "2025-09-22T10:23:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 153
+   },
+   {
+    "id": 77755,
+    "seasonNumber": 10,
+    "episodeNumber": 5,
+    "title": "Scared Screenless",
+    "airDate": "2025-09-29",
+    "airDateUtc": "2025-09-29T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 154
+   },
+   {
+    "id": 77756,
+    "seasonNumber": 10,
+    "episodeNumber": 6,
+    "title": "Wicked Human",
+    "airDate": "2025-09-29",
+    "airDateUtc": "2025-09-29T10:23:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 155
+   },
+   {
+    "id": 77757,
+    "seasonNumber": 10,
+    "episodeNumber": 7,
+    "title": "Murderoni",
+    "airDate": "2025-10-06",
+    "airDateUtc": "2025-10-06T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 156
+   },
+   {
+    "id": 77758,
+    "seasonNumber": 10,
+    "episodeNumber": 8,
+    "title": "Crab Splatter",
+    "airDate": "2025-10-06",
+    "airDateUtc": "2025-10-06T10:23:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 157
+   },
+   {
+    "id": 77759,
+    "seasonNumber": 10,
+    "episodeNumber": 9,
+    "title": "The Trouble with Truffles",
+    "airDate": "2025-10-13",
+    "airDateUtc": "2025-10-13T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 158
+   },
+   {
+    "id": 77760,
+    "seasonNumber": 10,
+    "episodeNumber": 10,
+    "title": "The White Hole",
+    "airDate": "2025-10-13",
+    "airDateUtc": "2025-10-13T10:23:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 159
+   },
+   {
+    "id": 83603,
+    "seasonNumber": 11,
+    "episodeNumber": 1,
+    "title": "Beef",
+    "airDate": "2026-08-03",
+    "airDateUtc": "2026-08-03T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 162
+   },
+   {
+    "id": 83604,
+    "seasonNumber": 11,
+    "episodeNumber": 2,
+    "title": "Catfish Hunter",
+    "airDate": "2026-08-03",
+    "airDateUtc": "2026-08-03T10:23:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 167
+   },
+   {
+    "id": 83605,
+    "seasonNumber": 11,
+    "episodeNumber": 3,
+    "title": "Our Flag Means Medical Coverage",
+    "airDate": "2026-08-10",
+    "airDateUtc": "2026-08-10T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 161
+   },
+   {
+    "id": 83606,
+    "seasonNumber": 11,
+    "episodeNumber": 4,
+    "title": "Lords of the Ring",
+    "airDate": "2026-08-17",
+    "airDateUtc": "2026-08-17T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 160
+   },
+   {
+    "id": 83607,
+    "seasonNumber": 11,
+    "episodeNumber": 5,
+    "title": "The Charm Offensive",
+    "airDate": "2026-08-24",
+    "airDateUtc": "2026-08-24T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 163
+   },
+   {
+    "id": 83608,
+    "seasonNumber": 11,
+    "episodeNumber": 6,
+    "title": "Late Bloomers",
+    "airDate": "2026-08-31",
+    "airDateUtc": "2026-08-31T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 165
+   },
+   {
+    "id": 83609,
+    "seasonNumber": 11,
+    "episodeNumber": 7,
+    "title": "Lord Nibbler in the Nothingverse",
+    "airDate": "2026-09-07",
+    "airDateUtc": "2026-09-07T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 164
+   },
+   {
+    "id": 83610,
+    "seasonNumber": 11,
+    "episodeNumber": 8,
+    "title": "Oceans Three",
+    "airDate": "2026-09-14",
+    "airDateUtc": "2026-09-14T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 166
+   },
+   {
+    "id": 83611,
+    "seasonNumber": 11,
+    "episodeNumber": 9,
+    "title": "A New New York Yankee in King Elfo's Court",
+    "airDate": "2026-09-21",
+    "airDateUtc": "2026-09-21T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 168
+   },
+   {
+    "id": 83612,
+    "seasonNumber": 11,
+    "episodeNumber": 10,
+    "title": "Final Ending: The Last Conclusion",
+    "airDate": "2026-09-28",
+    "airDateUtc": "2026-09-28T10:00:00Z",
+    "hasFile": true,
+    "absoluteEpisodeNumber": 169
+   }
+  ],
+  "series": {
+   "tvdbId": 73871,
+   "tmdbId": 615,
+   "title": "Futurama"
+  },
+  "tmdb": [
+   {
+    "names": [
+     "Bender's Big Score",
+     "La Grande Aventure de Bender"
+    ],
+    "air_date": "2007-11-27",
+    "season": 0,
+    "number": 1
+   },
+   {
+    "names": [
+     "Everybody Loves Hypnotoad"
+    ],
+    "air_date": "2007-11-27",
+    "season": 0,
+    "number": 2
+   },
+   {
+    "names": [
+     "The Beast with a Billion Backs",
+     "Le Monstre au milliard de tentacules"
+    ],
+    "air_date": "2008-06-24",
+    "season": 0,
+    "number": 3
+   },
+   {
+    "names": [
+     "The Lost Adventure",
+     "L'aventure perdue"
+    ],
+    "air_date": "2008-06-24",
+    "season": 0,
+    "number": 4
+   },
+   {
+    "names": [
+     "Bender's Game",
+     "Prenez garde au seigneur des robots !"
+    ],
+    "air_date": "2008-11-04",
+    "season": 0,
+    "number": 5
+   },
+   {
+    "names": [
+     "Into the Wild Green Yonder",
+     "Vous prendrez bien un dernier vert ?"
+    ],
+    "air_date": "2009-02-12",
+    "season": 0,
+    "number": 6
+   },
+   {
+    "names": [
+     "Space Pilot 3000",
+     "Spaciopilote 3000"
+    ],
+    "air_date": "1999-03-28",
+    "season": 1,
+    "number": 1
+   },
+   {
+    "names": [
+     "The Series Has Landed",
+     "La série débarque"
+    ],
+    "air_date": "1999-04-04",
+    "season": 1,
+    "number": 2
+   },
+   {
+    "names": [
+     "I, Roommate",
+     "Le Colocataire"
+    ],
+    "air_date": "1999-04-06",
+    "season": 1,
+    "number": 3
+   },
+   {
+    "names": [
+     "Love's Labours Lost in Space",
+     "Victime de l'amour, perdue dans l'espace"
+    ],
+    "air_date": "1999-04-13",
+    "season": 1,
+    "number": 4
+   },
+   {
+    "names": [
+     "Fear of a Bot Planet",
+     "Terreur sur la planète robot"
+    ],
+    "air_date": "1999-04-20",
+    "season": 1,
+    "number": 5
+   },
+   {
+    "names": [
+     "A Fishful of Dollars",
+     "Cinquante millions de dollars d'anchois"
+    ],
+    "air_date": "1999-04-27",
+    "season": 1,
+    "number": 6
+   },
+   {
+    "names": [
+     "My Three Suns",
+     "Trois soleils"
+    ],
+    "air_date": "1999-05-04",
+    "season": 1,
+    "number": 7
+   },
+   {
+    "names": [
+     "A Big Piece of Garbage",
+     "Un gros tas d'ordures"
+    ],
+    "air_date": "1999-05-11",
+    "season": 1,
+    "number": 8
+   },
+   {
+    "names": [
+     "Hell Is Other Robots",
+     "L'Enfer, c'est les autres robots"
+    ],
+    "air_date": "1999-05-18",
+    "season": 1,
+    "number": 9
+   },
+   {
+    "names": [
+     "A Flight to Remember",
+     "Titanic II"
+    ],
+    "air_date": "1999-09-26",
+    "season": 2,
+    "number": 1
+   },
+   {
+    "names": [
+     "Mars University",
+     "L'Université martienne"
+    ],
+    "air_date": "1999-10-03",
+    "season": 2,
+    "number": 2
+   },
+   {
+    "names": [
+     "When Aliens Attack",
+     "Omicron Persei  8 attaque"
+    ],
+    "air_date": "1999-11-07",
+    "season": 2,
+    "number": 3
+   },
+   {
+    "names": [
+     "Fry & the Slurm Factory",
+     "Buvez du Slurm"
+    ],
+    "air_date": "1999-11-14",
+    "season": 2,
+    "number": 4
+   },
+   {
+    "names": [
+     "I Second That Emotion",
+     "Sentiments partagés"
+    ],
+    "air_date": "1999-11-21",
+    "season": 2,
+    "number": 5
+   },
+   {
+    "names": [
+     "Brannigan, Begin Again",
+     "La Déchéance de Brannigan"
+    ],
+    "air_date": "1999-11-28",
+    "season": 2,
+    "number": 6
+   },
+   {
+    "names": [
+     "A Head in the Polls",
+     "Fortes Têtes"
+    ],
+    "air_date": "1999-12-12",
+    "season": 2,
+    "number": 7
+   },
+   {
+    "names": [
+     "Xmas Story",
+     "Conte de Noël"
+    ],
+    "air_date": "1999-12-19",
+    "season": 2,
+    "number": 8
+   },
+   {
+    "names": [
+     "Why Must I Be a Crustacean in Love?",
+     "C'est si dur d'être un crustacé amoureux"
+    ],
+    "air_date": "2000-02-06",
+    "season": 2,
+    "number": 9
+   },
+   {
+    "names": [
+     "Put Your Head on My Shoulders",
+     "La Tête sur l'épaule"
+    ],
+    "air_date": "2000-02-13",
+    "season": 2,
+    "number": 10
+   },
+   {
+    "names": [
+     "Lesser of Two Evils",
+     "Le Moins pire des deux"
+    ],
+    "air_date": "2000-02-20",
+    "season": 2,
+    "number": 11
+   },
+   {
+    "names": [
+     "Raging Bender"
+    ],
+    "air_date": "2000-02-27",
+    "season": 2,
+    "number": 12
+   },
+   {
+    "names": [
+     "A Bicyclops Built For Two",
+     "Le Mariage de Leela"
+    ],
+    "air_date": "2000-03-19",
+    "season": 2,
+    "number": 13
+   },
+   {
+    "names": [
+     "How Hermes Requisitioned His Groove Back",
+     "L’Inspectrice de l’administration centrale"
+    ],
+    "air_date": "2000-04-02",
+    "season": 2,
+    "number": 14
+   },
+   {
+    "names": [
+     "A Clone of My Own",
+     "Le Clone de Farnsworth"
+    ],
+    "air_date": "2000-04-09",
+    "season": 2,
+    "number": 15
+   },
+   {
+    "names": [
+     "The Deep South",
+     "Le Sud profond"
+    ],
+    "air_date": "2000-04-16",
+    "season": 2,
+    "number": 16
+   },
+   {
+    "names": [
+     "Bender Gets Made",
+     "Bender s'affranchit"
+    ],
+    "air_date": "2000-04-30",
+    "season": 2,
+    "number": 17
+   },
+   {
+    "names": [
+     "The Problem with Popplers",
+     "Délicieux Enfants"
+    ],
+    "air_date": "2000-05-07",
+    "season": 2,
+    "number": 18
+   },
+   {
+    "names": [
+     "Mother's Day",
+     "Fête des mères"
+    ],
+    "air_date": "2000-05-14",
+    "season": 2,
+    "number": 19
+   },
+   {
+    "names": [
+     "Anthology of Interest I",
+     "Histoires formidables !"
+    ],
+    "air_date": "2000-05-21",
+    "season": 2,
+    "number": 20
+   },
+   {
+    "names": [
+     "The Honking",
+     "La Voiture-Garoute"
+    ],
+    "air_date": "2000-11-05",
+    "season": 3,
+    "number": 1
+   },
+   {
+    "names": [
+     "War Is the H-Word",
+     "La Guerre c'est l'enfer"
+    ],
+    "air_date": "2000-11-26",
+    "season": 3,
+    "number": 2
+   },
+   {
+    "names": [
+     "The Cryonic Woman",
+     "La Femme cryonique"
+    ],
+    "air_date": "2000-12-03",
+    "season": 3,
+    "number": 3
+   },
+   {
+    "names": [
+     "Parasites Lost",
+     "Parasites perdus"
+    ],
+    "air_date": "2001-01-21",
+    "season": 3,
+    "number": 4
+   },
+   {
+    "names": [
+     "Amazon Women in the Mood",
+     "Amazones amoureuses"
+    ],
+    "air_date": "2001-02-04",
+    "season": 3,
+    "number": 5
+   },
+   {
+    "names": [
+     "Bendless Love",
+     "Bender est amoureux"
+    ],
+    "air_date": "2001-02-11",
+    "season": 3,
+    "number": 6
+   },
+   {
+    "names": [
+     "The Day the Earth Stood Stupid",
+     "Le jour où la Terre devint stupide"
+    ],
+    "air_date": "2001-02-18",
+    "season": 3,
+    "number": 7
+   },
+   {
+    "names": [
+     "That's Lobstertainment!",
+     "Zoidberg à Hollywood"
+    ],
+    "air_date": "2001-02-25",
+    "season": 3,
+    "number": 8
+   },
+   {
+    "names": [
+     "The Birdbot of Ice-Catraz",
+     "L'Évadé de Glace-Catraz"
+    ],
+    "air_date": "2001-03-04",
+    "season": 3,
+    "number": 9
+   },
+   {
+    "names": [
+     "The Luck of the Fryrish",
+     "Le Trèfle à sept feuilles"
+    ],
+    "air_date": "2001-03-11",
+    "season": 3,
+    "number": 10
+   },
+   {
+    "names": [
+     "The Cyber House Rules",
+     "Les Orphelins"
+    ],
+    "air_date": "2001-04-01",
+    "season": 3,
+    "number": 11
+   },
+   {
+    "names": [
+     "Insane in the Mainframe",
+     "Vol au-dessus d'un nid de robots"
+    ],
+    "air_date": "2001-04-08",
+    "season": 3,
+    "number": 12
+   },
+   {
+    "names": [
+     "Bendin' in the Wind",
+     "Bender casse la baraque"
+    ],
+    "air_date": "2001-04-22",
+    "season": 3,
+    "number": 13
+   },
+   {
+    "names": [
+     "Time Keeps On Slippin'",
+     "Les Dérapages du temps"
+    ],
+    "air_date": "2001-05-06",
+    "season": 3,
+    "number": 14
+   },
+   {
+    "names": [
+     "I Dated a Robot",
+     "Je sors avec un robot"
+    ],
+    "air_date": "2001-05-13",
+    "season": 3,
+    "number": 15
+   },
+   {
+    "names": [
+     "Roswell That Ends Well",
+     "Tout se termine bien à Roswell"
+    ],
+    "air_date": "2001-12-09",
+    "season": 4,
+    "number": 1
+   },
+   {
+    "names": [
+     "A Tale of Two Santas",
+     "Le Conte des deux Pères Noël"
+    ],
+    "air_date": "2001-12-23",
+    "season": 4,
+    "number": 2
+   },
+   {
+    "names": [
+     "Anthology of Interest II",
+     "Histoires formidables 2"
+    ],
+    "air_date": "2002-01-06",
+    "season": 4,
+    "number": 3
+   },
+   {
+    "names": [
+     "Love and Rocket",
+     "Un amour de vaisseau"
+    ],
+    "air_date": "2002-02-10",
+    "season": 4,
+    "number": 4
+   },
+   {
+    "names": [
+     "Leela's Homeworld",
+     "Retrouvailles"
+    ],
+    "air_date": "2002-02-17",
+    "season": 4,
+    "number": 5
+   },
+   {
+    "names": [
+     "Where the Buggalo Roam",
+     "Buggalos en vadrouille"
+    ],
+    "air_date": "2002-03-03",
+    "season": 4,
+    "number": 6
+   },
+   {
+    "names": [
+     "A Pharaoh to Remember",
+     "La Huitième plaie"
+    ],
+    "air_date": "2002-03-10",
+    "season": 4,
+    "number": 7
+   },
+   {
+    "names": [
+     "Godfellas",
+     "La Preuve par Dieu"
+    ],
+    "air_date": "2002-03-17",
+    "season": 4,
+    "number": 8
+   },
+   {
+    "names": [
+     "Future Stock",
+     "OPA sur PME"
+    ],
+    "air_date": "2002-03-17",
+    "season": 4,
+    "number": 9
+   },
+   {
+    "names": [
+     "A Leela of Her Own",
+     "La Victoire en lançant"
+    ],
+    "air_date": "2002-04-07",
+    "season": 4,
+    "number": 10
+   },
+   {
+    "names": [
+     "30% Iron Chef",
+     "Le Chef de fer à 30%"
+    ],
+    "air_date": "2002-04-14",
+    "season": 4,
+    "number": 11
+   },
+   {
+    "names": [
+     "Where No Fan Has Gone Before",
+     "Là où aucun fan n'est allé"
+    ],
+    "air_date": "2002-04-21",
+    "season": 4,
+    "number": 12
+   },
+   {
+    "names": [
+     "Crimes of the Hot",
+     "Gaz à tous les étages"
+    ],
+    "air_date": "2002-11-10",
+    "season": 5,
+    "number": 1
+   },
+   {
+    "names": [
+     "Jurassic Bark",
+     "Ceux qui m'aiment prendront le chien"
+    ],
+    "air_date": "2002-11-17",
+    "season": 5,
+    "number": 2
+   },
+   {
+    "names": [
+     "The Route of All Evil",
+     "La Livraison du plus fort"
+    ],
+    "air_date": "2002-12-08",
+    "season": 5,
+    "number": 3
+   },
+   {
+    "names": [
+     "A Taste of Freedom",
+     "Le Goût de la liberté"
+    ],
+    "air_date": "2002-12-22",
+    "season": 5,
+    "number": 4
+   },
+   {
+    "names": [
+     "Kif Gets Knocked Up a Notch",
+     "Kif et le polichinelle dans le tiroir"
+    ],
+    "air_date": "2003-01-12",
+    "season": 5,
+    "number": 5
+   },
+   {
+    "names": [
+     "Less Than Hero",
+     "Astéroïque"
+    ],
+    "air_date": "2003-03-02",
+    "season": 5,
+    "number": 6
+   },
+   {
+    "names": [
+     "Teenage Mutant Leela's Hurdles",
+     "Un sacré coup de jeune"
+    ],
+    "air_date": "2003-03-30",
+    "season": 5,
+    "number": 7
+   },
+   {
+    "names": [
+     "The Why of Fry",
+     "Le Pourquoi du comment"
+    ],
+    "air_date": "2003-04-06",
+    "season": 5,
+    "number": 8
+   },
+   {
+    "names": [
+     "The Sting",
+     "Le Dard"
+    ],
+    "air_date": "2003-06-01",
+    "season": 5,
+    "number": 9
+   },
+   {
+    "names": [
+     "The Farnsworth Parabox",
+     "Le Bon, la Boîte et l'Ahuri"
+    ],
+    "air_date": "2003-06-08",
+    "season": 5,
+    "number": 10
+   },
+   {
+    "names": [
+     "Three Hundred Big Boys",
+     "La Cagnotte de la soie"
+    ],
+    "air_date": "2003-06-15",
+    "season": 5,
+    "number": 11
+   },
+   {
+    "names": [
+     "Spanish Fry",
+     "La Trompe humaine"
+    ],
+    "air_date": "2003-07-13",
+    "season": 5,
+    "number": 12
+   },
+   {
+    "names": [
+     "Bend Her",
+     "L'Homme est une femme formidable"
+    ],
+    "air_date": "2003-07-20",
+    "season": 5,
+    "number": 13
+   },
+   {
+    "names": [
+     "Obsoletely Fabulous"
+    ],
+    "air_date": "2003-07-27",
+    "season": 5,
+    "number": 14
+   },
+   {
+    "names": [
+     "Bender Should Not Be Allowed on TV",
+     "Censurez Bender"
+    ],
+    "air_date": "2003-08-03",
+    "season": 5,
+    "number": 15
+   },
+   {
+    "names": [
+     "The Devil's Hands Are Idle Playthings",
+     "La Main du Diable dans la culotte d'un zouave"
+    ],
+    "air_date": "2003-08-10",
+    "season": 5,
+    "number": 16
+   },
+   {
+    "names": [
+     "Rebirth",
+     "Renaissance"
+    ],
+    "air_date": "2010-06-24",
+    "season": 6,
+    "number": 1
+   },
+   {
+    "names": [
+     "In-A-Gadda-Da-Leela",
+     "Innocence perdue"
+    ],
+    "air_date": "2010-06-24",
+    "season": 6,
+    "number": 2
+   },
+   {
+    "names": [
+     "Attack of the Killer App",
+     "L'Attaque des portables"
+    ],
+    "air_date": "2010-07-01",
+    "season": 6,
+    "number": 3
+   },
+   {
+    "names": [
+     "Proposition Infinity",
+     "Mariages interdits"
+    ],
+    "air_date": "2010-07-08",
+    "season": 6,
+    "number": 4
+   },
+   {
+    "names": [
+     "The Duh-Vinci Code",
+     "Sciences idiotes"
+    ],
+    "air_date": "2010-07-15",
+    "season": 6,
+    "number": 5
+   },
+   {
+    "names": [
+     "Lethal Inspection",
+     "Inspection mortelle"
+    ],
+    "air_date": "2010-07-22",
+    "season": 6,
+    "number": 6
+   },
+   {
+    "names": [
+     "The Late Philip J. Fry",
+     "Retour vers les futurs"
+    ],
+    "air_date": "2010-07-29",
+    "season": 6,
+    "number": 7
+   },
+   {
+    "names": [
+     "That Darn Katz!",
+     "Les Chats savants"
+    ],
+    "air_date": "2010-08-05",
+    "season": 6,
+    "number": 8
+   },
+   {
+    "names": [
+     "A Clockwork Origin",
+     "Origines mécaniques"
+    ],
+    "air_date": "2010-08-12",
+    "season": 6,
+    "number": 9
+   },
+   {
+    "names": [
+     "The Prisoner of Benda",
+     "Le Prisonnier de Benda"
+    ],
+    "air_date": "2010-08-19",
+    "season": 6,
+    "number": 10
+   },
+   {
+    "names": [
+     "Lrrreconcilable Ndndifferences",
+     "Différences insurmontables"
+    ],
+    "air_date": "2010-08-26",
+    "season": 6,
+    "number": 11
+   },
+   {
+    "names": [
+     "The Mutants Are Revolting",
+     "Les Mutants révoltants"
+    ],
+    "air_date": "2010-09-02",
+    "season": 6,
+    "number": 12
+   },
+   {
+    "names": [
+     "The Futurama Holiday Spectacular",
+     "L'Épisode incroyable"
+    ],
+    "air_date": "2010-11-21",
+    "season": 6,
+    "number": 13
+   },
+   {
+    "names": [
+     "Neutopia",
+     "La Guerre des sexes"
+    ],
+    "air_date": "2011-06-23",
+    "season": 6,
+    "number": 14
+   },
+   {
+    "names": [
+     "Benderama"
+    ],
+    "air_date": "2011-06-23",
+    "season": 6,
+    "number": 15
+   },
+   {
+    "names": [
+     "Ghost in the Machines",
+     "Un fantôme dans les machines"
+    ],
+    "air_date": "2011-06-30",
+    "season": 6,
+    "number": 16
+   },
+   {
+    "names": [
+     "Law and Oracle",
+     "La Loi et l'Oracle"
+    ],
+    "air_date": "2011-07-07",
+    "season": 6,
+    "number": 17
+   },
+   {
+    "names": [
+     "The Silence of the Clamps",
+     "Le Silence des robots"
+    ],
+    "air_date": "2011-07-14",
+    "season": 6,
+    "number": 18
+   },
+   {
+    "names": [
+     "Yo Leela Leela",
+     "Leela raconte des histoires"
+    ],
+    "air_date": "2011-07-21",
+    "season": 6,
+    "number": 19
+   },
+   {
+    "names": [
+     "All the Presidents' Heads",
+     "Les Têtes des présidents"
+    ],
+    "air_date": "2011-07-28",
+    "season": 6,
+    "number": 20
+   },
+   {
+    "names": [
+     "Mobius Dick",
+     "Obsession"
+    ],
+    "air_date": "2011-08-04",
+    "season": 6,
+    "number": 21
+   },
+   {
+    "names": [
+     "Fry Am the Egg Man",
+     "On ne fait pas d'omelette sans casser des œufs"
+    ],
+    "air_date": "2011-08-11",
+    "season": 6,
+    "number": 22
+   },
+   {
+    "names": [
+     "The Tip of the Zoidberg",
+     "La Pointe de Zoidberg"
+    ],
+    "air_date": "2011-08-18",
+    "season": 6,
+    "number": 23
+   },
+   {
+    "names": [
+     "Cold Warriors",
+     "Le Concours de la NASA"
+    ],
+    "air_date": "2011-08-25",
+    "season": 6,
+    "number": 24
+   },
+   {
+    "names": [
+     "Overclockwise",
+     "Optimisanthrope"
+    ],
+    "air_date": "2011-09-01",
+    "season": 6,
+    "number": 25
+   },
+   {
+    "names": [
+     "Reincarnation",
+     "Réincarnations"
+    ],
+    "air_date": "2011-09-08",
+    "season": 6,
+    "number": 26
+   },
+   {
+    "names": [
+     "The Bots and the Bees",
+     "Paternité robot-rative"
+    ],
+    "air_date": "2012-06-20",
+    "season": 7,
+    "number": 1
+   },
+   {
+    "names": [
+     "A Farewell to Arms",
+     "Des mains tendues à bras raccourcis"
+    ],
+    "air_date": "2012-06-20",
+    "season": 7,
+    "number": 2
+   },
+   {
+    "names": [
+     "Decision 3012",
+     "Retour vers 3012"
+    ],
+    "air_date": "2012-06-27",
+    "season": 7,
+    "number": 3
+   },
+   {
+    "names": [
+     "The Thief of Baghead",
+     "L'affaire est dans le sac"
+    ],
+    "air_date": "2012-07-04",
+    "season": 7,
+    "number": 4
+   },
+   {
+    "names": [
+     "Zapp Dingbat",
+     "Zappy End"
+    ],
+    "air_date": "2012-07-11",
+    "season": 7,
+    "number": 5
+   },
+   {
+    "names": [
+     "The Butterjunk Effect",
+     "L'Effet papillon"
+    ],
+    "air_date": "2012-07-18",
+    "season": 7,
+    "number": 6
+   },
+   {
+    "names": [
+     "The Six Million Dollar Mon",
+     "Le Rasta qui valait trois milliards"
+    ],
+    "air_date": "2012-07-25",
+    "season": 7,
+    "number": 7
+   },
+   {
+    "names": [
+     "Fun on a Bun",
+     "La Saucisse de Bender"
+    ],
+    "air_date": "2012-08-01",
+    "season": 7,
+    "number": 8
+   },
+   {
+    "names": [
+     "Free Will Hunting",
+     "Very Bad Trip"
+    ],
+    "air_date": "2012-08-08",
+    "season": 7,
+    "number": 9
+   },
+   {
+    "names": [
+     "Near-Death Wish",
+     "Il était une fois Farnsworth"
+    ],
+    "air_date": "2012-08-15",
+    "season": 7,
+    "number": 10
+   },
+   {
+    "names": [
+     "Viva Mars Vegas"
+    ],
+    "air_date": "2012-08-22",
+    "season": 7,
+    "number": 11
+   },
+   {
+    "names": [
+     "31st Century Fox",
+     "Chasseur mais pas trop"
+    ],
+    "air_date": "2012-08-29",
+    "season": 7,
+    "number": 12
+   },
+   {
+    "names": [
+     "Naturama"
+    ],
+    "air_date": "2012-08-29",
+    "season": 7,
+    "number": 13
+   },
+   {
+    "names": [
+     "2-D Blacktop",
+     "Un monde en 2D"
+    ],
+    "air_date": "2013-06-19",
+    "season": 7,
+    "number": 14
+   },
+   {
+    "names": [
+     "Fry and Leela's Big Fling",
+     "Le Fry et Leela Show"
+    ],
+    "air_date": "2013-06-19",
+    "season": 7,
+    "number": 15
+   },
+   {
+    "names": [
+     "T.: The Terrestrial",
+     "T., l'extra terrestre"
+    ],
+    "air_date": "2013-06-26",
+    "season": 7,
+    "number": 16
+   },
+   {
+    "names": [
+     "Forty Percent Leadbelly",
+     "Folk en stock"
+    ],
+    "air_date": "2013-07-03",
+    "season": 7,
+    "number": 17
+   },
+   {
+    "names": [
+     "The Inhuman Torch",
+     "La Torche inhumaine"
+    ],
+    "air_date": "2013-07-10",
+    "season": 7,
+    "number": 18
+   },
+   {
+    "names": [
+     "Saturday Morning Fun Pit",
+     "Futurama et ses amis"
+    ],
+    "air_date": "2013-07-17",
+    "season": 7,
+    "number": 19
+   },
+   {
+    "names": [
+     "Calculon 2.0",
+     "Résurrection"
+    ],
+    "air_date": "2013-07-24",
+    "season": 7,
+    "number": 20
+   },
+   {
+    "names": [
+     "Assie Come Home",
+     "Un seul cul vous manque"
+    ],
+    "air_date": "2013-07-31",
+    "season": 7,
+    "number": 21
+   },
+   {
+    "names": [
+     "Leela and the Genestalk",
+     "Leela et le Haricot géant"
+    ],
+    "air_date": "2013-08-07",
+    "season": 7,
+    "number": 22
+   },
+   {
+    "names": [
+     "Game of Tones",
+     "On connaît la chanson"
+    ],
+    "air_date": "2013-08-14",
+    "season": 7,
+    "number": 23
+   },
+   {
+    "names": [
+     "Murder on the Planet Express",
+     "Question de confiance"
+    ],
+    "air_date": "2013-08-21",
+    "season": 7,
+    "number": 24
+   },
+   {
+    "names": [
+     "Stench and Stenchibility",
+     "Puanteur et Deca-danse"
+    ],
+    "air_date": "2013-08-28",
+    "season": 7,
+    "number": 25
+   },
+   {
+    "names": [
+     "Meanwhile",
+     "En attendant…"
+    ],
+    "air_date": "2013-09-04",
+    "season": 7,
+    "number": 26
+   },
+   {
+    "names": [
+     "The Impossible Stream",
+     "Streaming impossible"
+    ],
+    "air_date": "2023-07-24",
+    "season": 8,
+    "number": 1
+   },
+   {
+    "names": [
+     "Children of a Lesser Bog",
+     "Les enfants des marais"
+    ],
+    "air_date": "2023-07-31",
+    "season": 8,
+    "number": 2
+   },
+   {
+    "names": [
+     "How the West Was 1010001",
+     "Comme au temps du Far West"
+    ],
+    "air_date": "2023-08-07",
+    "season": 8,
+    "number": 3
+   },
+   {
+    "names": [
+     "Parasites Regained",
+     "En vers et contre tous"
+    ],
+    "air_date": "2023-08-14",
+    "season": 8,
+    "number": 4
+   },
+   {
+    "names": [
+     "Related to Items You've Viewed",
+     "La mère de l'univers"
+    ],
+    "air_date": "2023-08-21",
+    "season": 8,
+    "number": 5
+   },
+   {
+    "names": [
+     "I Know What You Did Next Xmas",
+     "Souviens-toi Noël prochain..."
+    ],
+    "air_date": "2023-08-28",
+    "season": 8,
+    "number": 6
+   },
+   {
+    "names": [
+     "Rage Against the Vaccine",
+     "Non aux vaccins !"
+    ],
+    "air_date": "2023-09-04",
+    "season": 8,
+    "number": 7
+   },
+   {
+    "names": [
+     "Zapp Gets Canceled",
+     "Stage de sensibilisation"
+    ],
+    "air_date": "2023-09-11",
+    "season": 8,
+    "number": 8
+   },
+   {
+    "names": [
+     "The Prince and the Product",
+     "Le Prince et le Produit"
+    ],
+    "air_date": "2023-09-18",
+    "season": 8,
+    "number": 9
+   },
+   {
+    "names": [
+     "All the Way Down",
+     "Simulation"
+    ],
+    "air_date": "2023-09-25",
+    "season": 8,
+    "number": 10
+   },
+   {
+    "names": [
+     "The One Amigo",
+     "Le Seul Amigo"
+    ],
+    "air_date": "2024-07-29",
+    "season": 9,
+    "number": 1
+   },
+   {
+    "names": [
+     "Quids Game",
+     "Jeux mortels"
+    ],
+    "air_date": "2024-08-05",
+    "season": 9,
+    "number": 2
+   },
+   {
+    "names": [
+     "The Temp",
+     "L'Intérimaire"
+    ],
+    "air_date": "2024-08-12",
+    "season": 9,
+    "number": 3
+   },
+   {
+    "names": [
+     "Beauty and the Bug",
+     "Le Beau et l'Insecte"
+    ],
+    "air_date": "2024-08-19",
+    "season": 9,
+    "number": 4
+   },
+   {
+    "names": [
+     "One Is Silicon and the Other Gold",
+     "L'un est en silicone et l'autre en or"
+    ],
+    "air_date": "2024-08-26",
+    "season": 9,
+    "number": 5
+   },
+   {
+    "names": [
+     "Attack of the Clothes",
+     "L'Attaque des fringues"
+    ],
+    "air_date": "2024-09-02",
+    "season": 9,
+    "number": 6
+   },
+   {
+    "names": [
+     "Planet Espresso",
+     "Planète Expresso"
+    ],
+    "air_date": "2024-09-09",
+    "season": 9,
+    "number": 7
+   },
+   {
+    "names": [
+     "Cuteness Overload",
+     "Trop mignons"
+    ],
+    "air_date": "2024-09-16",
+    "season": 9,
+    "number": 8
+   },
+   {
+    "names": [
+     "The Futurama Mystery Liberry",
+     "Le Mystère de Futurama"
+    ],
+    "air_date": "2024-09-23",
+    "season": 9,
+    "number": 9
+   },
+   {
+    "names": [
+     "Otherwise",
+     "Du déjà-vu"
+    ],
+    "air_date": "2024-09-30",
+    "season": 9,
+    "number": 10
+   },
+   {
+    "names": [
+     "Destroy Tall Monsters",
+     "Détruisez les grands monstres"
+    ],
+    "air_date": "2025-09-15",
+    "season": 10,
+    "number": 1
+   },
+   {
+    "names": [
+     "The World Is Hot Enough",
+     "Le monde est déjà assez chaud"
+    ],
+    "air_date": "2025-09-15",
+    "season": 10,
+    "number": 2
+   },
+   {
+    "names": [
+     "Fifty Shades of Green",
+     "Cinquante nuances de vert"
+    ],
+    "air_date": "2025-09-15",
+    "season": 10,
+    "number": 3
+   },
+   {
+    "names": [
+     "The Numberland Gap",
+     "Le fossé du pays des nombres"
+    ],
+    "air_date": "2025-09-15",
+    "season": 10,
+    "number": 4
+   },
+   {
+    "names": [
+     "Scared Screenless",
+     "Effrayés sans écran"
+    ],
+    "air_date": "2025-09-15",
+    "season": 10,
+    "number": 5
+   },
+   {
+    "names": [
+     "Wicked Human",
+     "Méchant humain"
+    ],
+    "air_date": "2025-09-15",
+    "season": 10,
+    "number": 6
+   },
+   {
+    "names": [
+     "Murderoni"
+    ],
+    "air_date": "2025-09-15",
+    "season": 10,
+    "number": 7
+   },
+   {
+    "names": [
+     "Crab Splatter",
+     "Éclaboussures de crabe"
+    ],
+    "air_date": "2025-09-15",
+    "season": 10,
+    "number": 8
+   },
+   {
+    "names": [
+     "The Trouble with Truffles",
+     "Le problème avec les truffes"
+    ],
+    "air_date": "2025-09-15",
+    "season": 10,
+    "number": 9
+   },
+   {
+    "names": [
+     "The White Hole",
+     "Le trou blanc"
+    ],
+    "air_date": "2025-09-15",
+    "season": 10,
+    "number": 10
+   },
+   {
+    "names": [
+     "Beef",
+     "Embrouille et barbaque"
+    ],
+    "air_date": "2026-08-03",
+    "season": 11,
+    "number": 1
+   },
+   {
+    "names": [
+     "Catfish Hunter",
+     "Arnaque-moi si tu peux"
+    ],
+    "air_date": "2026-08-03",
+    "season": 11,
+    "number": 2
+   },
+   {
+    "names": [
+     "Our Flag Means Medical Coverage",
+     "Pirates des galaxies"
+    ],
+    "air_date": "2026-08-10",
+    "season": 11,
+    "number": 3
+   },
+   {
+    "names": [
+     "Lords of the Ring",
+     "Les Seigneurs de l'anneau"
+    ],
+    "air_date": "2026-08-17",
+    "season": 11,
+    "number": 4
+   },
+   {
+    "names": [
+     "The Charm Offensive",
+     "Sous le charme"
+    ],
+    "air_date": "2026-08-24",
+    "season": 11,
+    "number": 5
+   },
+   {
+    "names": [
+     "Late Bloomers",
+     "Floraison tardive"
+    ],
+    "air_date": "2026-08-31",
+    "season": 11,
+    "number": 6
+   },
+   {
+    "names": [
+     "Lord Nibbler in the Nothingverse",
+     "Lord Nibbler et le Néant"
+    ],
+    "air_date": "2026-09-07",
+    "season": 11,
+    "number": 7
+   },
+   {
+    "names": [
+     "Oceans Three",
+     "La croisière se poile"
+    ],
+    "air_date": "2026-09-14",
+    "season": 11,
+    "number": 8
+   },
+   {
+    "names": [
+     "A New New York Yankee in King Elfo's Court",
+     "Désenchantante nouvelle, tout le monde !"
+    ],
+    "air_date": "2026-09-21",
+    "season": 11,
+    "number": 9
+   },
+   {
+    "names": [
+     "Final Ending: The Last Conclusion",
+     "Fin Finale : La dernière conclusion"
+    ],
+    "air_date": "2026-09-28",
+    "season": 11,
+    "number": 10
+   }
+  ],
+  "tvdb": {
+   "S00E01": "Tout le monde aime Hypnotoad",
+   "S00E02": "La Grande Aventure de Bender",
+   "S00E03": "Le Monstre au milliard de tentacules",
+   "S00E04": "L'aventure Lost",
+   "S00E05": "Prenez garde au seigneur des robots !",
+   "S00E06": "Vous prendrez bien un dernier vert ?",
+   "S01E01": "Spaciopilote 3000",
+   "S01E02": "La série débarque",
+   "S01E03": "Le Colocataire",
+   "S01E04": "Victime de l’amour, perdue dans l’espace",
+   "S01E05": "Terreur sur la planète robot",
+   "S01E06": "Cinquante Millions de dollars d’anchois",
+   "S01E07": "Trois Soleils",
+   "S01E08": "Un gros tas d’ordures",
+   "S01E09": "L'Enfer, c’est les autres robots",
+   "S02E01": "Titanic 2",
+   "S02E02": "L’Université martienne",
+   "S02E03": "Omicron Persei Huit attaque",
+   "S02E04": "Buvez du Slurm",
+   "S02E05": "Sentiments partagés",
+   "S02E06": "La Déchéance de Brannigan",
+   "S02E07": "Fortes Têtes",
+   "S02E08": "Conte de Noël",
+   "S02E09": "C'est si dur d’être un crustacé amoureux",
+   "S02E10": "La Tête sur l'épaule",
+   "S02E11": "Le Moins Pire des deux",
+   "S02E13": "Le Mariage de Leela",
+   "S02E14": "L'Inspectrice de l’administration centrale",
+   "S02E15": "Le Clone de Farnsworth",
+   "S02E16": "Le Sud profond",
+   "S02E17": "Bender s’affranchit",
+   "S02E18": "Délicieux Enfants",
+   "S02E19": "Fête des mères",
+   "S02E20": "Histoires formidables !",
+   "S03E01": "La Voiture-Garoute",
+   "S03E02": "La Guerre c'est l'enfer",
+   "S03E03": "La Femme cryonique",
+   "S03E04": "Parasites perdus",
+   "S03E05": "Amazones amoureuses",
+   "S03E06": "Bender est amoureux",
+   "S03E07": "Le jour où la Terre devint stupide",
+   "S03E08": "Zoidberg à Hollywood",
+   "S03E09": "L'Évadé de Glace-Catraz",
+   "S03E10": "Le Trèfle à sept feuilles",
+   "S03E11": "Les Orphelins",
+   "S03E12": "Vol au-dessus d'un nid de robots",
+   "S03E13": "Bender casse la baraque",
+   "S03E14": "Les Dérapages du temps",
+   "S03E15": "Je sors avec un robot",
+   "S04E01": "Tout se termine bien à Roswell",
+   "S04E02": "Le Conte des deux pères Noël",
+   "S04E03": "Histoires formidables 2",
+   "S04E04": "Un amour de vaisseau",
+   "S04E05": "Retrouvailles",
+   "S04E06": "Les buggalos en vadrouille",
+   "S04E07": "Un pharaon inoubliable",
+   "S04E08": "Les affranchis de Dieu",
+   "S04E09": "Les actions du futur",
+   "S04E10": "La Victoire en lançant",
+   "S04E11": "Le Chef de fer à 30 %",
+   "S04E12": "Là où aucun fan n'est allé",
+   "S05E01": "Gaz à tous les étages",
+   "S05E02": "Ceux qui m'aiment prendront le chien",
+   "S05E03": "La livraison du plus fort",
+   "S05E04": "Un goût de liberté",
+   "S05E05": "Kif et le polichinelle dans le tiroir",
+   "S05E06": "Astéroïque",
+   "S05E07": "Un sacré coup de jeune",
+   "S05E08": "Le pourquoi du comment",
+   "S05E09": "Le dard",
+   "S05E10": "Le bon, la boîte et l'ahuri",
+   "S05E11": "La cagnotte de la soie",
+   "S05E12": "La trompe humaine",
+   "S05E13": "L'homme est une femme formidable",
+   "S05E15": "Censurez Bender",
+   "S05E16": "La main du diable dans la culotte d'un zouave",
+   "S06E01": "Renaissance",
+   "S06E02": "Innocence perdue",
+   "S06E03": "L’attaque des portables",
+   "S06E04": "Mariages interdits",
+   "S06E05": "Sciences idiotes",
+   "S06E06": "Inspection mortelle",
+   "S06E07": "Retour vers les futurs",
+   "S06E08": "Les chats savants",
+   "S06E09": "Origines mécaniques",
+   "S06E10": "Le prisonnier de Benda",
+   "S06E11": "Dddifférences innnsurmontables",
+   "S06E12": "Les mutants révoltants",
+   "S06E13": "L’épisode incroyable",
+   "S06E14": "La guerre des sexes",
+   "S06E16": "Un fantôme dans les machines",
+   "S06E17": "La Loi et l'Oracle",
+   "S06E18": "Le silence des robots",
+   "S06E19": "Leela raconte des histoires",
+   "S06E20": "Les têtes des présidents",
+   "S06E21": "Obsession",
+   "S06E22": "On ne fait pas d'omelette sans casser des œufs",
+   "S06E23": "La pointe de Zoidberg",
+   "S06E24": "Le concours de la Nasa",
+   "S06E25": "Optimisanthrope",
+   "S06E26": "Réincarnations",
+   "S07E01": "Paternité robot-rative",
+   "S07E02": "Des mains tendues à bras raccourcis",
+   "S07E03": "Retour vers 3012",
+   "S07E04": "L'affaire est dans le sac",
+   "S07E05": "Zappy end",
+   "S07E06": "L'effet papillon",
+   "S07E07": "Le rasta qui valait trois milliards",
+   "S07E08": "La saucisse de Bender",
+   "S07E09": "Very Bad Trip",
+   "S07E10": "Il était une fois Farnsworth…",
+   "S07E12": "Chasseur mais pas trop",
+   "S07E14": "Un monde en 2D",
+   "S07E15": "Le Fry et Leela Show",
+   "S07E16": "T., l'extra-terrestre",
+   "S07E17": "Folk en stock",
+   "S07E18": "La torche inhumaine",
+   "S07E19": "Futurama et ses amis",
+   "S07E21": "Un seul cul vous manque",
+   "S07E22": "Leela et le haricot géant",
+   "S07E23": "On connaît la chanson",
+   "S07E24": "Question de confiance",
+   "S07E25": "Puanteur et déca-danse !",
+   "S07E26": "En attendant",
+   "S08E01": "Streaming impossible",
+   "S08E02": "Les enfants des marais",
+   "S08E03": "Comme au temps du Far West",
+   "S08E04": "En vers et contre tous",
+   "S08E05": "La mère de l'univers",
+   "S08E06": "Souviens-toi Noël prochain...",
+   "S08E07": "Non aux vaccins !",
+   "S08E08": "Stage de sensibilisation",
+   "S08E09": "Le Prince et le Produit",
+   "S08E10": "Simulation",
+   "S09E01": "Le Seul Amigo",
+   "S09E02": "Jeux mortels",
+   "S09E03": "L'Intérimaire",
+   "S09E04": "Le Beau et l'Insecte",
+   "S09E05": "L'un est en silicone et l'autre en or",
+   "S09E06": "L'attaque des fringues",
+   "S09E07": "Planète Expresso",
+   "S09E08": "Trop mignons",
+   "S09E09": "Le Mystère de Futurama",
+   "S09E10": "Du déjà-vu",
+   "S10E01": "Détruire les grands monstres",
+   "S10E02": "Le monde ne refroidit pas",
+   "S10E03": "Cinquante nuances de vert",
+   "S10E04": "Le fossé de Numberland",
+   "S10E05": "Digital detox",
+   "S10E06": "Maudit humain",
+   "S10E07": "Pizza mortelle",
+   "S10E08": "Éclats de crabe",
+   "S10E09": "Le problèmes des truffes",
+   "S10E10": "Le trou blanc",
+   "S11E01": "Embrouille et barbaque",
+   "S11E02": "Arnaque-moi si tu peux",
+   "S11E03": "Pirates des Galaxies",
+   "S11E04": "Les Seigneurs de l'anneau",
+   "S11E05": "L'offensive du charme",
+   "S11E06": "Éclosion tardive",
+   "S11E07": "Lord Nibbler dans le NéantUnivers",
+   "S11E08": "Les trois océans",
+   "S11E09": "Un nouveau Yankee de New York à la cour du roi Elfo",
+   "S11E10": "Fin finale : La conclusion ultime"
+  }
+ },
+ "expect": {
+  "available": {
+   "14413": {
+    "service": "S01E01",
+    "name": "Spaciopilote 3000",
+    "match": "title",
+    "same": true
+   },
+   "14414": {
+    "service": "S01E02",
+    "name": "La série débarque",
+    "match": "title",
+    "same": true
+   },
+   "14415": {
+    "service": "S01E03",
+    "name": "Le Colocataire",
+    "match": "title",
+    "same": true
+   },
+   "14416": {
+    "service": "S01E04",
+    "name": "Victime de l’amour, perdue dans l’espace",
+    "match": "title",
+    "same": true
+   },
+   "14417": {
+    "service": "S01E05",
+    "name": "Terreur sur la planète robot",
+    "match": "title",
+    "same": true
+   },
+   "14418": {
+    "service": "S01E06",
+    "name": "Cinquante Millions de dollars d’anchois",
+    "match": "title",
+    "same": true
+   },
+   "14419": {
+    "service": "S01E07",
+    "name": "Trois Soleils",
+    "match": "title",
+    "same": true
+   },
+   "14420": {
+    "service": "S01E08",
+    "name": "Un gros tas d’ordures",
+    "match": "title",
+    "same": true
+   },
+   "14421": {
+    "service": "S01E09",
+    "name": "L'Enfer, c’est les autres robots",
+    "match": "title",
+    "same": true
+   },
+   "14422": {
+    "service": "S02E01",
+    "name": "Titanic 2",
+    "match": "title",
+    "same": true
+   },
+   "14423": {
+    "service": "S02E02",
+    "name": "L’Université martienne",
+    "match": "title",
+    "same": true
+   },
+   "14424": {
+    "service": "S02E03",
+    "name": "Omicron Persei 8 attaque",
+    "match": "title",
+    "same": true
+   },
+   "14425": {
+    "service": "S02E04",
+    "name": "Buvez du Slurm",
+    "match": "title",
+    "same": true
+   },
+   "14426": {
+    "service": "S02E05",
+    "name": "Sentiments partagés",
+    "match": "title",
+    "same": true
+   },
+   "14427": {
+    "service": "S02E06",
+    "name": "La Déchéance de Brannigan",
+    "match": "title",
+    "same": true
+   },
+   "14428": {
+    "service": "S02E07",
+    "name": "Fortes Têtes",
+    "match": "title",
+    "same": true
+   },
+   "14429": {
+    "service": "S02E08",
+    "name": "Conte de Noël",
+    "match": "title",
+    "same": true
+   },
+   "14430": {
+    "service": "S02E09",
+    "name": "C'est si dur d’être un crustacé amoureux",
+    "match": "title",
+    "same": true
+   },
+   "14431": {
+    "service": "S02E10",
+    "name": "La Tête sur l'épaule",
+    "match": "title",
+    "same": true
+   },
+   "14432": {
+    "service": "S02E11",
+    "name": "Le Moins Pire des deux",
+    "match": "title",
+    "same": true
+   },
+   "14433": {
+    "service": "S02E12",
+    "name": "Raging Bender",
+    "match": "title",
+    "same": true
+   },
+   "14434": {
+    "service": "S02E13",
+    "name": "Le Mariage de Leela",
+    "match": "title",
+    "same": true
+   },
+   "14435": {
+    "service": "S02E14",
+    "name": "L'Inspectrice de l’administration centrale",
+    "match": "title",
+    "same": true
+   },
+   "14436": {
+    "service": "S02E15",
+    "name": "Le Clone de Farnsworth",
+    "match": "title",
+    "same": true
+   },
+   "14437": {
+    "service": "S02E16",
+    "name": "Le Sud profond",
+    "match": "title",
+    "same": true
+   },
+   "14438": {
+    "service": "S02E17",
+    "name": "Bender s’affranchit",
+    "match": "title",
+    "same": true
+   },
+   "14439": {
+    "service": "S02E18",
+    "name": "Délicieux Enfants",
+    "match": "title",
+    "same": true
+   },
+   "14440": {
+    "service": "S02E19",
+    "name": "Fête des mères",
+    "match": "title",
+    "same": true
+   },
+   "14441": {
+    "service": "S02E20",
+    "name": "Histoires formidables !"
+   },
+   "14442": {
+    "service": "S03E01",
+    "name": "La Voiture-Garoute",
+    "match": "title",
+    "same": true
+   },
+   "14443": {
+    "service": "S03E02",
+    "name": "La Guerre c'est l'enfer",
+    "match": "title",
+    "same": true
+   },
+   "14444": {
+    "service": "S03E03",
+    "name": "La Femme cryonique",
+    "match": "title",
+    "same": true
+   },
+   "14445": {
+    "service": "S03E04",
+    "name": "Parasites perdus",
+    "match": "title",
+    "same": true
+   },
+   "14446": {
+    "service": "S03E05",
+    "name": "Amazones amoureuses",
+    "match": "title",
+    "same": true
+   },
+   "14447": {
+    "service": "S03E06",
+    "name": "Bender est amoureux",
+    "match": "title",
+    "same": true
+   },
+   "14448": {
+    "service": "S03E07",
+    "name": "Le jour où la Terre devint stupide",
+    "match": "title",
+    "same": true
+   },
+   "14449": {
+    "service": "S03E08",
+    "name": "Zoidberg à Hollywood",
+    "match": "title",
+    "same": true
+   },
+   "14450": {
+    "service": "S03E09",
+    "name": "L'Évadé de Glace-Catraz",
+    "match": "title",
+    "same": true
+   },
+   "14451": {
+    "service": "S03E10",
+    "name": "Le Trèfle à sept feuilles",
+    "match": "title",
+    "same": true
+   },
+   "14452": {
+    "service": "S03E11",
+    "name": "Les Orphelins",
+    "match": "title",
+    "same": true
+   },
+   "14453": {
+    "service": "S03E12",
+    "name": "Vol au-dessus d'un nid de robots",
+    "match": "title",
+    "same": true
+   },
+   "14454": {
+    "service": "S03E13",
+    "name": "Bender casse la baraque",
+    "match": "title",
+    "same": true
+   },
+   "14455": {
+    "service": "S03E14",
+    "name": "Les Dérapages du temps",
+    "match": "title",
+    "same": true
+   },
+   "14456": {
+    "service": "S03E15",
+    "name": "Je sors avec un robot",
+    "match": "title",
+    "same": true
+   },
+   "14457": {
+    "service": "S04E01",
+    "name": "Tout se termine bien à Roswell",
+    "match": "title",
+    "same": true
+   },
+   "14458": {
+    "service": "S04E02",
+    "name": "Le Conte des deux pères Noël",
+    "match": "title",
+    "same": true
+   },
+   "14459": {
+    "service": "S04E03",
+    "name": "Histoires formidables 2"
+   },
+   "14460": {
+    "service": "S04E04",
+    "name": "Un amour de vaisseau",
+    "match": "title",
+    "same": true
+   },
+   "14461": {
+    "service": "S04E05",
+    "name": "Retrouvailles",
+    "match": "title",
+    "same": true
+   },
+   "14462": {
+    "service": "S04E06",
+    "name": "Buggalos en vadrouille",
+    "match": "title",
+    "same": true
+   },
+   "14463": {
+    "service": "S04E07",
+    "name": "La Huitième plaie",
+    "match": "title",
+    "same": true
+   },
+   "14464": {
+    "service": "S04E08",
+    "name": "La Preuve par Dieu"
+   },
+   "14465": {
+    "service": "S04E09",
+    "name": "OPA sur PME"
+   },
+   "14466": {
+    "service": "S04E10",
+    "name": "La Victoire en lançant",
+    "match": "title",
+    "same": true
+   },
+   "14467": {
+    "service": "S04E11",
+    "name": "Le Chef de fer à 30 %",
+    "match": "title",
+    "same": true
+   },
+   "14468": {
+    "service": "S04E12",
+    "name": "Là où aucun fan n'est allé",
+    "match": "title",
+    "same": true
+   },
+   "14469": {
+    "service": "S05E01",
+    "name": "Gaz à tous les étages",
+    "match": "title",
+    "same": true
+   },
+   "14470": {
+    "service": "S05E02",
+    "name": "Ceux qui m'aiment prendront le chien",
+    "match": "title",
+    "same": true
+   },
+   "14471": {
+    "service": "S05E03",
+    "name": "La Livraison du plus fort",
+    "match": "title",
+    "same": true
+   },
+   "14472": {
+    "service": "S05E04",
+    "name": "Le Goût de la liberté",
+    "match": "title",
+    "same": true
+   },
+   "14473": {
+    "service": "S05E05",
+    "name": "Kif et le Polichinelle dans le tiroir",
+    "match": "title",
+    "same": true
+   },
+   "14474": {
+    "service": "S05E06",
+    "name": "Astéroïque",
+    "match": "title",
+    "same": true
+   },
+   "14475": {
+    "service": "S05E07",
+    "name": "Un sacré coup de jeune",
+    "match": "title",
+    "same": true
+   },
+   "14476": {
+    "service": "S05E08",
+    "name": "Fry : Le Pourquoi du comment",
+    "match": "title"
+   },
+   "14477": {
+    "service": "S05E09",
+    "name": "Le Dard",
+    "match": "title",
+    "same": true
+   },
+   "14478": {
+    "service": "S05E10",
+    "name": "Le Bon, la Boîte et l'Ahuri",
+    "match": "title",
+    "same": true
+   },
+   "14479": {
+    "service": "S05E11",
+    "name": "La Cagnotte de la soie",
+    "match": "title",
+    "same": true
+   },
+   "14480": {
+    "service": "S05E12",
+    "name": "La Trompe humaine",
+    "match": "title",
+    "same": true
+   },
+   "14481": {
+    "service": "S05E13",
+    "name": "L'homme est une femme formidable",
+    "match": "title",
+    "same": true
+   },
+   "14482": {
+    "service": "S05E14",
+    "name": "Obsoletely Fabulous",
+    "match": "title",
+    "same": true
+   },
+   "14483": {
+    "service": "S05E15",
+    "name": "Censurez Bender",
+    "match": "title",
+    "same": true
+   },
+   "14484": {
+    "service": "S05E16",
+    "name": "La Main du Diable dans la culotte d'un Zouave",
+    "match": "title",
+    "same": true
+   },
+   "14485": {
+    "service": "S07E01",
+    "name": "Renaissance",
+    "match": "title",
+    "same": true
+   },
+   "14486": {
+    "service": "S07E02",
+    "name": "Innocence perdue",
+    "match": "title",
+    "same": true
+   },
+   "14487": {
+    "service": "S07E03",
+    "name": "L'Attaque des portables",
+    "match": "title",
+    "same": true
+   },
+   "14488": {
+    "service": "S07E04",
+    "name": "Mariages interdits",
+    "match": "title",
+    "same": true
+   },
+   "14489": {
+    "service": "S07E05",
+    "name": "Sciences idiotes",
+    "match": "title",
+    "same": true
+   },
+   "14490": {
+    "service": "S07E06",
+    "name": "Inspection mortelle",
+    "match": "title",
+    "same": true
+   },
+   "14491": {
+    "service": "S07E07",
+    "name": "Retour vers les futurs",
+    "match": "title",
+    "same": true
+   },
+   "14492": {
+    "service": "S07E08",
+    "name": "Les Chats savants",
+    "match": "title",
+    "same": true
+   },
+   "14493": {
+    "service": "S07E09",
+    "name": "Origines mécaniques",
+    "match": "title",
+    "same": true
+   },
+   "14494": {
+    "service": "S07E10",
+    "name": "Le Prisonnier de Benda",
+    "match": "title",
+    "same": true
+   },
+   "14495": {
+    "service": "S07E11",
+    "name": "Différences insurmontables",
+    "match": "title",
+    "same": true
+   },
+   "14496": {
+    "service": "S07E12",
+    "name": "Les Mutants révoltants",
+    "match": "title",
+    "same": true
+   },
+   "14497": {
+    "service": "S07E13",
+    "name": "L'Épisode incroyable",
+    "match": "title",
+    "same": true
+   },
+   "14498": {
+    "service": "S08E02",
+    "name": "La Guerre des sexes",
+    "match": "title",
+    "same": true
+   },
+   "14499": {
+    "service": "S08E01",
+    "name": "Benderama",
+    "match": "title",
+    "same": true
+   },
+   "14500": {
+    "service": "S08E03",
+    "name": "Un fantôme dans les machines",
+    "match": "title",
+    "same": true
+   },
+   "14501": {
+    "service": "S08E04",
+    "name": "La Loi et l'Oracle",
+    "match": "title",
+    "same": true
+   },
+   "14502": {
+    "service": "S08E05",
+    "name": "Le Silence des robots",
+    "match": "title",
+    "same": true
+   },
+   "14503": {
+    "service": "S08E06",
+    "name": "Leela raconte des histoires",
+    "match": "title",
+    "same": true
+   },
+   "14504": {
+    "service": "S08E07",
+    "name": "Les Têtes des présidents",
+    "match": "title",
+    "same": true
+   },
+   "14505": {
+    "service": "S08E08",
+    "name": "Obsession",
+    "match": "title",
+    "same": true
+   },
+   "14506": {
+    "service": "S08E09",
+    "name": "On ne fait pas d'omelette sans casser des œufs",
+    "match": "title",
+    "same": true
+   },
+   "14507": {
+    "service": "S08E10",
+    "name": "La Pointe de Zoidberg",
+    "match": "title",
+    "same": true
+   },
+   "14508": {
+    "service": "S08E11",
+    "name": "Le Concours de la NASA",
+    "match": "title",
+    "same": true
+   },
+   "14509": {
+    "service": "S08E12",
+    "name": "Optimisanthrope",
+    "match": "title",
+    "same": true
+   },
+   "14510": {
+    "service": "S08E13",
+    "name": "Réincarnations",
+    "match": "title",
+    "same": true
+   },
+   "14511": {
+    "service": "S09E01",
+    "name": "Paternité robot-rative",
+    "match": "title",
+    "same": true
+   },
+   "14512": {
+    "service": "S09E02",
+    "name": "Des mains tendues à bras raccourcis",
+    "match": "title",
+    "same": true
+   },
+   "14513": {
+    "service": "S09E03",
+    "name": "Retour vers 3012",
+    "match": "title",
+    "same": true
+   },
+   "14514": {
+    "service": "S09E04",
+    "name": "L'affaire est dans le sac",
+    "match": "title",
+    "same": true
+   },
+   "14515": {
+    "service": "S09E05",
+    "name": "Zappy End",
+    "match": "title",
+    "same": true
+   },
+   "14516": {
+    "service": "S09E06",
+    "name": "L'Effet papillon",
+    "match": "title",
+    "same": true
+   },
+   "14517": {
+    "service": "S09E07",
+    "name": "Le Rasta qui valait trois milliards",
+    "match": "title",
+    "same": true
+   },
+   "14518": {
+    "service": "S09E08",
+    "name": "La Saucisse de Bender",
+    "match": "title",
+    "same": true
+   },
+   "14519": {
+    "service": "S09E09",
+    "name": "Very Bad Trip",
+    "match": "title",
+    "same": true
+   },
+   "14520": {
+    "service": "S09E10",
+    "name": "Il était une fois Farnsworth…",
+    "match": "title",
+    "same": true
+   },
+   "14521": {
+    "service": "S09E12",
+    "name": "Viva Mars Vegas",
+    "match": "title",
+    "same": true
+   },
+   "14522": {
+    "service": "S09E11",
+    "name": "Chasseur mais pas trop",
+    "match": "title",
+    "same": true
+   },
+   "14523": {
+    "service": "S09E13",
+    "name": "Naturama",
+    "match": "title",
+    "same": true
+   },
+   "14524": {
+    "service": "S10E01",
+    "name": "Un monde en 2D",
+    "match": "title",
+    "same": true
+   },
+   "14525": {
+    "service": "S10E02",
+    "name": "Le Fry et Leela Show",
+    "match": "title",
+    "same": true
+   },
+   "14526": {
+    "service": "S10E03",
+    "name": "T., l'extra terrestre",
+    "match": "title",
+    "same": true
+   },
+   "14527": {
+    "service": "S10E04",
+    "name": "Folk en stock",
+    "match": "title",
+    "same": true
+   },
+   "14528": {
+    "service": "S10E05",
+    "name": "La Torche inhumaine",
+    "match": "title",
+    "same": true
+   },
+   "14529": {
+    "service": "S10E06",
+    "name": "Futurama et ses amis",
+    "match": "title",
+    "same": true
+   },
+   "14530": {
+    "service": "S10E07",
+    "name": "Résurrection",
+    "match": "title",
+    "same": true
+   },
+   "14531": {
+    "service": "S10E08",
+    "name": "Un seul cul vous manque",
+    "match": "title",
+    "same": true
+   },
+   "14532": {
+    "service": "S10E09",
+    "name": "Leela et le Haricot géant",
+    "match": "title",
+    "same": true
+   },
+   "14533": {
+    "service": "S10E10",
+    "name": "On connaît la chanson",
+    "match": "title",
+    "same": true
+   },
+   "14534": {
+    "service": "S10E11",
+    "name": "Question de confiance",
+    "match": "title",
+    "same": true
+   },
+   "14535": {
+    "service": "S10E12",
+    "name": "Puanteur et Deca-danse",
+    "match": "title",
+    "same": true
+   },
+   "14536": {
+    "service": "S10E13",
+    "name": "En attendant…",
+    "match": "title",
+    "same": true
+   },
+   "41672": {
+    "service": "S11E01",
+    "name": "Streaming impossible",
+    "match": "title",
+    "same": true
+   },
+   "41673": {
+    "service": "S11E02",
+    "name": "Les enfants des marais",
+    "match": "title",
+    "same": true
+   },
+   "41674": {
+    "service": "S11E03",
+    "name": "Comme au temps du Far West",
+    "match": "title",
+    "same": true
+   },
+   "41675": {
+    "service": "S11E04",
+    "name": "En vers et contre tous",
+    "match": "title",
+    "same": true
+   },
+   "41676": {
+    "service": "S11E05",
+    "name": "La mère de l'univers",
+    "match": "title",
+    "same": true
+   },
+   "41677": {
+    "service": "S11E06",
+    "name": "Souviens-toi Noël prochain…",
+    "match": "title",
+    "same": true
+   },
+   "41678": {
+    "service": "S11E07",
+    "name": "Non aux vaccins !",
+    "match": "title",
+    "same": true
+   },
+   "41679": {
+    "service": "S11E08",
+    "name": "Stage de sensibilisation",
+    "match": "title",
+    "same": true
+   },
+   "41680": {
+    "service": "S11E09",
+    "name": "Le Prince et le Produit",
+    "match": "title",
+    "same": true
+   },
+   "41681": {
+    "service": "S11E10",
+    "name": "Simulation",
+    "match": "title",
+    "same": true
+   },
+   "59634": {
+    "service": "S12E01",
+    "name": "Le Seul Amigo",
+    "match": "title",
+    "same": true
+   },
+   "59635": {
+    "service": "S12E02",
+    "name": "Jeux mortels",
+    "match": "title",
+    "same": true
+   },
+   "59636": {
+    "service": "S12E03",
+    "name": "L'Intérimaire",
+    "match": "title",
+    "same": true
+   },
+   "59637": {
+    "service": "S12E04",
+    "name": "Le Beau et l'Insecte",
+    "match": "title",
+    "same": true
+   },
+   "59638": {
+    "service": "S12E05",
+    "name": "L'un est en silicone et l'autre en or",
+    "match": "title",
+    "same": true
+   },
+   "59639": {
+    "service": "S12E06",
+    "name": "L'Attaque des fringues",
+    "match": "title",
+    "same": true
+   },
+   "59640": {
+    "service": "S12E07",
+    "name": "Planète Expresso",
+    "match": "title",
+    "same": true
+   },
+   "59641": {
+    "service": "S12E08",
+    "name": "Trop mignons",
+    "match": "title",
+    "same": true
+   },
+   "59642": {
+    "service": "S12E09",
+    "name": "Le Mystère de Futurama",
+    "match": "title",
+    "same": true
+   },
+   "59643": {
+    "service": "S12E10",
+    "name": "Du déjà-vu",
+    "match": "title",
+    "same": true
+   },
+   "77751": {
+    "service": "S13E01",
+    "name": "Détruire les grands monstres",
+    "match": "title",
+    "same": true
+   },
+   "77752": {
+    "service": "S13E02",
+    "name": "Le monde ne refroidit pas",
+    "match": "title",
+    "same": true
+   },
+   "77753": {
+    "service": "S13E03",
+    "name": "Cinquante nuances de vert",
+    "match": "title",
+    "same": true
+   },
+   "77754": {
+    "service": "S13E04",
+    "name": "Le fossé de Numberland",
+    "match": "title",
+    "same": true
+   },
+   "77755": {
+    "service": "S13E05",
+    "name": "Digital detox",
+    "match": "title",
+    "same": true
+   },
+   "77756": {
+    "service": "S13E06",
+    "name": "Maudit humain",
+    "match": "title",
+    "same": true
+   },
+   "77757": {
+    "service": "S13E07",
+    "name": "Pizza mortelle",
+    "match": "title",
+    "same": true
+   },
+   "77758": {
+    "service": "S13E08",
+    "name": "Éclats de crabe",
+    "match": "title",
+    "same": true
+   },
+   "77759": {
+    "service": "S13E09",
+    "name": "Le problèmes des truffes",
+    "match": "title",
+    "same": true
+   },
+   "77760": {
+    "service": "S13E10",
+    "name": "Le trou blanc",
+    "match": "title",
+    "same": true
+   },
+   "83603": {
+    "service": "S14E01",
+    "name": "Embrouille et barbaque",
+    "match": "title",
+    "same": true
+   },
+   "83604": {
+    "service": "S14E02",
+    "name": "Arnaque-moi si tu peux",
+    "match": "title",
+    "same": true
+   },
+   "83605": {
+    "service": "S14E03",
+    "name": "Pirates des Galaxies",
+    "match": "title",
+    "same": true
+   },
+   "83606": {
+    "service": "S14E04",
+    "name": "Les Seigneurs de l'anneau",
+    "match": "title",
+    "same": true
+   },
+   "83607": {
+    "service": "S14E05",
+    "name": "Sous le charme",
+    "match": "title",
+    "same": true
+   },
+   "83608": {
+    "service": "S14E06",
+    "name": "Floraison tardive",
+    "match": "title",
+    "same": true
+   },
+   "83609": {
+    "service": "S14E07",
+    "name": "Lord Nibbler et le Néant",
+    "match": "title",
+    "same": true
+   },
+   "83610": {
+    "service": "S14E08",
+    "name": "La croisière se poile",
+    "match": "title",
+    "same": true
+   },
+   "83611": {
+    "service": "S14E09",
+    "name": "Désenchantante nouvelle, tout le monde !",
+    "match": "title",
+    "same": true
+   },
+   "83612": {
+    "service": "S14E10",
+    "name": "Fin Finale : La dernière conclusion",
+    "match": "title",
+    "same": true
+   }
+  },
+  "titlesAgree": false,
+  "season_map": {}
+ }
+}
