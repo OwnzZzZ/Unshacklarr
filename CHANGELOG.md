@@ -15,6 +15,7 @@ Every change worth knowing, newest first. The format follows
 
 ### Fixed
 
+- Mapped JustWatch AU's `9now.app.link` Branch redirects and `9now.com.au` links to NINE, and Nine Network catch-up, so titles like Travel Guides suggest 9Now instead of "no supported service".
 - A series' own network catch-up service (for example SEVEN or TEN) is now suggested beside the TMDB links, not only when TMDB lists none.
 - Preserved the selected Unshackle backend, Sonarr instance, provider programme, and season page across retries and upgrades.
 

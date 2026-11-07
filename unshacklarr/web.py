@@ -54,6 +54,8 @@ SITES = {
     "m6.fr": ("M6",), "m6plus.fr": ("M6",), "channel4.com": ("ALL4", "C4"),
     # JustWatch/TMDB still links 10 Play as 10play.com.au; the Unshackle TEN service uses 10.com.au.
     "10play.com.au": ("TEN",), "10.com.au": ("TEN",),
+    # 9Now: JustWatch AU often wraps www.9now.com.au behind 9now.app.link Branch redirects.
+    "9now.com.au": ("NINE",),
 }
 # Aggregator hosts: Amazon and Apple list other brands as Channels / storefront buys, not the brand's own login.
 STOREFRONT_SERVICES = frozenset({"AMZN", "ATV", "ATVP"})
@@ -65,7 +67,8 @@ STOREFRONT_NAME = re.compile(r"^(?:amazon\b.*|apple\s+tv(?:\s+store)?)$", re.IGN
 # nowhere is offered, best code first. Extend per country.
 NETWORKS = {"bbc": ("iP",), "cbbc": ("iP",), "channel 4": ("ALL4", "C4"), "e4": ("ALL4", "C4"), "more4": ("ALL4", "C4"),
             "itv": ("ITVX", "ITV"), "channel 5": ("MY5",), "u&": ("UKTV",), "abc (au)": ("iView", "AUBC"), "sbs": ("SBS",),
-            "seven network": ("7plus", "SEVEN"), "network 10": ("TEN",), "tvnz": ("TVNZ",), "m6": ("M6",), "w9": ("M6",), "6ter": ("M6",)}
+            "seven network": ("7plus", "SEVEN"), "nine network": ("NINE",), "network 10": ("TEN",), "tvnz": ("TVNZ",),
+            "m6": ("M6",), "w9": ("M6",), "6ter": ("M6",)}
 
 
 def provider_kind(name: str) -> str:
@@ -244,6 +247,9 @@ def series_title(url: str) -> str:
     if on_site(url, "10play.com.au", "10.com.au") and (show := re.match(r"/([a-z0-9-]+)(?:/|$)", path)):
         # JustWatch episode links on 10play.com.au; TEN wants the 10.com.au show page.
         return f"https://10.com.au/{show.group(1)}"
+    if on_site(url, "9now.com.au") and (show := re.match(r"/([a-z0-9-]+)(?:/|$)", path)):
+        # JustWatch may link a season or episode; NINE wants the show page.
+        return f"https://www.9now.com.au/{show.group(1)}"
     return url
 
 
@@ -281,10 +287,18 @@ def unwrap(url: str) -> str:
 
     Disney+ links go through disneyplus.bn5x.net/c/…?u=<the real URL>, a domain no
     service claims; without this, Disney+ never showed up in the suggestions.
+    9Now JustWatch links go through 9now.app.link with $desktop_url / $canonical_url.
     """
     for _ in range(3):
         query = parse_qs(urlparse(url).query)
-        inner = next((query[k][0] for k in ("u", "url", "murl") if query.get(k) and query[k][0].startswith("http")), None)
+        inner = next(
+            (
+                query[k][0]
+                for k in ("u", "url", "murl", "$desktop_url", "$canonical_url", "$fallback_url")
+                if query.get(k) and query[k][0].startswith("http")
+            ),
+            None,
+        )
         if not inner:
             break
         url = inner
