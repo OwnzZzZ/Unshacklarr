@@ -1036,6 +1036,13 @@ def test_a_streaming_site_maps_to_the_code_this_unshackle_has_for_it(tmp_path, m
     assert web.series_title("https://play.hbomax.com/ch/en/show/8931dfbf-d113-43de-8ee2-43bb594330d1/s1/e1-test") \
         == "https://play.hbomax.com/show/8931dfbf-d113-43de-8ee2-43bb594330d1"
 
+    # Fire Country on JustWatch AU links 10play.com.au; TEN only speaks 10.com.au.
+    assert installed("TEN")["10play.com.au"] == "TEN"
+    assert web.series_title("https://10play.com.au/fire-country/episodes/season-2/episode-6/tpv241203imzjy") \
+        == "https://10.com.au/fire-country"
+    assert web.service_for("https://10play.com.au/fire-country/episodes/season-2/episode-6/tpv241203imzjy",
+                           installed("TEN")) == "TEN"
+
     # Suggestions kept under MAX show under the code installed now, and go when no service takes their site
     kept = [{"service": "MAX", "url": "https://play.hbomax.com/show/x", "country": "AU", "site": "play.hbomax.com"},
             {"service": "ATV", "url": "umc.cmc.show", "country": "AU", "site": "tv.apple.com"}]
@@ -1048,6 +1055,178 @@ def test_a_streaming_site_maps_to_the_code_this_unshackle_has_for_it(tmp_path, m
     monkeypatch.setattr(web, "service_domains", down)
     assert web.installed_links(kept) == kept  # Unshackle out of reach: as kept
     assert web.TMDB_HEADERS["User-Agent"].startswith("Unshacklarr/")  # TMDB's site refuses a fake browser (PR #2)
+
+
+def test_watch_offers_prefer_a_brands_own_service_over_storefronts(tmp_path, monkeypatch):
+    """Prefer a real home-service URL over Amazon/Apple storefronts; Channel rows stay labelled, not invented as PMTP."""
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+
+    assert web.provider_kind("Paramount Plus") == "native"
+    assert web.provider_kind("Paramount+ Amazon Channel") == "channel"
+    assert web.provider_kind("Paramount Plus Apple TV channel") == "channel"
+    assert web.provider_kind("Amazon Prime Video") == "storefront"
+    assert web.provider_kind("Amazon Prime Video Free with Ads") == "storefront"
+    assert web.provider_kind("Amazon MX Player") == "storefront"
+    assert web.provider_kind("Amazon Video") == "storefront"
+    assert web.provider_kind("Apple TV") == "storefront"
+    assert web.provider_kind("Apple TV Store") == "storefront"
+    assert web.provider_brand("Paramount Plus") == web.provider_brand("Paramount+ Amazon Channel")
+
+    # Calendar: Amazon Free with Ads must not outrank Apple TV as a fake home brand.
+    de_ads = web.rank_watch_providers([
+        {"name": "Amazon Prime Video Free with Ads", "logo": "amzn"},
+        {"name": "Apple TV", "logo": "atv"},
+    ])
+    assert [p["name"] for p in de_ads] == ["Amazon Prime Video Free with Ads", "Apple TV"]
+    assert all(p["kind"] == "storefront" for p in de_ads)
+
+    ranked = web.rank_watch_providers([
+        {"name": "Paramount+ Amazon Channel", "logo": "ch"},
+        {"name": "Paramount Plus", "logo": "home"},
+        {"name": "Amazon Prime Video", "logo": "amzn"},
+        {"name": "BINGE", "logo": "binge"},
+        {"name": "Foxtel Now", "logo": "fox"},
+    ])
+    # TMDB order among natives (Channel/storefront dropped), not alphabetical.
+    assert [p["name"] for p in ranked] == ["Paramount Plus", "BINGE", "Foxtel Now"]
+    assert all(p["kind"] == "native" for p in ranked)
+
+    # UK Gogglebox-style: Channel-only Paramount+ stays a channel; native BINGE drops Amazon storefront.
+    channel_only = web.rank_watch_providers([
+        {"name": "Paramount+ Amazon Channel", "logo": "ch"},
+        {"name": "BINGE", "logo": "binge"},
+        {"name": "Amazon Prime Video", "logo": "amzn"},
+    ])
+    assert [p["name"] for p in channel_only] == ["BINGE", "Paramount+ Amazon Channel"]
+    assert channel_only[1]["kind"] == "channel"
+
+    # Severance-shaped: own Apple TV subscription ranks above Channel packaging (no native brand row).
+    severance = web.rank_watch_providers([
+        {"name": "Apple TV Amazon Channel", "logo": "ch"},
+        {"name": "Apple TV", "logo": "atv"},
+    ])
+    assert [p["name"] for p in severance] == ["Apple TV", "Apple TV Amazon Channel"]
+    assert [p["kind"] for p in severance] == ["storefront", "channel"]
+
+    # Storefront chips hide when a usable home URL is listed.
+    links = web.prefer_download_links([
+        {"service": "PMTP", "url": "https://www.paramountplus.com/shows/x/", "country": "AU", "kind": "native"},
+        {"service": "AMZN", "url": "amzn1.dv.gti.buy", "country": "AU", "kind": "storefront"},
+        {"service": "ATVP", "url": "umc.cmc.buy", "country": "AU", "kind": "storefront"},
+    ])
+    assert [l["service"] for l in links] == ["PMTP"] and links[0]["kind"] == "native"
+
+    # Channel chips also hide beside a usable home (Fire Country keeps NF/PMTP/TEN only).
+    with_channel = web.prefer_download_links([
+        {"service": "PMTP", "url": "https://www.paramountplus.com/shows/x/", "country": "AU", "kind": "native"},
+        {"service": "AMZN", "url": "amzn1.dv.gti.channel", "country": "AU", "kind": "channel"},
+        {"service": "AMZN", "url": "amzn1.dv.gti.channel-b", "country": "AU", "kind": "channel"},
+    ])
+    assert [(l["service"], l["kind"]) for l in with_channel] == [("PMTP", "native")]
+
+    # Episode-only / needs_series_url homes do not hide a usable storefront.
+    episode_home = web.prefer_download_links([
+        {"service": "MAX", "url": "https://play.hbomax.com/video/watch/x", "country": "AU", "kind": "native", "episode": True},
+        {"service": "AMZN", "url": "amzn1.dv.gti.one", "country": "AU", "kind": "storefront"},
+    ])
+    assert [(l["service"], l.get("episode"), l["kind"]) for l in episode_home] == [
+        ("MAX", True, "native"), ("AMZN", None, "storefront"),
+    ]
+    crave_home = web.prefer_download_links([
+        {"service": "CRAVE", "url": "https://www.crave.ca/play/x", "country": "CA", "kind": "native", "needs_series_url": True},
+        {"service": "AMZN", "url": "amzn1.dv.gti.one", "country": "CA", "kind": "storefront"},
+    ])
+    assert {l["service"] for l in crave_home} == {"CRAVE", "AMZN"}
+
+    storefronts = web.prefer_download_links([
+        {"service": "AMZN", "url": "amzn1.dv.gti.one", "country": "AU"},
+        {"service": "AMZN", "url": "amzn1.dv.gti.two", "country": "AU"},
+        {"service": "ATVP", "url": "umc.cmc.show", "country": "AU"},
+    ])
+    assert [(l["service"], l["url"]) for l in storefronts] == [
+        ("AMZN", "amzn1.dv.gti.one"), ("AMZN", "amzn1.dv.gti.two"), ("ATVP", "umc.cmc.show"),
+    ]
+    assert all(l["kind"] == "storefront" for l in storefronts)
+
+    # Stable kind sort keeps first-country / scrape order (TEN before NF), not alphabetical service tags.
+    ordered = web.prefer_download_links([
+        {"service": "TEN", "url": "https://10.com.au/x", "country": "AU", "kind": "native"},
+        {"service": "NF", "url": "https://www.netflix.com/title/1", "country": "GB", "kind": "native"},
+    ])
+    assert [l["service"] for l in ordered] == ["TEN", "NF"]
+
+
+def test_tmdb_watch_scrape_keeps_stream_channels_and_skips_buy(tmp_path, monkeypatch):
+    """TMDB's JustWatch embed splits Stream/Ads from Buy; titles label Channel vs home."""
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+
+    html = """
+    <div class="ott_provider"><h3>Stream</h3><ul class="providers">
+      <li><a title="Watch Fire Country on Paramount Plus"
+          href="https://click.justwatch.com/a?r=https%3A%2F%2Fwww.paramountplus.com%2Fshows%2Ffire-country%2F"></a>
+          <span class="wrapper flatrate"></span></li>
+      <li><a title="Watch Fire Country on Paramount+ Amazon Channel"
+          href="https://click.justwatch.com/a?r=https%3A%2F%2Fapp.primevideo.com%2Fdetail%3Fgti%3Damzn1.dv.gti.channel"></a>
+          <span class="wrapper flatrate"></span></li>
+      <li><a title="Watch Fire Country on Amazon Prime Video Free with Ads"
+          href="https://click.justwatch.com/a?r=https%3A%2F%2Fwatch.amazon.de%2Fdetail%3Fgti%3Damzn1.dv.gti.ads"></a>
+          <span class="wrapper flatrate"></span></li>
+      <li><a title="Watch Fire Country on Amazon MX Player"
+          href="https://click.justwatch.com/a?r=https%3A%2F%2Fwww.amazon.de%2Fgp%2Fvideo%2Fdetail%3Fgti%3Damzn1.dv.gti.mx"></a>
+          <span class="wrapper flatrate"></span></li>
+      <li><a title="Watch Fire Country on Paramount Plus Apple TV channel"
+          href="https://click.justwatch.com/a?r=https%3A%2F%2Ftv.apple.com"></a>
+          <span class="wrapper flatrate"></span></li>
+      <li><a title="Watch Fire Country on Netflix"
+          href="https://click.justwatch.com/a?r=https%3A%2F%2Fwww.netflix.com%2Ftitle%2F81640603"></a>
+          <span class="wrapper flatrate"></span></li>
+    </ul></div>
+    <div class="ott_provider"><h3>Ads</h3><ul class="providers">
+      <li><a title="Watch Fire Country on 10"
+          href="https://click.justwatch.com/a?r=https%3A%2F%2F10play.com.au%2Ffire-country%2Fepisodes%2Fs1%2Fe1"></a>
+          <span class="wrapper ads"></span></li>
+    </ul></div>
+    <div class="ott_provider"><h3>Buy</h3><ul class="providers">
+      <li><a title="Buy Fire Country on Apple TV Store"
+          href="https://click.justwatch.com/a?r=https%3A%2F%2Ftv.apple.com%2Fau%2Fshow%2Ffire-country%2Fumc.cmc.buy"></a>
+          <span class="wrapper buy"></span></li>
+      <li><a title="Buy Fire Country on Amazon Video"
+          href="https://click.justwatch.com/a?r=https%3A%2F%2Fapp.primevideo.com%2Fdetail%3Fgti%3Damzn1.dv.gti.buy"></a>
+          <span class="wrapper buy"></span></li>
+    </ul></div>
+    """
+    class FakeResp:
+        text = html
+    monkeypatch.setattr(web, "tmdb_page", lambda *a, **k: FakeResp())
+    monkeypatch.setattr(web.UNSHACKLE, "services", lambda: [
+        {"tag": "PMTP", "url": "", "help": "https://www.paramountplus.com"},
+        {"tag": "AMZN", "url": "", "help": "https://www.primevideo.com"},
+        {"tag": "ATVP", "url": "", "help": "https://tv.apple.com"},
+        {"tag": "NF", "url": "", "help": "https://www.netflix.com"},
+        {"tag": "TEN", "url": "", "help": "https://10.com.au"},
+    ])
+    domains = web.service_domains()
+    found = web.tmdb_links(202297, "AU", domains)
+    by_kind = {(l["service"], l["kind"]): l for l in found}
+    assert {l["service"] for l in found} == {"PMTP", "AMZN", "NF", "TEN"}  # Buy gone; bare tv.apple.com dropped
+    assert by_kind[("PMTP", "native")]["url"].startswith("https://www.paramountplus.com/")
+    assert by_kind[("NF", "native")]
+    assert by_kind[("TEN", "native")]["url"] == "https://10.com.au/fire-country"
+    assert by_kind[("AMZN", "channel")]  # title names Paramount+ Amazon Channel
+    assert by_kind[("AMZN", "storefront")]  # Free with Ads / MX Player stay storefront via host, not native
+    assert web.offer_provider_name("Watch Fire Country on Paramount+ Amazon Channel") == "Paramount+ Amazon Channel"
+    preferred = web.prefer_download_links(found)
+    assert {l["service"] for l in preferred} == {"PMTP", "NF", "TEN"}  # Channel + storefront AMZN hidden beside homes
+    assert web.usable_title_url("https://tv.apple.com") is False
+    assert web.usable_title_url("https://app.primevideo.com/detail?gti=x") is True
 
 
 def test_accepted_audio_languages_are_language_codes(tmp_path, monkeypatch):

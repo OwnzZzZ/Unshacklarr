@@ -49,15 +49,103 @@ UNSHACKLE = sonarr_sync.UNSHACKLE
 SITES = {
     "hbomax.com": ("MAX", "HMAX"), "max.com": ("MAX", "HMAX"),
     "tv.apple.com": ("ATV", "ATVP"),
-    "primevideo.com": ("AMZN",), "amazon.fr": ("AMZN",), "amazon.com": ("AMZN",),
+    "primevideo.com": ("AMZN",), "amazon.fr": ("AMZN",), "amazon.de": ("AMZN",), "amazon.com": ("AMZN",),
     "disneyplus.com": ("DSNP",), "canalplus.com": ("CanalPlus",), "crave.ca": ("CRAVE",),
     "m6.fr": ("M6",), "m6plus.fr": ("M6",), "channel4.com": ("ALL4", "C4"),
+    # JustWatch/TMDB still links 10 Play as 10play.com.au; the Unshackle TEN service uses 10.com.au.
+    "10play.com.au": ("TEN",), "10.com.au": ("TEN",),
 }
+# Aggregator hosts: Amazon and Apple list other brands as Channels / storefront buys, not the brand's own login.
+STOREFRONT_SERVICES = frozenset({"AMZN", "ATV", "ATVP"})
+STOREFRONT_HOSTS = ("primevideo.com", "amazon.com", "amazon.de", "amazon.fr", "tv.apple.com")
+CHANNEL_NAME = re.compile(r"\b(?:amazon\s+channel|apple\s+tv\s+channel|channels)\b", re.IGNORECASE)
+# Any Amazon-* catalogue name (Free with Ads, MX Player, Video…); Channel names match CHANNEL_NAME first.
+STOREFRONT_NAME = re.compile(r"^(?:amazon\b.*|apple\s+tv(?:\s+store)?)$", re.IGNORECASE)
 # A network's own catch-up service, by its name's first words (Sonarr's network): what a series TMDB links to
 # nowhere is offered, best code first. Extend per country.
 NETWORKS = {"bbc": ("iP",), "cbbc": ("iP",), "channel 4": ("ALL4", "C4"), "e4": ("ALL4", "C4"), "more4": ("ALL4", "C4"),
             "itv": ("ITVX", "ITV"), "channel 5": ("MY5",), "u&": ("UKTV",), "abc (au)": ("iView", "AUBC"), "sbs": ("SBS",),
             "seven network": ("7plus", "SEVEN"), "network 10": ("TEN",), "tvnz": ("TVNZ",), "m6": ("M6",), "w9": ("M6",), "6ter": ("M6",)}
+
+
+def provider_kind(name: str) -> str:
+    """How TMDB names a watch offer: the brand itself, a channel inside Amazon/Apple, or Amazon/Apple's storefront."""
+    text = str(name or "").strip()
+    if CHANNEL_NAME.search(text):
+        return "channel"
+    if STOREFRONT_NAME.fullmatch(text):
+        return "storefront"
+    return "native"
+
+
+def provider_brand(name: str) -> str:
+    """Collapse 'Paramount Plus' and 'Paramount+ Amazon Channel' to one brand key."""
+    text = CHANNEL_NAME.sub(" ", str(name or ""))
+    text = re.sub(r"\b(?:amazon|apple\s*tv|with ads|premium|basic|standard|free)\b", " ", text, flags=re.IGNORECASE)
+    text = text.replace("+", " plus ")
+    return re.sub(r"[^a-z0-9]+", "", text.casefold())
+
+
+def rank_watch_providers(providers: list[dict]) -> list[dict]:
+    """Calendar logos: prefer a brand's own TMDB row over its Amazon/Apple Channel packaging.
+
+    A Channel row is kept only when TMDB has no native row for that brand. It is labelled as a channel:
+    JustWatch sometimes attaches Channel offers to the wrong regional title (UK Gogglebox vs Australia).
+    Amazon/Apple storefront rows are dropped when any native brand remains.
+    Own-subscription storefronts (Apple TV, Amazon Prime Video) rank above leftover Channels.
+    The schedule UI slices logos to three; this returns every ranked row for the tooltip.
+    """
+    enriched = [{**p, "kind": p.get("kind") or provider_kind(p.get("name") or ""),
+                 "brand": provider_brand(p.get("name") or ""), "_i": i}
+                for i, p in enumerate(providers)]
+    natives = {p["brand"] for p in enriched if p["kind"] == "native" and p["brand"]}
+    kept = [p for p in enriched if not (p["kind"] == "channel" and p["brand"] in natives)]
+    if any(p["kind"] == "native" for p in kept):
+        kept = [p for p in kept if p["kind"] != "storefront"]
+    order = {"native": 0, "storefront": 1, "channel": 2}
+    # Kind first; keep TMDB/JustWatch order within a kind (do not alphabetise).
+    kept.sort(key=lambda p: (order.get(p["kind"], 9), p["_i"]))
+    out: list[dict] = []
+    seen: set[str] = set()
+    for p in kept:
+        key = p["brand"] or (p.get("name") or "")
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append({"name": p.get("name"), "logo": p.get("logo"), "kind": p["kind"]})
+    return out
+
+
+def link_kind(url: str, service: str | None = None) -> str:
+    """Whether a suggested Unshackle title is the service's own site or an Amazon/Apple storefront."""
+    if service in STOREFRONT_SERVICES or on_site(url, *STOREFRONT_HOSTS):
+        return "storefront"
+    return "native"
+
+
+def prefer_download_links(links: list[dict]) -> list[dict]:
+    """Tag each suggestion; hide Amazon/Apple storefront and Channel chips when a usable home URL is listed.
+
+    Only a real brand URL the user can download (not an episode-only or needs_series_url row) counts as home.
+    Channel listings are not promoted to home. Distinct URLs stay distinct chips.
+    """
+    tagged = [{**link, "kind": link.get("kind") or link_kind(str(link.get("url") or ""), link.get("service"))}
+              for link in links]
+
+    def usable_home(link: dict) -> bool:
+        return link["kind"] == "native" and not link.get("episode") and not link.get("needs_series_url")
+
+    if any(usable_home(link) for link in tagged):
+        tagged = [link for link in tagged if link["kind"] not in ("storefront", "channel")]
+    unique: dict[tuple, dict] = {}
+    for link in tagged:
+        key = (link.get("service"), link.get("url"))
+        seen = unique.setdefault(key, link)
+        if link.get("country") and link["country"] not in (seen.get("country") or "").split(", "):
+            seen["country"] = ", ".join(filter(None, [seen.get("country"), link["country"]]))
+    order = {"native": 0, "storefront": 1, "channel": 2}
+    # Kind only: stable sort keeps JustWatch / first-country scrape order within a kind.
+    return sorted(unique.values(), key=lambda l: order.get(l.get("kind") or "", 9))
 
 
 def service_for_network(network: str, installed: set[str]) -> str | None:
@@ -153,6 +241,9 @@ def series_title(url: str) -> str:
         return f"https://www.sbs.com.au/ondemand/tv-series/{show.group(1)}"
     if on_site(url, "u.co.uk") and (show := re.match(r"/shows/([a-z0-9-]+)", path)):
         return f"https://u.co.uk/shows/{show.group(1)}/watch-online"
+    if on_site(url, "10play.com.au", "10.com.au") and (show := re.match(r"/([a-z0-9-]+)(?:/|$)", path)):
+        # JustWatch episode links on 10play.com.au; TEN wants the 10.com.au show page.
+        return f"https://10.com.au/{show.group(1)}"
     return url
 
 
@@ -259,25 +350,71 @@ def crave_series(url: str) -> str | None:
     return f"https://www.crave.ca/{lang}/series/{slug.group(1)}-{series_id}" if series_id else None
 
 
+# TMDB's watch page groups JustWatch clicks under <h3>Stream</h3> / Free / Ads vs Buy / Rent.
+# Buy and Rent are purchases, not Unshackle subscription downloads; Channel packaging sits under Stream.
+STREAM_SECTIONS = frozenset({"stream", "free", "ads"})
+# Anchor title="Watch Fire Country on Paramount+ Amazon Channel" (or Buy/Rent/Stream … on …).
+OFFER_ON = re.compile(r"\b(?:Watch|Stream|Buy|Rent)\s+.+\s+on\s+(.+)$", re.IGNORECASE)
+
+
+def usable_title_url(url: str) -> bool:
+    """Drop bare storefront homes (JustWatch's Apple Channel row often links only tv.apple.com)."""
+    parsed = urlparse(url)
+    if not parsed.scheme or not parsed.hostname:
+        return False
+    path = (parsed.path or "").rstrip("/")
+    return bool(path or parsed.query)
+
+
+def offer_provider_name(title: str) -> str:
+    """Provider name from a TMDB JustWatch anchor title, else the whole title."""
+    text = str(title or "").strip()
+    match = OFFER_ON.search(text)
+    return match.group(1).strip() if match else text
+
+
 def tmdb_links(tmdb_id: int, country: str, domains: dict[str, str]) -> list[dict]:
-    """Service URLs from TMDB's "where to watch" page: its JustWatch links carry them in `r`."""
+    """Service URLs from TMDB's "where to watch" page: its JustWatch links carry them in `r`.
+
+    Only Stream / Free / Ads rows: Buy and Rent are ignored (same split as TMDB's watch/providers API).
+    Kind comes from the anchor title ("… on Paramount+ Amazon Channel"), falling back to the URL host.
+    """
     r = tmdb_page(f"https://www.themoviedb.org/tv/{tmdb_id}/watch", {"locale": country})
     links = []
-    for href in re.findall(r'href="(https://click\.justwatch\.com/[^"]+)"', r.text):
-        url = unwrap(parse_qs(urlparse(href.replace("&amp;", "&")).query).get("r", [""])[0])
-        service = service_for(url, domains)
-        if service:
-            # its site kept: the code for it may change (another Unshackle, a service renamed), the site does not
-            link = {"service": service, "url": series_title(url), "country": country, "site": urlparse(url).hostname}
-            if on_site(url, "crave.ca") and "/play/" in url:
-                # Crave's link opens one episode and holds no series id (…/series/<slug>-<id>)
-                if series := crave_series(url):
-                    link["url"] = series
-                else:  # the page asks for the series URL
-                    link["needs_series_url"] = True
-            elif re.search(r"-episode-\d+|episodeId=", link["url"]) or episode_link(link["url"]):  # still an episode once normalised
-                link["episode"] = True  # dropped below when the same service also links the series
-            links.append(link)
+    sections = re.findall(
+        r'<div class="ott_provider">\s*<h3>([^<]+)</h3>(.*?)(?=<div class="ott_provider">|$)',
+        r.text, flags=re.S | re.I,
+    )
+    # No ott_provider headings: skip rather than mix Buy into Stream (markup change).
+    for section, body in sections:
+        if section.strip().casefold() not in STREAM_SECTIONS:
+            continue
+        for attrs in re.findall(r"<a\b([^>]*)>", body, flags=re.I):
+            href = re.search(r'href="(https://click\.justwatch\.com/[^"]+)"', attrs)
+            if not href:
+                continue
+            url = unwrap(parse_qs(urlparse(href.group(1).replace("&amp;", "&")).query).get("r", [""])[0])
+            if not usable_title_url(url):
+                continue
+            service = service_for(url, domains)
+            if service:
+                # its site kept: the code for it may change (another Unshackle, a service renamed), the site does not
+                title_attr = re.search(r'title="([^"]*)"', attrs)
+                name = offer_provider_name(title_attr.group(1)) if title_attr else ""
+                # Title only promotes Channel; storefront hosts are never home (Amazon MX Player, Free with Ads…).
+                titled = provider_kind(name) if name else None
+                kind = "channel" if titled == "channel" else link_kind(url, service)
+                link = {"service": service, "url": series_title(url), "country": country,
+                        "site": urlparse(url).hostname, "kind": kind}
+                if on_site(url, "crave.ca") and "/play/" in url:
+                    # Crave's link opens one episode and holds no series id (…/series/<slug>-<id>)
+                    if series := crave_series(url):
+                        link["url"] = series
+                    else:  # the page asks for the series URL
+                        link["needs_series_url"] = True
+                elif re.search(r"-episode-\d+|episodeId=", link["url"]) or episode_link(link["url"]):  # still an episode once normalised
+                    link["episode"] = True  # dropped below when the same service also links the series
+                links.append(link)
     return links
 
 
@@ -1293,10 +1430,20 @@ async def suggest(request):
     countries = read_config()["tmdb_countries"]
     cache = read_json(TMDB_CACHE, {})
     hit = cache.get(tmdb_id)
-    fresh = hit and hit["countries"] == countries and (
-        datetime.now(timezone.utc) - datetime.fromisoformat(hit["checked"]) < timedelta(days=TMDB_CACHE_DAYS)
-    )
-    if not fresh or request.query.get("refresh"):
+
+    def suggest_stale(entry: dict | None) -> bool:
+        if not entry or entry.get("countries") != countries:
+            return True
+        try:
+            age = datetime.now(timezone.utc) - datetime.fromisoformat(entry["checked"])
+        except (KeyError, TypeError, ValueError):
+            return True
+        if age >= timedelta(days=TMDB_CACHE_DAYS):
+            return True
+        # Before Stream/Buy split and kind labels: refresh so Buy rows and unlabelled chips do not linger.
+        return any("kind" not in (link or {}) for link in entry.get("links") or [])
+
+    if suggest_stale(hit) or request.query.get("refresh"):
         try:
             domains = await asyncio.to_thread(service_domains)
             found = await asyncio.gather(*(asyncio.to_thread(tmdb_links, int(tmdb_id), c, domains) for c in countries))
@@ -1317,10 +1464,14 @@ async def suggest(request):
             with_series = {l["service"] for l in unique.values() if not l.get("episode")}
             links = [l for l in unique.values() if not (l.get("episode") and l["service"] in with_series)]
             links = await asyncio.to_thread(searched_in_place, links, int(tmdb_id))
+            # Prefer at read time only: cache keeps storefronts so a later-uninstalled home still leaves AMZN.
             hit = {"countries": countries, "checked": datetime.now(timezone.utc).isoformat(), "links": links}
             cache[tmdb_id] = hit
             write_atomic(TMDB_CACHE, json.dumps(cache))
-    return web.json_response({"links": await asyncio.to_thread(installed_links, hit["links"]), "checked": hit["checked"]})
+    return web.json_response({
+        "links": await asyncio.to_thread(lambda: prefer_download_links(installed_links(hit["links"]))),
+        "checked": hit["checked"],
+    })
 
 
 def title_key(title: str) -> str:
@@ -2666,8 +2817,11 @@ def tmdb_network(tmdb_id: int) -> dict:
         "logo": logo_url(first.get("logo_path")),
         "network_country": first.get("origin_country") or "",  # M6: FR, a channel watched there anyway
         "providers": {
-            country: [{"name": p["provider_name"], "logo": logo_url(p.get("logo_path"))}
-                      for p in (offers.get("flatrate") or []) + (offers.get("free") or []) + (offers.get("ads") or [])]
+            country: [
+                {"name": p["provider_name"], "logo": logo_url(p.get("logo_path")),
+                 "kind": provider_kind(p["provider_name"])}
+                for p in (offers.get("flatrate") or []) + (offers.get("free") or []) + (offers.get("ads") or [])
+            ]
             for country, offers in by_country.items()
         },
     }
@@ -2682,8 +2836,17 @@ async def networks(request):
     country = sonarr_sync.SETTINGS["country"]
     cache = read_json(NETWORKS_CACHE, {})
     fresh_after = (datetime.now(timezone.utc) - timedelta(days=NETWORKS_DAYS)).isoformat()
-    todo = [i for i in ids if (cache.get(str(i)) or {}).get("checked", "") < fresh_after
-            or "providers" not in cache[str(i)] or "network_country" not in cache[str(i)]]  # kept before it was asked
+
+    def stale(entry: dict) -> bool:
+        providers = (entry.get("providers") or {}).get(country) or next(iter((entry.get("providers") or {}).values()), [])
+        return (
+            entry.get("checked", "") < fresh_after
+            or "providers" not in entry
+            or "network_country" not in entry
+            or any("kind" not in (p or {}) for p in providers)  # before native/channel labelling
+        )
+
+    todo = [i for i in ids if stale(cache.get(str(i)) or {})]
     if todo and tmdb_key():
         limit = asyncio.Semaphore(8)  # polite to TMDB when a new calendar brings many series
 
@@ -2700,7 +2863,7 @@ async def networks(request):
     return web.json_response({
         i: {"name": cache[str(i)].get("name"), "logo": cache[str(i)].get("logo"), "country": country,
             "network_country": cache[str(i)].get("network_country") or "",
-            "providers": (cache[str(i)].get("providers") or {}).get(country, [])}
+            "providers": rank_watch_providers((cache[str(i)].get("providers") or {}).get(country, []))}
         for i in ids if str(i) in cache and "providers" in cache[str(i)]
     })
 

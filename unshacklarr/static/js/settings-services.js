@@ -195,8 +195,18 @@ async function openBulk() {
     const usable = links.filter((l) => !l.needs_series_url && !l.episode && S.services.includes(l.service));
     const name = `pick-${s.tvdbId}`;
     // Skip is picked by default: adding a series is a choice
-    const opt = (l, i) => el("label", { title: l ? l.url : "Leave it without a service" }, el("input", { type: "radio", name, value: l ? JSON.stringify([l.service, l.url]) : "",
-      checked: !l, onchange: pickCount }), l ? l.service : "Skip", l ? el("small", { textContent: l.country }) : "");
+    const kindLabel = (l) => l.kind === "storefront" ? "storefront" : l.kind === "channel" ? "channel" : "home";
+    const kindTitle = (l) => l.kind === "storefront"
+      ? `Amazon/Apple storefront — your ${l.service === "AMZN" ? "Prime" : "Apple"} login, not another brand's channel: ${l.url}`
+      : l.kind === "channel"
+        ? `Amazon/Apple Channels — not proof this exact title is on the brand's own app: ${l.url}`
+        : l.url;
+    const opt = (l, i) => el("label", {
+      className: l && l.kind && l.kind !== "native" ? `kind-${l.kind}` : "",
+      title: l ? kindTitle(l) : "Leave it without a service",
+    }, el("input", { type: "radio", name, value: l ? JSON.stringify([l.service, l.url]) : "",
+      checked: !l, onchange: pickCount }), l ? l.service : "Skip",
+      l ? el("small", { textContent: `${l.country} · ${kindLabel(l)}` }) : "");
     li.querySelector(".opts").replaceChildren(...(usable.length ? [...usable.map(opt), opt(null, -1)] : [el("span", { className: "none", textContent: "Nothing found on TMDB" })]));
     $("#bulk-progress").textContent = `Checked ${++done} of ${todo.length}`;
     pickCount();
