@@ -12,6 +12,7 @@ Every change worth knowing, newest first. The format follows
 
 ### Fixed
 
+- A series' own network catch-up service (for example SEVEN or TEN) is now suggested beside the TMDB links, not only when TMDB lists none.
 - Preserved the selected Unshackle backend, Sonarr instance, provider programme, and season page across retries and upgrades.
 
 ## [1.5.0] - 2026-10-17

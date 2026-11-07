@@ -538,18 +538,22 @@ function failed(text, retry) {
     retry ? el("button", { className: "btn small", textContent: "Try again", onclick: retry }) : "");
 }
 
-/* No link from TMDB: the series' channel may have a catch-up service here, picked and looked up on by its name. */
+/* The series' channel may have a catch-up service here, picked and looked up on by its name. */
+function networkButton(s, tag) {
+  return el("button", { type: "button", ariaLabel: `Find it on ${svcName(tag)}`, onclick: () => {
+    const sel = $("#d-service");
+    if (sel.value !== tag) { sel.value = tag; sel.dispatchEvent(new Event("change")); }
+    $("#d-find").hidden = true;
+    $("#d-find-q").value = s.title;
+    $("#d-find-open").click();
+  } }, el("b", { textContent: tag }), el("span", { textContent: `Find ${s.title} on ${svcName(tag)}` }));
+}
+/* No link from TMDB: the channel's service is all there is to offer. */
 function networkPick(s, box, none, lead) {
   const tag = S.networkServices?.[s.tvdbId];
   if (!tag) return box.replaceChildren(el("small", { className: "muted", textContent: none }));
   box.replaceChildren(el("small", { className: "muted", textContent: `${lead} Its channel, ${s.network}, is on ${svcName(tag)}:` }),
-    el("button", { type: "button", ariaLabel: `Find it on ${svcName(tag)}`, onclick: () => {
-      const sel = $("#d-service");
-      if (sel.value !== tag) { sel.value = tag; sel.dispatchEvent(new Event("change")); }
-      $("#d-find").hidden = true;
-      $("#d-find-q").value = s.title;
-      $("#d-find-open").click();
-    } }, el("b", { textContent: tag }), el("span", { textContent: `Find ${s.title} on ${svcName(tag)}` })));
+    networkButton(s, tag));
 }
 
 async function loadSuggestions(s, refresh = false) {
@@ -574,6 +578,8 @@ async function loadSuggestions(s, refresh = false) {
   }, el("b", { textContent: l.service }), el("span", { textContent: l.needs_series_url || l.episode ? `episode link · ${l.url}` : l.found_by === "search" ? `found by its title · ${l.url}` : l.url }),
     el("small", { textContent: l.country }))));
   box.querySelectorAll("button").forEach((b, i) => b.dataset.url = links[i].url);
+  const network = S.networkServices?.[s.tvdbId];  // after TMDB's links: theirs keep their order
+  if (network && !links.some((l) => l.service === network)) box.append(networkButton(s, network));
 }
 
 async function applySuggestion(link) {
