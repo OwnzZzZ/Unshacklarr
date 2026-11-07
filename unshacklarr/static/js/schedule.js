@@ -124,10 +124,19 @@ function networkBadge(d, extra = "") {
     : el("span", { className: "net text", title: networkTip, textContent: net.name });
   // Where it streams in the first "Where to watch" country; else a warning, but not for a channel of that
   // country nor for a series Unshackle already downloads (its service is what counts then)
+  const kindTip = (p) => p.kind === "storefront"
+    ? `${p.name} — Amazon/Apple storefront`
+    : p.via_channel
+      ? `${p.name} — home service (JustWatch lists it via Amazon/Apple Channels; your ${p.name} login applies)`
+      : `${p.name} — home service`;
   const local = net.providers.length
-    ? el("span", { className: "prov", title: `In ${net.country} on ${net.providers.map((p) => p.name).join(", ")}` },
-        ...net.providers.slice(0, 3).map((p) => p.logo ? el("img", { src: p.logo, alt: p.name, loading: "lazy" })
-          : el("i", { textContent: p.name.slice(0, 2) })))
+    ? el("span", { className: "prov", title: `In ${net.country}: ${net.providers.map((p) => kindTip(p)).join("; ")}` },
+        ...net.providers.slice(0, 3).map((p) => {
+          const tip = kindTip(p);
+          return p.logo
+            ? el("img", { src: p.logo, alt: p.name, title: tip, loading: "lazy", className: p.kind === "native" ? "" : `kind-${p.kind}` })
+            : el("i", { textContent: p.name.slice(0, 2), title: tip, className: p.kind === "native" ? "" : `kind-${p.kind}` });
+        }))
     : home || d.managed ? ""
     : el("span", { className: "chip nofr", textContent: `No streaming in ${net.country}`,
         title: `TMDB (from JustWatch) lists no streaming service in ${net.country} for this series` });

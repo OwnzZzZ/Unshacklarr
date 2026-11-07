@@ -1050,6 +1050,60 @@ def test_a_streaming_site_maps_to_the_code_this_unshackle_has_for_it(tmp_path, m
     assert web.TMDB_HEADERS["User-Agent"].startswith("Unshacklarr/")  # TMDB's site refuses a fake browser (PR #2)
 
 
+def test_watch_offers_prefer_a_brands_own_service_over_storefronts(tmp_path, monkeypatch):
+    """A Brand-on-Channels listing means the brand itself; Amazon/Apple storefront chips yield when a home service exists."""
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+
+    assert web.provider_kind("Paramount Plus") == "native"
+    assert web.provider_kind("Paramount+ Amazon Channel") == "channel"
+    assert web.provider_kind("Paramount Plus Apple TV channel") == "channel"
+    assert web.provider_kind("Amazon Prime Video") == "storefront"
+    assert web.provider_kind("Apple TV") == "storefront"
+    assert web.provider_brand("Paramount Plus") == web.provider_brand("Paramount+ Amazon Channel")
+    assert web.brand_label("Paramount+ Amazon Channel") == "Paramount+"
+
+    ranked = web.rank_watch_providers([
+        {"name": "Paramount+ Amazon Channel", "logo": "ch"},
+        {"name": "Paramount Plus", "logo": "home"},
+        {"name": "Amazon Prime Video", "logo": "amzn"},
+        {"name": "BINGE", "logo": "binge"},
+        {"name": "Foxtel Now", "logo": "fox"},
+    ], limit=3)
+    assert [p["name"] for p in ranked] == ["BINGE", "Foxtel Now", "Paramount Plus"]
+    assert all(p["kind"] == "native" for p in ranked)
+    assert not ranked[2].get("via_channel")  # true native row wins over the Channel composite
+
+    channel_only = web.rank_watch_providers([
+        {"name": "Paramount+ Amazon Channel", "logo": "ch"},
+        {"name": "BINGE", "logo": "binge"},
+        {"name": "Amazon Prime Video", "logo": "amzn"},
+    ], limit=3)
+    assert [p["name"] for p in channel_only] == ["BINGE", "Paramount+"]
+    assert channel_only[1]["kind"] == "native" and channel_only[1].get("via_channel")
+    assert web.home_services_from_providers(
+        [{"name": "Paramount+ Amazon Channel"}], {"PMTP", "AMZN"}) == ["PMTP"]
+
+    links = web.prefer_download_links([
+        {"service": "PMTP", "url": "https://www.paramountplus.com/shows/x/", "country": "AU"},
+        {"service": "AMZN", "url": "amzn1.dv.gti.one", "country": "AU"},
+        {"service": "AMZN", "url": "amzn1.dv.gti.two", "country": "AU"},
+        {"service": "ATVP", "url": "umc.cmc.show", "country": "AU"},
+    ])
+    assert [l["service"] for l in links] == ["PMTP"] and links[0]["kind"] == "native"
+
+    storefronts = web.prefer_download_links([
+        {"service": "AMZN", "url": "amzn1.dv.gti.one", "country": "AU"},
+        {"service": "AMZN", "url": "amzn1.dv.gti.two", "country": "AU"},
+        {"service": "ATVP", "url": "umc.cmc.show", "country": "AU"},
+    ])
+    assert sorted(l["service"] for l in storefronts) == ["AMZN", "ATVP"]
+    assert all(l["kind"] == "storefront" for l in storefronts)
+
+
 def test_accepted_audio_languages_are_language_codes(tmp_path, monkeypatch):
     monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
     import unshacklarr.sync

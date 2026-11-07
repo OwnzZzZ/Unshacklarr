@@ -568,11 +568,16 @@ async function loadSuggestions(s, refresh = false) {
   if (current !== s) return;  // another series was opened meanwhile
   if (!links.length) return networkPick(s, box, `TMDB lists no supported service in ${S.config.tmdb_countries.join(", ")}. Enter it below by hand.`,
     "TMDB lists no supported service.");
+  const kindLabel = (l) => l.kind === "storefront" ? "storefront" : l.kind === "channel" ? "channel" : "home";
   box.replaceChildren(...links.map((l) => el("button", {
-    ariaLabel: `Use ${l.service}: ${l.url}`,
+    className: l.kind && l.kind !== "native" ? `kind-${l.kind}` : "",
+    ariaLabel: `Use ${l.service} (${kindLabel(l)}): ${l.url}`,
+    title: l.kind === "storefront"
+      ? "Amazon/Apple storefront — not another brand's own login (Channels need that brand's Amazon/Apple add-on)"
+      : "",
     onclick: () => applySuggestion(l),
   }, el("b", { textContent: l.service }), el("span", { textContent: l.needs_series_url || l.episode ? `episode link · ${l.url}` : l.found_by === "search" ? `found by its title · ${l.url}` : l.url }),
-    el("small", { textContent: l.country }))));
+    el("small", { textContent: `${l.country} · ${kindLabel(l)}` }))));
   box.querySelectorAll("button").forEach((b, i) => b.dataset.url = links[i].url);
 }
 
