@@ -717,9 +717,10 @@ async def save_config(request):
             raise web.HTTPBadRequest(text=f"The gap between episodes of {key} must be a whole number of minutes") from None
         if not 0 <= gap <= 600:
             raise web.HTTPBadRequest(text=f"The gap between episodes of {key} must be from 0 to 600 minutes")
-        if gap and release_time:
+        timed = sonarr_sync.release_time(show)  # its own, else its broadcast's: the gap and the day count from it
+        if gap and timed:
             series[int(key)]["release_gap"] = gap
-        if day and (release_time or day < 0):  # the day after means nothing without a time; days before do
+        if day and (timed or day < 0):  # the day after means nothing without a time; days before do
             series[int(key)]["release_day"] = day
         if show.get("broadcast"):
             series[int(key)]["broadcast"] = check_broadcast(show["broadcast"], str(key))

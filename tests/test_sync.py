@@ -2856,3 +2856,12 @@ def test_the_next_episode_of_an_evening_is_tried_after_its_airing(tmp_path, monk
     assert [sync.release_slot(show, e).isoformat() for e in episodes] == [
         "2026-10-06T21:10:00+02:00", "2026-10-13T21:10:00+02:00", "2026-10-13T22:00:00+02:00"]
     assert sync.release_slot({"release_time": "21:10"}, episodes[2]).isoformat() == "2026-10-13T21:10:00+02:00"  # no gap: together
+
+
+def test_an_episode_serve_finds_no_title_for_is_not_out_yet(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+
+    def refused(*_, **__):  # serve after 6.0.0, the episode not on the service yet
+        raise sync.UnshackleError("unshackle serve: No titles found matching wanted criteria (ref 4d8140)")
+    monkeypatch.setattr(sync, "run_job", refused)
+    assert sync.run_job_retrying({"service": "DSNP"}, sleep=lambda _: None) == []
