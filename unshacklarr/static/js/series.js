@@ -155,7 +155,7 @@ $("#d-bc-every").onchange = (e) => { S.config.series[current.tvdbId].broadcast.e
 $("#d-bc-per").onchange = (e) => { S.config.series[current.tvdbId].broadcast.per_evening = Number(e.target.value); changedBroadcast(); };
 /* When the series' next episode will be tried, as the settings stand: what they change, in sight. */
 function releaseSlot(conf, ep) {
-  const day = Number(conf.release_day || 0), time = conf.release_time || "";
+  const day = Number(conf.release_day || 0), time = conf.release_time || conf.broadcast?.time || "";  // sync.release_time
   if (!ep.airDateUtc || (!time && day >= 0)) return null;
   const at = new Date(ep.airDateUtc);
   at.setDate(at.getDate() + day);

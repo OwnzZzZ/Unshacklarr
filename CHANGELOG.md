@@ -76,6 +76,8 @@ Unshacklarr can be reached from outside your network.
   don't look for a fault in a key that works. (#25, by mj23au)
 - **Service options now reach a remote server.** `-B`, `--atmos` and the others were left out of a download through it.
 - **A broadcast's time is the release time when none is set.** An episode is tried the minute it airs, not at the next sync.
+- **The gap to the next episode and the release day count from the broadcast's time too.** They were dropped on save without a release time.
+- **An episode not out yet is no longer a failure.** Unshackle's "No titles found" is read as *not on the service yet*: tried again, and the release-time tries go on.
 - **A service's `--profile` stays the service's.** Netflix's `--profile PRK_DO` was taken as an account profile and
   shown before the service in the command.
 - **Activity no longer freezes with a large job.** The episodes that don't change are no longer redrawn every second.

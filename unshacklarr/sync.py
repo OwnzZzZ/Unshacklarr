@@ -1252,6 +1252,8 @@ def run_job_retrying(payload: dict, run: EpisodeRun | None = None, sleep=time.sl
             return run_job(payload, run, job_id=job_id) if job_id else run_job(payload, run)
         except (JobFailed, UnshackleError) as e:
             cause = getattr(e, "cause", str(e))
+            if NOT_LISTED.search(cause):  # serve after 6.0.0 refuses an episode not out yet: nothing came, not a failure
+                return []
             waits = SERVE_RETRY_AFTER if UNREACHABLE in cause else RETRY_AFTER
             wait = waits[tries] if tries < len(waits) else None
             if not subs_tried and (m := SUBS_MISSING.search(f"{cause}\n{e}"[-4000:])):  # its one line, else all it said
@@ -2182,7 +2184,7 @@ def speaks(tags, accepted: list[str]) -> bool:
     return any(a == h or (a.split("-")[0] == h.split("-")[0] and ("-" not in a or "-" not in h)) for a in accepted for h in have)
 
 
-NOT_LISTED = re.compile(r"No (available )?episodes found", re.IGNORECASE)  # list-tracks: the episode is not on the service
+NOT_LISTED = re.compile(r"No (available )?episodes found|No titles found matching", re.IGNORECASE)  # the episode is not on the service (yet)
 
 
 def list_tracks(show: dict, config: dict, request: dict, ladder: dict | None = None) -> list[dict]:
