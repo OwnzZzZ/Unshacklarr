@@ -1198,6 +1198,8 @@ POLL_MISSES = 12  # job statuses missed in a row (5 s apart at least) before the
 # The service turned Unshackle away: cookies or credentials out of date, most of the time.
 LOGIN = re.compile(r"\b40[13]\b|unauthori[sz]ed|forbidden|not logged|log ?in|sign ?in|cookie|expired|session|"
                    r"invalid token|access token|credential|authenticat", re.IGNORECASE)
+# the files themselves refused (the login went through): the downloads leave from a country the service blocks
+FILES_REFUSED = re.compile(r"download worker failed.*\b40[13]\b", re.IGNORECASE | re.DOTALL)
 
 
 # Subtitles asked for (--s-lang) that the episode lacks: Unshackle stops ("fr not found in tracks", "… in subtitle
@@ -3255,7 +3257,11 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                         with counted:
                             failures += 1
                         run.say(f"\r\n\x1b[31m{label}: Unshackle FAILED\x1b[0m\n{error}".replace("\n", "\r\n"))
-                        if LOGIN.search(cause):
+                        if FILES_REFUSED.search(cause):
+                            hint = f"{show['service']} refused the video files: they must come from its country. Remove --no-proxy-download, or set --proxy-download."
+                            tell_failure(run, cause, lambda: notify_series(show, settings, "error", f"Failed: {label}", f"{hint}\n{cause[:1200]}", batch=batch, details=episode_details(ep, show)))
+                            run.finish("failed", cause, hint)
+                        elif LOGIN.search(cause):
                             hint = f"{show['service']} refused Unshackle: its cookies may have expired. Update them in Settings, Cookies."
                             tell_failure(run, cause, lambda: notify_series(show, settings, "error", f"Login failed on {show['service']}: {label}", f"{hint}\n{cause[:1200]}", batch=batch))
                             run.finish("failed", cause, hint)

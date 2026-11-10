@@ -3704,6 +3704,9 @@
   "s['endpoint'].split('/')[2]",
   "said"
  ],
+ "{0} refused the video files: they must come from its country. Remove --no-proxy-download, or set --proxy-download.": [
+  "show['service']"
+ ],
  "{0} remote": [
   "data.remote.length"
  ],

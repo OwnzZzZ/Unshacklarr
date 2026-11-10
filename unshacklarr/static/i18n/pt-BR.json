@@ -2235,5 +2235,6 @@
  "A {0} download is running: clear its cache once it is done": "Um download de {0} está em andamento: limpe o cache quando ele terminar",
  "{0} downloads on another Unshackle server: clear its cache there": "{0} baixa em outro servidor Unshackle: limpe o cache lá",
  "Unshacklarr cannot see Unshackle's Cache folder: mount it and set its path in Settings, Unshackle (CACHE_DIR with Docker)": "O Unshacklarr não vê a pasta Cache do Unshackle: monte-a e informe o caminho em Configurações, Unshackle (CACHE_DIR com Docker)",
- "Clear one service's cache": "Limpar o cache de um único serviço"
+ "Clear one service's cache": "Limpar o cache de um único serviço",
+ "{0} refused the video files: they must come from its country. Remove --no-proxy-download, or set --proxy-download.": "O {0} recusou os arquivos de vídeo: eles precisam vir do país dele. Remova --no-proxy-download ou defina --proxy-download."
 }

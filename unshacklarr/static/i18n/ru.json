@@ -2249,5 +2249,6 @@
  "A {0} download is running: clear its cache once it is done": "Идёт загрузка {0}: очистите его кеш, когда она закончится",
  "{0} downloads on another Unshackle server: clear its cache there": "{0} загружается на другом сервере Unshackle: очистите его кеш там",
  "Unshacklarr cannot see Unshackle's Cache folder: mount it and set its path in Settings, Unshackle (CACHE_DIR with Docker)": "Unshacklarr не видит папку Cache Unshackle: подключите её и укажите путь в Настройках, Unshackle (CACHE_DIR в Docker)",
- "Clear one service's cache": "Очистка кеша одного сервиса"
+ "Clear one service's cache": "Очистка кеша одного сервиса",
+ "{0} refused the video files: they must come from its country. Remove --no-proxy-download, or set --proxy-download.": "{0} отказал в видеофайлах: они должны идти из его страны. Уберите --no-proxy-download или задайте --proxy-download."
 }
