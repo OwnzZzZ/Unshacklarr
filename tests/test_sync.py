@@ -832,6 +832,21 @@ def test_a_login_failure_points_to_the_cookies(tmp_path, monkeypatch):
     assert "Login failed on RTLP: Show S02E05" in message and "Settings, Cookies" in message
 
 
+
+@responses.activate
+def test_video_files_refused_are_not_called_expired_cookies(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    responses.get(f"{SONARR}/api/v3/calendar", json=[episode(111, 2, 5)])
+    responses.post(re.compile(re.escape(WEBHOOK)))
+
+    def refused(payload, run=None):
+        raise sync.JobFailed("x", "failed", "download worker failed: HTTPError: 403 Client Error: FORBIDDEN for url: redacted.mp4")
+
+    monkeypatch.setattr(sync, "run_job", refused)
+    assert sync.main() == 1
+    [message] = discord_messages()
+    assert "refused the video files" in message and "--no-proxy-download" in message and "Cookies" not in message
+
 def test_a_download_without_the_first_language_asked_for_is_not_imported(tmp_path, monkeypatch):
     sync = load(tmp_path, monkeypatch)
     config = {"defaults": {"--a-lang": "fr,orig,en"}}

@@ -2290,5 +2290,6 @@
  "A {0} download is running: clear its cache once it is done": "{0} のダウンロードが実行中です。完了してからキャッシュを削除してください",
  "{0} downloads on another Unshackle server: clear its cache there": "{0} は別の Unshackle サーバーでダウンロードします。そちらでキャッシュを削除してください",
  "Unshacklarr cannot see Unshackle's Cache folder: mount it and set its path in Settings, Unshackle (CACHE_DIR with Docker)": "Unshacklarr から Unshackle の Cache フォルダが見えません。マウントして、設定 › Unshackle でパスを指定してください (Docker では CACHE_DIR)",
- "Clear one service's cache": "1 つのサービスのキャッシュだけを削除"
+ "Clear one service's cache": "1 つのサービスのキャッシュだけを削除",
+ "{0} refused the video files: they must come from its country. Remove --no-proxy-download, or set --proxy-download.": "{0} が動画ファイルを拒否しました：その国から取得する必要があります。--no-proxy-download を外すか、--proxy-download を設定してください。"
 }
