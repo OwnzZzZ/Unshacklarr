@@ -406,6 +406,7 @@ $("#bo-send").onclick = async (e) => {
     const r = await api("/api/backup/offsite", { method: "POST", body: JSON.stringify({ password: $("#bo-pw").value, settings }) });
     for (const k of Object.keys(settings).concat(["backup_remote_secret_set", "backup_passphrase_set"])) S.config.settings[k] = r.settings[k];
     savedConfig = configKey(S.config);  // saved on the server already: no unsaved change
+    savedUnits = configUnits(S.config);
     $("#bo-secret").value = $("#bo-pass").value = $("#bo-pw").value = "";
     if (r.sent.at) S.backups = { ...(S.backups || {}), offsite: r.sent };
     boKind = null;
@@ -670,7 +671,14 @@ async function save() {
   // Drop series with no service so the file only lists what Unshackle downloads.
   const series = Object.fromEntries(Object.entries(S.config.series).filter(([, c]) => c.service));
   // Keep S.config as is: the open editors hold references into it.
-  await api("/api/config", { method: "PUT", body: JSON.stringify({ ...S.config, series }) });
+  const units = configUnits(S.config);
+  const changed = [...new Set([...Object.keys(units), ...Object.keys(savedUnits)])].filter((u) => units[u] !== savedUnits[u]);
+  const base = Object.fromEntries(changed.map((u) => [u, S.config.versions?.[u] ?? null]));
+  const saved = await api("/api/config", { method: "PUT", body: JSON.stringify({ ...S.config, series, changed, base }) });
+  for (const u of changed) {  // only these are as the server has them now: the others keep the version they were loaded at
+    if (saved.versions?.[u]) S.config.versions[u] = saved.versions[u]; else delete S.config.versions?.[u];
+  }
+  savedUnits = units;
   unsaved = false;
   savedConfig = configKey(S.config);
   if (current) drawerSnapshot = { id: current.tvdbId, existed: true, conf: JSON.stringify(S.config.series[current.tvdbId]) };

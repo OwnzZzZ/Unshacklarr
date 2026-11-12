@@ -40,7 +40,13 @@ async function loadCookies() {
   if (bad) show("down", `${bad} service${bad === 1 ? "" : "s"} with expired or missing cookies`, counts);
   else if (warn) show("warn", `${warn} service${warn === 1 ? "" : "s"} to renew soon`, counts);
   else show("ok", services.length ? "All logins fine" : "No cookie file yet", services.length ? counts : "");
-  $("#ck-list").replaceChildren(...services.map(({ tag, files, worst, n }) => el("div", { className: `sx-card ck-card ${worst}` },
+  // Files Unshackle can't write (owned by root after a docker exec): a service then fails on a cache or token it can't save
+  const locked = data.unwritable?.length ? [el("div", { className: "sx-card ck-card bad" },
+    el("div", { className: "sx-head" }, el("span", { className: "sx-ico ck-ico bad", ariaHidden: "true", innerHTML: CK_ICONS.bad }),
+      el("div", {}, el("h3", { textContent: "Read-only files" }),
+        el("p", { textContent: "Unshackle can't write these files. Give them back to the container's user, for example with chown." }))),
+    el("ul", { className: "ck-locked" }, ...data.unwritable.map((p) => el("li", {}, el("code", { textContent: p })))))] : [];
+  $("#ck-list").replaceChildren(...locked, ...services.map(({ tag, files, worst, n }) => el("div", { className: `sx-card ck-card ${worst}` },
     el("div", { className: "sx-head" }, el("span", { className: `sx-ico ck-ico ${worst}`, ariaHidden: "true", innerHTML: CK_ICONS[worst] }),
       el("div", {}, el("h3", { textContent: tag }), el("p", { textContent: [n ? `Used by ${n} series` : "No series uses it", files.length ? `${files.length} file${files.length === 1 ? "" : "s"}` : ""].filter(Boolean).join(" · ") })),
       ...(files.length ? [] : [el("button", { className: "btn small primary", textContent: "Add", onclick: () => openCookieDialog(tag, "default") })])),

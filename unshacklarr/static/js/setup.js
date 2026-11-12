@@ -465,6 +465,7 @@ $("#tz-select").after(settingsZone.input, settingsZone.list);
     const data = (await stateAsked) || await api("/api/state");
     S = { series: data.series, config: data.config, services: data.services, serviceNames: data.service_names || {}, dlOptions: data.dl_options, health: data.health || {}, cdm: data.cdm || {}, domains: data.service_domains || {}, builtinLadders: data.builtin_ladders || [], networkServices: data.network_services || {}, backups: data.backups || null, news: data.news || {}, metadataLanguage: data.metadata_language || "", update: data.update || null, version: data.version, instances: data.instances || {}, sonarrsOf: data.sonarrs_of || {} };
     savedConfig = configKey(S.config);
+    savedUnits = configUnits(S.config);
     // a test build of a branch shows its branch and commit, not the release it started from
     const [, branch, commit] = (data.build || "").match(/^(.*?)(?:-([0-9a-f]{7,}))?$/);
     $("#set-version").textContent = data.version ? `Unshacklarr ${data.build ? [branch, commit].filter(Boolean).join(" · ") : data.version}` : "";

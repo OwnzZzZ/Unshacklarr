@@ -183,6 +183,12 @@ let unsaved = false;
 let savedConfig = "";  // the settings as last loaded or saved: a discard that brings them back clears the bar
 // what a save sends: a series opened without a service is not part of it
 const configKey = (c) => JSON.stringify({ ...c, series: Object.fromEntries(Object.entries(c.series || {}).filter(([, x]) => x.service)) });
+// Each part of the config (a section, a series) as last loaded or saved: a save sends which ones changed since, so
+// the server keeps what another tab changed meanwhile (web.merge_page_changes)
+let savedUnits = {};
+const configUnits = (c) => Object.fromEntries([
+  ...Object.entries(c).filter(([k]) => k !== "series" && k !== "versions").map(([k, v]) => [k, JSON.stringify(v)]),
+  ...Object.entries(c.series || {}).filter(([, x]) => x.service).map(([k, v]) => [`series:${k}`, JSON.stringify(v)])]);
 function dirty() {  // a change put back as it was hides the bar again
   renderCommands();
   unsaved = configKey(S.config) !== savedConfig;
@@ -318,6 +324,8 @@ function optionPicker(free, onPick, anyFlag = false) {
 
 const mainSonarr = () => S.config?.settings?.sonarr_name || "Sonarr";  // the main Sonarr where libraries are named
 const SEL = { on: false, ids: new Set() };  // the series picked to change together (js/bulk.js)
+// The names a series is searched by: Sonarr's title, its other titles there, its name in file names
+const seriesNames = (s) => [s.title, ...(s.altTitles || []), S.config.series[s.tvdbId]?.file_name || ""];
 function renderWall() {
   const q = $("#search").value.trim().toLowerCase();
   const svc = $("#f-service").value, lib = $("#f-library").value;
@@ -345,7 +353,7 @@ function renderWall() {
   const shown = S.series
     .filter((s) => {
       const on = S.config.series[s.tvdbId]?.service || "";
-      return (!q || s.title.toLowerCase().includes(q))
+      return (!q || seriesNames(s).some((n) => n.toLowerCase().includes(q)))
         && (!managed || (managed === "f" ? failing(s) : managed === "h" ? S.config.hidden_series.includes(s.tvdbId) : managed === "*" ? on : !on))
         && (!svc || on === svc)
         && (!lib || (lib === "-" ? !!s.id : libsOf(s).some((o) => o.name === lib)))

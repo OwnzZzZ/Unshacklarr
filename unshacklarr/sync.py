@@ -181,6 +181,7 @@ SETTINGS_DEFAULTS = {
     "backends": [],              # other unshackle serve: [{name, url, api_key, downloads (as that serve sees the folder)}]
     "quality_ladder": "",        # the quality ladder every series downloads by (a service or a series can pick another)
     "sonarrs": [],               # other Sonarr instances (a 4K one): [{name, url, api_key, downloads, quality_ladder, download_only}]
+    "after_download_url": "",    # each episode downloaded is posted there as JSON, for a script of yours
 }
 SETTINGS_FROM_ENV = {
     "unshackle_url": "UNSHACKLE_URL", "unshackle_api_key": "UNSHACKLE_API_KEY", "downloads": "DOWNLOADS",
@@ -496,6 +497,34 @@ def notify_series(show: dict | None, settings: dict, level: str, title: str, mes
             print(f"Inbox not written: {e}", file=sys.stderr)
         return False
     return notify(settings, level, title, message, *args, **kwargs)
+
+
+def after_download(ep: dict, show: dict, run, files: list[str], imported: bool) -> None:  # run: an EpisodeRun
+    """Settings, Notifications, After download: the episode just downloaded, posted as JSON for a script of yours (it
+    moves, uploads or files it). Its file as Sonarr sees it: in the library once imported, else in the downloads."""
+    url = str(SETTINGS.get("after_download_url") or "")
+    if not url:
+        return
+    if imported:  # where Sonarr put it
+        try:
+            got = sonarr_get(f"episode/{ep['id']}")
+            files = [sonarr_get(f"episodefile/{got['episodeFileId']}")["path"]] if got.get("episodeFileId") else files
+        except (requests.RequestException, KeyError, ValueError) as e:
+            trace(f"After download: Sonarr's file not read ({type(e).__name__})")
+    payload = {"event": "downloaded", "imported": imported, "sonarr": (instance() or {}).get("name", ""),
+               "series": {"tvdbId": ep["series"].get("tvdbId"), "title": ep["series"].get("title"), "sonarrId": ep["series"].get("id")},
+               "episode": {"id": ep.get("id"), "season": ep.get("seasonNumber"), "number": ep.get("episodeNumber"),
+                           "code": run.card.get("sxxeyy"), "title": ep.get("title")},
+               "service": show.get("service"), "run": run.id,
+               "files": [{"path": f, "name": Path(f.replace("\\", "/")).name} for f in files]}
+
+    def post() -> None:
+        try:
+            requests.post(url, json=payload, timeout=30).raise_for_status()
+        except requests.RequestException as e:  # never its URL: it may hold a token
+            print(f"After download: the webhook failed ({type(e).__name__}"
+                  f"{f' {e.response.status_code}' if getattr(e, 'response', None) is not None else ''})", file=sys.stderr)
+    threading.Thread(target=post, name="after-download", daemon=True).start()
 
 
 def notify(settings: dict, level: str, title: str, message: str, action: dict | None = None, batch: str | None = None,
@@ -860,7 +889,18 @@ def job_cause(job: dict) -> str:
     if (m := re.search(r"^Stderr:[ \t]*(.+?)\s*(?:^Worker failed|\Z)", stderr, re.M | re.S)) and m.group(1).strip():
         return m.group(1).strip()
     message = job.get("error_message") or job.get("status") or "failed"
-    return re.sub(r"^(?:Worker exited with code \d+:\s*)+", "", message).strip()
+    cause = re.sub(r"^(?:Worker exited with code \d+:\s*)+", "", message).strip()
+    if GENERIC_CAUSE.fullmatch(cause):  # says nothing ("Download failed with exit code 1"): the last error it logged
+        log = job.get("log")
+        text = "\n".join([job.get("error_details") or "", stderr, "\n".join(map(str, log)) if isinstance(log, list) else str(log or "")])
+        if found := ERROR_LINE.findall(re.sub(r"\x1b\[[0-9;]*[A-Za-z]", "", text[-50_000:])):
+            return found[-1].strip()[:500]
+    return cause
+
+
+GENERIC_CAUSE = re.compile(r"(?:Download failed with exit code \d+|failed|error|unknown error)\.?", re.IGNORECASE)
+# a line that names the error: "ProxyError: …", "PermissionError: [Errno 13] Permission denied: '…/titles.json'"
+ERROR_LINE = re.compile(r"\b[A-Z]\w*(?:Error|Exception)\b: [^\n]+|Permission denied[^\n]*")
 
 
 def ask_for_input(run: EpisodeRun, prompt: str | None) -> None:
@@ -2327,6 +2367,17 @@ def apply_ladder(show: dict, config: dict, request: dict) -> int | None:
     if not episodes:  # ponytail: not on the service (yet): the download finds nothing either, and says so as usual
         return None
     found = climb(ladder, episodes)
+    if not found and ladder.get("blind"):  # "Try unlisted codecs": the first step whose codec the listing has none of
+        listed = {t.get("codec") for ep in episodes for t in ep.get("video") or []}
+        if blind := next(((i, st) for i, st in enumerate(ladder["steps"], 1) if st.get("codec") and st["codec"] not in listed), None):
+            number, step = blind
+            request.pop("vbitrate", None)
+            request.pop("vbitrate_range", None)
+            request.update(vcodec=[step["codec"]], **({"quality": [step.get("max") or step["min"]]} if step.get("max") or step.get("min") else {}),
+                           **({"range": [step["range"]]} if step.get("range") and not request.get("range") else {}),
+                           **({"vbitrate_range": f"0-{step['max_kbps']}"} if step.get("max_kbps") else {}))
+            trace(f"quality ladder {ladder['name']}: step {number} ({step_label(step)}) is not listed by {show['service']}: tried anyway")
+            return number
     if not found:
         have = sorted({track_label(t) for ep in episodes for t in ep.get("video") or []})
         raise ValueError(f"None of the quality ladder {ladder['name']}'s steps is on {show['service']} (it has {', '.join(have) or 'no video'})")
@@ -2828,9 +2879,9 @@ def instance_config(inst: dict, config: dict) -> dict:
     own = {**({"ladder": ladder} if ladder and ladder != SAME_AS_SERIES else {}),
            **({"download_only": bool(inst["download_only"])} if inst.get("download_only") is not None else {})}
 
-    def for_series(v: dict) -> dict:  # options the series adds for that Sonarr's copies only (sonarrs: {name: {...}})
+    def for_series(v: dict) -> dict:  # options (dl and the service's) the series adds for that Sonarr's copies only
         per = (v.get("sonarrs") or {}).get(inst["name"]) or {}
-        return {**v, **own, **({"options": {**(v.get("options") or {}), **per["options"]}} if per.get("options") else {})}
+        return {**v, **own, **{level: {**(v.get(level) or {}), **per[level]} for level in ("options", "service_options") if per.get(level)}}
     return {**config, "series": {k: for_series(v) for k, v in (config.get("series") or {}).items()}}
 
 
@@ -2955,6 +3006,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
                 run.say(f"{label}: downloaded but not imported (download only). It waits in {where}")
                 run.step("done")
                 run.finish("kept", "Download only: not imported", f"The download waits in {where}")
+                after_download(ep, show, run, [f"{where}/{f.name}" for f in videos_in(out)], False)
                 notify_series(show, settings, "success", f"Downloaded, not imported: {label}",
                        f"Download only: the file waits in {where}. Import or delete it in Activity, Waiting in downloads.",
                        batch=batch, details=episode_details(ep, show, run))
@@ -2993,6 +3045,7 @@ def run_episodes(config: dict, settings: dict, episodes: list, manual: bool, rep
         run.step("done")
         imported_at[(instance() or {}).get("name", ""), ep["id"]] = time.monotonic()
         run.finish("downloaded", "", "Imported by Sonarr")
+        after_download(ep, show, run, [], True)
         finale = FINALES.get(str(ep.get("finaleType") or ""), "")  # the end of a season or of the series: said
         notify_series(show, settings, "success", f"Downloaded: {label}{f' · {finale}' if finale else ''}", "Imported by Sonarr.",
                       batch=batch, details=episode_details(ep, show, run))

@@ -69,6 +69,15 @@ Unshacklarr can be reached from outside your network.
 - **What the ladder takes over is said.** `--quality`, `--vcodec` and `--vbitrate-range` set at that level are flagged
   with one button to remove them; with a ladder they are no longer applied, and the command shows the ladder's video.
 - **A highest bitrate per step.** 1080p up to 6000 kbps, 4K at its best: a cap on one step only.
+- **Try unlisted codecs.** A ladder can try its AV1 or H.265 step even when the service lists only H.264, as Amazon
+  does through serve.
+
+**🗂️ Several Sonarr, scripts and checks**
+- **Service options per Sonarr.** A series' 4K or AV1 copy can use another profile or flags, in its Libraries, Advanced.
+- **After download.** Each episode downloaded is posted as JSON to your script: series, Sonarr, episode and file paths.
+- **Read-only files.** The Cookies page lists Unshackle's files it can no longer write, often left to root by a
+  `docker exec`.
+- **Search by any title.** The series search also finds a series by its other titles in Sonarr and its name in files.
 
 ### Fixed
 
@@ -78,6 +87,10 @@ Unshacklarr can be reached from outside your network.
 - **A broadcast's time is the release time when none is set.** An episode is tried the minute it airs, not at the next sync.
 - **The gap to the next episode and the release day count from the broadcast's time too.** They were dropped on save without a release time.
 - **Video files a service refuses are no longer blamed on its cookies.** The message points to the download's proxy instead.
+- **A page open in another tab no longer undoes your changes.** A save only sends what it changed; the same thing
+  changed in two places is refused with a message to reload. Settings edited by hand apply without a restart.
+- **A Sonarr taken out of Settings no longer blocks saving a series** that had options for it.
+- **The real error on Activity.** A failure that only said "exit code 1" now shows the last error it logged.
 - **An episode not out yet is no longer a failure.** Unshackle's "No titles found" is read as *not on the service yet*: tried again, and the release-time tries go on.
 - **A service's `--profile` stays the service's.** Netflix's `--profile PRK_DO` was taken as an account profile and
   shown before the service in the command.

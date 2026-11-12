@@ -296,9 +296,13 @@ def read_config() -> dict:
         stamp = (st.st_mtime_ns, st.st_size, st.st_ino)
     except FileNotFoundError:
         stamp = ()
-    if not stamp or stamp != config_read[0]:
+    before = config_read[0]  # read once: two requests may read the file at the same time
+    if not stamp or stamp != before:
         parsed = yaml.load(SERIES_FILE.read_text(encoding="utf8"), Loader=YAML_LOADER) if stamp else None
+        edited = bool(before)  # changed outside Unshacklarr (by hand): not at startup, not after its own write
         config_read = (stamp, parsed or {})
+        if edited:  # its settings too (another Sonarr removed…), not only its series: no restart needed
+            sonarr_sync.apply_settings(sonarr_sync.load_settings(parsed or {}))
     config = copy.deepcopy(config_read[1])
     return {
         "settings": config.get("settings") or {},
@@ -371,8 +375,9 @@ def real_config(body: dict, saved: dict) -> None:
         if isinstance(show.get("fallback"), dict):
             show["fallback"]["service_options"] = real_options(show["fallback"].get("service_options"), ((before or {}).get("fallback") or {}).get("service_options"))
         for name, per in (show.get("sonarrs") or {}).items() if isinstance(show.get("sonarrs"), dict) else ():
-            if isinstance(per, dict) and "options" in per:  # the options this series adds for another Sonarr's copies
-                per["options"] = real_options(per.get("options"), (((before or {}).get("sonarrs") or {}).get(name) or {}).get("options"))
+            for level in OPTION_LEVELS:  # the options this series adds for another Sonarr's copies
+                if isinstance(per, dict) and level in per:
+                    per[level] = real_options(per.get(level), (((before or {}).get("sonarrs") or {}).get(name) or {}).get(level))
     notifications = body.get("notifications") or {}
     urls = [t["url"] for t in sonarr_sync.notification_targets(saved["notifications"])]
     for target in notifications.get("targets") or []:
@@ -394,11 +399,94 @@ def public_config(config: dict) -> dict:
     service_defaults = {svc: {**lv, **{level: masked_options(lv.get(level)) for level in OPTION_LEVELS}} for svc, lv in config["service_defaults"].items()}
     series = {key: {**show, **{level: masked_options(show.get(level)) for level in OPTION_LEVELS if level in show},
                     **({"fallback": {**show["fallback"], "service_options": masked_options(show["fallback"].get("service_options"))}} if show.get("fallback") else {}),
-                    **({"sonarrs": {name: {**per, "options": masked_options(per.get("options"))} if isinstance(per, dict) and "options" in per else per
+                    **({"sonarrs": {name: {**per, **{level: masked_options(per.get(level)) for level in OPTION_LEVELS if level in per}} if isinstance(per, dict) else per
                                     for name, per in show["sonarrs"].items()}} if isinstance(show.get("sonarrs"), dict) else {})}
               for key, show in config["series"].items()}
-    return {**{k: v for k, v in config.items() if k not in ("auth", "settings")}, "settings": shown, "notifications": notifications,
-            "defaults": masked_options(config["defaults"]), "service_defaults": service_defaults, "series": series}
+    public = {**{k: v for k, v in config.items() if k not in ("auth", "settings")}, "settings": shown, "notifications": notifications,
+              "defaults": masked_options(config["defaults"]), "service_defaults": service_defaults, "series": series}
+    return {**public, "versions": unit_versions(public)}
+
+
+def config_units(public: dict) -> dict:
+    """The parts a page saves on their own: each section, and each series ("series:<tvdb>")."""
+    units = {k: v for k, v in public.items() if k not in ("series", "versions")}
+    units.update({f"series:{k}": v for k, v in (public.get("series") or {}).items()})
+    return units
+
+
+UNIT_SEEN: dict[str, object] = {}  # the parts as pages got them, by fingerprint: what a later save changed from
+UNIT_SEEN_MAX = 5000
+
+
+def unit_versions(public: dict) -> dict:
+    """A short fingerprint of each part as the page got it: a save says which parts it changed and from which version."""
+    versions = {}
+    for unit, value in config_units(public).items():
+        text = json.dumps(value, sort_keys=True, default=str)
+        versions[unit] = digest = hashlib.sha256(text.encode()).hexdigest()[:12]
+        UNIT_SEEN[digest] = json.loads(text)
+    while len(UNIT_SEEN) > UNIT_SEEN_MAX:  # the oldest first (insertion order)
+        UNIT_SEEN.pop(next(iter(UNIT_SEEN)))
+    return versions
+
+
+def merge_unit(base, mine, now):
+    """A part the page changed while it changed here too: key by key from the version the page started from, the
+    page's changes over the saved ones. None when both changed the same key differently (or nothing to go by)."""
+    if mine == now:
+        return mine
+    if not (isinstance(base, dict) and isinstance(mine, dict) and isinstance(now, dict)):
+        return None
+    out = {}
+    for key in {**base, **mine, **now}:
+        b, m, n = base.get(key), mine.get(key), now.get(key)
+        if m == b:
+            v = n
+        elif n in (b, m):
+            v = m
+        else:
+            return None
+        if v is not None:
+            out[key] = v
+    return out
+
+
+def merge_page_changes(body: dict, current: dict) -> None:
+    """A page sends its whole config, but only the parts it changed (body["changed"]) are taken from it; the others
+    stay as saved, so a tab opened before another change no longer writes old settings back. A part changed both
+    here and elsewhere since the page loaded it is merged key by key; the same key changed both ways is a conflict.
+    A page that sends no "changed" saves everything, as before."""
+    if not isinstance(body.get("changed"), list):
+        return
+    changed, base = {str(u) for u in body.pop("changed")}, body.pop("base", None) or {}
+    norm = lambda v: json.loads(json.dumps(v, sort_keys=True, default=str))  # noqa: E731
+    now = norm(config_units(current))
+    versions = unit_versions(current)
+    mine = norm(config_units({**body, "series": {str(k): v for k, v in (body.get("series") or {}).items()}}))
+    taken, clash = {}, []
+    for unit in changed:
+        if unit not in mine and unit not in now:
+            continue
+        if base.get(unit) == versions.get(unit):
+            taken[unit] = mine.get(unit)
+        elif (merged := merge_unit(UNIT_SEEN.get(base.get(unit)), mine.get(unit), now.get(unit))) is not None:
+            taken[unit] = merged
+        else:  # the same key changed both ways, or a series taken out here and changed elsewhere
+            clash.append(unit)
+    if clash:
+        if all(u.startswith("series:") for u in clash):
+            raise web.HTTPConflict(text="This series was changed elsewhere since this page was loaded. Reload the page, then make your change again.")
+        raise web.HTTPConflict(text="These settings were changed elsewhere since this page was loaded. Reload the page, then make your change again.")
+    for section in [k for k in now if not k.startswith("series:")]:
+        body[section] = taken[section] if section in taken else current[section]
+    series = {str(k): v for k, v in (current.get("series") or {}).items()}
+    for unit, value in taken.items():
+        if unit.startswith("series:"):
+            if value is None:
+                series.pop(unit.split(":", 1)[1], None)  # taken out of Unshacklarr on this page
+            else:
+                series[unit.split(":", 1)[1]] = value
+    body["series"] = series
 
 
 def tmdb_error(e: requests.RequestException) -> str:
@@ -459,6 +547,9 @@ def series_entry(s: dict) -> dict:
             "orders": {str(t.get("type")): str(t.get("name") or t.get("type")) for t in s.get("seasonTypes") or [] if t.get("type")},
             **({"language": str(s["language"].get("name") or "")} if isinstance(s.get("language"), dict) else {}),  # its titles' (Sonarr 5)
             **({"originalLanguage": str(s["originalLanguage"].get("name") or "")} if isinstance(s.get("originalLanguage"), dict) else {}),
+            # its other titles in Sonarr (TVDB's, in other languages): the search finds the series by them too
+            **({"altTitles": alt} if (alt := sorted({str(a["title"]) for a in s.get("alternateTitles") or []
+                                                     if a.get("title") and a["title"] != s["title"]})) else {}),
             # a season's own name, where Sonarr has one (Sonarr 5: a documentary strand's, an anime's arcs)
             **({"seasonTitles": titles} if (titles := {str(x["seasonNumber"]): str(x["title"]) for x in s.get("seasons") or []
                                                        if x.get("title")}) else {}),
@@ -593,7 +684,7 @@ async def service_options(request):
         raise web.HTTPBadGateway(text=str(e))
 
 
-def check_series_sonarrs(value, body: dict, dl_specs: list[dict], where: str) -> dict:
+def check_series_sonarrs(value, body: dict, dl_specs: list[dict], where: str, service_specs: list[dict] | None = None) -> dict:
     """A series' own settings for each other Sonarr: {name: {"off", "options"}}; its ladder and After the download
     are that Sonarr's, for every series. Only the Sonarrs in Settings; empty ones are left out."""
     if not value:
@@ -603,13 +694,17 @@ def check_series_sonarrs(value, body: dict, dl_specs: list[dict], where: str) ->
     names = {str(i.get("name") or "") for i in (body.get("settings") or {}).get("sonarrs") or []} | set(sonarr_sync.SONARRS)
     out = {}
     for name, per in value.items():
-        if name not in names or not isinstance(per, dict):
-            raise web.HTTPBadRequest(text=f"{where}: no Sonarr named {name} in Settings, Sonarr")
+        if name not in names:  # a Sonarr taken out of Settings: what the series had for it goes with it
+            continue
+        if not isinstance(per, dict):
+            raise web.HTTPBadRequest(text=f"{where}: the settings for Sonarr {name} must be an object")
         own = {}
         if per.get("off") is True:  # its new episodes are not downloaded for that Sonarr
             own["off"] = True
         if opts := check_options(per.get("options") or {}, dl_specs, f"{where} in {name}"):
             own["options"] = opts
+        if opts := check_options(per.get("service_options") or {}, service_specs, f"{where} in {name}", free=True):
+            own["service_options"] = opts  # the service's own options for that Sonarr's copies (another profile)
         if own:
             out[name] = own
     return out
@@ -693,6 +788,7 @@ async def service_profiles(request):
 async def save_config(request):
     body = await json_object(request)
     previous = read_config()
+    merge_page_changes(body, public_config(previous))
     real_config(body, previous)  # the secrets the browser only saw masked
     dl_specs = options.dl_specs()
     known = await asyncio.to_thread(known_services)
@@ -761,7 +857,7 @@ async def save_config(request):
             series[int(key)]["ladder"] = ladder
         if show.get("skip_upgrades") is True:  # left out of Activity, Upgrades
             series[int(key)]["skip_upgrades"] = True
-        if per := check_series_sonarrs(show.get("sonarrs"), body, dl_specs, str(key)):
+        if per := check_series_sonarrs(show.get("sonarrs"), body, dl_specs, str(key), service_specs):
             series[int(key)]["sonarrs"] = per
         if show.get("main_off") is True:  # not downloaded for the main Sonarr, only for the others
             series[int(key)]["main_off"] = True
@@ -902,7 +998,8 @@ def check_ladders(given) -> list[dict]:
                 raise web.HTTPBadRequest(text=f"The quality ladder {name}: {bad[0]!r} is not a language code like fr or en-AU")
             if codes:
                 orders[kind] = list(dict.fromkeys(codes))
-        out.append({"name": name, "steps": steps, **orders})
+        # the service may list fewer codecs than it serves (a listing in H.264 only): a step it lists none of is tried anyway
+        out.append({"name": name, "steps": steps, **orders, **({"blind": True} if ladder.get("blind") is True else {})})
     return out
 
 
@@ -1260,6 +1357,10 @@ def check_settings(body: dict, previous: dict) -> dict:
     settings["download_window_bursts"] = body.get("download_window_bursts") is True
     settings["spoiler_free"] = body.get("spoiler_free") is True
     settings["download_only"] = body.get("download_only") is True
+    hook = str(body.get("after_download_url") or "").strip()
+    if hook and not URL.fullmatch(hook):
+        raise web.HTTPBadRequest(text="The After download address must start with http:// or https://")
+    settings["after_download_url"] = hook
     settings["quality_ladder"] = str(body.get("quality_ladder") or "")  # checked against the ladders by save_config
     settings["upgrade_other_groups"] = body.get("upgrade_other_groups") is True
     settings["upgrade_check_new"] = body.get("upgrade_check_new") is True
@@ -1975,7 +2076,29 @@ def cookie_state() -> dict:
         wants = {s["tag"] for s in UNSHACKLE.services() if "cookies" in (s.get("auth_methods") or [])}
     except UnshackleError:
         wants = set()
-    return {"folder": str(folder), "files": files, "used": used, "wants": sorted(wants)}
+    return {"folder": str(folder), "files": files, "used": used, "wants": sorted(wants), "unwritable": unwritable_files(folder)}
+
+
+def unwritable_files(cookies_dir: Path, most: int = 20) -> list[str]:
+    """Files and folders of Unshackle's (cookies, cache and its device tokens, its config folder) that this user cannot
+    write: left owned by root after a docker exec, they make a service fail on a cache or token it can't save. Only
+    the folders Unshacklarr sees; the first `most` found."""
+    folders = [cookies_dir]
+    for where in (cache_folder, lambda: Path(sonarr_sync.SETTINGS.get("unshackle_config_dir") or "")):
+        try:
+            if str(found := where()) not in ("", "."):
+                folders.append(found)
+        except UnshackleError:
+            pass
+    out, seen = [], 0
+    for folder in dict.fromkeys(folders):
+        for path in [folder, *folder.rglob("*")] if folder.is_dir() else []:
+            seen += 1
+            if seen > 20_000 or len(out) >= most:  # ponytail: a bounded walk, a huge cache is not read whole
+                return out
+            if not os.access(path, os.W_OK):
+                out.append(str(path))
+    return out
 
 
 async def list_cookies(_):
