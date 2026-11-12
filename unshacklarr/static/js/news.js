@@ -24,6 +24,9 @@ const NEWS = [
   { id: "orig-audio", version: "1.6.0", title: "orig in the accepted audio languages", sec: "downloads", target: "#dx-audio" },
   { id: "service-cache", version: "1.6.0", title: "Clear one service's cache", sec: "downloads", target: "#svc-defaults" },
   { id: "any-service-option", version: "1.6.0", title: "Any service option", sec: "downloads", target: "#svc-defaults" },
+  { id: "sonarr-service-options", version: "1.6.0", title: "Service options per Sonarr", series: true, target: "#d-libs-adv" },
+  { id: "after-download", version: "1.6.0", title: "After download", sec: "notifications", target: "#nt-after-card" },
+  { id: "ladder-blind", version: "1.6.0", title: "Try unlisted codecs", sec: "quality", target: ".ql-blind" },
   { id: "ladder-chips", version: "1.6.0", title: "Ladders as chips, a bitrate per step", sec: "downloads", target: "#svc-defaults" },
   { id: "dl-generate-dv-sample", version: "1.6.0", title: "--generate-dv and --include-sample", sec: "downloads", target: "section.sx-card:has(#defaults)" },
 ];

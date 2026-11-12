@@ -154,7 +154,13 @@ function ladderCard(lad) {
       el("small", { className: "muted", textContent: "Tried from the top: Unshacklarr downloads the first step the episode has a track for, and the best track within it." })),
     el("div", { className: "sx-grid ql-langs" },
       langs("audio", "Audio, in this order", "The first language in this list that the episode has is downloaded (en also matches en-GB). Not used when empty, or when the series or its service sets --a-lang."),
-      langs("subtitles", "Subtitles, in this order", "The first language in this list that the episode has full subtitles in is downloaded. Not used when empty, or when --s-lang is set.")));
+      langs("subtitles", "Subtitles, in this order", "The first language in this list that the episode has full subtitles in is downloaded. Not used when empty, or when --s-lang is set."),
+      el("div", { className: "field ql-blind" },
+        el("label", { className: "check" }, el("input", { type: "checkbox", checked: !!lad.blind, onchange: (e) => {
+          if (e.target.checked) lad.blind = true; else delete lad.blind;
+          dirty();
+        } }), "Try unlisted codecs"),
+        el("small", { textContent: "When no step matches, the first step whose codec the service does not list is downloaded anyway." }))));
 }
 
 function stepRow(lad, st, i) {
@@ -702,18 +708,27 @@ function renderLibraries(conf) {
         dirty(); renderLibraries(conf);
       });
     }));
-  // Advanced: options added to the series' own for one library's copies only, for whoever needs them
-  $("#d-libs-adv-body").replaceChildren(...found.map((o) => {
+  // Advanced: options added to the series' own for one library's copies only, for whoever needs them: download options and
+  // the service's own (a 4K or AV1 copy with another profile or flags)
+  const editor = (name, level, specs, anyFlag) => {
     const opts = el("div", { className: "opts" });
-    const values = new Proxy({ ...(all[o.name]?.options || {}) }, {  // written into conf only once an option is added
-      set: (t, k, v) => { t[k] = v; per(o.name).options = { ...t }; dirty(); return true; },
+    const values = new Proxy({ ...(all[name]?.[level] || {}) }, {  // written into conf only once an option is added
+      set: (t, k, v) => { t[k] = v; per(name)[level] = { ...t }; dirty(); return true; },
       deleteProperty: (t, k) => {
         delete t[k];
-        if (Object.keys(t).length) per(o.name).options = { ...t }; else if (conf.sonarrs?.[o.name]) { delete conf.sonarrs[o.name].options; tidy(o.name); }
+        if (Object.keys(t).length) per(name)[level] = { ...t }; else if (conf.sonarrs?.[name]) { delete conf.sonarrs[name][level]; tidy(name); }
         dirty(); return true;
       } });
-    optionsEditor(opts, S.dlOptions, values);
-    return el("div", { className: "field" }, el("label", { textContent: `Download options for ${o.name}` }), opts);
-  }));
-  $("#d-libs-adv").open = found.some((o) => all[o.name]?.options);
+    optionsEditor(opts, specs, values, anyFlag);
+    return opts;
+  };
+  const theirs = el("div");
+  $("#d-libs-adv-body").replaceChildren(...found.map((o) => el("div", { className: "field" },
+    el("label", { textContent: `Download options for ${o.name}` }), editor(o.name, "options", S.dlOptions))), theirs);
+  if (conf.service) loadServiceOptions(conf.service).catch(() => []).then((specs) => {
+    if (S.config.series[current?.tvdbId] !== conf) return;  // another series opened meanwhile
+    theirs.replaceChildren(...found.map((o) => el("div", { className: "field" },
+      el("label", { textContent: `${conf.service} options for ${o.name}` }), editor(o.name, "service_options", specs, true))));
+  });
+  $("#d-libs-adv").open = found.some((o) => all[o.name]?.options || all[o.name]?.service_options);
 }

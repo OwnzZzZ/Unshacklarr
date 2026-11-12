@@ -1889,11 +1889,7 @@ def test_a_series_switches_another_sonarr_off_or_adds_options_for_it(tmp_path, m
     specs = [{"flag": "--atmos", "is_flag": True, "choices": []}]
     assert web.check_series_sonarrs({"sonarr-4k": {"off": True, "ladder": "1080p", "options": {}}}, body, specs, "1") == {"sonarr-4k": {"off": True}}  # a ladder is that Sonarr's
     assert web.check_series_sonarrs({"sonarr-4k": {}}, body, specs, "1") == {}  # nothing of its own: left out
-    try:
-        web.check_series_sonarrs({"nope": {"off": True}}, body, specs, "1")
-        raise AssertionError("a Sonarr not in Settings was taken")
-    except web.web.HTTPBadRequest:
-        pass
+    assert web.check_series_sonarrs({"nope": {"off": True}}, body, specs, "1") == {}  # a Sonarr taken out of Settings: dropped
 
 def test_the_download_window_keeps_the_automatic_sync_to_its_hours(tmp_path, monkeypatch):
     sync = load(tmp_path, monkeypatch)
@@ -2880,3 +2876,63 @@ def test_an_episode_serve_finds_no_title_for_is_not_out_yet(tmp_path, monkeypatc
         raise sync.UnshackleError("unshackle serve: No titles found matching wanted criteria (ref 4d8140)")
     monkeypatch.setattr(sync, "run_job", refused)
     assert sync.run_job_retrying({"service": "DSNP"}, sleep=lambda _: None) == []
+
+
+def test_a_failure_that_says_nothing_shows_the_last_error_logged(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    job = {"status": "failed", "error_message": "Download failed with exit code 1",
+           "log": ["Downloading", "PermissionError: [Errno 13] Permission denied: '/config/cache/AMZN/titles_1.json'", "Exiting"]}
+    assert sync.job_cause(job).startswith("PermissionError: [Errno 13] Permission denied")
+    job = {"status": "failed", "error_message": "Download failed with exit code 1",
+           "error_details": "requests.exceptions.ProxyError: HTTPSConnectionPool(host='x', port=443): Max retries exceeded"}
+    assert sync.job_cause(job).startswith("ProxyError: HTTPSConnectionPool")
+    assert sync.job_cause({"status": "failed", "error_message": "Download failed with exit code 1"}) == "Download failed with exit code 1"
+    assert sync.job_cause({"status": "failed", "error_message": "User is not entitled"}) == "User is not entitled"
+
+
+def test_a_ladder_that_trusts_its_steps_tries_a_codec_the_listing_lacks(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    config = sync.read_file()
+    config["quality_ladders"] = [{"name": "AV1", "blind": True, "steps": [{"codec": "AV1", "range": "SDR", "min": 1080, "max": 1080}]}]
+    config["series"][111]["ladder"] = "AV1"
+    # the listing comes back in H.264 only (serve does not pass the codec on to the service)
+    monkeypatch.setattr(sync.UNSHACKLE, "call", lambda method, path, json=None, **_: {"episodes": [{"video": [{"height": 1080, "codec": "AVC", "range": "SDR"}]}]})
+    monkeypatch.setattr(sync, "no_cdm", lambda tag, config=None: "")
+    downloads = []
+    monkeypatch.setattr(sync, "run_job_retrying", lambda payload, run=None: downloads.append(payload))
+    sync.sync(config, {}, [episode(111, 2, 5)], manual=True, kind="manual")
+    assert [(d["quality"], d["vcodec"], d["range"]) for d in downloads] == [([1080], ["AV1"], ["SDR"])]
+    del config["quality_ladders"][0]["blind"]
+    sync.sync(config, {}, [episode(111, 2, 5)], manual=True, kind="manual")
+    assert len(downloads) == 1  # without it: nothing outside what the service lists
+
+
+def test_after_download_posts_the_episode_and_its_file_for_a_script(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    from types import SimpleNamespace
+    sent = []
+    monkeypatch.setattr(sync.requests, "post", lambda url, json=None, timeout=None: sent.append((url, json)) or SimpleNamespace(raise_for_status=lambda: None))
+    monkeypatch.setattr(sync, "sonarr_get", lambda path, **_: {"episodeFileId": 9} if path.startswith("episode/") else {"path": "/tv/Show/Season 2/Show.S02E05.mkv"})
+    run = SimpleNamespace(id="r1", card={"sxxeyy": "S02E05"})
+    ep = {**episode(111, 2, 5), "title": "Pilot"}
+    sync.SETTINGS["after_download_url"] = ""
+    sync.after_download(ep, {"service": "RTLP"}, run, [], True)
+    assert sent == []  # not set: nothing sent
+    sync.SETTINGS["after_download_url"] = "http://hook/done"
+    sync.after_download(ep, {"service": "RTLP"}, run, [], True)
+    for t in sync.threading.enumerate():
+        if t.name == "after-download":
+            t.join(5)
+    url, body = sent[0]
+    assert url == "http://hook/done" and body["imported"] is True and body["service"] == "RTLP"
+    assert body["episode"]["code"] == "S02E05" and body["series"]["tvdbId"] == 111
+    assert body["files"] == [{"path": "/tv/Show/Season 2/Show.S02E05.mkv", "name": "Show.S02E05.mkv"}]
+
+
+def test_another_sonarrs_copies_take_the_service_options_the_series_adds_for_it(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    config = {"series": {1: {"service": "AMZN", "options": {"--quality": "1080"}, "service_options": {"--tier": "x"},
+                             "sonarrs": {"4K": {"options": {"--quality": "2160"}, "service_options": {"--profile-name": "uhd"}}}}}}
+    got = sync.instance_config({"name": "4K", "quality_ladder": ""}, config)["series"][1]
+    assert got["options"] == {"--quality": "2160"} and got["service_options"] == {"--tier": "x", "--profile-name": "uhd"}
+    assert sync.instance_config({"name": "AV1", "quality_ladder": ""}, config)["series"][1]["service_options"] == {"--tier": "x"}

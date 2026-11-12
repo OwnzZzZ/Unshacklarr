@@ -2798,3 +2798,88 @@ def test_series_on_remote_are_told_when_unshackle_cannot_run_it(tmp_path, monkey
     assert web.remote_unsupported(config) == ["NF"]
     monkeypatch.setattr(web.UNSHACKLE, "config", lambda: {"dl": {}, "remote_services": ["box"]})
     assert web.remote_unsupported(config) == []
+
+
+def test_a_page_saves_only_what_it_changed_and_a_clash_is_refused(tmp_path, monkeypatch):
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    loaded = {"settings": {"sonarrs": [{"name": "4K"}], "language": "en"}, "defaults": {},
+              "series": {1: {"service": "A", "title": "x"}, 2: {"service": "B", "title": "y"}}}
+    versions = web.unit_versions(loaded)
+    # meanwhile another tab took the 4K Sonarr out and changed series 2; the server learned a release time for series 1
+    now = {"settings": {"sonarrs": [], "language": "en"}, "defaults": {},
+           "series": {1: {"service": "A", "title": "x", "release_time": "21:00"}, 2: {"service": "B", "title": "z"}}}
+    # this old tab changed series 1 only, and sends its old settings with it
+    body = {**loaded, "series": {"1": {"service": "A", "title": "x2"}, "2": {"service": "B", "title": "y"}},
+            "changed": ["series:1"], "base": {"series:1": versions["series:1"]}}
+    web.merge_page_changes(body, now)
+    assert body["settings"]["sonarrs"] == [], "the other tab's settings stay"
+    assert body["series"]["2"]["title"] == "z", "the other tab's series stays"
+    assert body["series"]["1"] == {"service": "A", "title": "x2", "release_time": "21:00"}, "merged key by key"
+    # the same key changed both ways: refused
+    body = {**loaded, "series": {"2": {"service": "B", "title": "w"}}, "changed": ["series:2"], "base": {"series:2": versions["series:2"]}}
+    with pytest.raises(web.web.HTTPConflict):
+        web.merge_page_changes(body, now)
+    # a page that says nothing of its changes saves everything, as before
+    body = {**loaded}
+    web.merge_page_changes(body, now)
+    assert body["settings"]["sonarrs"] == [{"name": "4K"}]
+
+
+def test_settings_edited_by_hand_apply_without_a_restart(tmp_path, monkeypatch):
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    web.write_config({"settings": {"sonarrs": [{"name": "4K", "url": "http://x"}]}})
+    web.read_config()
+    assert "4K" in web.sonarr_sync.SONARRS
+    import os, time
+    web.SERIES_FILE.write_text("settings:\n  sonarrs: []\n", encoding="utf8")
+    os.utime(web.SERIES_FILE, ns=(time.time_ns() + 10**9,) * 2)
+    web.read_config()
+    assert "4K" not in web.sonarr_sync.SONARRS, "the Sonarr taken out of the file is gone"
+
+
+def test_a_series_other_titles_reach_the_page_for_the_search():
+    from unshacklarr import web
+    s = {"id": 1, "tvdbId": 2, "title": "Money Heist", "alternateTitles": [{"title": "La casa de papel"}, {"title": "Money Heist"}]}
+    assert web.series_entry(s)["altTitles"] == ["La casa de papel"]
+    assert "altTitles" not in web.series_entry({**s, "alternateTitles": []})
+
+
+def test_a_series_service_options_for_another_sonarr_are_checked_and_a_removed_sonarr_is_dropped(tmp_path, monkeypatch):
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    body = {"settings": {"sonarrs": [{"name": "4K"}]}}
+    got = web.check_series_sonarrs({"4K": {"service_options": {"--profile-name": "uhd"}}, "Gone": {"off": True}}, body, [], "x", None)
+    assert got == {"4K": {"service_options": {"--profile-name": "uhd"}}}
+    shown = web.public_config({**web.read_config(), "series": {1: {"service": "A", "sonarrs": {"4K": {"service_options": {"--proxy": "http://u:secret@h"}}}}}})
+    assert "secret" not in json.dumps(shown["series"])
+
+
+def test_files_unshackle_cannot_write_are_listed(tmp_path, monkeypatch):
+    import os
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    cookies_dir, cache = tmp_path / "Cookies", tmp_path / "cache"
+    (cookies_dir / "AMZN").mkdir(parents=True)
+    (cache / "AMZN").mkdir(parents=True)
+    (cookies_dir / "AMZN" / "default.txt").write_text("x")
+    locked = cache / "AMZN" / "titles_1.json"
+    locked.write_text("{}")
+    locked.chmod(0o444)
+    web.sonarr_sync.SETTINGS["cache_dir"] = str(cache)
+    if os.access(locked, os.W_OK):  # root writes anything: nothing to see
+        return
+    assert web.unwritable_files(cookies_dir) == [str(locked)]

@@ -481,6 +481,10 @@
           <div class="ax-seg" role="radiogroup" aria-label="Which message" id="nt-pv-pick"><button type="button" data-pv="success">Downloaded</button><button type="button" data-pv="warning">Needs a look</button><button type="button" data-pv="error">Failed</button></div>
           <div class="nt-preview" id="nt-preview"></div>
         </section>
+        <section class="sx-card" id="nt-after-card">
+          <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 17l6-6-6-6M12 19h8"/></svg></span><div><h3>After download</h3><p>Each episode downloaded is posted as JSON to your script: series, Sonarr, episode, service and file paths.</p></div></div>
+          <div class="field"><label for="nt-after">Webhook</label><input id="nt-after" type="url" data-set="after_download_url" placeholder="http://my-script:8080/done" spellcheck="false"><small>Empty: nothing is sent.</small></div>
+        </section>
         <section class="sx-card">
           <div class="sx-head"><span class="sx-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg></span><div><h3>Recently sent</h3><p>The last messages that went out, and whether each address took them.</p></div></div>
           <div class="nt-sent" id="nt-sent"></div>
