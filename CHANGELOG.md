@@ -62,7 +62,7 @@ Unshacklarr can be reached from outside your network.
 
 **⏰ Release times**
 - **Next episode.** Two episodes the same evening, published one after the other: the second is tried that many
-  minutes later. In a series' When.
+  minutes later. In a series' When, and in its Broadcast schedule, where it spaces the episodes' times.
 
 **📶 Quality ladders, simpler**
 - **Ladders as chips.** A service or a series picks its ladder in one tap; Edit ladders leads to Settings, Quality.

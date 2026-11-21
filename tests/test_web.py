@@ -548,7 +548,9 @@ def test_a_broadcast_schedule_is_checked_on_save(tmp_path, monkeypatch):
                                 "per_evening": "1", "evenings": {"2026-10-07": "2"}}, "Cat's Eyes")
     assert plan == {"from": "S01E02", "start": "2026-09-30", "time": "20:39", "every": "weekly", "days": [2],  # its start day
                     "per_evening": 1, "evenings": {"2026-10-07": 2}}
-    for bad in ({"start": "", "time": "20:39"}, {"start": "2026-09-30", "time": "8pm"}, {"start": "2026-09-30", "time": "20:39", "per_evening": 12}):
+    assert web.check_broadcast({"start": "2026-09-30", "time": "20:39", "gap": "43"}, "x")["gap"] == 43
+    for bad in ({"start": "", "time": "20:39"}, {"start": "2026-09-30", "time": "8pm"}, {"start": "2026-09-30", "time": "20:39", "per_evening": 12},
+                {"start": "2026-09-30", "time": "20:39", "gap": 700}, {"start": "2026-09-30", "time": "20:39", "gap": "soon"}):
         try:
             web.check_broadcast(bad, "x")
             raise AssertionError(bad)

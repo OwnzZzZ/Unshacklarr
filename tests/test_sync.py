@@ -301,6 +301,13 @@ def test_release_slot(tmp_path, monkeypatch):
     broadcast = {"broadcast": {"start": "2026-11-03", "time": "21:25"}}
     assert sync.release_slot(broadcast, {"airDateUtc": "2026-11-03T20:25:00Z"}).isoformat() == "2026-11-03T21:25:00+01:00"
     assert sync.release_slot({**broadcast, "release_time": "22:00"}, {"airDateUtc": "2026-11-03T20:25:00Z"}).isoformat() == "2026-11-03T22:00:00+01:00"
+    # No gap of its own: its broadcast's, for the second episode of an evening
+    eps = [{"id": 1, "seasonNumber": 1, "episodeNumber": 1, "airDateUtc": "2026-11-03T20:25:00Z"},
+           {"id": 2, "seasonNumber": 1, "episodeNumber": 2, "airDateUtc": "2026-11-03T20:25:00Z"}]
+    monkeypatch.setattr(sync, "series_episodes", lambda _: eps)
+    second = {**eps[1], "seriesId": 9}
+    assert sync.release_slot({"release_time": "21:25", "broadcast": {"gap": 43}}, second).isoformat() == "2026-11-03T22:08:00+01:00"
+    assert sync.release_slot({"release_time": "21:25", "release_gap": 10, "broadcast": {"gap": 43}}, second).isoformat() == "2026-11-03T21:35:00+01:00"
 
 
 def test_an_episode_out_before_it_airs_joins_the_automatic_sync(tmp_path, monkeypatch):
@@ -1092,6 +1099,10 @@ def test_a_series_own_schedule_dates_its_episodes(tmp_path, monkeypatch):
     daily = sync.broadcast_dates({"broadcast": {**plan, "every": "daily", "evenings": {}}}, eps)
     assert daily[106].date().isoformat() == "2026-10-04"
     assert sync.broadcast_dates({}, eps) == {}
+    # Two an evening, the next one 43 min later
+    spaced = sync.broadcast_dates({"broadcast": {**plan, "gap": 43}}, eps)
+    assert (spaced[103].isoformat(), spaced[104].isoformat()) == ("2026-10-07T20:39:00+02:00", "2026-10-07T21:22:00+02:00")
+    assert spaced[105].isoformat() == "2026-10-21T20:39:00+02:00"
 
 
 def test_an_episode_not_aired_yet_waits_without_a_release_time(tmp_path, monkeypatch):
