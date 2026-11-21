@@ -440,6 +440,7 @@ async function openDrawer(s, tab, fromRoute = false) {
   $("#d-release").value = conf.release_time || "";
   $("#d-release-day").value = String(conf.release_day || 0);
   $("#d-release-gap").value = conf.release_gap || "";
+  $("#d-release-gap").placeholder = conf.broadcast?.gap || "";  // empty: its broadcast's (sync.release_slot)
   $("#d-release-gap-help").textContent = "Two episodes the same evening, published one after the other. Empty: same time."
     + (s.runtime ? ` Sonarr: ${s.runtime} min.` : "");
   $("#d-audio").value = conf.audio_accept || "";

@@ -31,6 +31,7 @@ command line; a flag set to true is on, false or empty is left out:
           days: [1]
           per_evening: 1         #   so many episodes an evening,
           evenings: {2026-10-07: 2, 2026-10-21: 0}  # but so many on these (0: no broadcast)
+          gap: 43                #   the next one of an evening 43 min later (else all at `time`)
         release_gap: 50          # two the same evening: the next one tried 50 min later (its airing)
         release_day: 0           # from then on, every 30 s for 10 min; 1 = the day after airing,
                                  # -3 = three days before it airs (a platform ahead of the channel)
@@ -1376,6 +1377,7 @@ def broadcast_dates(show: dict, episodes: list[dict]) -> dict[int, datetime]:
     hour, minute = map(int, str(plan["time"]).split(":"))
     evenings, days = {str(k): v for k, v in (plan.get("evenings") or {}).items()}, set(plan.get("days") or [])  # a date typed unquoted: a date key
     first_day = day = datetime.fromisoformat(str(plan["start"])).date()
+    gap = int(plan.get("gap") or 0)
     out = {}
     for _ in range(BROADCAST_DAYS_MAX):
         if not dated:
@@ -1383,8 +1385,8 @@ def broadcast_dates(show: dict, episodes: list[dict]) -> dict[int, datetime]:
         regular = plan.get("every") == "daily" or day.weekday() in days or day == first_day  # its first evening, whatever the day
         count = int(evenings.get(day.isoformat(), plan.get("per_evening") or 1 if regular else 0))
         at = datetime.combine(day, datetime.min.time(), LOCAL).replace(hour=hour, minute=minute)
-        for ep in dated[:count]:
-            out[ep["id"]] = at
+        for rank, ep in enumerate(dated[:count]):  # one after the other with a gap, else all at its time
+            out[ep["id"]] = at + timedelta(minutes=gap * rank)
         dated = dated[count:]
         day += timedelta(days=1)
     return out
@@ -1476,7 +1478,7 @@ def release_slot(show: dict, ep: dict) -> datetime | None:
     hour, minute = map(int, (release_time(show) or "00:00").split(":"))
     aired = parse_time(ep["airDateUtc"]).astimezone(LOCAL).date() + timedelta(days=day)
     slot = datetime.combine(aired, datetime.min.time(), LOCAL).replace(hour=hour, minute=minute)
-    gap = int(show.get("release_gap") or 0)
+    gap = int(show.get("release_gap") or (show.get("broadcast") or {}).get("gap") or 0)  # its own, else its broadcast's
     return slot + timedelta(minutes=gap * evening_rank(show, ep)) if gap else slot
 
 

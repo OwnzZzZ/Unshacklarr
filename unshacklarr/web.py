@@ -1141,8 +1141,14 @@ def check_broadcast(plan: dict, key: str) -> dict:
             raise bad(f"{day} is not a day with a number of episodes") from None
     if not 1 <= per_evening <= 9 or any(not 0 <= c <= 9 for c in evenings.values()):
         raise bad("an evening has 0 to 9 episodes")
+    try:  # minutes between two episodes of the same evening
+        gap = int(plan.get("gap") or 0)
+    except (TypeError, ValueError):
+        raise bad("the next episode comes a whole number of minutes later") from None
+    if not 0 <= gap <= 600:
+        raise bad("the next episode comes 0 to 600 minutes later")
     return {"from": first, "start": start.isoformat(), "time": str(plan["time"]), "every": every,
-            **({"days": days} if every == "weekly" else {}), "per_evening": per_evening, **({"evenings": evenings} if evenings else {})}
+            **({"days": days} if every == "weekly" else {}), "per_evening": per_evening, **({"evenings": evenings} if evenings else {}), **({"gap": gap} if gap else {})}
 
 
 def check_numbering(show: dict, key: str) -> dict:
