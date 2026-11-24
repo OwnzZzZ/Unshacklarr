@@ -2267,5 +2267,12 @@
  "When no step matches, the first step whose codec the service does not list is downloaded anyway.": "どのステップも一致しない場合、サービスが一覧に出さないコーデックの最初のステップをそのままダウンロードします。",
  "quality ladder {0}: step {1} ({2}) is not listed by {3}: tried anyway": "画質ラダー {0}：ステップ {1}（{2}）は {3} の一覧にありません：それでも試します",
  "{0} options for {1}": "{1} 用の {0} オプション",
- "{0}: the settings for Sonarr {1} must be an object": "{0}：Sonarr {1} の設定はオブジェクトである必要があります"
+ "{0}: the settings for Sonarr {1} must be an object": "{0}：Sonarr {1} の設定はオブジェクトである必要があります",
+ "Retry with…": "オプションを変えて再試行…",
+ "Retry with other download options, this time only": "今回だけ別のダウンロードオプションで再試行",
+ "Retry {0} with": "{0} を次の設定で再試行",
+ "For this download only. It starts from the series' options; the series itself does not change.": "今回のダウンロードのみ。シリーズのオプションから始まります。シリーズ自体は変わりません。",
+ "{0} {1}: downloading again, with these options": "{0} {1}: このオプションで再ダウンロード中",
+ "the next episode comes 0 to 600 minutes later": "次のエピソードは 0〜600 分後",
+ "the next episode comes a whole number of minutes later": "次のエピソードは整数の分数だけ後"
 }

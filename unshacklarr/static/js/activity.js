@@ -768,6 +768,8 @@ function runActs(c) {
     live && c.job_id ? el("button", { className: "btn small danger", textContent: "Stop", onclick: (e) => stopRun(c, e.target) }) : "",
     !live && (c.outcome === "kept" || c.outcome === "import") ? el("button", { className: "btn small primary", textContent: c.outcome === "kept" ? "Import anyway" : "Import", onclick: (e) => importKept(c, e.target) }) : "",
     !live && c.episodeId && !["downloaded", "kept", "import"].includes(c.outcome) ? el("button", { className: "btn small primary", textContent: "Retry", onclick: (e) => retryRun(c, e.target) }) : "",
+    !live && c.episodeId && !["downloaded", "kept", "import"].includes(c.outcome) ? el("button", { className: "btn small", textContent: "Retry with…",
+      title: "Retry with other download options, this time only", onclick: () => openRetryOptions(c) }) : "",
     !live ? el("button", { className: "btn small", textContent: "Diagnostic", title: "A file to attach to a GitHub issue: versions, settings and this attempt's log, without passwords, keys or tokens",
       onclick: () => downloadDiagnostic(c) }) : "",
     !live ? el("button", { className: "btn small", textContent: "Delete", onclick: (e) => deleteRun(c, e.target) }) : "",
@@ -943,10 +945,26 @@ async function openJobOptions(j) {
     // (false, "") is not shown
     const shownNow = (k) => Object.fromEntries(Object.entries({ ...(now.base?.[k] || {}), ...(now[k] || {}) }).filter(([, v]) => v !== false && v !== ""));
     jobOpts = { job: j.job, service, base: now.base || {}, options: shownNow("options"), service_options: shownNow("service_options") };
-    optionsEditor($("#jobopts-dl"), S.dlOptions, jobOpts.options);
-    optionsEditor($("#jobopts-own"), specs, jobOpts.service_options, true);
-    $("#jobopts-dialog").showModal();
+    showOptsDialog(specs, "Options of this job", "Apply to this job");
   } catch (e) { toast(e.message, true); }
+}
+function showOptsDialog(specs, title, apply, help = "For the episodes still to come in this job. It starts from the options they have now; what you change is for this job only, the series itself does not change.") {
+  $("#jobopts-title").textContent = title;
+  $("#jobopts-help").textContent = help;
+  $("#jobopts-apply").textContent = apply;
+  optionsEditor($("#jobopts-dl"), S.dlOptions, jobOpts.options);
+  optionsEditor($("#jobopts-own"), specs, jobOpts.service_options, true);
+  $("#jobopts-dialog").showModal();
+}
+/* A Retry with other options, this once: the series' options to start from, the series unchanged. */
+async function openRetryOptions(c) {
+  const conf = S.config.series?.[c.tvdbId] || {}, service = conf.service || c.service, per = S.config.service_defaults?.[service] || {};
+  const base = { options: { ...S.config.defaults, ...per.options, ...conf.options }, service_options: { ...per.service_options, ...conf.service_options } };
+  const shown = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== false && v !== ""));
+  $("#jobopts-err").textContent = "";
+  jobOpts = { retry: c, service, base, options: shown(base.options), service_options: shown(base.service_options) };
+  showOptsDialog(await loadServiceOptions(service).catch(() => []), `Retry ${c.sxxeyy} with`, "Retry",
+    "For this download only. It starts from the series' options; the series itself does not change.");
 }
 $("#jobopts-form").onsubmit = async (e) => {
   if (e.submitter?.value !== "apply" || !jobOpts) return;
@@ -959,6 +977,15 @@ $("#jobopts-form").onsubmit = async (e) => {
     return out;
   };
   try {
+    if (jobOpts.retry) {
+      const c = jobOpts.retry;
+      await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: [c.episodeId], retry: true, ...(c.batch ? { batch: c.batch } : {}),
+        ...forSonarr([c]), service: jobOpts.service, options: changes("options"), service_options: changes("service_options") }) });
+      $("#jobopts-dialog").close();
+      toast(`${c.series} ${c.sxxeyy}: downloading again, with these options`);
+      picked_run = null;
+      return setTimeout(openActivity, 1500);
+    }
     await api(`/api/jobs/${encodeURIComponent(jobOpts.job)}/options`, { method: "POST",
       body: JSON.stringify({ service: jobOpts.service, options: changes("options"), service_options: changes("service_options") }) });
     $("#jobopts-dialog").close();

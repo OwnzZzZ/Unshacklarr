@@ -596,7 +596,11 @@ job_options: dict[str, dict] = {}  # job -> {"options", "service_options"} set i
 
 def with_job_options(show: dict, batch: str | None) -> dict:
     """The series as this job downloads it: the options set for the job over the series' own (false turns one off)."""
-    extra = job_options.get(batch) if batch else None
+    return with_options(show, job_options.get(batch) if batch else None)
+
+
+def with_options(show: dict, extra: dict | None) -> dict:
+    """The series with these options over its own: {"options", "service_options"} (false or "" turns one off)."""
     if not extra:
         return show
     return {**show, "options": {**(show.get("options") or {}), **(extra.get("options") or {})},
@@ -611,7 +615,7 @@ def queue_snapshot() -> dict:
     by a restart, is in the history as interrupted, its Retry there)."""
     with jobs_lock:
         return {batch: {"episodes": ids, "paused": batch in paused_jobs, **({"options": job_options[batch]} if job_options.get(batch) else {}),
-                        **{k: job.get(k) for k in ("replace", "kind", "sonarr", "proxy", "video", "numbering") if job.get(k)}}
+                        **{k: job.get(k) for k in ("replace", "kind", "sonarr", "proxy", "video", "numbering", "extra") if job.get(k)}}
                 for batch, job in sorted(running_jobs.items())
                 if (ids := list(dict.fromkeys(ep["id"] for ep in job["episodes"] if waiting.get(ep["id"]) is job["stubs"].get(ep["id"], False))))}
 
@@ -2804,7 +2808,7 @@ sweep_lock = threading.Lock()
 
 
 def main(episode_ids: list[int] | None = None, replace: bool = False, kind: str = "manual", numbering: dict | None = None,
-         batch: str | None = None, sonarr: str = "", proxy: str = "", video: dict | None = None) -> int:
+         batch: str | None = None, sonarr: str = "", proxy: str = "", video: dict | None = None, extra: dict | None = None) -> int:
     config = read_file()
     settings = config.get("notifications") or {}
     try:
@@ -2816,7 +2820,7 @@ def main(episode_ids: list[int] | None = None, replace: bool = False, kind: str 
                 raise RuntimeError(f"Choose a quality ladder for Sonarr {sonarr} in Settings, Sonarr first")
             with on_instance(inst):
                 return sync(instance_config(inst, config) if inst else config, settings, chosen_episodes(episode_ids),
-                            manual=True, replace=replace, kind=kind, numbering=numbering, batch=batch, proxy=proxy, video=video)
+                            manual=True, replace=replace, kind=kind, numbering=numbering, batch=batch, proxy=proxy, video=video, extra=extra)
         if not sweep_lock.acquire(blocking=False):  # one automatic sweep at a time
             print("A sync is already running, nothing to do.")
             return 0
@@ -2912,7 +2916,8 @@ NUMBERING = ("season_map", "season_offset", "season_offset_from", "episode_offse
 
 
 def sync(config: dict, settings: dict, episodes, manual: bool = False, replace: bool = False, kind: str = "auto",
-         numbering: dict | None = None, batch: str | None = None, proxy: str = "", video: dict | None = None) -> int:
+         numbering: dict | None = None, batch: str | None = None, proxy: str = "", video: dict | None = None,
+         extra: dict | None = None) -> int:
     series = config.get("series") or {}
     if numbering is not None:  # this download's own, in place of the series': the file keeps its own
         series = {k: {**{o: v for o, v in show.items() if o not in NUMBERING}, **numbering} for k, show in series.items()}
@@ -2924,6 +2929,9 @@ def sync(config: dict, settings: dict, episodes, manual: bool = False, replace: 
     if video:  # this download's own codec and height ({vcodec, quality}), over the series' ladder; the setup is untouched
         series = {k: {**show, "asked_video": video} for k, show in series.items()}
         config = {**config, "series": series}
+    if extra:  # a Retry's own options, over the series'; the setup is untouched
+        series = {k: with_options(show, extra) for k, show in series.items()}
+        config = {**config, "series": series}
     episodes = list(episodes)
     if kind in ("auto", "burst"):  # switched off for this Sonarr: none of its new episodes
         episodes = [ep for ep in episodes if not off_in(instance(), series.get(ep["series"]["tvdbId"]) or {})]
@@ -2931,7 +2939,8 @@ def sync(config: dict, settings: dict, episodes, manual: bool = False, replace: 
     # (a job's episode queued again once the job was over goes on in that same job)
     batch = batch or (f"{datetime.now(timezone.utc):%Y%m%d-%H%M%S}-{uuid.uuid4().hex[:6]}" if kind != "auto" and len(episodes) > 1 else None)
     job = {"episodes": episodes, "stubs": {}, "closed": False, "replace": replace,  # the rest: to pick it up after a restart
-           "kind": kind, "sonarr": (instance() or {}).get("name", ""), "proxy": proxy, "video": video, "numbering": numbering}
+           "kind": kind, "sonarr": (instance() or {}).get("name", ""), "proxy": proxy, "video": video, "numbering": numbering,
+           "extra": extra}
     if kind != "auto":  # picked by hand: the ones after the first show as queued in Activity
         for ep in episodes:
             show = series.get(ep["series"]["tvdbId"]) or {}

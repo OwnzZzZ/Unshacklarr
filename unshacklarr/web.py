@@ -2970,13 +2970,14 @@ def room_for_one_more() -> None:
 
 
 def run_sync(episode_ids: list[int] | None = None, replace: bool = False, kind: str = "manual", numbering: dict | None = None,
-             batch: str | None = None, sonarr: str = "", proxy: str = "", video: dict | None = None) -> threading.Thread:
+             batch: str | None = None, sonarr: str = "", proxy: str = "", video: dict | None = None,
+             extra: dict | None = None) -> threading.Thread:
     """A sync in the background: every missing episode, or the ones given. Each episode has
     its own lock, so these runs never download the same one twice."""
     def work():
         global last_sync
         try:
-            sonarr_sync.main(episode_ids, replace=replace, kind=kind, numbering=numbering, batch=batch, sonarr=sonarr, proxy=proxy, video=video)
+            sonarr_sync.main(episode_ids, replace=replace, kind=kind, numbering=numbering, batch=batch, sonarr=sonarr, proxy=proxy, video=video, extra=extra)
         except Exception as e:  # notified already; the page shows the history
             print(f"Sync stopped: {type(e).__name__}: {e}", flush=True)
         finally:
@@ -3870,6 +3871,15 @@ async def download(request):
         if numbering is None:
             numbering = await asyncio.to_thread(retried_numbering, ids, batch)
         replace = replace or await asyncio.to_thread(retried_replace, ids, batch)
+    extra = None
+    if isinstance(body.get("options"), dict) or isinstance(body.get("service_options"), dict):  # Retry with options: this download's own
+        known = await asyncio.to_thread(known_services)
+        extra = {"options": check_options(real_options(body.get("options") or {}, {}), options.dl_specs(), "this download"),
+                 "service_options": check_options(real_options(body.get("service_options") or {}, {}),
+                                                  (known or {}).get(str(body.get("service") or "")) if known is not None else None,
+                                                  "this download", free=True)}
+        if batch in sonarr_sync.running_jobs:
+            batch = ""  # the job still runs: its options would be the whole job's, so this one goes on its own
     if why := await asyncio.to_thread(still_on_serve, ids, inst["name"] if inst else ""):
         raise web.HTTPConflict(text=why)
     if batch and not inst:  # the job still runs: in its queue (retries next, in order), one download at a time
@@ -3879,7 +3889,7 @@ async def download(request):
         ids = left
     room_for_one_more()
     run_sync(ids, replace=replace, kind="retry" if body.get("retry") is True else "manual", numbering=numbering, batch=batch or None,
-             sonarr=inst["name"] if inst else "")
+             sonarr=inst["name"] if inst else "", extra=extra)
     return web.json_response({"running": True})
 
 
@@ -5336,7 +5346,7 @@ def resume_queue() -> int:
         print(f"Picking up job {batch} again: {len(ids)} episode{'s' if len(ids) > 1 else ''}{' (paused)' if job.get('paused') else ''}", flush=True)
         thread = run_sync(list(dict.fromkeys(ids)), replace=job.get("replace") is True, kind=job.get("kind") or "manual",
                           numbering=job.get("numbering"), batch=batch, sonarr=job.get("sonarr") or "", proxy=job.get("proxy") or "",
-                          video=job.get("video"))
+                          video=job.get("video"), extra=job.get("extra") if isinstance(job.get("extra"), dict) else None)
         sonarr_sync.restoring[batch] = (thread, job)  # kept in the file until it runs
         n += len(ids)
     return n

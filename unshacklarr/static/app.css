@@ -1445,8 +1445,8 @@ button.pill[aria-pressed="true"] { background: rgb(79 179 191 / .16); border-col
   .steps .l { display: none; } .steps .s { display: inline; }
   .cd-stats { gap: 22px; flex-wrap: nowrap; } .cd-stats b { font-size: 16px; }
   .cd-stats div:nth-child(4) { display: none; }
-  .cd-foot { display: flex; gap: 10px; }
-  .cd-foot .btn { flex: 1; min-height: 44px; }
+  .cd-foot { display: flex; flex-wrap: wrap; gap: 10px; }
+  .cd-foot .btn { flex: 1 1 auto; min-height: 44px; white-space: nowrap; }  /* five buttons: a second row, never a label on two lines */
   .dock { bottom: calc(76px + env(safe-area-inset-bottom)); padding: 8px 8px 8px 10px; gap: 8px; }
   .dock .d-ico, .dock .d-l1 span { display: none; }
   .dock .d-acts button { width: 32px; height: 32px; }

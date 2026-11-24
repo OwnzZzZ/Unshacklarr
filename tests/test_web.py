@@ -964,6 +964,38 @@ def test_a_retry_asks_the_service_what_its_attempt_asked(tmp_path, monkeypatch):
     assert asked == [([70], by_title), ([71], None), ([70], None)]
 
 
+def test_a_retry_with_options_downloads_with_them_this_once(tmp_path, monkeypatch):
+    import asyncio
+    from aiohttp.test_utils import TestClient, TestServer
+    monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))
+    import unshacklarr.sync
+    import unshacklarr.web
+    importlib.reload(unshacklarr.sync)
+    web = importlib.reload(unshacklarr.web)
+    web.write_config({**web.read_config(), "auth": {"password": web.hash_password("password1"), "secret": "s1"}})
+    asked = []
+    monkeypatch.setattr(web, "run_sync", lambda ids, **kw: asked.append(kw.get("extra")))
+    monkeypatch.setattr(web, "cdm_refusal", lambda ids: "")
+    monkeypatch.setattr(web, "known_services", lambda: None)
+    monkeypatch.setattr(web.options, "dl_specs", lambda: [{"flag": "--quality", "kind": "text"}, {"flag": "--no-proxy", "kind": "flag"}])
+
+    async def go():
+        async with TestClient(TestServer(web.app)) as browser:
+            page = {"X-Unshackle": "1"}
+            await browser.post("/api/login", json={"password": "password1"}, headers=page)
+            ok = await browser.post("/api/download", headers=page, json={"episodeIds": [70], "retry": True, "service": "DSNP",
+                                                                     "options": {"--quality": "720"}, "service_options": {"-B": True}})
+            assert ok.status == 200
+            bad = await browser.post("/api/download", headers=page, json={"episodeIds": [70], "retry": True, "options": {"--nope": True}})
+            assert bad.status == 400
+            assert (await browser.post("/api/download", json={"episodeIds": [70], "retry": True}, headers=page)).status == 200
+
+    asyncio.run(go())
+    assert asked == [{"options": {"--quality": "720"}, "service_options": {"-B": True}}, None]
+    show = {"service": "DSNP", "options": {"--quality": "1080", "--no-proxy": True}}
+    assert web.sonarr_sync.with_options(show, {"options": {"--quality": "720", "--no-proxy": False}})["options"] == {"--quality": "720", "--no-proxy": False}
+
+
 def test_a_newer_release_is_told_and_github_out_of_reach_keeps_the_last_answer(tmp_path, monkeypatch):
     import requests
     monkeypatch.setenv("UNSHACKLARR_DATA", str(tmp_path))

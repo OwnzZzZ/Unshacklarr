@@ -882,6 +882,7 @@
  "For release times and the sync clock.": [],
  "For the episodes still to come in this job. It starts from the options they have now; what you change is for this job only, the series itself does not change.": [],
  "For this browser only. The page reloads in the new language.": [],
+ "For this download only. It starts from the series' options; the series itself does not change.": [],
  "For this series only. They take priority over the options set for its service.": [],
  "For when Authelia, Authentik or another proxy already logs you in. The proxy passes your name in a header, and Unshacklarr opens without asking for its own password.": [],
  "For when Sonarr's dates are wrong or missing: set the days the episodes air, used instead of Sonarr's.": [],
@@ -1765,8 +1766,13 @@
  "Resume": [],
  "Resume the job": [],
  "Retry": [],
+ "Retry with other download options, this time only": [],
+ "Retry with…": [],
  "Retry {0} failed": [
   "retryable.length"
+ ],
+ "Retry {0} with": [
+  "c.sxxeyy"
  ],
  "Reverse proxy": [],
  "Room kept free": [],
@@ -3099,6 +3105,8 @@
   "new_q['name']",
   "new_key[1]"
  ],
+ "the next episode comes 0 to 600 minutes later": [],
+ "the next episode comes a whole number of minutes later": [],
  "the oldest {0}": [
   "ago(oldest)"
  ],
@@ -3822,6 +3830,10 @@
   "d.sxxeyy"
  ],
  "{0} {1}: downloading again": [
+  "c.series",
+  "c.sxxeyy"
+ ],
+ "{0} {1}: downloading again, with these options": [
   "c.series",
   "c.sxxeyy"
  ],

@@ -2265,5 +2265,12 @@
  "When no step matches, the first step whose codec the service does not list is downloaded anyway.": "Если ни одна ступень не подходит, первая ступень, кодек которой сервис не указывает, всё равно загружается.",
  "quality ladder {0}: step {1} ({2}) is not listed by {3}: tried anyway": "лестница качества {0}: ступень {1} ({2}) не указана сервисом {3}: всё равно пробуем",
  "{0} options for {1}": "Параметры {0} для {1}",
- "{0}: the settings for Sonarr {1} must be an object": "{0}: настройки Sonarr {1} должны быть объектом"
+ "{0}: the settings for Sonarr {1} must be an object": "{0}: настройки Sonarr {1} должны быть объектом",
+ "Retry with…": "Повторить с…",
+ "Retry with other download options, this time only": "Повторить с другими параметрами загрузки, только в этот раз",
+ "Retry {0} with": "Повторить {0} с",
+ "For this download only. It starts from the series' options; the series itself does not change.": "Только для этой загрузки. За основу берутся параметры сериала; сам сериал не меняется.",
+ "{0} {1}: downloading again, with these options": "{0} {1}: загружается снова, с этими параметрами",
+ "the next episode comes 0 to 600 minutes later": "следующая серия выходит через 0–600 минут",
+ "the next episode comes a whole number of minutes later": "следующая серия выходит через целое число минут"
 }
