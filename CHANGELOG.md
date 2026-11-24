@@ -26,6 +26,8 @@ Unshacklarr can be reached from outside your network.
 - **Options of a job.** While it runs, its download and service options can be changed for the episodes still to
   come, starting from the ones they have now; the series stays as it is.
 - **Retry the failed episodes while the job runs**, and a retry goes before the episodes still to come.
+- **Retry with other options.** An attempt's Retry with… downloads it once with other download or service options,
+  starting from the series' own; the series stays as it is.
 - **A job survives a restart.** Its queued episodes are kept on disk and queued again when Unshacklarr starts; a paused
   job stays paused.
 - **Delete the job.** A job that is over leaves the history in one click.

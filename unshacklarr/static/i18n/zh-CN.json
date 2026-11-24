@@ -2311,5 +2311,12 @@
  "When no step matches, the first step whose codec the service does not list is downloaded anyway.": "没有步骤匹配时，仍会下载服务未列出其编码的第一个步骤。",
  "quality ladder {0}: step {1} ({2}) is not listed by {3}: tried anyway": "画质阶梯 {0}：步骤 {1}（{2}）未被 {3} 列出：仍然尝试",
  "{0} options for {1}": "{1} 的 {0} 选项",
- "{0}: the settings for Sonarr {1} must be an object": "{0}：Sonarr {1} 的设置必须是一个对象"
+ "{0}: the settings for Sonarr {1} must be an object": "{0}：Sonarr {1} 的设置必须是一个对象",
+ "Retry with…": "换选项重试…",
+ "Retry with other download options, this time only": "仅此一次，用其他下载选项重试",
+ "Retry {0} with": "重试 {0}，使用",
+ "For this download only. It starts from the series' options; the series itself does not change.": "仅限本次下载。从剧集的选项开始；剧集本身不变。",
+ "{0} {1}: downloading again, with these options": "{0} {1}：正在用这些选项重新下载",
+ "the next episode comes 0 to 600 minutes later": "下一集在 0 到 600 分钟后",
+ "the next episode comes a whole number of minutes later": "下一集在整数分钟后"
 }

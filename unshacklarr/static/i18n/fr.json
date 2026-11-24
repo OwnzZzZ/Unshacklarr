@@ -2292,5 +2292,12 @@
  "When no step matches, the first step whose codec the service does not list is downloaded anyway.": "Quand aucune étape ne correspond, la première étape dont le service ne liste pas le codec est téléchargée quand même.",
  "quality ladder {0}: step {1} ({2}) is not listed by {3}: tried anyway": "échelle de qualité {0} : l'étape {1} ({2}) n'est pas listée par {3} : essayée quand même",
  "{0} options for {1}": "Options {0} pour {1}",
- "{0}: the settings for Sonarr {1} must be an object": "{0} : les réglages du Sonarr {1} doivent être un objet"
+ "{0}: the settings for Sonarr {1} must be an object": "{0} : les réglages du Sonarr {1} doivent être un objet",
+ "Retry with…": "Relancer avec…",
+ "Retry with other download options, this time only": "Relancer avec d'autres options de téléchargement, cette fois seulement",
+ "Retry {0} with": "Relancer {0} avec",
+ "For this download only. It starts from the series' options; the series itself does not change.": "Pour ce téléchargement seulement. On part des options de la série ; la série elle-même ne change pas.",
+ "{0} {1}: downloading again, with these options": "{0} {1} : nouveau téléchargement, avec ces options",
+ "the next episode comes 0 to 600 minutes later": "l'épisode suivant arrive de 0 à 600 minutes plus tard",
+ "the next episode comes a whole number of minutes later": "l'épisode suivant arrive un nombre entier de minutes plus tard"
 }
