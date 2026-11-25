@@ -957,7 +957,7 @@ body.gated > :not(.gate):not(.toasts) { display: none !important; }
 .con-detail.docked > .cd-raw { display: none; }  /* the output opens in the bar */
 .dock.open { flex-wrap: wrap; row-gap: 10px; }
 .dock.open > .cd-raw { flex: 1 0 100%; order: -1; }  /* the bar grows upwards: the output above its line */
-.dock.open > .cd-raw .term { height: min(58vh, 640px); }
+.dock.open > .cd-raw .term { height: min(36vh, 380px); }  /* the job above stays in sight: its head and a few episodes */
 .dock.open .d-open svg { transform: rotate(180deg); }
 @media (min-width: 701px) { .dock .d-acts, .dock .d-sep { display: none; } }  /* the job's actions are in its head there */
 .con-none { margin: auto; text-align: center; color: var(--muted); max-width: 40ch; }
@@ -1451,7 +1451,7 @@ button.pill[aria-pressed="true"] { background: rgb(79 179 191 / .16); border-col
   .dock .d-ico, .dock .d-l1 span { display: none; }
   .dock .d-acts button { width: 32px; height: 32px; }
   .con-detail.docked-acts .cd-foot { display: none; }  /* the bar has the job's actions */
-  .dock.open > .cd-raw .term { height: calc(100dvh - 330px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
+  .dock.open > .cd-raw .term { height: 30dvh; }
   .cd-tracks .t { grid-template-columns: 1fr auto; } .cd-tracks .t .bar { grid-column: 1 / -1; grid-row: 2; }
   .cd-raw .term { height: 60dvh; min-height: 280px; }
   .icon-hide { opacity: .8; width: 36px; height: 36px; }
