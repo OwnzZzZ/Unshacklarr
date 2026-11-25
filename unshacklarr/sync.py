@@ -1879,6 +1879,21 @@ def parts_in(out: Path) -> int:
     return len({int(m.group(1)) for f in out.rglob("*.mkv") if (m := PART.search(f.name))}) or 1
 
 
+def same_video(files: list[Path], warnings: str) -> bool:
+    """mkvmerge's only doubt is the codec's private data, and the parts' video is the same all the same: codec,
+    size, frame rate, and the H.264 header's profile and level. Only the SPS's optional part (VUI: colour, timing)
+    differs then (Koh-Lanta on TF1+): the joined file plays through."""
+    doubts = [w for w in warnings.split("Warning:") if "append" in w.lower()]
+    if not doubts or not all("codec's private data does not match. Both have the same length" in w for w in doubts):
+        return False
+    def video(f: Path) -> tuple:
+        p = next((t for t in mkv_tracks(f) if t.get("type") == "video"), {}).get("properties") or {}
+        data = p.get("codec_private_data") or ""
+        return (p.get("codec_id"), p.get("pixel_dimensions"), p.get("default_duration"), len(data), data[:8])
+    first, *rest = map(video, files)
+    return bool(first[0]) and all(v == first for v in rest)
+
+
 def finalize(out: Path, sxxeyy: str, name: str, join_parts: bool = True, episode_name: str = "joined",
              on_step=lambda step, parts: None, programme: bool = False) -> int:
     """Join split parts into one file, then name it and title it after Sonarr's series.
@@ -1912,7 +1927,7 @@ def finalize(out: Path, sxxeyy: str, name: str, join_parts: bool = True, episode
         run = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace")
         # 1 means warnings only, but not that one: "can probably not be appended correctly" is a file that may
         # stop playing where the parts meet. The parts are kept for a look, nothing is imported.
-        if run.returncode > 1 or (run.returncode == 1 and "append" in run.stdout.lower()):
+        if run.returncode > 1 or (run.returncode == 1 and "append" in run.stdout.lower() and not same_video([f for _, f in parts], run.stdout)):
             joined.unlink(missing_ok=True)
             raise RuntimeError(f"mkvmerge could not join the {len(parts)} parts: {run.stdout.strip()[-500:]}")
         for _, f in parts:

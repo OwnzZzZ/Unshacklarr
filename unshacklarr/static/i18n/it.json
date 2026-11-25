@@ -2308,5 +2308,7 @@
  "For this download only. It starts from the series' options; the series itself does not change.": "Solo per questo download. Si parte dalle opzioni della serie; la serie stessa non cambia.",
  "{0} {1}: downloading again, with these options": "{0} {1}: di nuovo in download, con queste opzioni",
  "the next episode comes 0 to 600 minutes later": "l'episodio successivo arriva da 0 a 600 minuti dopo",
- "the next episode comes a whole number of minutes later": "l'episodio successivo arriva un numero intero di minuti dopo"
+ "the next episode comes a whole number of minutes later": "l'episodio successivo arriva un numero intero di minuti dopo",
+ "Not monitored in {0}": "Non monitorata in {0}",
+ "Nothing downloads by itself: monitor it there.": "Niente si scarica da solo: monitorala lì."
 }

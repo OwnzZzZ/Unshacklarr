@@ -6,8 +6,10 @@ Every change worth knowing, newest first. The format follows
 
 ## [Unreleased]
 
-Long jobs you can steer while they run, proxies that hold, and a security update of aiohttp: update soon if
-Unshacklarr can be reached from outside your network.
+## [1.6.0] - 2026-11-25
+
+Long jobs you can steer while they run, proxies that hold, ready for Unshackle 7, and a security update of
+aiohttp: update soon if Unshacklarr can be reached from outside your network.
 
 ### Security
 
@@ -47,7 +49,7 @@ Unshacklarr can be reached from outside your network.
 - **The API speaks the service's numbering.** `"numbering": "service"` takes Disney+'s S04E05 for the episode it is in
   Sonarr, and `"audio": "fr"` lets Unshacklarr decide: download, download again, or add the French track.
 
-**🧩 Unshackle after 6.0.0**
+**🧩 Unshackle 7**
 - **A remote server's login questions.** An OTP or a PIN its login asks while it lists a series comes to the bell,
   with a field to answer.
 - **What your Unshackle supports**, in Settings › Unshackle, each with what it needs; a series set to `--remote` on
@@ -80,6 +82,7 @@ Unshacklarr can be reached from outside your network.
 - **Read-only files.** The Cookies page lists Unshackle's files it can no longer write, often left to root by a
   `docker exec`.
 - **Search by any title.** The series search also finds a series by its other titles in Sonarr and its name in files.
+- **Not monitored.** A series' page warns when a Sonarr it downloads for doesn't monitor it: nothing would come by itself.
 
 ### Fixed
 
@@ -105,15 +108,16 @@ Unshacklarr can be reached from outside your network.
 - **The output's scrollbar can be dragged.** The text covered it when the output was wider than its box.
 - **Seasons on the service on a phone.** The field gets the full keyboard, so `=` and `,` can be typed.
 - **`--remote` with the official Unshackle.** A download through a remote server and its options now go through
-  Unshackle's own API (after 6.0.0); with 6.0.0, Per service says the options are not known and to write them as is.
+  Unshackle's own API (Unshackle 7); with 6.0.0, Per service says the options are not known and to write them as is.
 - **A series downloaded through `--remote` is also listed and searched there.** Its episodes no longer start the
   service here, where it may not be set up (NF stopped with "Service NF exited").
-- **Retries with Unshackle after 6.0.0.** A network or service hitch it now answers with 424, and a server about to
+- **Retries with Unshackle 7.** A network or service hitch it now answers with 424, and a server about to
   restart, are tried again as before.
 - **Unshackle 7 starts when Unshacklarr runs it itself.** It now asks for the key on its health check, so Unshacklarr
   waited 90 s and gave up.
 - **Updating Unshackle's container brings the new Unshackle.** The build kept its first copy, so the version stayed
   the one first installed. (#28)
+- **Parts joined.** Two parts encoded with slightly different settings (same codec, size and frame rate) are joined, no longer kept apart.
 - **No more false cookie warnings.** Crave's load balancer cookies (a week) and Apple's `utsdc` (an hour) no longer
   count as the date the login ends.
 
@@ -447,6 +451,7 @@ New options are off until you turn them on, except Upgrades' automatic check (0 
 - **Every tool in the images** is pinned and checked.
 - **oauthlib 4.0.0**, for two advisories.
 
+[1.6.0]: https://github.com/OwnzZzZ/Unshacklarr/releases/tag/v1.6.0
 [1.5.0]: https://github.com/OwnzZzZ/Unshacklarr/releases/tag/v1.5.0
 [1.4.0]: https://github.com/OwnzZzZ/Unshacklarr/releases/tag/v1.4.0
 [1.3.2]: https://github.com/OwnzZzZ/Unshacklarr/releases/tag/v1.3.2

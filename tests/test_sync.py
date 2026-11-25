@@ -755,6 +755,41 @@ def test_finalize_reports_joining_then_renaming(tmp_path, monkeypatch):
     assert steps == [("joining", 2), ("renaming", 2), ("renaming", 1)]  # one file: nothing to join
 
 
+def test_parts_whose_sps_differs_in_its_vui_only_are_joined(tmp_path, monkeypatch):
+    # Koh-Lanta on TF1+: same codec, size, frame rate, profile and level, the SPS's colour/timing part differs
+    sync = load(tmp_path, monkeypatch)
+    one = "01640028ffe1001e67640028acd940780227e5c05a808080db800000030080000019478c18cb01000668ebe08cb22c"
+    two = "01640028ffe1001e67640028acd940780227e5c05a808080a0000003002000000651e30632c001000668ebe08cb22c"
+    video = {"Part.1": one, "Part.2": two}
+    doubt = ("Warning: The track number 0 from the file 'b.mkv' can probably not be appended correctly to the track "
+             "number 0 from the file 'a.mkv': The codec's private data does not match. Both have the same length (47) "
+             "but different content. Please make sure that the resulting file plays correctly the whole time.")
+
+    def run(cmd, **_):
+        if cmd[:2] == ["mkvmerge", "-J"]:
+            data = next((v for k, v in video.items() if k in cmd[2]), one)  # the joined file, once renamed
+            props = {"codec_id": "V_MPEG4/ISO/AVC", "pixel_dimensions": "1920x1080", "default_duration": 40000000, "codec_private_data": data}
+            return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps({"tracks": [{"type": "video", "properties": props}]}))
+        if cmd[0] == "mkvmerge":
+            Path(cmd[cmd.index("-o") + 1]).touch()
+            return subprocess.CompletedProcess(cmd, 1, stdout=doubt)
+        return subprocess.CompletedProcess(cmd, 0, stdout="")
+
+    monkeypatch.setattr(sync.subprocess, "run", run)
+    split_episode(tmp_path / "ep", ["One", "Two"])
+    assert sync.finalize(tmp_path / "ep", "S01E05", "Show") == 2
+    [joined] = (tmp_path / "ep").iterdir()
+    assert ".Part." not in joined.name
+    video["Part.2"] = two.replace("01640028", "0164001f", 1)  # another level: refused, the parts kept
+    split_episode(tmp_path / "ep2", ["One", "Two"])
+    try:
+        sync.finalize(tmp_path / "ep2", "S01E05", "Show")
+        raise AssertionError("parts of another level were joined")
+    except RuntimeError as e:
+        assert "could not join" in str(e)
+    assert len(list((tmp_path / "ep2").iterdir())) == 2
+
+
 @responses.activate
 def test_an_import_sonarr_did_not_do_is_an_import_left_to_do(tmp_path, monkeypatch):
     # Downloaded whole, only Sonarr's import failed: not a failed download, an import to do (by mj23au, #10)
@@ -1831,8 +1866,8 @@ def test_the_series_page_and_upgrades_know_the_other_sonarr(tmp_path, monkeypatc
     libraries["sonarr-4k"][3].update(tvdbId=3, title="Tehran")
     url = web.sonarr_sync.SONARRS["sonarr-4k"]["url"]
     others, only = web.sonarrs_of_series({1, 2})
-    assert others == {1: [{"name": "sonarr-4k", "url": url, "slug": "", "missing": 5, "id": 77}],
-                      3: [{"name": "sonarr-4k", "url": url, "slug": "tehran", "missing": 0, "id": 78}]}
+    assert others == {1: [{"name": "sonarr-4k", "url": url, "slug": "", "missing": 5, "id": 77, "monitored": None}],
+                      3: [{"name": "sonarr-4k", "url": url, "slug": "tehran", "missing": 0, "id": 78, "monitored": None}]}
     assert [(s["tvdbId"], s["title"], s["id"]) for s in only] == [(3, "Tehran", None)]  # in sonarr-4k only: listed, no main id
     web.health["sonarrs"] = {"sonarr-4k": {"ok": False}}
     assert web.instances_of_series() == {} and web.sonarrs_of_series() == ({}, [])  # down: the page opens without waiting for it

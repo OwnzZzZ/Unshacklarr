@@ -10,11 +10,11 @@
 </p>
 
 <p align="center">
-  <img alt="Version 1.5.0" src="https://img.shields.io/badge/version-1.5.0-26a69a">
+  <img alt="Version 1.6.0" src="https://img.shields.io/badge/version-1.6.0-26a69a">
   <img alt="License GPL-3.0" src="https://img.shields.io/badge/license-GPL--3.0-blue">
   <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-3776ab">
   <img alt="Sonarr v3 and v4" src="https://img.shields.io/badge/sonarr-v3%20%7C%20v4-35c5f4">
-  <img alt="Unshackle 5.4 to 6" src="https://img.shields.io/badge/unshackle-5.4%20%7C%206-e0559b">
+  <img alt="Unshackle 5.4 to 7" src="https://img.shields.io/badge/unshackle-5.4%20%7C%206%20%7C%207-e0559b">
   <img alt="9 languages" src="https://img.shields.io/badge/languages-9-8a63d2">
 </p>
 
@@ -120,14 +120,14 @@ flowchart LR
 
 You need:
 
-- ⬇️ **Unshackle** 5.4.0 or later, 6.0 included, set up with its services, cookies and CDMs;
+- ⬇️ **Unshackle** 5.4.0 or later, 6 and 7 included, set up with its services, cookies and CDMs;
 - 📡 **Sonarr** v4, or v3;
 - 🎞️ **MKVToolNix** (`mkvmerge`, `mkvpropedit`), which Unshackle needs too; the Docker image has it.
 
 > [!NOTE]
 > Answering a service's question during a download (a code sent by e-mail) needs Unshackle 6.0 or later;
-> downloading through a remote server (`--remote`) and answering its login questions need a version after 6.0.0.
-> With a version after 6.0.0, a `serve: dashboard: key:` in `unshackle.yaml` (any long random string) also gives
+> downloading through a remote server (`--remote`) and answering its login questions need Unshackle 7.
+> With Unshackle 7, a `serve: dashboard: key:` in `unshackle.yaml` (any long random string) also gives
 > Settings › Unshackle its log, errors by service and remote sessions, and a restart that waits for the downloads.
 > Settings › Unshackle › *Supports* says which of these your Unshackle allows; a series set to `--remote` on an
 > Unshackle that cannot run it is told in the bell.

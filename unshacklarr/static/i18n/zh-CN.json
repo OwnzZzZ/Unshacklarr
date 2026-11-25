@@ -2318,5 +2318,7 @@
  "For this download only. It starts from the series' options; the series itself does not change.": "仅限本次下载。从剧集的选项开始；剧集本身不变。",
  "{0} {1}: downloading again, with these options": "{0} {1}：正在用这些选项重新下载",
  "the next episode comes 0 to 600 minutes later": "下一集在 0 到 600 分钟后",
- "the next episode comes a whole number of minutes later": "下一集在整数分钟后"
+ "the next episode comes a whole number of minutes later": "下一集在整数分钟后",
+ "Not monitored in {0}": "未在 {0} 中监控",
+ "Nothing downloads by itself: monitor it there.": "不会自动下载：请在那里开启监控。"
 }

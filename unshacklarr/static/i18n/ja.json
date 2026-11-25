@@ -2313,5 +2313,7 @@
  "For this download only. It starts from the series' options; the series itself does not change.": "今回のダウンロードのみ。シリーズのオプションから始まります。シリーズ自体は変わりません。",
  "{0} {1}: downloading again, with these options": "{0} {1}: このオプションで再ダウンロード中",
  "the next episode comes 0 to 600 minutes later": "次のエピソードは 0〜600 分後",
- "the next episode comes a whole number of minutes later": "次のエピソードは整数の分数だけ後"
+ "the next episode comes a whole number of minutes later": "次のエピソードは整数の分数だけ後",
+ "Not monitored in {0}": "{0} で監視されていません",
+ "Nothing downloads by itself: monitor it there.": "自動では何もダウンロードされません。そちらで監視してください。"
 }
