@@ -82,6 +82,7 @@ aiohttp: update soon if Unshacklarr can be reached from outside your network.
 - **Read-only files.** The Cookies page lists Unshackle's files it can no longer write, often left to root by a
   `docker exec`.
 - **Search by any title.** The series search also finds a series by its other titles in Sonarr and its name in files.
+- **Not monitored.** A series' page warns when a Sonarr it downloads for doesn't monitor it: nothing would come by itself.
 
 ### Fixed
 
@@ -116,6 +117,7 @@ aiohttp: update soon if Unshacklarr can be reached from outside your network.
   waited 90 s and gave up.
 - **Updating Unshackle's container brings the new Unshackle.** The build kept its first copy, so the version stayed
   the one first installed. (#28)
+- **Parts joined.** Two parts encoded with slightly different settings (same codec, size and frame rate) are joined, no longer kept apart.
 - **No more false cookie warnings.** Crave's load balancer cookies (a week) and Apple's `utsdc` (an hour) no longer
   count as the date the login ends.
 

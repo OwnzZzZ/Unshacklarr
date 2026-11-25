@@ -1430,6 +1430,9 @@
  ],
  "Not in Unshackle": [],
  "Not managed": [],
+ "Not monitored in {0}": [
+  "unwatched.join(\", \")"
+ ],
  "Not on the service": [],
  "Not on {0}": [
   "c.notOn"
@@ -1460,6 +1463,7 @@
  "Note": [],
  "Nothing better found yet.": [],
  "Nothing better on the services: every file is already on the best step they have.": [],
+ "Nothing downloads by itself: monitor it there.": [],
  "Nothing found on TMDB": [],
  "Nothing found on {0} under that name.": [
   "svcName(conf.service)"

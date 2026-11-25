@@ -2272,5 +2272,7 @@
  "For this download only. It starts from the series' options; the series itself does not change.": "Только для этой загрузки. За основу берутся параметры сериала; сам сериал не меняется.",
  "{0} {1}: downloading again, with these options": "{0} {1}: загружается снова, с этими параметрами",
  "the next episode comes 0 to 600 minutes later": "следующая серия выходит через 0–600 минут",
- "the next episode comes a whole number of minutes later": "следующая серия выходит через целое число минут"
+ "the next episode comes a whole number of minutes later": "следующая серия выходит через целое число минут",
+ "Not monitored in {0}": "Не отслеживается в {0}",
+ "Nothing downloads by itself: monitor it there.": "Ничего не скачивается само: включите отслеживание там."
 }

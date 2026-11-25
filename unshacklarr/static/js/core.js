@@ -480,14 +480,19 @@ function renderSeriesState() {
   const conf = current && S.config.series[current.tvdbId], box = $("#ds-state");
   if (!conf) return;
   const sick = conf.service && S.health[current.tvdbId];
+  // a Sonarr it downloads for that doesn't monitor it: its wanted list never holds the episodes, nothing goes automatically
+  const unwatched = [...(current.id && !conf.main_off && current.monitored === false ? [mainSonarr()] : []),
+    ...(S.sonarrsOf?.[current.tvdbId] || []).filter((o) => o.monitored === false && !conf.sonarrs?.[o.name]?.off).map((o) => o.name)];
   const [cls, text] = !conf.service ? ["", "Not downloaded by Unshackle"]
     : sick ? ["down", `Its downloads from ${svcName(conf.service)} fail`]
     : !conf.title && !conf.programmes ? ["warn", `On ${svcName(conf.service)}: its series URL is missing`]
+    : unwatched.length ? ["warn", `Not monitored in ${unwatched.join(", ")}`]
     : conf.programmes ? ["ok", `Downloaded from ${svcName(conf.service)}, each episode its own programme`]
     : ["ok", `Downloaded from ${svcName(conf.service)}`];
   box.classList.remove("ok", "down", "warn");
   if (cls) box.classList.add(cls);
   $("#ds-state-text").textContent = text;
+  if (cls === "warn" && unwatched.length) $("#d-since").textContent = "Nothing downloads by itself: monitor it there.";
 }
 /* Service options only show for a service that has some; "stop" only for a managed series. */
 async function renderServiceOptions(conf) {

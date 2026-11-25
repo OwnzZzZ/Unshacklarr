@@ -3109,7 +3109,7 @@ def sonarrs_of_series(main: set[int] = frozenset()) -> tuple[dict[int, list[dict
             stats = serie.get("statistics") or {}
             out.setdefault(tvdb, []).append({"name": inst["name"], "url": inst["url"], "slug": serie.get("titleSlug") or "",
                                              "missing": max(0, stats.get("episodeCount", 0) - stats.get("episodeFileCount", 0)),
-                                             "id": serie["id"]})
+                                             "id": serie["id"], "monitored": serie.get("monitored")})
             if tvdb not in main and tvdb not in only:
                 only[tvdb] = {**series_entry(serie), "id": None}
     return out, list(only.values())

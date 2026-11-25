@@ -805,7 +805,10 @@ function pickServiceEpisode(e, sx, theirs, svc, missing) {
       const name = (items[0].name || "").replace(/\s*\(\d+\s*\/\s*\d+\)\s*$/, "");
       opts.push([key, `${key} · ${name ? `${name} · ` : ""}parts ${parts.map((t) => t.part).join(" + ")}`]);
       for (const t of parts) opts.push([`${key}.${t.part}`, `${key}.${t.part} · ${t.name || `part ${t.part}`}`]);
-    } else opts.push([key, `${key}${items[0].name ? ` · ${items[0].name}` : ""}`]);
+    } else {  // TF1+ numbers both parts of an episode alike: both come with that number, both are listed
+      const names = [...new Set(items.map((t) => t.name).filter(Boolean))].sort();
+      opts.push([key, `${key}${names.length ? ` · ${names.join(" + ")}` : ""}`]);
+    }
   }
   if (!opts.some(([v]) => v === (theirs || ""))) opts.unshift([theirs || "", theirs ? `${theirs} · not on ${svc}` : "Nothing: before the first episode"]);
   const titled = elsewhere(e) && epAvail[e.id].service;
