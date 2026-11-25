@@ -6,6 +6,16 @@ Every change worth knowing, newest first. The format follows
 
 ## [Unreleased]
 
+### Added
+
+**🆕 Sonarr 5, on this branch until it is out of beta**
+- **Languages.** Your files without your audio languages, read from Sonarr 5's own tracks: watch them for the
+  preferred audio, or download them again. In Activity.
+- **Titles in your language.** A series whose titles Sonarr gives in English offers, on its page, to have them in
+  yours: its episodes then match the service's better.
+- **Episode order.** A series Sonarr numbers in another order (DVD, Netflix…) says so in its Numbering; when that
+  order changes, its new episodes wait until you confirm the numbering.
+
 ## [1.6.0] - 2026-11-25
 
 Long jobs you can steer while they run, proxies that hold, ready for Unshackle 7, and a security update of
@@ -120,14 +130,6 @@ aiohttp: update soon if Unshacklarr can be reached from outside your network.
 - **Parts joined.** Two parts encoded with slightly different settings (same codec, size and frame rate) are joined, no longer kept apart.
 - **No more false cookie warnings.** Crave's load balancer cookies (a week) and Apple's `utsdc` (an hour) no longer
   count as the date the login ends.
-
-**🆕 Sonarr 5, on this branch until it is out of beta**
-- **Languages.** Your files without your audio languages, read from Sonarr 5's own tracks: watch them for the
-  preferred audio, or download them again. In Activity.
-- **Titles in your language.** A series whose titles Sonarr gives in English offers, on its page, to have them in
-  yours: its episodes then match the service's better.
-- **Episode order.** A series Sonarr numbers in another order (DVD, Netflix…) says so in its Numbering; when that
-  order changes, its new episodes wait until you confirm the numbering.
 
 ### Removed
 
