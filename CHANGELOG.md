@@ -110,6 +110,10 @@ Unshacklarr can be reached from outside your network.
   service here, where it may not be set up (NF stopped with "Service NF exited").
 - **Retries with Unshackle after 6.0.0.** A network or service hitch it now answers with 424, and a server about to
   restart, are tried again as before.
+- **Unshackle 7 starts when Unshacklarr runs it itself.** It now asks for the key on its health check, so Unshacklarr
+  waited 90 s and gave up.
+- **Updating Unshackle's container brings the new Unshackle.** The build kept its first copy, so the version stayed
+  the one first installed. (#28)
 - **No more false cookie warnings.** Crave's load balancer cookies (a week) and Apple's `utsdc` (an hour) no longer
   count as the date the login ends.
 
