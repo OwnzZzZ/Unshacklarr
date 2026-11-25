@@ -154,7 +154,7 @@ class Local:
             if self.process.poll() is not None:
                 raise UnshackleError(f"unshackle serve stopped at start: {self.tail()}")
             try:
-                requests.get(f"{self.url}/api/health", timeout=2).raise_for_status()
+                requests.get(f"{self.url}/api/health", headers={"X-Secret-Key": self.key}, timeout=2).raise_for_status()  # keyed in Unshackle 7
                 self.started = datetime.now(timezone.utc)
                 return
             except requests.RequestException:

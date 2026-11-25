@@ -226,7 +226,8 @@ def test_a_local_serve_gets_its_socket_and_key_without_the_command_line(tmp_path
         "    seen = {'argv': sys.argv, 'key': config.serve['api_secret'], 'env': [k for k in os.environ if k.startswith('UNSHACKLARR')],\n"
         "            'users': config.serve.get('users')}\n"
         "    app = web.Application()\n"
-        "    app.router.add_get('/api/health', lambda r: web.json_response(seen))\n"
+        "    ok = lambda r: r.headers.get('X-Secret-Key') == config.serve['api_secret']  # Unshackle 7 keys /api/health\n"
+        "    app.router.add_get('/api/health', lambda r: web.json_response(seen, status=200 if ok(r) else 401))\n"
         "    web.run_app(app, host='127.0.0.1', port=1, print=None)\n")  # port 1: only the handed socket can serve
     command = tmp_path / ".venv" / "bin" / "unshackle"  # a git clone's: the launcher runs from the clone
     command.parent.mkdir(parents=True)
@@ -236,7 +237,7 @@ def test_a_local_serve_gets_its_socket_and_key_without_the_command_line(tmp_path
     try:
         local.start(str(command))
         import requests
-        seen = requests.get(f"{local.url}/api/health", timeout=5).json()
+        seen = requests.get(f"{local.url}/api/health", headers={"X-Secret-Key": local.key}, timeout=5).json()
         assert seen["key"] == local.key and seen["env"] == []  # the key arrived, and left the environment
         assert str(local.url.rsplit(":", 1)[1]) not in " ".join(seen["argv"])  # nor the port on the command line
         # Unshackle 6 serves its proxies only to a key with server_proxy: this run's key has it (5.x reads no such field)

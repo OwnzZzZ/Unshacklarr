@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # unshackle serve, from Unshackle's own repository: the downloads Unshacklarr asks for.
 # Its config, cookies and CDMs are not baked in: mount them at /config/unshackle
 # (unshackle.yaml with a serve: api_secret, Cookies/, WVDs/, PRDs/).
@@ -36,7 +37,8 @@ RUN set -eux; cd /tmp; \
 # Unshacklarr can use (CDM tests, remote servers, a service's questions): see the README.
 ARG UNSHACKLE_REPO=https://github.com/unshackle-dl/unshackle.git
 ARG UNSHACKLE_REF=main
-RUN git clone --depth 1 --branch "$UNSHACKLE_REF" "$UNSHACKLE_REPO" /app
+# ADD, not git clone: the step is rebuilt as soon as the branch moves, so an update needs no --no-cache (#28)
+ADD ${UNSHACKLE_REPO}#${UNSHACKLE_REF} /app
 WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PROJECT_ENVIRONMENT=/opt/venv
 RUN uv sync --frozen --no-dev
