@@ -4,6 +4,7 @@ import json
 import os
 import stat
 import threading
+import time
 from pathlib import Path
 
 import pytest
@@ -225,7 +226,8 @@ def test_a_local_serve_gets_its_socket_and_key_without_the_command_line(tmp_path
         "    seen = {'argv': sys.argv, 'key': config.serve['api_secret'], 'env': [k for k in os.environ if k.startswith('UNSHACKLARR')],\n"
         "            'users': config.serve.get('users')}\n"
         "    app = web.Application()\n"
-        "    app.router.add_get('/api/health', lambda r: web.json_response(seen))\n"
+        "    ok = lambda r: r.headers.get('X-Secret-Key') == config.serve['api_secret']  # Unshackle 7 keys /api/health\n"
+        "    app.router.add_get('/api/health', lambda r: web.json_response(seen, status=200 if ok(r) else 401))\n"
         "    web.run_app(app, host='127.0.0.1', port=1, print=None)\n")  # port 1: only the handed socket can serve
     command = tmp_path / ".venv" / "bin" / "unshackle"  # a git clone's: the launcher runs from the clone
     command.parent.mkdir(parents=True)
@@ -235,7 +237,7 @@ def test_a_local_serve_gets_its_socket_and_key_without_the_command_line(tmp_path
     try:
         local.start(str(command))
         import requests
-        seen = requests.get(f"{local.url}/api/health", timeout=5).json()
+        seen = requests.get(f"{local.url}/api/health", headers={"X-Secret-Key": local.key}, timeout=5).json()
         assert seen["key"] == local.key and seen["env"] == []  # the key arrived, and left the environment
         assert str(local.url.rsplit(":", 1)[1]) not in " ".join(seen["argv"])  # nor the port on the command line
         # Unshackle 6 serves its proxies only to a key with server_proxy: this run's key has it (5.x reads no such field)
@@ -260,7 +262,7 @@ def test_a_service_that_failed_to_load_is_refused_before_the_job_others_go_on(tm
         backend.download({"service": "AMZN"})
     assert not any(call.request.method == "POST" for call in responses.calls)
     assert backend.download({"service": "BINGE"}) == "queued"
-    assert backend.download({"service": "AMZN", "remote": True}) == "queued"
+    assert backend.download({"service": "AMZN", "remote": "box"}) == "queued"
 
     responses.replace(responses.GET, "http://backend:8786/api/services",
                       json={"services": [{"tag": "AMZN"}], "load_errors": []})
@@ -317,3 +319,96 @@ def test_a_cdm_named_for_the_download_is_sent_and_its_refusal_said(tmp_path):
         raise AssertionError("refused")
     except UnshackleError as e:
         assert "cdm_overrides" in str(e)
+
+
+@responses.activate
+def test_a_service_login_serve_could_not_finish_is_not_called_a_refused_key(tmp_path):
+    # by mj23au (#25): serve answers 401 for two things: a wrong key ({"status": 401, "message": "Secret Key is Invalid."})
+    # and a service whose login failed (AUTH_FAILED, with an error_code). The second was shown as "refused the API key"
+    backend = Unshackle(tmp_path)
+    backend.configure({"unshackle_url": "http://backend:8786", "unshackle_api_key": "test-api-secret"})
+    responses.post("http://backend:8786/api/search", status=401, json={"status": "error", "error_code": "AUTH_FAILED",
+                   "message": "Authentication failed: This login needs the user, and only a download job or a remote session can reach the user"})
+    responses.get("http://backend:8786/api/services", status=401, json={"status": 401, "message": "Secret Key is Invalid."})
+    try:
+        backend.call("POST", "/api/search", json={"service": "X", "query": "q"})
+        raise AssertionError("login failed")
+    except UnshackleError as e:
+        assert "This login needs the user" in str(e) and "API key" not in str(e)
+    try:
+        backend.call("GET", "/api/services")
+        raise AssertionError("key refused")
+    except UnshackleError as e:
+        assert str(e) == "unshackle serve refused the API key"
+
+
+def test_load_balancer_and_short_technical_cookies_say_nothing_of_the_login(tmp_path):
+    # Crave's AWSALBTG lasts a week, Apple's utsdc an hour, whatever the login: a file of session cookies stays undated
+    from unshacklarr import cookies
+    soon = int(time.time()) + 3600
+    path = tmp_path / "c.txt"
+    path.write_text(f"# Netscape HTTP Cookie File\n.bellmedia.ca\tTRUE\t/\tTRUE\t{soon}\tAWSALBTG\tx\n"
+                    f".apple.com\tTRUE\t/\tTRUE\t{soon}\tutsdc\tx\n.apple.com\tTRUE\t/\tTRUE\t0\tmyacinfo\tx\n")
+    assert cookies.summary(path)["expires"] is None
+
+
+@responses.activate
+def test_a_remote_servers_services_come_from_unshackles_own_api(tmp_path):
+    # After 6.0.0: the names in /api/config, each server's services in /api/services?remote=; 6.0.0 has neither
+    from responses import matchers
+    backend = Unshackle(tmp_path)
+    backend.configure({"unshackle_url": "http://backend:8786", "unshackle_api_key": "test-api-secret"})
+    responses.get("http://backend:8786/api/config", json={"config": {"dl": {}, "remote_services": ["community", "down"]}})
+    nf = {"tag": "NF", "remote": "community", "cli_params": []}
+    responses.get("http://backend:8786/api/services", match=[matchers.query_param_matcher({"remote": "community"})], json={"services": [nf]})
+    responses.get("http://backend:8786/api/services", match=[matchers.query_param_matcher({"remote": "down"})], status=503, json={})
+    assert backend.remote_services() == [{"name": "community", "services": [nf]}]  # the server down left out
+
+    old = Unshackle(tmp_path)
+    old.configure({"unshackle_url": "http://old:8786", "unshackle_api_key": "test-api-secret"})
+    responses.get("http://old:8786/api/config", json={"config": {"dl": {}}})
+    assert old.remote_services() == []  # 6.0.0: no names, nothing asked
+
+
+@responses.activate
+def test_remote_names_its_server_as_serve_takes_it(tmp_path):
+    # dl's --remote [--server X] goes to serve as remote: "X"; the one server of remote_services when none is named
+    import json
+    backend = Unshackle(tmp_path)
+    backend.configure({"unshackle_url": "http://backend:8786", "unshackle_api_key": "test-api-secret"})
+    responses.get("http://backend:8786/api/config", json={"config": {"remote_services": ["community"]}})
+    responses.post("http://backend:8786/api/download", json={"job_id": "j"})
+    backend.download({"service": "NF", "remote": True})
+    backend.download({"service": "NF", "remote": True, "server": "other"})
+    sent = [json.loads(c.request.body) for c in responses.calls if c.request.method == "POST"]
+    assert sent == [{"service": "NF", "remote": "community"}, {"service": "NF", "remote": "other"}]
+    responses.post("http://backend:8786/api/list-titles", json={"titles": []})  # a listing goes through it too
+    backend.call("POST", "/api/list-titles", json={"service": "NF", "title_id": "1", "remote": True})
+    assert json.loads(responses.calls[-1].request.body)["remote"] == "community"
+
+    responses.replace(responses.GET, "http://backend:8786/api/config", json={"config": {"remote_services": ["a", "b"]}})
+    backend._config = (0.0, {})
+    with pytest.raises(UnshackleError, match="--server"):
+        backend.download({"service": "NF", "remote": True})
+
+
+@responses.activate
+def test_serves_passing_errors_say_their_code_and_a_restart_waits_for_its_downloads(tmp_path, monkeypatch):
+    # After 6.0.0 serve answers a network hitch with 424 and drains before a restart: both worth another try
+    backend = Unshackle(tmp_path)
+    backend.configure({"unshackle_url": "http://backend:8786", "unshackle_api_key": "test-api-secret"})
+    responses.post("http://backend:8786/api/list-titles", status=424, json={"error_code": "NETWORK_ERROR", "message": "Connection lost"})
+    with pytest.raises(UnshackleError, match=r"Connection lost \(NETWORK_ERROR\)"):
+        backend.call("POST", "/api/list-titles", json={"service": "NF", "title_id": "1"})
+
+    responses.get("http://backend:8786/api/dashboard/status", json={"errors": {"NF": {"SERVICE_ERROR": 2}}})
+    assert backend.dashboard("") is None and backend.dashboard("dash-key") == {"errors": {"NF": {"SERVICE_ERROR": 2}}}
+    assert responses.calls[-1].request.headers["X-Secret-Key"] == "dash-key"  # the dashboard's own key, not the API's
+
+    monkeypatch.setattr(Unshackle, "mode", property(lambda self: "local"))  # serve run by Unshacklarr: restarted by it
+    monkeypatch.setattr(backend, "endpoint", lambda: ("http://backend:8786", "test-api-secret"))
+    responses.post("http://backend:8786/api/dashboard/drain", json={"jobs": {"downloading": 1}, "sessions": 0, "draining": True})
+    responses.delete("http://backend:8786/api/dashboard/drain", json={"draining": False})
+    with pytest.raises(UnshackleError, match="still downloading"):
+        backend.restart("dash-key")
+    assert responses.calls[-1].request.method == "DELETE"  # the drain called off: it takes new work again

@@ -16,7 +16,7 @@ const eqHeight = (t) => Math.max(heightClass(t.height || 0), heightClass((t.widt
 const ranges = (t) => (t.layers?.length ? t.layers : [t.range]);
 const fitsStep = (st, t) => (!st.codec || t.codec === st.codec)
   && (st.range === "HYBRID" ? ranges(t).includes("DV") && ranges(t).some((r) => r === "HDR10" || r === "HDR10P") : !st.range || ranges(t).includes(st.range))
-  && eqHeight(t) >= (st.min || 0) && (!st.max || eqHeight(t) <= st.max);
+  && eqHeight(t) >= (st.min || 0) && (!st.max || eqHeight(t) <= st.max) && (!st.max_kbps || (t.bitrate || 0) <= st.max_kbps);
 const stepOf = (lad, t) => { const i = lad.steps.findIndex((st) => fitsStep(st, t)); return i < 0 ? lad.steps.length : i; };
 const trackText = (t) => `${eqHeight(t) || "?"}p ${nameOf(CODECS, t.codec) || "?"} ${(t.layers?.length ? t.layers : [t.range]).map((r) => nameOf(RANGES, r) || "?").join(" + ")}`;
 
@@ -35,15 +35,38 @@ function ladderUse(name) {
   return [S.config.settings.quality_ladder === name ? "every series" : "", ...services.map(svcName), series ? `${series} series` : "", ...others].filter(Boolean);
 }
 
-/* A ladder picker: each choice once, the one the level before gives marked (default). Picking it is "" (follow
-   that level), any other is this level's own; off is none. */
-function ladderSelect(value, inherited, onchange) {
+/* A ladder picker, as chips: each choice once, the one the level before gives marked default. Picking it is ""
+   (follow that level), any other is this level's own; off is none. */
+function ladderChips(value, inherited, onchange) {
   const def = inherited && ladders().some((l) => l.name === inherited) ? inherited : "off";
-  const choice = (name, label) => el("option", { value: name === def ? "" : name, textContent: name === def ? `${label} (default)` : label });
-  const sel = el("select", { onchange: (e) => onchange(e.target.value) },
-    choice("off", "Off"), ...ladders().map((l) => choice(l.name, l.name)));
-  sel.value = !value || value === def ? "" : value;
-  return sel;
+  let now = !value || !ladders().some((l) => l.name === value) && value !== "off" ? def : value;
+  const box = el("div", { className: "ax-seg", role: "radiogroup", ariaLabel: "Quality ladder" });
+  const paint = () => box.replaceChildren(...[["off", "Off"], ...ladders().map((l) => [l.name, l.name])].map(([v, label]) => el("button", {
+    type: "button", role: "radio", ariaChecked: String(now === v), onclick: () => { now = v; paint(); onchange(v === def ? "" : v); } },
+    el("span", { textContent: label }), ...(v === def ? [el("small", { className: "chip-default", textContent: "default" })] : []))),
+    el("a", { className: "ax-edit", href: "#/settings/quality", textContent: "Edit ladders" }));
+  paint();
+  return box;
+}
+const ladderNamed = (name) => (name && name !== "off" && ladders().find((l) => l.name === name)) || null;
+/* What a ladder decides itself: these options would only fight it (sync.apply_ladder drops or replaces them). */
+const LADDER_FLAGS = ["--quality", "--vcodec", "--vbitrate", "--vbitrate-range"];
+const stepText = (st) => [st.max && st.max !== st.min ? `${st.min || 0}-${st.max}p` : st.max ? `${st.max}p` : st.min ? `${st.min}p+` : "",
+  st.codec ? nameOf(CODECS, st.codec) : "", st.range ? nameOf(RANGES, st.range) : "", st.max_kbps ? `≤ ${st.max_kbps} kbps` : ""].filter(Boolean).join(" ") || "Any";
+/* Under a ladder picker: the options of that level the ladder takes over, and a button to remove them. */
+function ladderClash(note, lad, opts, removed) {
+  const clash = lad ? LADDER_FLAGS.filter((f) => f in opts) : [];
+  note.hidden = !clash.length;
+  note.replaceChildren(el("span", { textContent: `Set by the ladder: ${clash.join(", ")}` }),
+    el("button", { type: "button", className: "btn small", textContent: "Remove", onclick: () => { clash.forEach((f) => delete opts[f]); dirty(); removed(); } }));
+  return note;
+}
+/* Under a command: the video the ladder picks, in place of the options it takes over. */
+function ladderLine(code, lad) {
+  let line = code.nextElementSibling?.classList.contains("dx-ladder") ? code.nextElementSibling : null;
+  if (!line) code.after(line = el("small", { className: "dx-ladder" }));
+  line.hidden = !lad;
+  if (lad) line.textContent = `Video by ${lad.name}: ${lad.steps.map(stepText).join(" › ")}`;
 }
 /* Chips for a setting a series may take from the level before: each choice once, the inherited one marked
    default; picking it follows that level again, any other is the series' own. */
@@ -131,7 +154,13 @@ function ladderCard(lad) {
       el("small", { className: "muted", textContent: "Tried from the top: Unshacklarr downloads the first step the episode has a track for, and the best track within it." })),
     el("div", { className: "sx-grid ql-langs" },
       langs("audio", "Audio, in this order", "The first language in this list that the episode has is downloaded (en also matches en-GB). Not used when empty, or when the series or its service sets --a-lang."),
-      langs("subtitles", "Subtitles, in this order", "The first language in this list that the episode has full subtitles in is downloaded. Not used when empty, or when --s-lang is set.")));
+      langs("subtitles", "Subtitles, in this order", "The first language in this list that the episode has full subtitles in is downloaded. Not used when empty, or when --s-lang is set."),
+      el("div", { className: "field ql-blind" },
+        el("label", { className: "check" }, el("input", { type: "checkbox", checked: !!lad.blind, onchange: (e) => {
+          if (e.target.checked) lad.blind = true; else delete lad.blind;
+          dirty();
+        } }), "Try unlisted codecs"),
+        el("small", { textContent: "When no step matches, the first step whose codec the service does not list is downloaded anyway." }))));
 }
 
 function stepRow(lad, st, i) {
@@ -159,6 +188,9 @@ function stepRow(lad, st, i) {
     el("span", { className: "ql-n", textContent: String(i + 1) }),
     sel(CODECS, "codec"), sel(RANGES, "range"),
     el("span", { className: "ql-h" }, height("min", "Lowest height"), el("span", { textContent: "to" }), height("max", "Highest height"), el("span", { textContent: "p" }),
+      el("input", { type: "number", min: 0, max: 1000000, step: 100, inputMode: "numeric", ariaLabel: "Highest bitrate, kbps", placeholder: "any",
+        value: st.max_kbps || "", oninput: (e) => { const v = Math.max(0, parseInt(e.target.value, 10) || 0); if (v) st.max_kbps = v; else delete st.max_kbps; dirty(); } }),
+      el("span", { textContent: "kbps" }),
       el("span", { className: "ql-btns" }, move(i - 1, "Move up", "m6 15 6-6 6 6"), move(i + 1, "Move down", "m6 9 6 6 6-6"),
       el("button", { type: "button", className: "ql-icon danger", ariaLabel: "Remove this step", disabled: n === 1,
         innerHTML: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>', onclick: () => { lad.steps.splice(i, 1); dirty(); renderQuality(); } }))),
@@ -176,7 +208,7 @@ $("#ql-add").onclick = () => {
 $("#ql-reset").onclick = (e) => {
   if (e.target.dataset.sure !== "1") { e.target.dataset.sure = "1"; e.target.textContent = "Sure? Your own ladders will be deleted"; return; }
   delete e.target.dataset.sure;
-  e.target.textContent = "Reset to the built-in ladders";
+  e.target.textContent = "Reset ladders";
   const keep = new Set(S.builtinLadders.map((l) => l.name));
   for (const l of ladders()) if (!keep.has(l.name)) renameRefs("ladder", l.name, "");
   S.config.quality_ladders = structuredClone(S.builtinLadders);
@@ -376,11 +408,14 @@ function fillQualityImport(conf) {
   fillFallback(conf);
   renderLibraries(conf);
   const set = S.config.settings, svc = S.config.service_defaults?.[conf.service] || {};
-  $("#d-ladder").replaceWith(Object.assign(ladderSelect(conf.ladder, svc.ladder || set.quality_ladder, (v) => {
+  const clash = () => ladderClash($("#d-ladder-clash"), ladderOfSeries(conf), conf.options ??= {}, () => { optionsEditor($("#d-opts"), S.dlOptions, conf.options); clash(); });
+  $("#d-ladder").replaceWith(Object.assign(ladderChips(conf.ladder, svc.ladder || set.quality_ladder, (v) => {
     if (v) conf.ladder = v; else delete conf.ladder;
     renderLibraries(conf);
+    clash();
     dirty();
   }), { id: "d-ladder" }));
+  clash();
   importChips();
   $("#d-skip-upgrades").checked = conf.skip_upgrades === true;
   spoilerChips(conf);
@@ -673,18 +708,27 @@ function renderLibraries(conf) {
         dirty(); renderLibraries(conf);
       });
     }));
-  // Advanced: options added to the series' own for one library's copies only, for whoever needs them
-  $("#d-libs-adv-body").replaceChildren(...found.map((o) => {
+  // Advanced: options added to the series' own for one library's copies only, for whoever needs them: download options and
+  // the service's own (a 4K or AV1 copy with another profile or flags)
+  const editor = (name, level, specs, anyFlag) => {
     const opts = el("div", { className: "opts" });
-    const values = new Proxy({ ...(all[o.name]?.options || {}) }, {  // written into conf only once an option is added
-      set: (t, k, v) => { t[k] = v; per(o.name).options = { ...t }; dirty(); return true; },
+    const values = new Proxy({ ...(all[name]?.[level] || {}) }, {  // written into conf only once an option is added
+      set: (t, k, v) => { t[k] = v; per(name)[level] = { ...t }; dirty(); return true; },
       deleteProperty: (t, k) => {
         delete t[k];
-        if (Object.keys(t).length) per(o.name).options = { ...t }; else if (conf.sonarrs?.[o.name]) { delete conf.sonarrs[o.name].options; tidy(o.name); }
+        if (Object.keys(t).length) per(name)[level] = { ...t }; else if (conf.sonarrs?.[name]) { delete conf.sonarrs[name][level]; tidy(name); }
         dirty(); return true;
       } });
-    optionsEditor(opts, S.dlOptions, values);
-    return el("div", { className: "field" }, el("label", { textContent: `Download options for ${o.name}` }), opts);
-  }));
-  $("#d-libs-adv").open = found.some((o) => all[o.name]?.options);
+    optionsEditor(opts, specs, values, anyFlag);
+    return opts;
+  };
+  const theirs = el("div");
+  $("#d-libs-adv-body").replaceChildren(...found.map((o) => el("div", { className: "field" },
+    el("label", { textContent: `Download options for ${o.name}` }), editor(o.name, "options", S.dlOptions))), theirs);
+  if (conf.service) loadServiceOptions(conf.service).catch(() => []).then((specs) => {
+    if (S.config.series[current?.tvdbId] !== conf) return;  // another series opened meanwhile
+    theirs.replaceChildren(...found.map((o) => el("div", { className: "field" },
+      el("label", { textContent: `${conf.service} options for ${o.name}` }), editor(o.name, "service_options", specs, true))));
+  });
+  $("#d-libs-adv").open = found.some((o) => all[o.name]?.options || all[o.name]?.service_options);
 }

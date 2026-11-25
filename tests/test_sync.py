@@ -148,7 +148,7 @@ def test_downloads_mapped_episodes_and_imports_them_by_id(tmp_path, monkeypatch)
     assert sync.main() == 0
     assert wanted(calls) == ["S02E05", "S02E06"]
     # defaults, overridden per series, and the service's own option, typed as the API wants them
-    assert calls[0] == {"movie": True, "quality": [1080], "service": "RTLP", "title_id": "https://rtl/show",
+    assert calls[0] == {"service_params": {"movie": True}, "quality": [1080], "service": "RTLP", "title_id": "https://rtl/show",
                         "wanted": ["S02E05"], "output_dir": str(tmp_path / "unshackle-111-S02E05")}
     assert not (tmp_path / "unshackle-111-S02E06").exists()  # retried next run
 
@@ -297,6 +297,17 @@ def test_release_slot(tmp_path, monkeypatch):
     assert sync.release_slot({"release_day": -3}, {"airDateUtc": "2026-10-03T19:00:00Z"}).isoformat() == "2026-09-30T00:00:00+02:00"
     assert sync.release_slot({"release_day": 1}, {"airDateUtc": "2026-10-03T19:00:00Z"}) is None  # the day after needs a time
     assert sync.release_day({"release_day": -40}) == -sync.EARLY_DAYS_MAX
+    # No release time but a broadcast schedule: its time (La Comtesse de Monte-Cristo, 21:25 on Auvio)
+    broadcast = {"broadcast": {"start": "2026-11-03", "time": "21:25"}}
+    assert sync.release_slot(broadcast, {"airDateUtc": "2026-11-03T20:25:00Z"}).isoformat() == "2026-11-03T21:25:00+01:00"
+    assert sync.release_slot({**broadcast, "release_time": "22:00"}, {"airDateUtc": "2026-11-03T20:25:00Z"}).isoformat() == "2026-11-03T22:00:00+01:00"
+    # No gap of its own: its broadcast's, for the second episode of an evening
+    eps = [{"id": 1, "seasonNumber": 1, "episodeNumber": 1, "airDateUtc": "2026-11-03T20:25:00Z"},
+           {"id": 2, "seasonNumber": 1, "episodeNumber": 2, "airDateUtc": "2026-11-03T20:25:00Z"}]
+    monkeypatch.setattr(sync, "series_episodes", lambda _: eps)
+    second = {**eps[1], "seriesId": 9}
+    assert sync.release_slot({"release_time": "21:25", "broadcast": {"gap": 43}}, second).isoformat() == "2026-11-03T22:08:00+01:00"
+    assert sync.release_slot({"release_time": "21:25", "release_gap": 10, "broadcast": {"gap": 43}}, second).isoformat() == "2026-11-03T21:35:00+01:00"
 
 
 def test_an_episode_out_before_it_airs_joins_the_automatic_sync(tmp_path, monkeypatch):
@@ -374,9 +385,9 @@ def test_options_stack_defaults_then_service_then_series(tmp_path, monkeypatch):
     cmd = sync.unshackle_command(show, config, "S01E02", tmp_path / "out")
     assert cmd[cmd.index("S01E02") + 1 :] == ["--quality", "2160", "--proxy", "ca", "CRAVE", "--movie", "https://crave.ca/x"]
     payload = sync.download_request(show, config, "S01E02", tmp_path / "out")
-    assert (payload["quality"], payload["proxy"], payload["movie"]) == ([2160], "ca", True)
+    assert (payload["quality"], payload["proxy"], payload["service_params"]) == ([2160], "ca", {"movie": True})
     other = sync.download_request({**show, "service": "ATV"}, config, "S01E02", tmp_path / "out")
-    assert other["proxy"] == "fr" and "movie" not in other  # another service only gets the defaults
+    assert other["proxy"] == "fr" and "service_params" not in other  # another service only gets the defaults
 
 
 def test_each_side_sees_the_downloads_folder_at_its_own_path(tmp_path, monkeypatch):
@@ -520,21 +531,15 @@ def test_two_tracks_named_alike_stay_two(tmp_path, monkeypatch):
     assert [t["label"] for t in card["tracks"]] == ["subtitle fr", "subtitle fr"]
 
 
-def test_the_output_has_unshackles_log_and_debug_only_in_debug_mode(tmp_path, monkeypatch):
+def test_the_output_has_debug_only_in_debug_mode(tmp_path, monkeypatch):
     sync = load(tmp_path, monkeypatch)
     run = sync.EpisodeRun(episode(111, 2, 5), {"service": "RMCP"}, "manual", "S02E05")
-    states = iter([
-        {"status": "downloading", "log_count": 2, "log": ["02:00:01 INFO RMCP: Getting tracks", "02:00:02 WARNING dl: slow segment"]},
-        {"status": "downloading", "log_count": 5, "log": ["b", "c", "02:00:09 ERROR dl: gave up"]},  # 3 new, all sent
-        {"status": "completed", "output_files": ["/downloads/x/Show.S02E05.mkv"], "log_count": 5, "log": []},
-    ])
+    states = iter([{"status": "downloading"}, {"status": "completed", "output_files": ["/downloads/x/Show.S02E05.mkv"]}])
     monkeypatch.setattr(sync.UNSHACKLE, "download", lambda payload: "job1")
     monkeypatch.setattr(sync.UNSHACKLE, "job", lambda job_id: next(states))
     sync.trace("a debug line", debug=True)
     sync.run_job({}, run, poll=0)
     log = (tmp_path / "runs" / f"{run.id}.log").read_text()
-    assert log.index("Getting tracks") < log.index("slow segment") < log.index("gave up")
-    assert "\x1b[33m  02:00:02 WARNING" in log and "\x1b[31m  02:00:09 ERROR" in log
     assert "job job1" in log and "made 1 file: Show.S02E05.mkv" in log and "a debug line" not in log
     monkeypatch.setattr(sync, "DEBUG", True)
     sync.trace("a debug line", debug=True)
@@ -750,6 +755,41 @@ def test_finalize_reports_joining_then_renaming(tmp_path, monkeypatch):
     assert steps == [("joining", 2), ("renaming", 2), ("renaming", 1)]  # one file: nothing to join
 
 
+def test_parts_whose_sps_differs_in_its_vui_only_are_joined(tmp_path, monkeypatch):
+    # Koh-Lanta on TF1+: same codec, size, frame rate, profile and level, the SPS's colour/timing part differs
+    sync = load(tmp_path, monkeypatch)
+    one = "01640028ffe1001e67640028acd940780227e5c05a808080db800000030080000019478c18cb01000668ebe08cb22c"
+    two = "01640028ffe1001e67640028acd940780227e5c05a808080a0000003002000000651e30632c001000668ebe08cb22c"
+    video = {"Part.1": one, "Part.2": two}
+    doubt = ("Warning: The track number 0 from the file 'b.mkv' can probably not be appended correctly to the track "
+             "number 0 from the file 'a.mkv': The codec's private data does not match. Both have the same length (47) "
+             "but different content. Please make sure that the resulting file plays correctly the whole time.")
+
+    def run(cmd, **_):
+        if cmd[:2] == ["mkvmerge", "-J"]:
+            data = next((v for k, v in video.items() if k in cmd[2]), one)  # the joined file, once renamed
+            props = {"codec_id": "V_MPEG4/ISO/AVC", "pixel_dimensions": "1920x1080", "default_duration": 40000000, "codec_private_data": data}
+            return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps({"tracks": [{"type": "video", "properties": props}]}))
+        if cmd[0] == "mkvmerge":
+            Path(cmd[cmd.index("-o") + 1]).touch()
+            return subprocess.CompletedProcess(cmd, 1, stdout=doubt)
+        return subprocess.CompletedProcess(cmd, 0, stdout="")
+
+    monkeypatch.setattr(sync.subprocess, "run", run)
+    split_episode(tmp_path / "ep", ["One", "Two"])
+    assert sync.finalize(tmp_path / "ep", "S01E05", "Show") == 2
+    [joined] = (tmp_path / "ep").iterdir()
+    assert ".Part." not in joined.name
+    video["Part.2"] = two.replace("01640028", "0164001f", 1)  # another level: refused, the parts kept
+    split_episode(tmp_path / "ep2", ["One", "Two"])
+    try:
+        sync.finalize(tmp_path / "ep2", "S01E05", "Show")
+        raise AssertionError("parts of another level were joined")
+    except RuntimeError as e:
+        assert "could not join" in str(e)
+    assert len(list((tmp_path / "ep2").iterdir())) == 2
+
+
 @responses.activate
 def test_an_import_sonarr_did_not_do_is_an_import_left_to_do(tmp_path, monkeypatch):
     # Downloaded whole, only Sonarr's import failed: not a failed download, an import to do (by mj23au, #10)
@@ -833,6 +873,21 @@ def test_a_login_failure_points_to_the_cookies(tmp_path, monkeypatch):
     [message] = discord_messages()
     assert "Login failed on RTLP: Show S02E05" in message and "Settings, Cookies" in message
 
+
+
+@responses.activate
+def test_video_files_refused_are_not_called_expired_cookies(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    responses.get(f"{SONARR}/api/v3/calendar", json=[episode(111, 2, 5)])
+    responses.post(re.compile(re.escape(WEBHOOK)))
+
+    def refused(payload, run=None):
+        raise sync.JobFailed("x", "failed", "download worker failed: HTTPError: 403 Client Error: FORBIDDEN for url: redacted.mp4")
+
+    monkeypatch.setattr(sync, "run_job", refused)
+    assert sync.main() == 1
+    [message] = discord_messages()
+    assert "refused the video files" in message and "--no-proxy-download" in message and "Cookies" not in message
 
 def test_a_download_without_the_first_language_asked_for_is_not_imported(tmp_path, monkeypatch):
     sync = load(tmp_path, monkeypatch)
@@ -983,24 +1038,6 @@ def test_a_click_on_an_episode_waiting_in_downloads_says_why_nothing_happens(tmp
     assert started == [["S02E05"]]  # downloaded again, not refused
 
 
-def test_a_login_code_is_sent_once_and_leaves_the_card_once_done(tmp_path, monkeypatch):
-    sync = load(tmp_path, monkeypatch)
-    sent = []
-    monkeypatch.setattr(sync, "notify", lambda settings, level, title, message, action=None: sent.append((level, title, message)))
-    run = sync.EpisodeRun(episode(111, 2, 5), {"service": "DSNP"}, "auto")
-    need = {"service": "DSNP", "message": "Link this device to your Disney+ account", "url": "https://www.disneyplus.com/start",
-            "code": "ABCD1234", "expires_at": sync.time.time() + 600}
-    sync.ask_for_action(run, need)
-    sync.ask_for_action(run, need)  # the next polls: the same code, not sent again
-    assert run.card["action"]["code"] == "ABCD1234" and len(sent) == 1
-    assert sent[0][1] == "DSNP needs you: ABCD1234" and "https://www.disneyplus.com/start" in sent[0][2] and "within 10 min" in sent[0][2]
-    sync.ask_for_action(run, {**need, "code": "EFGH5678"})  # expired, a new one: sent
-    assert len(sent) == 2
-    sync.ask_for_action(run, None)
-    assert "action" not in run.card
-    run.finish("failed")
-
-
 def test_the_inbox_keeps_every_notification_and_its_action(tmp_path, monkeypatch):
     sync = load(tmp_path, monkeypatch)
     monkeypatch.setattr(sync.PUSH, "send", lambda *a, **k: 0)
@@ -1075,7 +1112,7 @@ def test_parts_in_counts_part_files_or_one_whole_file(tmp_path, monkeypatch):
 def test_a_download_shows_its_command_where_it_runs_and_its_proxy(tmp_path, monkeypatch):
     sync = load(tmp_path, monkeypatch)
     request = {"quality": [1080], "no_atmos": True, "proxy": "http://user:pw@proxy.example:8080", "service": "RTLP",
-               "movie": True, "title_id": "https://www.rtl.fr/some show", "wanted": ["S02E08"], "output_dir": "/dl", "debug": True}
+               "service_params": {"movie": True}, "title_id": "https://www.rtl.fr/some show", "wanted": ["S02E08"], "output_dir": "/dl", "debug": True}
     setup = sync.setup_of(request)
     assert setup["command"] == ("unshackle dl --quality 1080 --noatmos --proxy 'http://***@proxy.example:8080'"
                                 " RTLP --movie 'https://www.rtl.fr/some show' -w S02E08")
@@ -1097,6 +1134,10 @@ def test_a_series_own_schedule_dates_its_episodes(tmp_path, monkeypatch):
     daily = sync.broadcast_dates({"broadcast": {**plan, "every": "daily", "evenings": {}}}, eps)
     assert daily[106].date().isoformat() == "2026-10-04"
     assert sync.broadcast_dates({}, eps) == {}
+    # Two an evening, the next one 43 min later
+    spaced = sync.broadcast_dates({"broadcast": {**plan, "gap": 43}}, eps)
+    assert (spaced[103].isoformat(), spaced[104].isoformat()) == ("2026-10-07T20:39:00+02:00", "2026-10-07T21:22:00+02:00")
+    assert spaced[105].isoformat() == "2026-10-21T20:39:00+02:00"
 
 
 def test_an_episode_not_aired_yet_waits_without_a_release_time(tmp_path, monkeypatch):
@@ -1336,7 +1377,7 @@ def test_an_episode_in_none_of_the_accepted_languages_waits_undownloaded(tmp_pat
     cards = [json.loads(p.read_text()) for p in (tmp_path / "runs").glob("*.json")]
     assert {c["outcome"] for c in cards if c["sxxeyy"] == "S02E06"} == {"unavailable"}
     assert "de, de-AT" in next(c["cause"] for c in cards if c["sxxeyy"] == "S02E06")
-    assert all(set(a) <= {"service", "title_id", "wanted", "profile", "proxy", "no_proxy", "cdm_type", "movie"} for a in asked)  # only what the official serve takes
+    assert all(set(a) <= {"service", "title_id", "wanted", "profile", "proxy", "no_proxy", "cdm_type", "service_params"} for a in asked)  # only what the official serve takes
 
 
 def test_nothing_is_downloaded_without_room_and_a_click_says_why(tmp_path, monkeypatch):
@@ -1825,8 +1866,8 @@ def test_the_series_page_and_upgrades_know_the_other_sonarr(tmp_path, monkeypatc
     libraries["sonarr-4k"][3].update(tvdbId=3, title="Tehran")
     url = web.sonarr_sync.SONARRS["sonarr-4k"]["url"]
     others, only = web.sonarrs_of_series({1, 2})
-    assert others == {1: [{"name": "sonarr-4k", "url": url, "slug": "", "missing": 5, "id": 77}],
-                      3: [{"name": "sonarr-4k", "url": url, "slug": "tehran", "missing": 0, "id": 78}]}
+    assert others == {1: [{"name": "sonarr-4k", "url": url, "slug": "", "missing": 5, "id": 77, "monitored": None}],
+                      3: [{"name": "sonarr-4k", "url": url, "slug": "tehran", "missing": 0, "id": 78, "monitored": None}]}
     assert [(s["tvdbId"], s["title"], s["id"]) for s in only] == [(3, "Tehran", None)]  # in sonarr-4k only: listed, no main id
     web.health["sonarrs"] = {"sonarr-4k": {"ok": False}}
     assert web.instances_of_series() == {} and web.sonarrs_of_series() == ({}, [])  # down: the page opens without waiting for it
@@ -1894,11 +1935,7 @@ def test_a_series_switches_another_sonarr_off_or_adds_options_for_it(tmp_path, m
     specs = [{"flag": "--atmos", "is_flag": True, "choices": []}]
     assert web.check_series_sonarrs({"sonarr-4k": {"off": True, "ladder": "1080p", "options": {}}}, body, specs, "1") == {"sonarr-4k": {"off": True}}  # a ladder is that Sonarr's
     assert web.check_series_sonarrs({"sonarr-4k": {}}, body, specs, "1") == {}  # nothing of its own: left out
-    try:
-        web.check_series_sonarrs({"nope": {"off": True}}, body, specs, "1")
-        raise AssertionError("a Sonarr not in Settings was taken")
-    except web.web.HTTPBadRequest:
-        pass
+    assert web.check_series_sonarrs({"nope": {"off": True}}, body, specs, "1") == {}  # a Sonarr taken out of Settings: dropped
 
 def test_the_download_window_keeps_the_automatic_sync_to_its_hours(tmp_path, monkeypatch):
     sync = load(tmp_path, monkeypatch)
@@ -2375,7 +2412,7 @@ def test_a_job_takes_in_only_episodes_with_its_own_replace_choice(tmp_path, monk
 
 
 def test_the_sign_in_hint_waits_for_two_quiet_minutes(tmp_path, monkeypatch):
-    # A download serve keeps talking about is not waiting for a sign-in, even with no track yet
+    # A download whose tracks move is not waiting for a sign-in
     sync = load(tmp_path, monkeypatch)
     clock = {"t": 0.0}
     monkeypatch.setattr(sync.time, "monotonic", lambda: clock["t"])
@@ -2386,8 +2423,8 @@ def test_the_sign_in_hint_waits_for_two_quiet_minutes(tmp_path, monkeypatch):
     asked = [0]
     monkeypatch.setattr(run, "say", lambda text: said.append((asked[0], text)))
 
-    polls = iter([{"status": "downloading", "log_count": n} for n in (1, 2, 3, 4, 5)] +  # serve talks: no hint
-                 [{"status": "downloading", "log_count": 5}] * 6 + [{"status": "failed", "error": "x"}])
+    polls = iter([{"status": "downloading", "track_progress": [{"label": "video", "progress": n}]} for n in (1, 2, 3, 4, 5)] +  # it moves: no hint
+                 [{"status": "downloading"}] * 6 + [{"status": "failed", "error": "x"}])
 
     class Serve:
         name = ""
@@ -2733,3 +2770,215 @@ def test_a_series_that_names_its_cdm_is_not_refused_for_want_of_one(tmp_path, mo
         assert "No CDM" in str(e)
     request = sync.download_request({**show, "options": {"--cdm": "my_l3"}}, config, "S01E01", tmp_path)
     assert request["cdm"] == "my_l3"
+
+
+def test_orig_in_the_accepted_audio_is_the_series_original_language(tmp_path, monkeypatch):
+    # "orig, fr" for every series: an anime takes ja or fr, a French series fr; Sonarr not saying it (v3): orig left out
+    sync = load(tmp_path, monkeypatch)
+    config = {"settings": {"audio_accept": "orig, fr"}}
+    assert sync.accepted_audio({}, config, {"originalLanguage": {"id": 8, "name": "Japanese"}}) == ["ja", "fr"]
+    assert sync.accepted_audio({}, config, {"originalLanguage": {"id": 2, "name": "French"}}) == ["fr"]
+    assert sync.accepted_audio({}, config, {"originalLanguage": {"name": "Portuguese (Brazil)"}}) == ["pt-br", "fr"]
+    assert sync.accepted_audio({}, config, {}) == ["fr"]
+    assert sync.speaks({"ja"}, sync.accepted_audio({}, config, {"originalLanguage": {"name": "Japanese"}}))
+
+
+def test_service_options_go_under_service_params(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    monkeypatch.setattr(sync.UNSHACKLE, "dl_config", lambda: {})
+    show = {"service": "AMZN", "title": "x", "options": {"--remote": True}, "service_options": {"-B": True}}
+    payload = sync.download_request(show, {}, "S01E01", tmp_path / "out")
+    assert payload["service_params"] == {"b": True} and payload["remote"] is True  # serve hands a remote server only these
+    assert "service_params" not in sync.options.command_line(payload)
+    local = sync.download_request({**show, "options": {}}, {}, "S01E01", tmp_path / "out")
+    assert local["service_params"] == {"b": True} and "b" not in local  # the same without --remote
+
+
+def test_a_service_profile_is_not_the_account_profile(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    monkeypatch.setattr(sync.UNSHACKLE, "dl_config", lambda: {})
+    monkeypatch.setattr(sync, "service_entry", lambda tag, config=None: {"tag": tag, "cli_params": [
+        {"kind": "option", "name": "profile", "opts": ["-p", "--profile"], "type": "text"}]})
+    show = {"service": "NF", "title": "https://www.netflix.com/title/1", "service_options": {"--profile": "PRK_DO"}}
+    payload = sync.download_request(show, {}, "S01E01", tmp_path / "out")
+    assert "profile" not in payload and payload["service_params"] == {"profile": "PRK_DO"}  # not an account named PRK_DO
+    line = sync.options.command_line(payload)
+    assert line.index("--profile PRK_DO") > line.index(" NF ")  # after the service: its option, not dl's
+    assert sync.serve_params(show, {})["service_params"] == {"profile": "PRK_DO"}
+
+
+def test_a_retry_goes_before_the_episodes_still_to_come(tmp_path, monkeypatch):
+    # In its job, a retried episode is next; on its own, it gets the first slot free, the job running lending its own
+    import threading, time
+    sync = load(tmp_path, monkeypatch)
+    started = []
+
+    def download(payload, run=None):
+        sx = payload["wanted"][0]
+        started.append(sx)
+        if sx == "S02E06":  # S02E05 failed: retried while S02E07 and S02E08 wait
+            assert sync.add_to_job(run.card["batch"], episode(111, 2, 5), {"service": "RTLP"}, first=True)
+        raise sync.UnshackleError("no such title")
+
+    monkeypatch.setattr(sync, "run_job_retrying", download)
+    monkeypatch.setattr(sync, "download_request", lambda show, config, sx, out: {"service": "RTLP", "title_id": "t", "wanted": [sx], "output_dir": str(out)})
+    monkeypatch.setattr(sync, "notify", lambda *a, **k: None)
+    sync.sync(sync.read_file(), {}, [episode(111, 2, n) for n in (5, 6, 7, 8)], manual=True, kind="manual")
+    assert started == ["S02E05", "S02E06", "S02E05", "S02E07", "S02E08"]
+
+    monkeypatch.setitem(sync.SETTINGS, "downloads_at_once", 1)
+    order = []
+
+    class Run:
+        def __init__(self, batch, n, kind="manual"): self.card, self.id = {"batch": batch, "kind": kind}, f"{batch}-{n}"
+        def say(self, text): pass
+
+    def job(batch, episodes):
+        sync.number_job(batch)
+        for n in range(1, episodes + 1):
+            with sync.download_slot("", Run(batch, n)):
+                order.append(f"{batch}{n}")
+                time.sleep(.05)
+            time.sleep(.02)
+        sync.release_job(batch)
+
+    def other(name, kind):
+        with sync.download_slot("", Run(None, name, kind)):
+            order.append(name)
+
+    a = threading.Thread(target=job, args=("A", 3)); a.start(); time.sleep(.01)
+    b = threading.Thread(target=job, args=("B", 1)); b.start(); time.sleep(.01)
+    r = threading.Thread(target=other, args=("R", "retry")); r.start()
+    for t in (a, b, r): t.join()
+    assert order == ["A1", "R", "A2", "A3", "B1"]  # the retry between two of A's episodes, A still before B
+    assert sync.slot_jobs[""] == [] and not sync.slot_line.get("")
+
+
+def test_a_proxy_that_fails_is_tried_again_then_its_job_pauses(tmp_path, monkeypatch):
+    # nordvpn:fr gives another server at each try: tried again at once, 3 times; past that, the error says so
+    sync = load(tmp_path, monkeypatch)
+    tries, waits = [], []
+    proxy = "The proxy for this session failed: Proxy check failed: no IP lookup got through the proxy (ProxyError)."
+
+    def job(payload, run=None):
+        tries.append(1)
+        if len(tries) < 3:
+            raise sync.JobFailed("x", "failed", proxy)
+        return ["/downloads/x.mkv"]
+
+    monkeypatch.setattr(sync, "run_job", job)
+    assert sync.run_job_retrying({}, sleep=waits.append) == ["/downloads/x.mkv"] and waits == [5, 5]
+
+    tries.clear(); waits.clear()
+    monkeypatch.setattr(sync, "run_job", lambda payload, run=None: (tries.append(1), (_ for _ in ()).throw(sync.JobFailed("x", "failed", proxy)))[1])
+    try:
+        sync.run_job_retrying({}, sleep=waits.append)
+        assert False, "it should give up"
+    except sync.JobFailed as e:
+        assert e.proxy_down and len(tries) == 1 + sync.PROXY_RETRIES
+
+
+def test_a_job_pauses_when_its_proxy_keeps_failing(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    paused, said = [], []
+
+    def download(payload, run=None):
+        e = sync.JobFailed("x", "failed", "Server error [INVALID_PROXY]: Proxy check failed: no IP lookup got through the proxy")
+        e.proxy_down = True
+        raise e
+
+    monkeypatch.setattr(sync, "run_job_retrying", download)
+    monkeypatch.setattr(sync, "download_request", lambda show, config, sx, out: {"service": "RTLP", "title_id": "t", "wanted": [sx], "output_dir": str(out)})
+    monkeypatch.setattr(sync, "notify", lambda settings, level, title, message, **k: said.append(title))
+    monkeypatch.setattr(sync, "pause_job", lambda batch, pause: paused.append((batch, pause)))  # not a real pause: the test would wait
+    sync.sync(sync.read_file(), {}, [episode(111, 2, n) for n in (5, 6)], manual=True, kind="manual")
+    assert paused and paused[0][1] is True and any("Job paused: the proxy failed" in t for t in said)
+
+
+def test_a_video_track_says_its_codec(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    assert sync.codec_in("Black.Clover.S01E20.MULTi.NF.1080p.WEB.H265.AAC2.0-TiNA.mkv") == "H.265"
+    assert sync.codec_in("Ranma.S03E01.MULTi.NF.1080p.WEB.H.264.AAC2.0-TiNA.mkv") == "H.264" and sync.codec_in("Show.S01E01.mkv") == ""
+    assert sync.with_codec("video 1080p SDR", "H.265") == "video 1080p SDR H.265"
+    assert sync.with_codec("Part 2 · video 1080p SDR", "H.264") == "Part 2 · video 1080p SDR H.264"
+    assert sync.with_codec("audio fr 2.0", "H.265") == "audio fr 2.0" and sync.with_codec("video 1080p SDR", "") == "video 1080p SDR"
+
+
+def test_the_next_episode_of_an_evening_is_tried_after_its_airing(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    episodes = [{"id": n, "seriesId": 7, "seasonNumber": 1, "episodeNumber": n, "airDateUtc": at}
+                for n, at in ((1, "2026-10-06T19:00:00Z"), (2, "2026-10-13T19:00:00Z"), (3, "2026-10-13T19:00:00Z"))]
+    monkeypatch.setattr(sync, "sonarr_get", lambda path, **kw: episodes)
+    show = {"release_time": "21:10", "release_gap": 50}
+    assert [sync.release_slot(show, e).isoformat() for e in episodes] == [
+        "2026-10-06T21:10:00+02:00", "2026-10-13T21:10:00+02:00", "2026-10-13T22:00:00+02:00"]
+    assert sync.release_slot({"release_time": "21:10"}, episodes[2]).isoformat() == "2026-10-13T21:10:00+02:00"  # no gap: together
+
+
+def test_an_episode_serve_finds_no_title_for_is_not_out_yet(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+
+    def refused(*_, **__):  # serve after 6.0.0, the episode not on the service yet
+        raise sync.UnshackleError("unshackle serve: No titles found matching wanted criteria (ref 4d8140)")
+    monkeypatch.setattr(sync, "run_job", refused)
+    assert sync.run_job_retrying({"service": "DSNP"}, sleep=lambda _: None) == []
+
+
+def test_a_failure_that_says_nothing_shows_the_last_error_logged(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    job = {"status": "failed", "error_message": "Download failed with exit code 1",
+           "log": ["Downloading", "PermissionError: [Errno 13] Permission denied: '/config/cache/AMZN/titles_1.json'", "Exiting"]}
+    assert sync.job_cause(job).startswith("PermissionError: [Errno 13] Permission denied")
+    job = {"status": "failed", "error_message": "Download failed with exit code 1",
+           "error_details": "requests.exceptions.ProxyError: HTTPSConnectionPool(host='x', port=443): Max retries exceeded"}
+    assert sync.job_cause(job).startswith("ProxyError: HTTPSConnectionPool")
+    assert sync.job_cause({"status": "failed", "error_message": "Download failed with exit code 1"}) == "Download failed with exit code 1"
+    assert sync.job_cause({"status": "failed", "error_message": "User is not entitled"}) == "User is not entitled"
+
+
+def test_a_ladder_that_trusts_its_steps_tries_a_codec_the_listing_lacks(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    config = sync.read_file()
+    config["quality_ladders"] = [{"name": "AV1", "blind": True, "steps": [{"codec": "AV1", "range": "SDR", "min": 1080, "max": 1080}]}]
+    config["series"][111]["ladder"] = "AV1"
+    # the listing comes back in H.264 only (serve does not pass the codec on to the service)
+    monkeypatch.setattr(sync.UNSHACKLE, "call", lambda method, path, json=None, **_: {"episodes": [{"video": [{"height": 1080, "codec": "AVC", "range": "SDR"}]}]})
+    monkeypatch.setattr(sync, "no_cdm", lambda tag, config=None: "")
+    downloads = []
+    monkeypatch.setattr(sync, "run_job_retrying", lambda payload, run=None: downloads.append(payload))
+    sync.sync(config, {}, [episode(111, 2, 5)], manual=True, kind="manual")
+    assert [(d["quality"], d["vcodec"], d["range"]) for d in downloads] == [([1080], ["AV1"], ["SDR"])]
+    del config["quality_ladders"][0]["blind"]
+    sync.sync(config, {}, [episode(111, 2, 5)], manual=True, kind="manual")
+    assert len(downloads) == 1  # without it: nothing outside what the service lists
+
+
+def test_after_download_posts_the_episode_and_its_file_for_a_script(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    from types import SimpleNamespace
+    sent = []
+    monkeypatch.setattr(sync.requests, "post", lambda url, json=None, timeout=None: sent.append((url, json)) or SimpleNamespace(raise_for_status=lambda: None))
+    monkeypatch.setattr(sync, "sonarr_get", lambda path, **_: {"episodeFileId": 9} if path.startswith("episode/") else {"path": "/tv/Show/Season 2/Show.S02E05.mkv"})
+    run = SimpleNamespace(id="r1", card={"sxxeyy": "S02E05"})
+    ep = {**episode(111, 2, 5), "title": "Pilot"}
+    sync.SETTINGS["after_download_url"] = ""
+    sync.after_download(ep, {"service": "RTLP"}, run, [], True)
+    assert sent == []  # not set: nothing sent
+    sync.SETTINGS["after_download_url"] = "http://hook/done"
+    sync.after_download(ep, {"service": "RTLP"}, run, [], True)
+    for t in sync.threading.enumerate():
+        if t.name == "after-download":
+            t.join(5)
+    url, body = sent[0]
+    assert url == "http://hook/done" and body["imported"] is True and body["service"] == "RTLP"
+    assert body["episode"]["code"] == "S02E05" and body["series"]["tvdbId"] == 111
+    assert body["files"] == [{"path": "/tv/Show/Season 2/Show.S02E05.mkv", "name": "Show.S02E05.mkv"}]
+
+
+def test_another_sonarrs_copies_take_the_service_options_the_series_adds_for_it(tmp_path, monkeypatch):
+    sync = load(tmp_path, monkeypatch)
+    config = {"series": {1: {"service": "AMZN", "options": {"--quality": "1080"}, "service_options": {"--tier": "x"},
+                             "sonarrs": {"4K": {"options": {"--quality": "2160"}, "service_options": {"--profile-name": "uhd"}}}}}}
+    got = sync.instance_config({"name": "4K", "quality_ladder": ""}, config)["series"][1]
+    assert got["options"] == {"--quality": "2160"} and got["service_options"] == {"--tier": "x", "--profile-name": "uhd"}
+    assert sync.instance_config({"name": "AV1", "quality_ladder": ""}, config)["series"][1]["service_options"] == {"--tier": "x"}

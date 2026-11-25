@@ -3,10 +3,19 @@ const argsOf = (opts) => Object.entries(opts || {}).flatMap(([f, v]) => v === tr
 function renderCommands() {
   const box = $("#dx-cmd");
   if (!box || !S.config.defaults) return;
-  box.textContent = ["unshackle dl", ...argsOf(S.config.defaults), "<service>", "<series>"].join(" ");
+  // a ladder picks the video: the options it takes over are left out, its steps said below
+  const without = (opts, lad) => lad ? Object.fromEntries(Object.entries(opts).filter(([f]) => !LADDER_FLAGS.includes(f))) : opts;
+  const top = ladderNamed(S.config.settings.quality_ladder);
+  box.textContent = ["unshackle dl", ...argsOf(without(S.config.defaults, top)), "<service>", "<series>"].join(" ");
+  ladderLine(box, top);
   document.querySelectorAll(".dx-svc-cmd").forEach((c) => {
-    const l = S.config.service_defaults?.[c.dataset.tag] || {};
-    c.textContent = ["unshackle dl", ...argsOf({ ...S.config.defaults, ...l.options }), c.dataset.tag, ...argsOf(l.service_options), "<series>"].join(" ");
+    const l = S.config.service_defaults?.[c.dataset.tag] || {}, lad = ladderNamed(l.ladder || S.config.settings.quality_ladder);
+    c.textContent = ["unshackle dl", ...argsOf(without({ ...S.config.defaults, ...l.options }, lad)), c.dataset.tag, ...argsOf(l.service_options), "<series>"].join(" ");
+    ladderLine(c, lad);
+  });
+  document.querySelectorAll(".dx-remote-note").forEach((n) => {  // --remote on, its server's options not listed (Unshackle 6.0.0)
+    const l = S.config.service_defaults?.[n.dataset.tag] || {};
+    n.hidden = n.dataset.known === "1" || !{ ...S.config.defaults, ...l.options }["--remote"];
   });
 }
 
@@ -20,22 +29,39 @@ async function renderServiceDefaults() {
     const own = el("div", { className: "opts" }), dl = el("div", { className: "opts" });
     const specs = await loadServiceOptions(tag);
     optionsEditor(dl, S.dlOptions, levels.options);
-    optionsEditor(own, specs, levels.service_options);
+    optionsEditor(own, specs, levels.service_options, true);
     const count = Object.keys(levels.options).length + Object.keys(levels.service_options).length + (levels.backend ? 1 : 0) + (levels.ladder ? 1 : 0);
     const servers = S.config.settings.backends || [];
     const backend = el("select", { onchange: (e) => { if (e.target.value) levels.backend = e.target.value; else delete levels.backend; dirty(); } },
       el("option", { value: "", textContent: "The main one (Settings, Unshackle)" }), ...servers.map((b) => el("option", { value: b.name, textContent: b.name })));
     backend.value = levels.backend || "";
-    const ladder = ladderSelect(levels.ladder, S.config.settings.quality_ladder, (v) => { if (v) levels.ladder = v; else delete levels.ladder; dirty(); });
+    const clash = el("div", { className: "ladder-clash" });
+    const clashes = () => ladderClash(clash, ladderNamed(levels.ladder || S.config.settings.quality_ladder), levels.options, renderServiceDefaults);
+    const ladder = ladderChips(levels.ladder, S.config.settings.quality_ladder, (v) => {
+      if (v) levels.ladder = v; else delete levels.ladder;
+      clashes(); dirty();
+    });
+    clashes();
     blocks.push(el("div", { className: "svc-block" },
       el("div", { className: "svc-block-head" }, el("b", { textContent: tag }),
         el("small", { textContent: count ? `${count} option${count > 1 ? "s" : ""}` : "Nothing set yet" }),
+        el("button", { className: "btn small", textContent: "Clear cache", title: `Deletes the logins, tokens and sessions Unshackle keeps for ${tag}: it logs in again next time`,
+          onclick: async (e) => {
+            e.target.disabled = true;
+            try {
+              const r = await api(`/api/unshackle/cache/${encodeURIComponent(tag)}/clear`, { method: "POST" });
+              toast(`${tag} cache cleared: ${r.freed_bytes >= 2 ** 20 ? `${(r.freed_bytes / 2 ** 20).toFixed(0)} MB` : `${Math.ceil(r.freed_bytes / 1024)} KB`} freed`);
+            } catch (err) { toast(err.message, true); }
+            e.target.disabled = false;
+          } }),
         el("button", { className: "btn small danger", textContent: "Remove", onclick: () => { delete all[tag]; dirty(); renderServiceDefaults(); } })),
       el("div", { className: "sx-grid svc-picks" },
         ...(servers.length || levels.backend ? [field("Unshackle server", backend, `Where ${tag} downloads.`)] : []),
-        field("Quality ladder", ladder, "Default: the one of Settings, Quality.")),
+        field("Quality ladder", ladder, "Default: the one of Settings, Quality.", clash)),
       el("span", { className: "sub", textContent: "Download options" }), dl,
-      ...(specs.length || Object.keys(levels.service_options).length ? [el("span", { className: "sub", textContent: `Options of ${tag}` }), own] : []),
+      el("span", { className: "sub", textContent: `Options of ${tag}` }), own,
+      el("small", { className: "help dx-remote-note", hidden: true, dataset: { tag, known: specs.some((s) => s.remote) ? "1" : "" },
+        textContent: "The remote server's options are not known with this Unshackle: write them as they are." }),
       el("div", { className: "dx-cmd" }, el("span", { textContent: `A ${tag} download starts as` }),
         el("code", { className: "dx-svc-cmd", translate: "no", dataset: { tag } }))));
   }
@@ -380,6 +406,7 @@ $("#bo-send").onclick = async (e) => {
     const r = await api("/api/backup/offsite", { method: "POST", body: JSON.stringify({ password: $("#bo-pw").value, settings }) });
     for (const k of Object.keys(settings).concat(["backup_remote_secret_set", "backup_passphrase_set"])) S.config.settings[k] = r.settings[k];
     savedConfig = configKey(S.config);  // saved on the server already: no unsaved change
+    savedUnits = configUnits(S.config);
     $("#bo-secret").value = $("#bo-pass").value = $("#bo-pw").value = "";
     if (r.sent.at) S.backups = { ...(S.backups || {}), offsite: r.sent };
     boKind = null;
@@ -644,7 +671,14 @@ async function save() {
   // Drop series with no service so the file only lists what Unshackle downloads.
   const series = Object.fromEntries(Object.entries(S.config.series).filter(([, c]) => c.service));
   // Keep S.config as is: the open editors hold references into it.
-  await api("/api/config", { method: "PUT", body: JSON.stringify({ ...S.config, series }) });
+  const units = configUnits(S.config);
+  const changed = [...new Set([...Object.keys(units), ...Object.keys(savedUnits)])].filter((u) => units[u] !== savedUnits[u]);
+  const base = Object.fromEntries(changed.map((u) => [u, S.config.versions?.[u] ?? null]));
+  const saved = await api("/api/config", { method: "PUT", body: JSON.stringify({ ...S.config, series, changed, base }) });
+  for (const u of changed) {  // only these are as the server has them now: the others keep the version they were loaded at
+    if (saved.versions?.[u]) S.config.versions[u] = saved.versions[u]; else delete S.config.versions?.[u];
+  }
+  savedUnits = units;
   unsaved = false;
   savedConfig = configKey(S.config);
   if (current) drawerSnapshot = { id: current.tvdbId, existed: true, conf: JSON.stringify(S.config.series[current.tvdbId]) };

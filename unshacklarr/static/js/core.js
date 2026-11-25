@@ -183,6 +183,12 @@ let unsaved = false;
 let savedConfig = "";  // the settings as last loaded or saved: a discard that brings them back clears the bar
 // what a save sends: a series opened without a service is not part of it
 const configKey = (c) => JSON.stringify({ ...c, series: Object.fromEntries(Object.entries(c.series || {}).filter(([, x]) => x.service)) });
+// Each part of the config (a section, a series) as last loaded or saved: a save sends which ones changed since, so
+// the server keeps what another tab changed meanwhile (web.merge_page_changes)
+let savedUnits = {};
+const configUnits = (c) => Object.fromEntries([
+  ...Object.entries(c).filter(([k]) => k !== "series" && k !== "versions").map(([k, v]) => [k, JSON.stringify(v)]),
+  ...Object.entries(c.series || {}).filter(([, x]) => x.service).map(([k, v]) => [`series:${k}`, JSON.stringify(v)])]);
 function dirty() {  // a change put back as it was hides the bar again
   renderCommands();
   unsaved = configKey(S.config) !== savedConfig;
@@ -218,7 +224,7 @@ function el(tag, { dataset, ...props } = {}, ...children) {
 }
 
 /* One row per option already set, plus a picker listing every other option the CLI knows. */
-function optionsEditor(root, specs, values) {
+function optionsEditor(root, specs, values, anyFlag = false) {  // anyFlag: a service's own options, any flag as written too
   root.replaceChildren();
   for (const [flag, value] of Object.entries(values)) {
     const spec = specs.find((s) => s.flag === flag) || { flag, help: "", is_flag: typeof value === "boolean", choices: [] };
@@ -238,23 +244,23 @@ function optionsEditor(root, specs, values) {
       el("code", { title: spec.help }, flag),
       input,
       el("button", { className: "rm", title: "Remove", ariaLabel: `Remove ${flag}`, textContent: "×",
-        onclick: () => { delete values[flag]; dirty(); optionsEditor(root, specs, values); } })));
+        onclick: () => { delete values[flag]; dirty(); optionsEditor(root, specs, values, anyFlag); } })));
   }
   const free = specs.filter((s) => !(s.flag in values)).sort((a, b) => a.flag.localeCompare(b.flag));
   if (!specs.length && !Object.keys(values).length) root.append(el("small", { className: "muted", textContent: "None." }));
-  if (!free.length) return;
+  if (!free.length && !anyFlag) return;
   root.append(optionPicker(free, (spec) => {
-    values[spec.flag] = spec.is_flag ? true : "";
+    values[spec.flag] = spec.value ?? (spec.is_flag ? true : "");
     dirty();
-    optionsEditor(root, specs, values);
+    optionsEditor(root, specs, values, anyFlag);
     // Straight to the new option's value (the last row), or back to the search for a flag.
     const rows = root.querySelectorAll(".opt");
     (spec.is_flag ? root.querySelector(".picker input") : rows[rows.length - 1]?.querySelector("input"))?.focus();
-  }));
+  }, anyFlag));
 }
 
 /* Search box over the options not set yet: matches the flag, its short form and its help. */
-function optionPicker(free, onPick) {
+function optionPicker(free, onPick, anyFlag = false) {
   const input = el("input", { type: "text", placeholder: "Add an option: type to search, e.g. lang, audio, atmos",
     role: "combobox", ariaAutoComplete: "list", ariaExpanded: "false", autocomplete: "off", spellcheck: false });
   const list = el("ul", { className: "picker-list", role: "listbox", hidden: true });
@@ -262,17 +268,29 @@ function optionPicker(free, onPick) {
   input.setAttribute("aria-controls", list.id);
   let shown = [], active = 0;
 
-  const rank = (s, q) => !q ? 0 : s.flag.replace(/^-+/, "").startsWith(q) ? 0 : s.flag.includes(q) || s.short.includes(q) ? 1 : 2;
+  // the flag as typed, case kept (AMZN's -B is not its -b): its exact short or long form first
+  const exact = (s, raw) => raw.startsWith("-") && (s.short === raw || s.flag === raw);
+  const rank = (s, q, raw) => exact(s, raw) ? -1 : !q ? 0 : s.flag.replace(/^-+/, "").startsWith(q) ? 0 : s.flag.includes(q) || s.short.includes(q) ? 1 : 2;
+  // A flag none of them is (a remote server's version of the service has options this one lacks): added as written,
+  // "-B" on, or "-X value" with its value
+  const typedFlag = () => {
+    const m = /^(-{1,2}[A-Za-z0-9][A-Za-z0-9-]*)(?:\s+(.+))?$/.exec(input.value.trim());
+    return anyFlag && m && !free.some((s) => exact(s, m[1])) ? { flag: m[1], short: "", help: "", is_flag: !m[2], value: m[2] ? m[2].trim() : true, typed: true } : null;
+  };
   function render() {
-    const q = input.value.trim().toLowerCase().replace(/^-+/, "");
+    const raw = input.value.trim().split(/\s+/)[0] || "";
+    const q = raw.toLowerCase().replace(/^-+/, "");
     shown = free
-      .filter((s) => !q || s.flag.includes(q) || s.short.includes(q) || s.help.toLowerCase().includes(q))
-      .sort((a, b) => rank(a, q) - rank(b, q) || a.flag.localeCompare(b.flag));
+      .filter((s) => !q || exact(s, raw) || s.flag.includes(q) || s.short.toLowerCase().includes(q) || s.help.toLowerCase().includes(q))
+      .sort((a, b) => rank(a, q, raw) - rank(b, q, raw) || a.flag.localeCompare(b.flag));
+    const typed = typedFlag();
+    if (typed) shown.push(typed);
     active = Math.min(active, Math.max(shown.length - 1, 0));
     list.replaceChildren(...(shown.length ? shown.map((s, i) => {
       const li = el("li", { role: "option", className: i === active ? "on" : "",
         onmousedown: (e) => { e.preventDefault(); onPick(s); } },
-        el("code", { textContent: s.flag }), el("span", { textContent: s.help }));
+        el("code", { textContent: s.typed ? `${s.flag}${s.value === true ? "" : ` ${s.value}`}` : exact(s, raw) && s.short === raw && s.flag !== raw ? `${s.short}, ${s.flag}` : s.flag }),
+        el("span", { textContent: s.typed ? "Add it as written: the service on the remote server may know it" : s.help }));
       li.id = `${list.id}-${i}`;
       li.setAttribute("aria-selected", i === active);
       return li;
@@ -306,6 +324,8 @@ function optionPicker(free, onPick) {
 
 const mainSonarr = () => S.config?.settings?.sonarr_name || "Sonarr";  // the main Sonarr where libraries are named
 const SEL = { on: false, ids: new Set() };  // the series picked to change together (js/bulk.js)
+// The names a series is searched by: Sonarr's title, its other titles there, its name in file names
+const seriesNames = (s) => [s.title, ...(s.altTitles || []), S.config.series[s.tvdbId]?.file_name || ""];
 function renderWall() {
   const q = $("#search").value.trim().toLowerCase();
   const svc = $("#f-service").value, lib = $("#f-library").value;
@@ -333,7 +353,7 @@ function renderWall() {
   const shown = S.series
     .filter((s) => {
       const on = S.config.series[s.tvdbId]?.service || "";
-      return (!q || s.title.toLowerCase().includes(q))
+      return (!q || seriesNames(s).some((n) => n.toLowerCase().includes(q)))
         && (!managed || (managed === "f" ? failing(s) : managed === "h" ? S.config.hidden_series.includes(s.tvdbId) : managed === "*" ? on : !on))
         && (!svc || on === svc)
         && (!lib || (lib === "-" ? !!s.id : libsOf(s).some((o) => o.name === lib)))
@@ -419,6 +439,10 @@ async function openDrawer(s, tab, fromRoute = false) {
   knownProfiles(conf.service);
   $("#d-release").value = conf.release_time || "";
   $("#d-release-day").value = String(conf.release_day || 0);
+  $("#d-release-gap").value = conf.release_gap || "";
+  $("#d-release-gap").placeholder = conf.broadcast?.gap || "";  // empty: its broadcast's (sync.release_slot)
+  $("#d-release-gap-help").textContent = "Two episodes the same evening, published one after the other. Empty: same time."
+    + (s.runtime ? ` Sonarr: ${s.runtime} min.` : "");
   $("#d-audio").value = conf.audio_accept || "";
   $("#d-audio").placeholder = S.config.settings?.audio_accept || "Example: fr, en";
   bcMonth = null;  // its own schedule's month: from its first day's
@@ -456,22 +480,27 @@ function renderSeriesState() {
   const conf = current && S.config.series[current.tvdbId], box = $("#ds-state");
   if (!conf) return;
   const sick = conf.service && S.health[current.tvdbId];
+  // a Sonarr it downloads for that doesn't monitor it: its wanted list never holds the episodes, nothing goes automatically
+  const unwatched = [...(current.id && !conf.main_off && current.monitored === false ? [mainSonarr()] : []),
+    ...(S.sonarrsOf?.[current.tvdbId] || []).filter((o) => o.monitored === false && !conf.sonarrs?.[o.name]?.off).map((o) => o.name)];
   const [cls, text] = !conf.service ? ["", "Not downloaded by Unshackle"]
     : sick ? ["down", `Its downloads from ${svcName(conf.service)} fail`]
     : !conf.title && !conf.programmes ? ["warn", `On ${svcName(conf.service)}: its series URL is missing`]
+    : unwatched.length ? ["warn", `Not monitored in ${unwatched.join(", ")}`]
     : conf.programmes ? ["ok", `Downloaded from ${svcName(conf.service)}, each episode its own programme`]
     : ["ok", `Downloaded from ${svcName(conf.service)}`];
   box.classList.remove("ok", "down", "warn");
   if (cls) box.classList.add(cls);
   $("#ds-state-text").textContent = text;
+  if (cls === "warn" && unwatched.length) $("#d-since").textContent = "Nothing downloads by itself: monitor it there.";
 }
 /* Service options only show for a service that has some; "stop" only for a managed series. */
 async function renderServiceOptions(conf) {
   renderSeriesState();
   const specs = await loadServiceOptions(conf.service).catch(() => []);  // Unshackle down: no options to offer
   if (current && S.config.series[current.tvdbId] !== conf && oneOff !== conf) return;  // another series opened meanwhile
-  $("#d-service-field").hidden = !specs.length && !Object.keys(conf.service_options).length;
-  optionsEditor($("#d-service-opts"), specs, conf.service_options);
+  $("#d-service-field").hidden = !conf.service;  // its options, or any flag written as the service on a remote server takes it
+  optionsEditor($("#d-service-opts"), specs, conf.service_options, true);
   $("#d-stop").hidden = !conf.service;
   renderInherited(conf);
   renderBroadcast();
@@ -592,7 +621,7 @@ async function applySuggestion(link) {
   renderSeriesState();
   renderMeta(current);
   renderCheck(current, true);  // Episodes offers to ask the service at once, as a typed link does
-  optionsEditor($("#d-service-opts"), await loadServiceOptions(conf.service).catch(() => []), conf.service_options);
+  optionsEditor($("#d-service-opts"), await loadServiceOptions(conf.service).catch(() => []), conf.service_options, true);
   dirty();
   renderWall();
 }

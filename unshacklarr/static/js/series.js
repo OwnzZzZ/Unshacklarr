@@ -27,6 +27,12 @@ $("#d-epname").onchange = (e) => { advConf().episode_name = e.target.value; advD
 $("#d-parts").onchange = (e) => { advConf().parts = Number(e.target.value) || undefined; advDirty(); };
 $("#d-release").oninput = (e) => { S.config.series[current.tvdbId].release_time = e.target.value; dirty(); renderReleaseNext(); };  // at once: Save shows then, not on leaving the field
 $("#d-audio").oninput = (e) => { S.config.series[current.tvdbId].audio_accept = e.target.value.trim() || undefined; dirty(); };
+$("#d-release-gap").oninput = (e) => {
+  const v = e.target.value === "" ? 0 : Number(e.target.value), bad = !Number.isInteger(v) || v < 0 || v > 600;
+  e.target.setCustomValidity(bad ? "A whole number of minutes, from 0 to 600" : "");
+  e.target.reportValidity();
+  if (!bad) { S.config.series[current.tvdbId].release_gap = v || undefined; dirty(); renderReleaseNext(); }
+};
 $("#d-release-day").onchange = (e) => { S.config.series[current.tvdbId].release_day = Number(e.target.value); dirty(); renderReleaseNext(); };
 /* The day a service publishes, from the day Sonarr says an episode airs: that day, the day after, or up to two weeks
    before (a platform ahead of the channel: sync.EARLY_DAYS_MAX). */
@@ -49,11 +55,11 @@ function broadcastDates(plan, eps) {
   const [fs, fe] = (/S(\d+)E(\d+)/i.exec(plan.from || "S01E01") || [0, 1, 1]).slice(1).map(Number);
   let todo = eps.filter((e) => e.seasonNumber > 0 && (e.seasonNumber > fs || (e.seasonNumber === fs && e.episodeNumber >= fe)))
     .sort((a, b) => a.seasonNumber - b.seasonNumber || a.episodeNumber - b.episodeNumber);
-  const [h, m] = plan.time.split(":").map(Number), day = new Date(`${plan.start}T00:00`);
+  const [h, m] = plan.time.split(":").map(Number), day = new Date(`${plan.start}T00:00`), gap = Number(plan.gap || 0);
   for (let i = 0; i < 3 * 366 && todo.length; i++, day.setDate(day.getDate() + 1)) {
     const n = broadcastCount(plan, day, plan.start);
     const at = new Date(day); at.setHours(h, m, 0, 0);
-    todo.slice(0, n).forEach((e) => out.set(e.id, at));
+    todo.slice(0, n).forEach((e, rank) => out.set(e.id, new Date(at.getTime() + gap * rank * 60000)));  // one after the other with a gap
     todo = todo.slice(n);
   }
   return out;
@@ -81,6 +87,7 @@ function renderBroadcast() {
   $("#d-bc-time").value = plan.time;
   $("#d-bc-every").value = plan.every;
   $("#d-bc-per").value = String(plan.per_evening || 1);
+  $("#d-bc-gap").value = plan.gap || "";
   $("#d-bc-days").hidden = plan.every === "daily";
   $("#d-bc-days").replaceChildren(...DAY_NAMES.map((name, i) => el("button", { type: "button", textContent: name,
     ariaPressed: String((plan.days || []).includes(i)), onclick: () => {
@@ -147,14 +154,27 @@ $("#d-bc-start").oninput = (e) => { if (!e.target.value) return; const plan = S.
 $("#d-bc-time").oninput = (e) => { if (e.target.value) { S.config.series[current.tvdbId].broadcast.time = e.target.value; changedBroadcast(); } };
 $("#d-bc-every").onchange = (e) => { S.config.series[current.tvdbId].broadcast.every = e.target.value; changedBroadcast(); };
 $("#d-bc-per").onchange = (e) => { S.config.series[current.tvdbId].broadcast.per_evening = Number(e.target.value); changedBroadcast(); };
+$("#d-bc-gap").oninput = (e) => {
+  const v = e.target.value === "" ? 0 : Number(e.target.value), bad = !Number.isInteger(v) || v < 0 || v > 600;
+  e.target.setCustomValidity(bad ? "A whole number of minutes, from 0 to 600" : "");
+  e.target.reportValidity();
+  if (bad) return;
+  S.config.series[current.tvdbId].broadcast.gap = v || undefined;
+  $("#d-release-gap").placeholder = v || "";  // the release gap follows it while empty
+  changedBroadcast();
+};
 /* When the series' next episode will be tried, as the settings stand: what they change, in sight. */
 function releaseSlot(conf, ep) {
-  const day = Number(conf.release_day || 0), time = conf.release_time || "";
+  const day = Number(conf.release_day || 0), time = conf.release_time || conf.broadcast?.time || "";  // sync.release_time
   if (!ep.airDateUtc || (!time && day >= 0)) return null;
   const at = new Date(ep.airDateUtc);
   at.setDate(at.getDate() + day);
   const [h, m] = (time || "00:00").split(":").map(Number);
   at.setHours(h, m, 0, 0);
+  const gap = Number(conf.release_gap || conf.broadcast?.gap || 0), evening = new Date(ep.airDateUtc).toDateString(), number = ep.seasonNumber * 1e4 + ep.episodeNumber;
+  const rank = gap ? Object.values(epSeasons || {}).flat().filter((e) => e.seasonNumber > 0 && e.airDateUtc
+    && new Date(e.airDateUtc).toDateString() === evening && e.seasonNumber * 1e4 + e.episodeNumber < number).length : 0;  // sync.evening_rank
+  at.setMinutes(at.getMinutes() + gap * rank);
   return at;
 }
 function renderReleaseNext() {
@@ -324,11 +344,13 @@ let epPages = {};  // Sonarr season -> a show of its own the service has for it,
 let epAvail = null;  // episode id -> what the service calls it, once "What's on <service>?" asked it
 let epTitles = null;  // everything the service lists then: [{key: "S26E11", part, name}]
 let epChecked = null;  // when that was
-/* TVDB's titles in your language (its website), over Sonarr's where it has none ("TBA"): a French series reads. */
+/* TVDB's titles in your language (its website), over Sonarr's where it has none ("TBA"): a French series reads. Kept
+   on each episode too: a service naming it in your language ("Donjon") is Sonarr's English one ("Dungeon"). */
 function localTitles(names) {
   for (const e of Object.values(epSeasons || {}).flat()) {
     const name = names?.[e.id];
-    if (name && (!e.title || e.title === "TBA")) { e.title = name; e.localTitle = true; }
+    if (name) e.localName = name;
+    if (name && (!e.title || /^(tba|tbc)$/i.test(e.title))) { e.title = name; e.localTitle = true; }
   }
 }
 const svcName = (tag) => S.serviceNames?.[tag] || tag;  // "RMC+" for RMCP
@@ -783,7 +805,10 @@ function pickServiceEpisode(e, sx, theirs, svc, missing) {
       const name = (items[0].name || "").replace(/\s*\(\d+\s*\/\s*\d+\)\s*$/, "");
       opts.push([key, `${key} · ${name ? `${name} · ` : ""}parts ${parts.map((t) => t.part).join(" + ")}`]);
       for (const t of parts) opts.push([`${key}.${t.part}`, `${key}.${t.part} · ${t.name || `part ${t.part}`}`]);
-    } else opts.push([key, `${key}${items[0].name ? ` · ${items[0].name}` : ""}`]);
+    } else {  // TF1+ numbers both parts of an episode alike: both come with that number, both are listed
+      const names = [...new Set(items.map((t) => t.name).filter(Boolean))].sort();
+      opts.push([key, `${key}${names.length ? ` · ${names.join(" + ")}` : ""}`]);
+    }
   }
   if (!opts.some(([v]) => v === (theirs || ""))) opts.unshift([theirs || "", theirs ? `${theirs} · not on ${svc}` : "Nothing: before the first episode"]);
   const titled = elsewhere(e) && epAvail[e.id].service;
@@ -840,9 +865,10 @@ const elsewhere = (e) => ["title", "absolute"].includes(epAvail?.[e.id]?.match);
 function agreement(e, theirs, found, svc) {
   if (!theirs) return "";
   if (!found.length) return el("span", { className: "st bad", textContent: `Not on ${svc}` });
-  const ours = plainTitle(e.title), other = plainTitle(found[0].name), generic = /^(tba|tbd|episode( \d+)?)$/;
+  const ours = plainTitle(e.title), other = plainTitle(found[0].name), generic = /^(tba|tbd|tbc|episode( \d+)?)$/;
   const titled = epAvail?.[e.id]?.match === "title" && epAvail[e.id].service === theirs;
-  if (titled || (ours && other && (ours === other || ours.includes(other) || other.includes(ours))))
+  const meets = (a) => a && other && (a === other || a.includes(other) || other.includes(a));
+  if (titled || meets(ours) || meets(plainTitle(e.localName)))  // Sonarr's title, or TVDB's in your language
     return el("span", { className: "st ok", textContent: "✓ Same title" });
   if (!ours || !other || generic.test(ours) || generic.test(other)) return "";
   return el("span", { className: "st warn", textContent: "Other title", title: `In Sonarr: ${e.title}\nOn ${svc}: ${found[0].name}` });

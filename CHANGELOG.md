@@ -6,6 +6,130 @@ Every change worth knowing, newest first. The format follows
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-11-25
+
+Long jobs you can steer while they run, proxies that hold, ready for Unshackle 7, and a security update of
+aiohttp: update soon if Unshacklarr can be reached from outside your network.
+
+### Security
+
+- **aiohttp 3.14.4.** Eight advisories fixed, three of them high: the server no longer waits without end for a
+  request's headers, can no longer be made to use too much memory, CPU or file descriptors, and parses requests more
+  strictly. (#24)
+- **certifi 2026.10.23.** The emSign root certificates, whose intermediate keys were compromised, are no longer
+  trusted for Unshacklarr's own HTTPS connections (a critical advisory).
+
+### Added
+
+**📦 Long jobs**
+- **A bar at the bottom of a job.** The episode going on stays in sight however long the job; one tap on the bar opens
+  its output, a click beside folds it. On a phone, the job's buttons are in it too.
+- **Show or hide a job's episodes.** Click Done, Queued, Failed… in a job to hide those episodes or show them again.
+- **Options of a job.** While it runs, its download and service options can be changed for the episodes still to
+  come, starting from the ones they have now; the series stays as it is.
+- **Retry the failed episodes while the job runs**, and a retry goes before the episodes still to come.
+- **Retry with other options.** An attempt's Retry with… downloads it once with other download or service options,
+  starting from the series' own; the series stays as it is.
+- **A job survives a restart.** Its queued episodes are kept on disk and queued again when Unshacklarr starts; a paused
+  job stays paused.
+- **Delete the job.** A job that is over leaves the history in one click.
+- **The video's codec in Activity.** Video 1080p SDR H.265: the codec asked while it downloads, the file's once made.
+
+**🌐 Proxies**
+- **A proxy that fails is tried again**, at once, 3 times, each on another server of the provider (nordvpn:fr). If it
+  still fails, the job pauses and you are told, instead of failing every episode left.
+
+**🎧 Services and languages**
+- **orig in the accepted audio languages.** Each series' original language as Sonarr gives it, so "orig, fr" works for
+  every series at once. In Settings › Download options.
+- **Clear one service's cache.** In Settings › Per service, without logging every other service out. Unshacklarr
+  needs to see Unshackle's Cache folder (`CACHE_DIR` with Docker).
+- **Any service option.** A flag the service on a remote server knows, such as AMZN's `-B`, can be written as is in a
+  service's or a series' options.
+- **The API speaks the service's numbering.** `"numbering": "service"` takes Disney+'s S04E05 for the episode it is in
+  Sonarr, and `"audio": "fr"` lets Unshacklarr decide: download, download again, or add the French track.
+
+**🧩 Unshackle 7**
+- **A remote server's login questions.** An OTP or a PIN its login asks while it lists a series comes to the bell,
+  with a field to answer.
+- **What your Unshackle supports**, in Settings › Unshackle, each with what it needs; a series set to `--remote` on
+  an Unshackle that cannot run it is told in the bell.
+- **Its log, errors by service and remote sessions** in Settings › Unshackle, even in Docker, once `unshackle.yaml`
+  has a `serve: dashboard: key:` and Unshacklarr sees that file.
+- **Restart waits for the downloads**, with that key too: Restart in Settings › Unshackle says Unshackle is busy
+  instead of cutting them.
+- **`--generate-dv`.** With `-r HYBRID`, Dolby Vision made from the HDR10+ when a title has none. In Download options.
+- **`--include-sample`**: a 60 second sample of each file, in a Sample folder next to it. In Download options.
+- **Proxies by network or IP.** `nordvpn:fr@187.14.108.15`, `nordvpn:ca@-datacamp`: the API's `proxy` takes them.
+- **Clear finished**, in Settings › Unshackle › Maintenance: Unshackle forgets its finished downloads.
+- **The editor knows the new keys** of `unshackle.yaml`: `codec_names`, `muxing.track_names`, `original_label`…
+
+**⏰ Release times**
+- **Next episode.** Two episodes the same evening, published one after the other: the second is tried that many
+  minutes later. In a series' When, and in its Broadcast schedule, where it spaces the episodes' times.
+
+**📶 Quality ladders, simpler**
+- **Ladders as chips.** A service or a series picks its ladder in one tap; Edit ladders leads to Settings, Quality.
+- **What the ladder takes over is said.** `--quality`, `--vcodec` and `--vbitrate-range` set at that level are flagged
+  with one button to remove them; with a ladder they are no longer applied, and the command shows the ladder's video.
+- **A highest bitrate per step.** 1080p up to 6000 kbps, 4K at its best: a cap on one step only.
+- **Try unlisted codecs.** A ladder can try its AV1 or H.265 step even when the service lists only H.264, as Amazon
+  does through serve.
+
+**🗂️ Several Sonarr, scripts and checks**
+- **Service options per Sonarr.** A series' 4K or AV1 copy can use another profile or flags, in its Libraries, Advanced.
+- **After download.** Each episode downloaded is posted as JSON to your script: series, Sonarr, episode and file paths.
+- **Read-only files.** The Cookies page lists Unshackle's files it can no longer write, often left to root by a
+  `docker exec`.
+- **Search by any title.** The series search also finds a series by its other titles in Sonarr and its name in files.
+- **Not monitored.** A series' page warns when a Sonarr it downloads for doesn't monitor it: nothing would come by itself.
+
+### Fixed
+
+- **A service's failed login is no longer called a refused API key.** Serve's own reason is shown instead, so you
+  don't look for a fault in a key that works. (#25, by mj23au)
+- **Service options now reach a remote server.** `-B`, `--atmos` and the others were left out of a download through it.
+- **A broadcast's time is the release time when none is set.** An episode is tried the minute it airs, not at the next sync.
+- **The gap to the next episode and the release day count from the broadcast's time too.** They were dropped on save without a release time.
+- **Video files a service refuses are no longer blamed on its cookies.** The message points to the download's proxy instead.
+- **A page open in another tab no longer undoes your changes.** A save only sends what it changed; the same thing
+  changed in two places is refused with a message to reload. Settings edited by hand apply without a restart.
+- **A Sonarr taken out of Settings no longer blocks saving a series** that had options for it.
+- **The real error on Activity.** A failure that only said "exit code 1" now shows the last error it logged.
+- **An episode not out yet is no longer a failure.** Unshackle's "No titles found" is read as *not on the service yet*: tried again, and the release-time tries go on.
+- **A service's `--profile` stays the service's.** Netflix's `--profile PRK_DO` was taken as an account profile and
+  shown before the service in the command.
+- **Activity no longer freezes with a large job.** The episodes that don't change are no longer redrawn every second.
+- **More episodes found by their title.** "TBC" counts as no title, like "TBA"; TVDB's "PAGE 14 Donjon" is Netflix's
+  "Donjon"; a title only translated ("Dungeon", "Donjon") is no longer marked *Other title*.
+- **Quality ladders with `--remote`.** A remote download reads the episode's tracks too, so its ladder and languages
+  are checked before it starts instead of failing.
+- **No false alarm before a premiere.** A new series or season with nothing out yet is no longer told to check its URL.
+- **The output's scrollbar can be dragged.** The text covered it when the output was wider than its box.
+- **Seasons on the service on a phone.** The field gets the full keyboard, so `=` and `,` can be typed.
+- **`--remote` with the official Unshackle.** A download through a remote server and its options now go through
+  Unshackle's own API (Unshackle 7); with 6.0.0, Per service says the options are not known and to write them as is.
+- **A series downloaded through `--remote` is also listed and searched there.** Its episodes no longer start the
+  service here, where it may not be set up (NF stopped with "Service NF exited").
+- **Retries with Unshackle 7.** A network or service hitch it now answers with 424, and a server about to
+  restart, are tried again as before.
+- **Unshackle 7 starts when Unshacklarr runs it itself.** It now asks for the key on its health check, so Unshacklarr
+  waited 90 s and gave up.
+- **Updating Unshackle's container brings the new Unshackle.** The build kept its first copy, so the version stayed
+  the one first installed. (#28)
+- **Parts joined.** Two parts encoded with slightly different settings (same codec, size and frame rate) are joined, no longer kept apart.
+- **No more false cookie warnings.** Crave's load balancer cookies (a week) and Apple's `utsdc` (an hour) no longer
+  count as the date the login ends.
+
+### Removed
+
+What only a fork of Unshackle gave: Unshacklarr now needs nothing but the official Unshackle.
+- **The CDM devices' test, details and reprovisioning**, and the *A CDM device fails* alert. Adding, deleting and
+  choosing a device stay.
+- **The TV login code box.** Disney+ now shows its code as Unshackle's own notice on the download.
+- **Unshackle's log in Activity**, and the proxy and CDM a download went through. With it, the output's
+  Essentials/Debug switch: Settings' debug mode alone says how much the output shows.
+
 ## [1.5.0] - 2026-10-17
 
 Several Sonarr at once, the audio of your language added to the files you have, Upgrades that run by themselves,
@@ -319,6 +443,7 @@ New options are off until you turn them on, except Upgrades' automatic check (0 
 - **Every tool in the images** is pinned and checked.
 - **oauthlib 4.0.0**, for two advisories.
 
+[1.6.0]: https://github.com/OwnzZzZ/Unshacklarr/releases/tag/v1.6.0
 [1.5.0]: https://github.com/OwnzZzZ/Unshacklarr/releases/tag/v1.5.0
 [1.4.0]: https://github.com/OwnzZzZ/Unshacklarr/releases/tag/v1.4.0
 [1.3.2]: https://github.com/OwnzZzZ/Unshacklarr/releases/tag/v1.3.2

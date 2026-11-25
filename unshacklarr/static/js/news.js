@@ -3,6 +3,7 @@
    too. A new install starts with nothing new. The window shows the release notes, read from the CHANGELOG, one
    release per row; a change whose title is an option's below gets a way to it. */
 const NEWS = [
+  { id: "release-gap", version: "1.6.0", title: "Next episode", series: true, target: 'label[for="d-release-gap"]' },
   { id: "download-window", version: "1.5.0", title: "Download window", sec: "automation", target: "#ax-window-card" },
   { id: "learn-release", version: "1.5.0", title: "Auto release times", sec: "automation", target: "#ax-learn-card" },
   { id: "add-audio", version: "1.5.0", title: "Add audio track", sec: "downloads", target: ".up-mode" },
@@ -20,6 +21,14 @@ const NEWS = [
   { id: "upgrade-spread", version: "1.5.0", title: "Spread the questions", sec: "upgrades", target: "#ug-spread-field" },
   { id: "upgrade-new", version: "1.5.0", title: "Check new series", sec: "upgrades", target: "#ug-new-field" },
   { id: "downloads-at-once", version: "1.5.0", title: "Downloads at once", sec: "unshackle", target: "#ux-at-once-field" },
+  { id: "orig-audio", version: "1.6.0", title: "orig in the accepted audio languages", sec: "downloads", target: "#dx-audio" },
+  { id: "service-cache", version: "1.6.0", title: "Clear one service's cache", sec: "downloads", target: "#svc-defaults" },
+  { id: "any-service-option", version: "1.6.0", title: "Any service option", sec: "downloads", target: "#svc-defaults" },
+  { id: "sonarr-service-options", version: "1.6.0", title: "Service options per Sonarr", series: true, target: "#d-libs-adv" },
+  { id: "after-download", version: "1.6.0", title: "After download", sec: "notifications", target: "#nt-after-card" },
+  { id: "ladder-blind", version: "1.6.0", title: "Try unlisted codecs", sec: "quality", target: ".ql-blind" },
+  { id: "ladder-chips", version: "1.6.0", title: "Ladders as chips, a bitrate per step", sec: "downloads", target: "#svc-defaults" },
+  { id: "dl-generate-dv-sample", version: "1.6.0", title: "--generate-dv and --include-sample", sec: "downloads", target: "section.sx-card:has(#defaults)" },
 ];
 const NEWS_KINDS = { new: "New", improved: "Improved", fix: "Fix", security: "Security", note: "Note" };
 const versionKey = (v) => String(v || "0").split(".").map((n) => parseInt(n, 10) || 0).reduce((a, n) => a * 1000 + n, 0);

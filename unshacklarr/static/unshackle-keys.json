@@ -15,6 +15,10 @@
   "info": "Fallback template for chapter names, e.g.",
   "type": "str"
  },
+ "codec_names": {
+  "info": "Renames the codec and HDR names in the filename.",
+  "type": "dict"
+ },
  "continue_downloads": {
   "info": "Keep a failed download's completed segment files so the next download resumes from where it",
   "type": "bool"
@@ -137,8 +141,16 @@
     "info": "Audio codec(s), e.g.",
     "type": "list"
    },
+   "audio_description": {
+    "info": "Include descriptive (audio-description) tracks.",
+    "type": "bool"
+   },
+   "audio_description_only": {
+    "info": "Keep only descriptive (audio-description) tracks.",
+    "type": "bool"
+   },
    "best_available": {
-    "info": "Warn instead of failing when a requested resolution, range, or language is missing.",
+    "info": "Warn instead of failing when a requested resolution, range, or language is missing, or when one DRM system does not license under --all-drm.",
     "type": "bool"
    },
    "channels": {
@@ -155,6 +167,14 @@
    },
    "forced_subs": {
     "info": "Include forced subtitle tracks.",
+    "type": "bool"
+   },
+   "forced_subs_only": {
+    "info": "Keep only forced subtitle tracks; implies forced_subs.",
+    "type": "bool"
+   },
+   "generate_dv": {
+    "info": "With -r HYBRID, make Dolby Vision from the HDR10+ metadata when a title has no DV track.",
     "type": "bool"
    },
    "lang": {
@@ -216,6 +236,22 @@
   "info": "Settings for extracting cookies directly from a local Firefox profile.",
   "type": "dict"
  },
+ "generate_dv_mode": {
+  "info": "How --generate-dv sets the Level 1 brightness",
+  "keys": {
+   "legacy": {
+    "info": "The dovi_tool generate --hdr10plus-json average."
+   },
+   "v40": {
+    "info": "The same average, at least about 10 nits, as in studio Dolby Vision (CM v4.0)."
+   }
+  },
+  "type": "str"
+ },
+ "hdr10plus_probe": {
+  "info": "Find the HDR10+ tracks that a service labels as HDR10.",
+  "type": "bool"
+ },
  "headers": {
   "info": "Default HTTP headers merged into every HTTP session unshackle makes.",
   "type": "dict"
@@ -270,9 +306,17 @@
     "info": "Merge video tracks that share height, range, and codec into one file, so only language varies inside a file.",
     "type": "bool"
    },
+   "original_label": {
+    "info": "Text that unshackle adds after the name of an audio or subtitle track in the title's original language, such as [Original].",
+    "type": "str"
+   },
    "set_title": {
     "info": "Write a human-readable title into the MKV container.",
     "type": "bool"
+   },
+   "track_names": {
+    "info": "The language of the name unshackle gives a track that the service left unnamed: english (Chinese (Traditional)), native, the name in the language itself (\u4e2d\u6587\uff08\u7e41\u9ad4\uff09), or none, which leaves the track unnamed.",
+    "type": "str"
    }
   },
   "type": "dict"
@@ -417,7 +461,7 @@
     "type": "dict"
    },
    "device_name": {
-    "info": "ChromeCDM, L1, L2 (Widevine) or SL2, SL3 (PlayReady)"
+    "info": "ChromeCDM, L1, L2, L3 (Widevine) or SL2, SL3 (PlayReady)."
    },
    "endpoints": {
     "info": "get_request and decrypt_response, each {path, method, timeout}",

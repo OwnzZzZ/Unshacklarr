@@ -63,7 +63,7 @@ function uyComplete(ctx) {
 }
 async function uyEditor(text) {
   CM ||= await import("/codemirror.js?v=6.0.2");
-  uy.keys ||= await fetch("/unshackle-keys.json?v=5.5.0").then((r) => r.json()).catch(() => ({}));
+  uy.keys ||= await fetch("/unshackle-keys.json?v=6.1.0-dev").then((r) => r.json()).catch(() => ({}));
   api("/api/cdm").then((d) => { uy.devices = d.devices.map((x) => x.name); }).catch(() => {});
   const colours = CM.HighlightStyle.define([
     { tag: [CM.tags.propertyName, CM.tags.definition(CM.tags.propertyName)], color: "var(--accent)" },

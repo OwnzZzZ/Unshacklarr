@@ -296,9 +296,13 @@ def read_config() -> dict:
         stamp = (st.st_mtime_ns, st.st_size, st.st_ino)
     except FileNotFoundError:
         stamp = ()
-    if not stamp or stamp != config_read[0]:
+    before = config_read[0]  # read once: two requests may read the file at the same time
+    if not stamp or stamp != before:
         parsed = yaml.load(SERIES_FILE.read_text(encoding="utf8"), Loader=YAML_LOADER) if stamp else None
+        edited = bool(before)  # changed outside Unshacklarr (by hand): not at startup, not after its own write
         config_read = (stamp, parsed or {})
+        if edited:  # its settings too (another Sonarr removed…), not only its series: no restart needed
+            sonarr_sync.apply_settings(sonarr_sync.load_settings(parsed or {}))
     config = copy.deepcopy(config_read[1])
     return {
         "settings": config.get("settings") or {},
@@ -371,8 +375,9 @@ def real_config(body: dict, saved: dict) -> None:
         if isinstance(show.get("fallback"), dict):
             show["fallback"]["service_options"] = real_options(show["fallback"].get("service_options"), ((before or {}).get("fallback") or {}).get("service_options"))
         for name, per in (show.get("sonarrs") or {}).items() if isinstance(show.get("sonarrs"), dict) else ():
-            if isinstance(per, dict) and "options" in per:  # the options this series adds for another Sonarr's copies
-                per["options"] = real_options(per.get("options"), (((before or {}).get("sonarrs") or {}).get(name) or {}).get("options"))
+            for level in OPTION_LEVELS:  # the options this series adds for another Sonarr's copies
+                if isinstance(per, dict) and level in per:
+                    per[level] = real_options(per.get(level), (((before or {}).get("sonarrs") or {}).get(name) or {}).get(level))
     notifications = body.get("notifications") or {}
     urls = [t["url"] for t in sonarr_sync.notification_targets(saved["notifications"])]
     for target in notifications.get("targets") or []:
@@ -394,11 +399,94 @@ def public_config(config: dict) -> dict:
     service_defaults = {svc: {**lv, **{level: masked_options(lv.get(level)) for level in OPTION_LEVELS}} for svc, lv in config["service_defaults"].items()}
     series = {key: {**show, **{level: masked_options(show.get(level)) for level in OPTION_LEVELS if level in show},
                     **({"fallback": {**show["fallback"], "service_options": masked_options(show["fallback"].get("service_options"))}} if show.get("fallback") else {}),
-                    **({"sonarrs": {name: {**per, "options": masked_options(per.get("options"))} if isinstance(per, dict) and "options" in per else per
+                    **({"sonarrs": {name: {**per, **{level: masked_options(per.get(level)) for level in OPTION_LEVELS if level in per}} if isinstance(per, dict) else per
                                     for name, per in show["sonarrs"].items()}} if isinstance(show.get("sonarrs"), dict) else {})}
               for key, show in config["series"].items()}
-    return {**{k: v for k, v in config.items() if k not in ("auth", "settings")}, "settings": shown, "notifications": notifications,
-            "defaults": masked_options(config["defaults"]), "service_defaults": service_defaults, "series": series}
+    public = {**{k: v for k, v in config.items() if k not in ("auth", "settings")}, "settings": shown, "notifications": notifications,
+              "defaults": masked_options(config["defaults"]), "service_defaults": service_defaults, "series": series}
+    return {**public, "versions": unit_versions(public)}
+
+
+def config_units(public: dict) -> dict:
+    """The parts a page saves on their own: each section, and each series ("series:<tvdb>")."""
+    units = {k: v for k, v in public.items() if k not in ("series", "versions")}
+    units.update({f"series:{k}": v for k, v in (public.get("series") or {}).items()})
+    return units
+
+
+UNIT_SEEN: dict[str, object] = {}  # the parts as pages got them, by fingerprint: what a later save changed from
+UNIT_SEEN_MAX = 5000
+
+
+def unit_versions(public: dict) -> dict:
+    """A short fingerprint of each part as the page got it: a save says which parts it changed and from which version."""
+    versions = {}
+    for unit, value in config_units(public).items():
+        text = json.dumps(value, sort_keys=True, default=str)
+        versions[unit] = digest = hashlib.sha256(text.encode()).hexdigest()[:12]
+        UNIT_SEEN[digest] = json.loads(text)
+    while len(UNIT_SEEN) > UNIT_SEEN_MAX:  # the oldest first (insertion order)
+        UNIT_SEEN.pop(next(iter(UNIT_SEEN)))
+    return versions
+
+
+def merge_unit(base, mine, now):
+    """A part the page changed while it changed here too: key by key from the version the page started from, the
+    page's changes over the saved ones. None when both changed the same key differently (or nothing to go by)."""
+    if mine == now:
+        return mine
+    if not (isinstance(base, dict) and isinstance(mine, dict) and isinstance(now, dict)):
+        return None
+    out = {}
+    for key in {**base, **mine, **now}:
+        b, m, n = base.get(key), mine.get(key), now.get(key)
+        if m == b:
+            v = n
+        elif n in (b, m):
+            v = m
+        else:
+            return None
+        if v is not None:
+            out[key] = v
+    return out
+
+
+def merge_page_changes(body: dict, current: dict) -> None:
+    """A page sends its whole config, but only the parts it changed (body["changed"]) are taken from it; the others
+    stay as saved, so a tab opened before another change no longer writes old settings back. A part changed both
+    here and elsewhere since the page loaded it is merged key by key; the same key changed both ways is a conflict.
+    A page that sends no "changed" saves everything, as before."""
+    if not isinstance(body.get("changed"), list):
+        return
+    changed, base = {str(u) for u in body.pop("changed")}, body.pop("base", None) or {}
+    norm = lambda v: json.loads(json.dumps(v, sort_keys=True, default=str))  # noqa: E731
+    now = norm(config_units(current))
+    versions = unit_versions(current)
+    mine = norm(config_units({**body, "series": {str(k): v for k, v in (body.get("series") or {}).items()}}))
+    taken, clash = {}, []
+    for unit in changed:
+        if unit not in mine and unit not in now:
+            continue
+        if base.get(unit) == versions.get(unit):
+            taken[unit] = mine.get(unit)
+        elif (merged := merge_unit(UNIT_SEEN.get(base.get(unit)), mine.get(unit), now.get(unit))) is not None:
+            taken[unit] = merged
+        else:  # the same key changed both ways, or a series taken out here and changed elsewhere
+            clash.append(unit)
+    if clash:
+        if all(u.startswith("series:") for u in clash):
+            raise web.HTTPConflict(text="This series was changed elsewhere since this page was loaded. Reload the page, then make your change again.")
+        raise web.HTTPConflict(text="These settings were changed elsewhere since this page was loaded. Reload the page, then make your change again.")
+    for section in [k for k in now if not k.startswith("series:")]:
+        body[section] = taken[section] if section in taken else current[section]
+    series = {str(k): v for k, v in (current.get("series") or {}).items()}
+    for unit, value in taken.items():
+        if unit.startswith("series:"):
+            if value is None:
+                series.pop(unit.split(":", 1)[1], None)  # taken out of Unshacklarr on this page
+            else:
+                series[unit.split(":", 1)[1]] = value
+    body["series"] = series
 
 
 def tmdb_error(e: requests.RequestException) -> str:
@@ -445,9 +533,13 @@ def series_entry(s: dict) -> dict:
             "year": s.get("year"),
             "monitored": s.get("monitored"),
             "status": s.get("status"),  # continuing, ended, upcoming: Suggest services looks at the living ones
+            "runtime": s.get("runtime"),  # minutes: the gap between two episodes of an evening, when none is set
             "network": s.get("network"),  # its channel: its catch-up service when TMDB links to none
             "missing": max(0, stats.get("episodeCount", 0) - stats.get("episodeFileCount", 0)),
             "poster": poster,
+            # its other titles in Sonarr (TVDB's, in other languages): the search finds the series by them too
+            **({"altTitles": alt} if (alt := sorted({str(a["title"]) for a in s.get("alternateTitles") or []
+                                                     if a.get("title") and a["title"] != s["title"]})) else {}),
             # a season's own name, where Sonarr has one (Sonarr 5: a documentary strand's, an anime's arcs)
             **({"seasonTitles": titles} if (titles := {str(x["seasonNumber"]): str(x["title"]) for x in s.get("seasons") or []
                                                        if x.get("title")}) else {}),
@@ -581,7 +673,7 @@ async def service_options(request):
         raise web.HTTPBadGateway(text=str(e))
 
 
-def check_series_sonarrs(value, body: dict, dl_specs: list[dict], where: str) -> dict:
+def check_series_sonarrs(value, body: dict, dl_specs: list[dict], where: str, service_specs: list[dict] | None = None) -> dict:
     """A series' own settings for each other Sonarr: {name: {"off", "options"}}; its ladder and After the download
     are that Sonarr's, for every series. Only the Sonarrs in Settings; empty ones are left out."""
     if not value:
@@ -591,26 +683,32 @@ def check_series_sonarrs(value, body: dict, dl_specs: list[dict], where: str) ->
     names = {str(i.get("name") or "") for i in (body.get("settings") or {}).get("sonarrs") or []} | set(sonarr_sync.SONARRS)
     out = {}
     for name, per in value.items():
-        if name not in names or not isinstance(per, dict):
-            raise web.HTTPBadRequest(text=f"{where}: no Sonarr named {name} in Settings, Sonarr")
+        if name not in names:  # a Sonarr taken out of Settings: what the series had for it goes with it
+            continue
+        if not isinstance(per, dict):
+            raise web.HTTPBadRequest(text=f"{where}: the settings for Sonarr {name} must be an object")
         own = {}
         if per.get("off") is True:  # its new episodes are not downloaded for that Sonarr
             own["off"] = True
         if opts := check_options(per.get("options") or {}, dl_specs, f"{where} in {name}"):
             own["options"] = opts
+        if opts := check_options(per.get("service_options") or {}, service_specs, f"{where} in {name}", free=True):
+            own["service_options"] = opts  # the service's own options for that Sonarr's copies (another profile)
         if own:
             out[name] = own
     return out
 
 
-def check_options(opts: dict, specs: list[dict] | None, where: str) -> dict:
+def check_options(opts: dict, specs: list[dict] | None, where: str, free: bool = False) -> dict:
     """Only options Unshackle defines, with values of their type. None: the service's
-    options are not known (Unshackle unreachable), so only their shape is checked."""
+    options are not known (Unshackle unreachable), so only their shape is checked. free: a service's own options, any
+    flag as written too (-B, a remote server's version of the service may have options this one lacks)."""
     by_flag = {s["flag"]: s for s in specs} if specs is not None else None
     for flag, value in opts.items():
-        if by_flag is not None and flag not in by_flag:
+        shape = r"-{1,2}[A-Za-z0-9][A-Za-z0-9-]*" if free else r"--[a-z0-9][a-z0-9-]*"
+        if by_flag is not None and flag not in by_flag and not free:
             raise web.HTTPBadRequest(text=f"Unknown option {flag} in {where}")
-        if not re.fullmatch(r"--[a-z0-9][a-z0-9-]*", flag) or not isinstance(value, (bool, str, int, float)):
+        if not re.fullmatch(shape, flag) or not isinstance(value, (bool, str, int, float)):
             raise web.HTTPBadRequest(text=f"Invalid option {flag} in {where}")
     try:
         options.to_params(opts, specs or [])
@@ -645,7 +743,7 @@ async def series_search(request):
     if not show.get("service") or not query:
         raise web.HTTPBadRequest(text="Pick a service and type a name first")
     dl, _ = sonarr_sync.stacked(show, read_config())
-    params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy")}
+    params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy", "remote", "server")}
     try:
         backend = await asyncio.to_thread(sonarr_sync.backend_for, show["service"])
         found = await asyncio.to_thread(backend.call, "POST", "/api/search", json={**params, "service": show["service"], "query": query})
@@ -679,6 +777,7 @@ async def service_profiles(request):
 async def save_config(request):
     body = await json_object(request)
     previous = read_config()
+    merge_page_changes(body, public_config(previous))
     real_config(body, previous)  # the secrets the browser only saw masked
     dl_specs = options.dl_specs()
     known = await asyncio.to_thread(known_services)
@@ -693,7 +792,7 @@ async def save_config(request):
             "service": service,
             "title": title,
             "options": check_options(show.get("options") or {}, dl_specs, str(key)),
-            "service_options": check_options(show.get("service_options") or {}, service_specs, str(key)),
+            "service_options": check_options(show.get("service_options") or {}, service_specs, str(key), free=True),
         }
         series[int(key)].update(check_numbering(show, str(key)))
         # The automatic sync only takes episodes aired from here on: see sonarr_sync.wanted_automatically.
@@ -708,7 +807,16 @@ async def save_config(request):
             if not re.fullmatch(r"([01]\d|2[0-3]):[0-5]\d", release_time):
                 raise web.HTTPBadRequest(text=f"The release time of {key} must look like 23:30")
             series[int(key)]["release_time"] = release_time
-        if day and (release_time or day < 0):  # the day after means nothing without a time; days before do
+        try:  # minutes between two episodes of the same evening
+            gap = int(show.get("release_gap") or 0)
+        except (TypeError, ValueError):
+            raise web.HTTPBadRequest(text=f"The gap between episodes of {key} must be a whole number of minutes") from None
+        if not 0 <= gap <= 600:
+            raise web.HTTPBadRequest(text=f"The gap between episodes of {key} must be from 0 to 600 minutes")
+        timed = sonarr_sync.release_time(show)  # its own, else its broadcast's: the gap and the day count from it
+        if gap and timed:
+            series[int(key)]["release_gap"] = gap
+        if day and (timed or day < 0):  # the day after means nothing without a time; days before do
             series[int(key)]["release_day"] = day
         if show.get("broadcast"):
             series[int(key)]["broadcast"] = check_broadcast(show["broadcast"], str(key))
@@ -735,7 +843,7 @@ async def save_config(request):
             series[int(key)]["ladder"] = ladder
         if show.get("skip_upgrades") is True:  # left out of Activity, Upgrades
             series[int(key)]["skip_upgrades"] = True
-        if per := check_series_sonarrs(show.get("sonarrs"), body, dl_specs, str(key)):
+        if per := check_series_sonarrs(show.get("sonarrs"), body, dl_specs, str(key), service_specs):
             series[int(key)]["sonarrs"] = per
         if show.get("main_off") is True:  # not downloaded for the main Sonarr, only for the others
             series[int(key)]["main_off"] = True
@@ -753,7 +861,7 @@ async def save_config(request):
     for service, levels in (body.get("service_defaults") or {}).items():
         service_specs = check_service(service, known, "the service defaults")
         opts = check_options(levels.get("options") or {}, dl_specs, service)
-        own = check_options(levels.get("service_options") or {}, service_specs, service)
+        own = check_options(levels.get("service_options") or {}, service_specs, service, free=True)
         picks = {}
         if backend := str(levels.get("backend") or ""):
             if backend not in {b["name"] for b in settings.get("backends") or []}:
@@ -836,12 +944,13 @@ def check_fallback(alt: dict, known: dict | None, dl_specs: list[dict], key: str
     if title.startswith("-"):
         raise web.HTTPBadRequest(text=f"The fallback URL of {key} cannot start with '-'")
     numbering = {k: v for k, v in check_numbering(alt, f"the fallback of {key}").items() if k in sonarr_sync.FALLBACK_NUMBERING}
-    own = check_options(alt.get("service_options") or {}, specs, f"the fallback of {key}")
+    own = check_options(alt.get("service_options") or {}, specs, f"the fallback of {key}", free=True)
     return {"service": service, "title": title, **({"service_options": own} if own else {}), **numbering}
 
 
 def check_ladders(given) -> list[dict]:
-    """Quality ladders: each a name and its steps, in order: a codec and a range (empty: any), a height from min to max (0: no limit)."""
+    """Quality ladders: each a name and its steps, in order: a codec and a range (empty: any), a height from min to max (0: no limit),
+    a highest bitrate in kbps (0: none)."""
     out = []
     for ladder in given if isinstance(given, list) else sonarr_sync.BUILTIN_LADDERS:
         name = str(ladder.get("name") or "").strip()
@@ -855,12 +964,14 @@ def check_ladders(given) -> list[dict]:
             if (codec and codec not in sonarr_sync.CODECS) or (dynamic and dynamic not in sonarr_sync.RANGES):
                 raise web.HTTPBadRequest(text=f"The quality ladder {name}: unknown codec or range")
             try:
-                low, high = int(step.get("min") or 0), int(step.get("max") or 0)
+                low, high, kbps = int(step.get("min") or 0), int(step.get("max") or 0), int(step.get("max_kbps") or 0)
             except (TypeError, ValueError):
-                raise web.HTTPBadRequest(text=f"The quality ladder {name}: heights are whole numbers, like 1080") from None
+                raise web.HTTPBadRequest(text=f"The quality ladder {name}: heights and bitrates are whole numbers, like 1080") from None
             if not (0 <= low <= 10000 and 0 <= high <= 10000) or (high and low > high):
                 raise web.HTTPBadRequest(text=f"The quality ladder {name}: a step's lowest height is above its highest")
-            steps.append({"codec": codec, "range": dynamic, "min": low, "max": high})
+            if not 0 <= kbps <= 1_000_000:
+                raise web.HTTPBadRequest(text=f"The quality ladder {name}: a step's bitrate is in kbps, like 8000")
+            steps.append({"codec": codec, "range": dynamic, "min": low, "max": high, **({"max_kbps": kbps} if kbps else {})})
         if not steps:
             raise web.HTTPBadRequest(text=f"The quality ladder {name} has no step")
         orders = {}
@@ -873,7 +984,8 @@ def check_ladders(given) -> list[dict]:
                 raise web.HTTPBadRequest(text=f"The quality ladder {name}: {bad[0]!r} is not a language code like fr or en-AU")
             if codes:
                 orders[kind] = list(dict.fromkeys(codes))
-        out.append({"name": name, "steps": steps, **orders})
+        # the service may list fewer codecs than it serves (a listing in H.264 only): a step it lists none of is tried anyway
+        out.append({"name": name, "steps": steps, **orders, **({"blind": True} if ladder.get("blind") is True else {})})
     return out
 
 
@@ -1001,7 +1113,7 @@ def check_quiet(quiet) -> dict | None:
     return {"from": quiet["from"], "to": quiet["to"]}
 
 
-EVENTS = ("down", "cookies", "cdm", "precheck", "disk")  # what else is watched and told: Unshackle or Sonarr down, cookies, CDM devices, a check before a release
+EVENTS = ("down", "cookies", "precheck", "disk")  # what else is watched and told: Unshackle or Sonarr down, cookies, a check before a release
 
 
 def check_broadcast(plan: dict, key: str) -> dict:
@@ -1029,8 +1141,14 @@ def check_broadcast(plan: dict, key: str) -> dict:
             raise bad(f"{day} is not a day with a number of episodes") from None
     if not 1 <= per_evening <= 9 or any(not 0 <= c <= 9 for c in evenings.values()):
         raise bad("an evening has 0 to 9 episodes")
+    try:  # minutes between two episodes of the same evening
+        gap = int(plan.get("gap") or 0)
+    except (TypeError, ValueError):
+        raise bad("the next episode comes a whole number of minutes later") from None
+    if not 0 <= gap <= 600:
+        raise bad("the next episode comes 0 to 600 minutes later")
     return {"from": first, "start": start.isoformat(), "time": str(plan["time"]), "every": every,
-            **({"days": days} if every == "weekly" else {}), "per_evening": per_evening, **({"evenings": evenings} if evenings else {})}
+            **({"days": days} if every == "weekly" else {}), "per_evening": per_evening, **({"evenings": evenings} if evenings else {}), **({"gap": gap} if gap else {})}
 
 
 def check_numbering(show: dict, key: str) -> dict:
@@ -1081,9 +1199,12 @@ LANGUAGE_TAG = re.compile(r"[a-z]{2,3}(-[a-z0-9]{2,8})*", re.IGNORECASE)
 
 
 def check_audio_accept(value, where: str, what: str = "audio") -> str:
-    """The audio (or subtitle, or upgrade) languages of a setting, as "fr, en": language tags only, never orig or all."""
+    """The audio (or subtitle, or upgrade) languages of a setting, as "fr, en": language tags, never all or best; the
+    accepted audio takes orig too, the series' original language as Sonarr gives it."""
     codes = [c for c in re.split(r"[,\s]+", str(value or "").strip()) if c]
     for code in codes:
+        if what == "audio" and code.lower() == "orig":
+            continue
         if not LANGUAGE_TAG.fullmatch(code) or code.lower() in ("orig", "all", "best"):
             if what == "subtitles":  # whole sentences, each its own: they are translated as they are
                 raise web.HTTPBadRequest(text=f"Required subtitle languages of {where}: {code!r} is not a language code like fr or en-US")
@@ -1177,7 +1298,7 @@ def check_settings(body: dict, previous: dict) -> dict:
     if mode not in ("", "local", "remote"):
         raise web.HTTPBadRequest(text="unshackle runs either here (local) or elsewhere (remote)")
     settings["unshackle_mode"] = mode
-    for name in ("unshackle_command", "downloads", "unshackle_downloads", "sonarr_downloads", "cookies_dir", "unshackle_config_dir"):
+    for name in ("unshackle_command", "downloads", "unshackle_downloads", "sonarr_downloads", "cookies_dir", "cache_dir", "unshackle_config_dir"):
         settings[name] = str(body.get(name) or "").strip().rstrip("/\\")
         folder = settings[name]
         if name != "unshackle_command" and folder and (not (posixpath.isabs(folder) or ntpath.isabs(folder))
@@ -1228,6 +1349,10 @@ def check_settings(body: dict, previous: dict) -> dict:
     settings["download_window_bursts"] = body.get("download_window_bursts") is True
     settings["spoiler_free"] = body.get("spoiler_free") is True
     settings["download_only"] = body.get("download_only") is True
+    hook = str(body.get("after_download_url") or "").strip()
+    if hook and not URL.fullmatch(hook):
+        raise web.HTTPBadRequest(text="The After download address must start with http:// or https://")
+    settings["after_download_url"] = hook
     settings["quality_ladder"] = str(body.get("quality_ladder") or "")  # checked against the ladders by save_config
     settings["upgrade_other_groups"] = body.get("upgrade_other_groups") is True
     settings["upgrade_check_new"] = body.get("upgrade_check_new") is True
@@ -1355,7 +1480,7 @@ def search_series_url(service: str, title: str) -> str | None:
     """The series' address on its service when its search has exactly one result of that title."""
     show = {"service": service}
     dl, _ = sonarr_sync.stacked(show, read_config())
-    params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy")}
+    params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy", "remote", "server")}
     query = re.sub(r"\s*\(\d{4}\)\s*$", "", title)
     try:
         found = sonarr_sync.backend_for(service).call("POST", "/api/search", json={**params, "service": service, "query": query})
@@ -1443,7 +1568,7 @@ def due_releases(now: datetime, inst: dict | None = None) -> list[int]:
 
 def due_in(now: datetime, inst: dict | None) -> list[int]:
     config = read_config()
-    timed = [s for s in config["series"].values() if s.get("release_time")]
+    timed = [s for s in config["series"].values() if sonarr_sync.release_time(s)]
     if not timed:
         return []  # no series has a release time: no need to ask Sonarr every 30 s
     due = []
@@ -1451,7 +1576,7 @@ def due_in(now: datetime, inst: dict | None) -> list[int]:
         show = config["series"].get(ep["series"]["tvdbId"])
         if show and inst and sonarr_sync.off_in(inst, show):
             continue  # that library switched off for the series
-        slot = show and show.get("service") and show.get("release_time") and sonarr_sync.release_slot(show, ep)  # no time: no burst
+        slot = show and show.get("service") and sonarr_sync.release_time(show) and sonarr_sync.release_slot(show, ep)  # no time: no burst
         burst_for = timedelta(minutes=float(sonarr_sync.SETTINGS["burst_minutes"]))
         if slot and slot <= now < slot + burst_for and not ep["hasFile"] and not sonarr_sync.episode_folder(ep).exists():
             due.append(ep["id"])
@@ -1498,7 +1623,8 @@ def precheck(now: datetime) -> list[str]:
         problem = "" if sonarr_sync.stacked(show, config)[0].get("--cdm") else sonarr_sync.no_cdm(show["service"])  # its own device
         if not problem:
             try:
-                if not any(t.get("type") == "episode" for t in list_titles(show)):
+                premiere = any(e["episodeNumber"] == 1 for e in eps)  # nothing out yet: an empty list is normal
+                if not any(t.get("type") == "episode" for t in list_titles(show)) and not premiere:
                     problem = f"{show['service']} lists no episodes for this series: is its URL still right?"
             except UnshackleError as e:
                 problem = str(e)
@@ -1580,6 +1706,11 @@ def add_or_download(episode_id: int, want: str, anyway: bool = False) -> None:
     except Exception as e:  # anything unforeseen: the whole episode again, as before
         print(f"Add the audio: {type(e).__name__}: {e}", flush=True)
     run_sync([episode_id], replace=True, kind="upgrade")
+
+
+def add_audio_soon(episode_id: int, lang: str) -> None:
+    """The audio added to the episode's file in the background (add_or_download: the whole episode when it can't)."""
+    threading.Thread(target=add_or_download, args=(episode_id, lang), daemon=True).start()
 
 
 async def confirm_audio(request):
@@ -1670,6 +1801,12 @@ def unshackle_health(full: bool = False) -> dict:
             state["jobs"] = [{"id": j["job_id"], "service": j.get("service"), "title": j.get("current_title") or j.get("title") or j.get("title_id"),
                               "status": j["status"], "progress": round(float(j.get("progress") or 0))}
                              for j in jobs if j["status"] in ("queued", "downloading")]
+            key = dashboard_key()
+            status = UNSHACKLE.dashboard(key) or {}
+            state["errors"] = {svc: sum(codes.values()) for svc, codes in (status.get("errors") or {}).items() if isinstance(codes, dict)}
+            state["sessions"] = [{k: x.get(k) for k in ("owner", "service", "title", "title_id")}
+                                 for x in ((UNSHACKLE.dashboard(key, "sessions") or {}).get("sessions") or [])] if status else []
+            state["caps"] = unshackle_caps(h, bool(status), bool(key))
             state["tools"] = UNSHACKLE.tools() + [
                 {"name": f"{name} (for Unshacklarr)", "installed": bool(shutil.which(name)), "required": True}
                 for name in ("mkvmerge", "mkvpropedit")]
@@ -1795,12 +1932,10 @@ async def watch_updates():
 
 
 ALERTS_FILE = sonarr_sync.DATA / "alerts.json"  # what was told already: {key: state}, told again only when it changes
-CDM_TEST_EVERY = timedelta(days=1)
 
 
 def check_alerts(now: datetime | None = None) -> None:
-    """Cookies about to expire or expired, and CDM devices in use that fail their test (tested once a day):
-    each told once, told again only if it changes."""
+    """Cookies about to expire or expired: each told once, told again only if it changes."""
     now = now or datetime.now(timezone.utc)
     settings = read_config()["notifications"]
     events = settings.get("events") or {}
@@ -1815,6 +1950,9 @@ def check_alerts(now: datetime | None = None) -> None:
             problems["library"] = ("error", "A library folder is almost full",
                                    f"Less than {keep:g} GB free in {', '.join(full_roots)}: nothing is downloaded for its series. Make room, "
                                    "or lower the room kept free in Settings, Unshackle, Folders.")
+    if events.get("precheck", True) and (services := remote_unsupported(read_config())):
+        problems["remote"] = ("error", "--remote is not supported", f"Series of {', '.join(services)} use it: their downloads will fail. "
+                                                                   "Update Unshackle to a version after 6.0.0.")
     if events.get("cookies", True):
         try:
             state = cookie_state()
@@ -1827,29 +1965,9 @@ def check_alerts(now: datetime | None = None) -> None:
                 if f.get("expired"):
                     problems[f"cookies:{name}"] = ("error", f"{name} cookies have expired", "Its downloads will fail: replace them in Settings, Cookies.")
                 elif left is not None and 0 <= left < 7:
-                    problems[f"cookies:{name}"] = ("warning", f"{name} cookies expire in {max(1, round(left))} days",
+                    days = round(left)
+                    problems[f"cookies:{name}"] = ("warning", f"{name} cookies expire in {days} days" if days > 1 else f"{name} cookies expire in 1 day",
                                                     "Replace them before they expire, in Settings, Cookies.")
-    if events.get("cdm", True):
-        try:
-            state = cdm_state()
-        except UnshackleError:
-            state, unknown = None, unknown + ["cdm:"]
-        for d in (state or {}).get("devices", []):
-            if not d.get("used_by") or d.get("folder") or (d.get("info") or {}).get("unreadable"):
-                continue
-            test = d.get("test")
-            if not test or now - datetime.fromisoformat(test["at"]) > CDM_TEST_EVERY:
-                try:
-                    result = UNSHACKLE.call("POST", "/api/cdm/devices/test", json={"kind": d["kind"].lower(), "name": d["name"]})
-                except UnshackleError:
-                    unknown.append(f"cdm:{d['kind']}:{d['name']}")
-                    continue  # Unshackle down: told apart
-                test = {k: result.get(k) for k in ("ok", "revoked", "error", "keys")} | {"at": now.isoformat()}
-                note_cdm_test(f"{d['kind']}:{d['name']}", test)
-            if not test.get("ok"):
-                word = "was revoked" if test.get("revoked") else "failed its test"
-                problems[f"cdm:{d['kind']}:{d['name']}"] = ("error", f"CDM {d['name']} {word}",
-                                                             f"{test.get('error') or 'No license'}. Used by {', '.join(d['used_by'])}: see Settings, CDM.")
     for key, (level, title, message) in problems.items():
         if told.get(key) != title:
             sonarr_sync.notify(settings, level, title, message)
@@ -1858,7 +1976,7 @@ def check_alerts(now: datetime | None = None) -> None:
 
 
 async def watch_alerts():
-    """Every minute, what the quiet hours kept; every hour, cookies and CDM devices."""
+    """Every minute, what the quiet hours kept; every hour, cookies."""
     last = None
     while True:
         try:
@@ -1879,9 +1997,50 @@ async def status(request):
     return web.json_response(health)
 
 
+def unshackle_caps(health: dict, dashboard: bool, keyed: bool) -> list[dict]:
+    """What this Unshackle lets Unshacklarr do, asked to it: each with what is missing when it cannot."""
+    after = "Needs Unshackle after 6.0.0"
+    try:
+        remote = isinstance(UNSHACKLE.config().get("remote_services"), list)
+    except UnshackleError:
+        remote = False
+    try:
+        UNSHACKLE.remote_logins()
+        logins = True
+    except UnshackleError:
+        logins = False
+    major = re.match(r"(\d+)", str(health.get("version") or ""))
+    return [{"name": "Download questions", "ok": bool(major and int(major[1]) >= 6), "why": "Needs Unshackle 6"},
+            {"name": "--remote", "ok": remote, "why": after},
+            {"name": "Remote logins", "ok": logins, "why": after},
+            {"name": "Dashboard", "ok": dashboard, "why": "Wrong serve: dashboard: key:" if keyed else "Needs serve: dashboard: key:"}]
+
+
+def remote_unsupported(config: dict) -> list[str]:
+    """The services whose series are set to --remote while this Unshackle cannot run it (6.0.0)."""
+    shows = [s for s in config["series"].values() if s.get("service") and sonarr_sync.stacked(s, config)[0].get("--remote")]
+    if not shows:
+        return []
+    try:
+        if isinstance(UNSHACKLE.config().get("remote_services"), list):
+            return []
+    except UnshackleError:
+        return []  # down: told apart
+    return sorted({str(s["service"]) for s in shows})
+
+
+def dashboard_key() -> str:
+    """serve.dashboard.key of the unshackle.yaml Unshacklarr sees: its errors and its drain before a restart; "" without."""
+    try:
+        dashboard = (cdm.read(cdm_paths()[0]).get("serve") or {}).get("dashboard")
+    except (UnshackleError, cdm.CdmError, OSError, yaml.YAMLError, AttributeError):
+        return ""
+    return str(dashboard.get("key") or "") if isinstance(dashboard, dict) else ""
+
+
 async def restart_unshackle(_):
     try:
-        await asyncio.to_thread(UNSHACKLE.restart)
+        await asyncio.to_thread(UNSHACKLE.restart, await asyncio.to_thread(dashboard_key))
     except UnshackleError as e:
         raise web.HTTPBadGateway(text=str(e))
     health["unshackle"] = {**await asyncio.to_thread(unshackle_health, True), "checked": datetime.now(timezone.utc).isoformat()}
@@ -1909,7 +2068,29 @@ def cookie_state() -> dict:
         wants = {s["tag"] for s in UNSHACKLE.services() if "cookies" in (s.get("auth_methods") or [])}
     except UnshackleError:
         wants = set()
-    return {"folder": str(folder), "files": files, "used": used, "wants": sorted(wants)}
+    return {"folder": str(folder), "files": files, "used": used, "wants": sorted(wants), "unwritable": unwritable_files(folder)}
+
+
+def unwritable_files(cookies_dir: Path, most: int = 20) -> list[str]:
+    """Files and folders of Unshackle's (cookies, cache and its device tokens, its config folder) that this user cannot
+    write: left owned by root after a docker exec, they make a service fail on a cache or token it can't save. Only
+    the folders Unshacklarr sees; the first `most` found."""
+    folders = [cookies_dir]
+    for where in (cache_folder, lambda: Path(sonarr_sync.SETTINGS.get("unshackle_config_dir") or "")):
+        try:
+            if str(found := where()) not in ("", "."):
+                folders.append(found)
+        except UnshackleError:
+            pass
+    out, seen = [], 0
+    for folder in dict.fromkeys(folders):
+        for path in [folder, *folder.rglob("*")] if folder.is_dir() else []:
+            seen += 1
+            if seen > 20_000 or len(out) >= most:  # ponytail: a bounded walk, a huge cache is not read whole
+                return out
+            if not os.access(path, os.W_OK):
+                out.append(str(path))
+    return out
 
 
 async def list_cookies(_):
@@ -1969,35 +2150,6 @@ def cdm_paths() -> tuple[Path, Path, Path]:
                          "and set its path in Settings, Unshackle (UNSHACKLE_CONFIG_DIR with Docker)")
 
 
-CDM_TESTS = sonarr_sync.DATA / "cdm_tests.json"  # each device's last test: "Widevine:name": {at, ok, revoked, error, keys}
-cdm_tests_lock = threading.Lock()
-
-
-def cdm_tests() -> dict:
-    return read_json(CDM_TESTS, {})
-
-
-def note_cdm_test(key: str, result: dict | None) -> None:
-    with cdm_tests_lock:
-        tests = cdm_tests()
-        if result is None:
-            tests.pop(key, None)
-        else:
-            tests[key] = result
-        write_atomic(CDM_TESTS, json.dumps(tests))
-
-
-def cdm_details() -> tuple[dict, str | None]:
-    """What each device's certificate says, asked to Unshackle (it has the DRM libraries)."""
-    try:
-        found = UNSHACKLE.call("GET", "/api/cdm/devices")["devices"]
-    except UnshackleError as e:
-        if "404" in str(e) or "not found" in str(e).lower():
-            return {}, "This Unshackle cannot describe or test its devices: it needs the /api/cdm routes (a newer Unshackle)"
-        return {}, str(e)
-    return {(d["kind"], d["name"]): d for d in found}, None
-
-
 def cdm_state() -> dict:
     conf, wvds, prds = cdm_paths()
     try:
@@ -2005,38 +2157,7 @@ def cdm_state() -> dict:
     except UnshackleError:
         services = []
     state = cdm.state(conf, wvds, prds)
-    details, details_error = cdm_details()
-    tests = cdm_tests()
-    for d in state["devices"]:
-        d["info"] = details.get((d["kind"].lower(), d["name"]))
-        d["test"] = tests.get(f"{d['kind']}:{d['name']}")
-    return {"folder": str(conf.parent), **state, "services": services, "details_error": details_error}
-
-
-async def cdm_test(request):
-    """A test license from the DRM's own test server, remembered for the page."""
-    body = await json_object(request)
-    kind, name = str(body.get("kind") or ""), str(body.get("name") or "")
-    if kind not in ("Widevine", "PlayReady"):
-        raise web.HTTPBadRequest(text="The kind is Widevine or PlayReady")
-    try:
-        result = await asyncio.to_thread(UNSHACKLE.call, "POST", "/api/cdm/devices/test", json={"kind": kind.lower(), "name": name})
-    except UnshackleError as e:
-        raise web.HTTPBadGateway(text=str(e))
-    result = {k: result.get(k) for k in ("ok", "revoked", "error", "keys")} | {"at": datetime.now(timezone.utc).isoformat()}
-    await asyncio.to_thread(note_cdm_test, f"{kind}:{name}", result)
-    return web.json_response(result)
-
-
-async def cdm_reprovision(request):
-    body = await json_object(request)
-    name = str(body.get("name") or "")
-    try:
-        done = await asyncio.to_thread(UNSHACKLE.call, "POST", "/api/cdm/devices/reprovision", json={"name": name})
-    except UnshackleError as e:
-        raise web.HTTPBadRequest(text=str(e))
-    await asyncio.to_thread(note_cdm_test, f"PlayReady:{name}", None)  # a new certificate: its old test says nothing now
-    return web.json_response({"backup": done.get("backup"), "state": await asyncio.to_thread(cdm_state)})
+    return {"folder": str(conf.parent), **state, "services": services}
 
 
 async def list_cdm(_):
@@ -2059,7 +2180,6 @@ async def cdm_action(request):
             await asyncio.to_thread(cdm.add, wvds, prds, str(body.get("filename") or ""), content)
         elif action == "delete":
             await asyncio.to_thread(cdm.delete, conf, wvds, prds, str(body.get("name") or ""), str(body.get("kind") or ""))
-            await asyncio.to_thread(note_cdm_test, f"{body.get('kind')}:{body.get('name')}", None)
         elif action == "remote-save":
             await asyncio.to_thread(cdm.remote_save, conf, body.get("form") or {}, str(body["was"]) if body.get("was") else None)
         elif action == "remote-delete":
@@ -2335,7 +2455,7 @@ async def allow_proxies(_):
     return web.json_response({"saved": new != text})
 
 
-MAINTENANCE = {"clear-cache", "clear-temp", "refresh-services"}  # serve's own /api/maintenance actions
+MAINTENANCE = {"clear-cache", "clear-temp", "refresh-services", "clear-finished"}  # serve's own maintenance actions
 
 
 async def unshackle_maintenance(request):
@@ -2343,12 +2463,50 @@ async def unshackle_maintenance(request):
     if action not in MAINTENANCE:
         raise web.HTTPNotFound(text="Unknown maintenance action")
     try:
-        result = await asyncio.to_thread(UNSHACKLE.call, "POST", f"/api/maintenance/{action}")
+        path = "/api/download/jobs/clear-finished" if action == "clear-finished" else f"/api/maintenance/{action}"
+        result = await asyncio.to_thread(UNSHACKLE.call, "POST", path)
     except UnshackleError as e:
         raise web.HTTPBadGateway(text=str(e))
     if action == "refresh-services":
         UNSHACKLE.configure(sonarr_sync.SETTINGS)  # forget the services it listed before
     return web.json_response(result)
+
+
+def cache_folder() -> Path:
+    if sonarr_sync.SETTINGS.get("cache_dir"):
+        return Path(sonarr_sync.SETTINGS["cache_dir"])
+    if UNSHACKLE.mode == "local":
+        return UNSHACKLE.local.paths(str(sonarr_sync.SETTINGS.get("unshackle_command") or ""))["cache"]
+    raise UnshackleError("Unshacklarr cannot see Unshackle's Cache folder: mount it and set its path "
+                         "in Settings, Unshackle (CACHE_DIR with Docker)")
+
+
+def clear_service_cache(tag: str) -> int:
+    """Empty one service's folder of Unshackle's cache (its logins, tokens and sessions): the bytes freed."""
+    if tag not in {s["tag"] for s in UNSHACKLE.services()}:
+        raise web.HTTPNotFound(text="Unknown service")
+    if ((read_config().get("service_defaults") or {}).get(tag) or {}).get("backend"):
+        raise web.HTTPBadRequest(text=f"{tag} downloads on another Unshackle server: clear its cache there")
+    if any(j.get("service") == tag and j.get("status") in ("queued", "downloading") for j in UNSHACKLE.jobs()):
+        raise web.HTTPConflict(text=f"A {tag} download is running: clear its cache once it is done")
+    folder = cache_folder() / tag
+    freed = 0
+    for item in folder.iterdir() if folder.is_dir() else []:
+        if item.is_dir() and not item.is_symlink():
+            freed += sum(f.stat().st_size for f in item.rglob("*") if f.is_file())
+            shutil.rmtree(item)
+        else:
+            freed += item.lstat().st_size
+            item.unlink()
+    return freed
+
+
+async def clear_cache_of(request):
+    try:
+        freed = await asyncio.to_thread(clear_service_cache, request.match_info["tag"])
+    except UnshackleError as e:
+        raise web.HTTPBadGateway(text=str(e))
+    return web.json_response({"freed_bytes": freed})
 
 
 async def cancel_job(request):
@@ -2363,9 +2521,14 @@ async def cancel_job(request):
 
 
 async def unshackle_log(_):
-    if UNSHACKLE.mode == "remote":
-        raise web.HTTPBadRequest(text="A remote unshackle serve keeps its log where it runs")
-    return web.json_response({"log": UNSHACKLE.local.tail(400, "\n")})
+    if UNSHACKLE.mode != "remote":
+        return web.json_response({"log": UNSHACKLE.local.tail(400, "\n")})
+    found = await asyncio.to_thread(UNSHACKLE.dashboard, await asyncio.to_thread(dashboard_key), "logs")
+    if found is None:
+        raise web.HTTPBadRequest(text="Its log needs serve: dashboard: key: in unshackle.yaml (Unshackle after 6.0.0)")
+    lines = [f"{datetime.fromtimestamp(float(r.get('ts') or 0)).strftime('%H:%M:%S')} {r.get('level')} {r.get('logger')}: {r.get('msg')}"
+             for r in found.get("records") or [] if not str(r.get("logger") or "").startswith("aiohttp.access")]  # not every request
+    return web.json_response({"log": "\n".join(lines[-400:])})
 
 
 async def stop_run(request):
@@ -2425,6 +2588,47 @@ async def unqueue(request):
     return web.json_response({"unqueued": episode_id})
 
 
+def job_base_options(batch: str) -> dict:
+    """The options a job's episodes download with before its own: the defaults, its service's, its series' (for another
+    Sonarr, with that Sonarr's own); empty when the job is over."""
+    job = sonarr_sync.running_jobs.get(batch) or {}
+    if not job.get("episodes"):
+        return {}
+    config = sonarr_sync.read_file()
+    inst = sonarr_sync.SONARRS.get(job.get("sonarr") or "")
+    config = sonarr_sync.instance_config(inst, config) if inst else config
+    show = (config.get("series") or {}).get(job["episodes"][0]["series"]["tvdbId"])
+    if not show or not show.get("service"):
+        return {}
+    dl, own = sonarr_sync.stacked(show, config)
+    return {"options": dl, "service_options": own}
+
+
+async def job_options(request):
+    """A job's own download options (GET), or new ones (POST) for its episodes still to come: over the series' options,
+    the series left as it is."""
+    batch = request.match_info["batch"]
+    if not BATCH_ID.fullmatch(batch):
+        raise web.HTTPBadRequest(text="Unknown job")
+    shown = lambda o: {k: masked_options((o or {}).get(k)) for k in ("options", "service_options")}  # a proxy's credentials masked
+    if request.method == "GET":  # with the options its episodes have without them, for the dialog to start from
+        return web.json_response({**shown(sonarr_sync.job_options.get(batch)), "base": shown(await asyncio.to_thread(job_base_options, batch))})
+    if batch not in sonarr_sync.running_jobs:
+        raise web.HTTPConflict(text="This job is over")
+    body = await json_object(request)
+    service, was = str(body.get("service") or ""), sonarr_sync.job_options.get(batch) or {}
+    known = await asyncio.to_thread(known_services)
+    opts = check_options(real_options(body.get("options") if isinstance(body.get("options"), dict) else {}, was.get("options")),
+                         options.dl_specs(), "this job")
+    own = check_options(real_options(body.get("service_options") if isinstance(body.get("service_options"), dict) else {},
+                                     was.get("service_options")), (known or {}).get(service) if known is not None else None, "this job", free=True)
+    sonarr_sync.job_options[batch] = {"options": opts, "service_options": own}
+    if not opts and not own:
+        sonarr_sync.job_options.pop(batch, None)
+    print(f"Job {batch}: its own options for the episodes still to come", flush=True)
+    return web.json_response(shown(sonarr_sync.job_options.get(batch)))
+
+
 async def pause_job(request):
     """Pause a job (the download going on ends, the next one waits) or let it go on."""
     batch = request.match_info["batch"]
@@ -2436,8 +2640,8 @@ async def pause_job(request):
     return web.json_response({"paused": batch in sonarr_sync.paused_jobs})
 
 
-async def join_job(batch: str, episode_id: int, replace: bool = False) -> bool:
-    """The episode at the end of its running job's queue (or in its place, if cancelled before its turn)."""
+async def join_job(batch: str, episode_id: int, replace: bool = False, first: bool = False) -> bool:
+    """The episode at the end of its running job's queue (or in its place, if cancelled before its turn); first: next."""
     if batch not in sonarr_sync.running_jobs:
         return False
     try:
@@ -2445,7 +2649,7 @@ async def join_job(batch: str, episode_id: int, replace: bool = False) -> bool:
     except (requests.RequestException, IndexError):
         return False
     show = read_config()["series"].get(ep["series"]["tvdbId"]) or {}
-    return bool(show.get("service")) and sonarr_sync.add_to_job(batch, ep, show, replace)
+    return bool(show.get("service")) and sonarr_sync.add_to_job(batch, ep, show, replace, first)
 
 
 async def requeue(request):
@@ -2511,6 +2715,53 @@ async def answer_run(request):
     return web.json_response({"sent": True})
 
 
+told_logins: dict[str, str] = {}  # remote login id -> the question told, once each
+
+
+def check_remote_logins() -> None:
+    """What a remote server's login waits on (an OTP, a PIN) while a listing goes through it: in the bell, with a
+    field to answer; done once it asks nothing. ponytail: the main Unshackle only, the others' remote servers unseen."""
+    if not UNSHACKLE.remote_services():
+        return
+    try:
+        asking = {str(lg["id"]): lg for lg in UNSHACKLE.remote_logins() if lg.get("prompt")}
+    except UnshackleError:
+        return
+    for lid, lg in asking.items():
+        if told_logins.get(lid) != lg["prompt"]:
+            told_logins[lid] = lg["prompt"]
+            service = lg.get("service") or "The service"
+            sonarr_sync.notify(read_config()["notifications"], "warning", f"{service} asks you something",
+                               f"{lg['prompt']}\nAnswer in Unshacklarr, for the remote server {lg.get('remote')}.",
+                               action={"kind": "input", "id": f"rl-{lid}", "text": lg["prompt"], "service": service, "login": lid})
+    for lid in [k for k in told_logins if k not in asking]:
+        told_logins.pop(lid)
+        sonarr_sync.inbox_resolve(f"rl-{lid}")
+
+
+async def watch_remote_logins():
+    while True:
+        try:
+            if read_config()["auth"]:
+                await asyncio.to_thread(check_remote_logins)
+        except Exception as e:
+            print(f"Remote logins: {e}", flush=True)
+        await asyncio.sleep(3)
+
+
+async def answer_remote_login(request):
+    """The person's answer to what a remote server's login asks, passed to Unshackle."""
+    login = request.match_info["login"]
+    answer = str((await json_object(request)).get("response") or "").strip()
+    if not answer or len(answer) > 200:
+        raise web.HTTPBadRequest(text="Type the answer first")
+    try:
+        await asyncio.to_thread(UNSHACKLE.call, "POST", f"/api/remote/logins/{login}/input", json={"response": answer})
+    except UnshackleError as e:
+        raise web.HTTPBadGateway(text=str(e))
+    return web.json_response({"sent": True})
+
+
 async def delete_run(request):
     run_id = request.match_info["run_id"]
     if not RUN_ID.fullmatch(run_id):
@@ -2520,6 +2771,21 @@ async def delete_run(request):
     if not await asyncio.to_thread(forget_runs, lambda c: c["id"] != run_id):
         raise web.HTTPNotFound(text="No such download in the history")
     return web.json_response({"deleted": 1})
+
+
+async def delete_job(request):
+    """A job over, out of the history: every attempt of it, as each one's Delete does. One still running or queued in it:
+    stop the job first."""
+    batch = request.match_info["batch"]
+    if not BATCH_ID.fullmatch(batch):
+        raise web.HTTPBadRequest(text="Unknown job")
+    if any(c.get("batch") == batch for c in sonarr_sync.waiting.values()) or \
+            any(c.get("batch") == batch and c["outcome"] == "running" for c in await asyncio.to_thread(run_cards)):
+        raise web.HTTPConflict(text="This job is still going on: stop it first")
+    deleted = await asyncio.to_thread(forget_runs, lambda c: c.get("batch") != batch)
+    if not deleted:
+        raise web.HTTPNotFound(text="No such job in the history")
+    return web.json_response({"deleted": deleted})
 
 
 async def clear_runs(request):
@@ -2704,13 +2970,14 @@ def room_for_one_more() -> None:
 
 
 def run_sync(episode_ids: list[int] | None = None, replace: bool = False, kind: str = "manual", numbering: dict | None = None,
-             batch: str | None = None, sonarr: str = "", proxy: str = "", video: dict | None = None) -> threading.Thread:
+             batch: str | None = None, sonarr: str = "", proxy: str = "", video: dict | None = None,
+             extra: dict | None = None) -> threading.Thread:
     """A sync in the background: every missing episode, or the ones given. Each episode has
     its own lock, so these runs never download the same one twice."""
     def work():
         global last_sync
         try:
-            sonarr_sync.main(episode_ids, replace=replace, kind=kind, numbering=numbering, batch=batch, sonarr=sonarr, proxy=proxy, video=video)
+            sonarr_sync.main(episode_ids, replace=replace, kind=kind, numbering=numbering, batch=batch, sonarr=sonarr, proxy=proxy, video=video, extra=extra)
         except Exception as e:  # notified already; the page shows the history
             print(f"Sync stopped: {type(e).__name__}: {e}", flush=True)
         finally:
@@ -2842,7 +3109,7 @@ def sonarrs_of_series(main: set[int] = frozenset()) -> tuple[dict[int, list[dict
             stats = serie.get("statistics") or {}
             out.setdefault(tvdb, []).append({"name": inst["name"], "url": inst["url"], "slug": serie.get("titleSlug") or "",
                                              "missing": max(0, stats.get("episodeCount", 0) - stats.get("episodeFileCount", 0)),
-                                             "id": serie["id"]})
+                                             "id": serie["id"], "monitored": serie.get("monitored")})
             if tvdb not in main and tvdb not in only:
                 only[tvdb] = {**series_entry(serie), "id": None}
     return out, list(only.values())
@@ -2948,13 +3215,13 @@ def plain_title(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", text).strip()
 
 
-GENERIC_TITLE = re.compile(r"(tba|tbd|episode|episodio|folge|aflevering|emission)( \d+)?")  # MyTF1's "Émission 7" too
+GENERIC_TITLE = re.compile(r"(tba|tbd|tbc|episode|episodio|folge|aflevering|emission)( \d+)?")  # MyTF1's "Émission 7" too
 
 
 def usable_title(text: str | None) -> str:
     """A title worth comparing, plain; "" for none, a placeholder ("TBA", "Episode 3") or one written mostly
     in another alphabet (TMDB's Japanese title of an anime, before its translations). An episode number
-    ahead of the name goes (Molotov's "E6 Franck Dubosc")."""
+    ahead of the name goes (Molotov's "E6 Franck Dubosc", TVDB's "PAGE 14 Donjon" for Netflix's "Donjon")."""
     letters = [c for c in text or "" if c.isalpha()]
     latin = sum(unicodedata.normalize("NFKD", c).encode("ascii", "ignore").isalpha() for c in letters)
     if letters and latin * 2 < len(letters):  # another alphabet: "修行DEディナー" is not a title "de"
@@ -2962,7 +3229,7 @@ def usable_title(text: str | None) -> str:
     plain = plain_title(text or "")
     if GENERIC_TITLE.fullmatch(plain):
         return ""
-    return re.sub(r"^e\d+ (?=\w)", "", plain)
+    return re.sub(r"^(e|ep|episode|page|chapter|chapitre|capitulo|kapitel) ?\d+ (?=\w)", "", plain)
 
 
 TVDB_TITLES = sonarr_sync.DATA / "tvdb_titles.json"
@@ -3126,8 +3393,9 @@ def match_by_title(service_eps: list[dict], sonarr_eps: list[dict], tmdb_eps: li
 def list_titles(show: dict) -> list[dict]:
     """The series' titles on its service, with its profile, proxy and service options: nothing downloaded."""
     dl, own = sonarr_sync.stacked(show, read_config())
-    params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy")}
-    params.update(options.to_params(own, options.service_specs(sonarr_sync.service_entry(show["service"]))))
+    params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy", "remote", "server")}
+    if service := options.to_params(own, options.service_specs(sonarr_sync.service_entry(show["service"]))):
+        params["service_params"] = service
     return sonarr_sync.backend_for(show["service"]).call("POST", "/api/list-titles", json={**params, "service": show["service"], "title_id": str(show["title"])})["titles"]
 
 
@@ -3177,7 +3445,7 @@ def page_of_season(show: dict, name: str, aired: int) -> dict | None:
     """A show of its own on the series' service for one of its seasons: one search result of that very name, not the
     series' own page, whose listing holds at least half of the season's aired episodes in one of its seasons."""
     dl, _ = sonarr_sync.stacked(show, read_config())  # as search_series_url: the series' profile and proxy
-    params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy")}
+    params = {k: v for k, v in options.to_params(dl, options.dl_specs()).items() if k in ("profile", "proxy", "no_proxy", "remote", "server")}
     try:
         found = sonarr_sync.backend_for(show["service"]).call("POST", "/api/search", json={**params, "service": show["service"], "query": name})
     except UnshackleError as e:
@@ -3603,13 +3871,25 @@ async def download(request):
         if numbering is None:
             numbering = await asyncio.to_thread(retried_numbering, ids, batch)
         replace = replace or await asyncio.to_thread(retried_replace, ids, batch)
+    extra = None
+    if isinstance(body.get("options"), dict) or isinstance(body.get("service_options"), dict):  # Retry with options: this download's own
+        known = await asyncio.to_thread(known_services)
+        extra = {"options": check_options(real_options(body.get("options") or {}, {}), options.dl_specs(), "this download"),
+                 "service_options": check_options(real_options(body.get("service_options") or {}, {}),
+                                                  (known or {}).get(str(body.get("service") or "")) if known is not None else None,
+                                                  "this download", free=True)}
+        if batch in sonarr_sync.running_jobs:
+            batch = ""  # the job still runs: its options would be the whole job's, so this one goes on its own
     if why := await asyncio.to_thread(still_on_serve, ids, inst["name"] if inst else ""):
         raise web.HTTPConflict(text=why)
-    if batch and len(ids) == 1 and not inst and await join_job(batch, ids[0], replace):  # join_job reads the main Sonarr's ids
-        return web.json_response({"running": True})  # the job still runs: at the end of its queue, one download at a time
+    if batch and not inst:  # the job still runs: in its queue (retries next, in order), one download at a time
+        left = [i for i in reversed(ids) if not await join_job(batch, i, replace, body.get("retry") is True)][::-1]  # main Sonarr's ids
+        if not left:
+            return web.json_response({"running": True})
+        ids = left
     room_for_one_more()
     run_sync(ids, replace=replace, kind="retry" if body.get("retry") is True else "manual", numbering=numbering, batch=batch or None,
-             sonarr=inst["name"] if inst else "")
+             sonarr=inst["name"] if inst else "", extra=extra)
     return web.json_response({"running": True})
 
 
@@ -4105,7 +4385,7 @@ def diagnostic(run_id: str) -> str:
     config = public_config(read_config())
     show = config["series"].get(card.get("tvdbId")) or config["series"].get(str(card.get("tvdbId"))) or {}
     # pasted in a public issue: no address, folder, bucket or account of the user's, the other Sonarrs' and servers' names only
-    private = re.compile(r".*_url$|.*downloads.*|backup_remote_.*|library_.*_root|proxy_auth_from|cookies_dir|unshackle_config_dir")
+    private = re.compile(r".*_url$|.*downloads.*|backup_remote_.*|library_.*_root|proxy_auth_from|cookies_dir|cache_dir|unshackle_config_dir")
     settings = {k: v for k, v in config["settings"].items() if not private.fullmatch(k)}
     for key in ("sonarrs", "backends"):
         if isinstance(settings.get(key), list):
@@ -4546,8 +4826,46 @@ def episode_ids_of(tvdb: int, episodes: list[str]) -> list[int]:
     return [known[x] for x in episodes]
 
 
+def sonarr_codes_of_service(tvdb: int, codes: list[str]) -> tuple[dict[str, str], list[str]]:
+    """The service's own episode codes (Disney+'s S04E05) as the main Sonarr numbers them (S17E45): by the series' last
+    listing on the service first (an episode found there by its very title), else by its numbering read backwards.
+    ({service code: Sonarr code}, the codes no Sonarr episode answers to, or more than one)."""
+    show = read_config()["series"].get(tvdb) or {}
+    series = sonarr_sync.sonarr_get("series", tvdbId=tvdb)
+    if not series:
+        raise web.HTTPNotFound(text=f"Sonarr has no series with TVDB id {tvdb}")
+    eps = [e for e in sonarr_sync.sonarr_get("episode", seriesId=series[0]["id"]) if e["seasonNumber"] > 0 or e.get("episodeNumber")]
+    code_of = {e["id"]: f"S{e['seasonNumber']:02}E{e['episodeNumber']:02}" for e in eps}
+    hit = read_json(SERVICE_LISTS, {}).get(str(tvdb)) or {}
+    listed = hit.get("available") or {} if hit.get("service") == show.get("service") and hit.get("title") == str(show.get("title")) \
+        and hit.get("v") == SERVICE_LIST_FORMAT else {}
+    found, missing = {}, []
+    for code in codes:
+        by_list = {int(i) for i, m in listed.items() if str(m.get("service") or "").split(".")[0] == code
+                   and (m.get("match") != "title" or m.get("same")) and int(i) in code_of}
+        if len(by_list) == 1:
+            found[code] = code_of[by_list.pop()]
+            continue
+        # the numbering backwards, an episode the listing puts under another number left out (it is that one, not this)
+        by_number = [e for e in eps if (sonarr_sync.service_episode(show, e["seasonNumber"], e["episodeNumber"]) or "").split(".")[0] == code
+                     and str((listed.get(str(e["id"])) or {}).get("service") or code).split(".")[0] == code]
+        if len(by_number) == 1 and not by_list:
+            found[code] = code_of[by_number[0]["id"]]
+        else:
+            missing.append(code)
+    return found, missing
+
+
+def file_speaks(ep: dict, lang: str) -> bool | None:
+    """Whether the episode's file has audio in this language, from Sonarr's media info; None: no file."""
+    if not ep.get("hasFile"):
+        return None
+    tags = [x.strip() for x in str(((ep.get("episodeFile") or {}).get("mediaInfo") or {}).get("audioLanguages") or "").split("/") if x.strip()]
+    return sonarr_sync.speaks(tags, [lang])
+
+
 # A download's own proxy, as Unshackle's --proxy takes a provider's region: nordvpn:fr, surfshark:tw, protonvpn:us:ny
-PROXY_OVERRIDE = re.compile(r"[a-z]+:[a-z]{2}[a-z0-9:-]{0,30}", re.IGNORECASE)
+PROXY_OVERRIDE = re.compile(r"[a-z]+:[a-z]{2}[a-z0-9:-]{0,30}(?:@-?[\w.-]{1,40})?", re.IGNORECASE)  # @: a network or IP (after 6.0.0)
 # A download's own video codec, by its usual names, as the quality ladders call it
 VCODEC_OVERRIDE = {"h.264": "AVC", "avc": "AVC", "h.265": "HEVC", "hevc": "HEVC"}
 
@@ -4566,9 +4884,19 @@ async def v1_start_download(request):
     """Episodes by Sonarr's ids, or by the series' TVDB id and S01E02: downloaded as the page's Download does,
     a file Sonarr has replaced only by a better one. "sonarr": for another Sonarr (its ids), "retry": as a retry,
     "replace": Replace anyway, as the page's button, "proxy": this download's own proxy (nordvpn:fr) over the series',
-    "vcodec" (H.264, H.265) and "quality" (1080): its own video, over the series' quality ladder."""
+    "vcodec" (H.264, H.265) and "quality" (1080): its own video, over the series' quality ladder.
+    "numbering": "service": "episodes" as the series' service numbers them (Disney+'s S04E05), found in Sonarr by its
+    last listing there or the series' numbering. "audio": "fr", that language just came on the service: an episode with no
+    file is downloaded, one whose file has it downloaded again (the service's is better), one whose file lacks it gets
+    it as the audio upgrade setting says (the track added, or the episode again)."""
     body = await json_object(request)
     replace = body.get("replace") is True
+    audio = str(body.get("audio") or "").strip().lower()
+    if audio and not LANGUAGE_TAG.fullmatch(audio):
+        raise web.HTTPBadRequest(text='"audio" is one language code, such as "fr"')
+    by_service = body.get("numbering") == "service"
+    if body.get("numbering") not in (None, "", "sonarr", "service"):
+        raise web.HTTPBadRequest(text='"numbering" is "service" (the service\'s own episode codes) or "sonarr"')
     proxy = body.get("proxy") or ""
     if not isinstance(proxy, str) or (proxy and not PROXY_OVERRIDE.fullmatch(proxy)):
         raise web.HTTPBadRequest(text='"proxy" is a proxy provider and a region, such as "nordvpn:fr"')
@@ -4583,6 +4911,12 @@ async def v1_start_download(request):
             raise web.HTTPNotFound(text=f"Unshacklarr downloads no series with TVDB id {tvdb}: set it up on its page first")
         names = [f"S{int(m[1]):02}E{int(m[2]):02}" for m in (re.fullmatch(r"S(\d+)E(\d+)", x) for x in names)]
         try:
+            if by_service:  # the service's codes, as the main Sonarr numbers them (its listing holds the main one's ids)
+                found, missing = await asyncio.to_thread(sonarr_codes_of_service, tvdb, names)
+                if missing:
+                    svc = (read_config()["series"].get(tvdb) or {}).get("service") or "the service"
+                    raise web.HTTPNotFound(text=f"No episode of Sonarr is {svc}'s {', '.join(missing)} for this series")
+                names = [found[x] for x in names]
             ids = await asyncio.to_thread(on_sonarr, inst, episode_ids_of, tvdb, names)
         except requests.RequestException as e:
             raise web.HTTPBadGateway(text=f"Sonarr is unreachable: {no_credentials(e)}")
@@ -4595,9 +4929,25 @@ async def v1_start_download(request):
     if why := await asyncio.to_thread(still_on_serve, ids, inst["name"] if inst else ""):
         raise web.HTTPConflict(text=why)
     room_for_one_more()
-    run_sync(ids, **({"kind": "retry"} if body.get("retry") is True else {}), **({"sonarr": inst["name"]} if inst else {}),
-             **({"replace": True} if replace else {}), **({"proxy": proxy} if proxy else {}), **({"video": video} if video else {}))
-    return web.json_response({"queued": len(ids)})
+    common = {**({"kind": "retry"} if body.get("retry") is True else {}), **({"sonarr": inst["name"]} if inst else {}),
+              **({"proxy": proxy} if proxy else {}), **({"video": video} if video else {})}
+    if not audio:
+        run_sync(ids, **common, **({"replace": True} if replace else {}))
+        return web.json_response({"queued": len(ids)})
+    # that language just came on the service: Unshacklarr decides per episode from the file Sonarr has
+    eps = await asyncio.to_thread(on_sonarr, inst, lambda: sonarr_sync.sonarr_get("episode", episodeIds=ids, includeEpisodeFile="true"))
+    kinds = {e["id"]: file_speaks(e, audio) for e in eps}
+    fresh, again, lacking = ([i for i in ids if kinds.get(i) is k] for k in (None, True, False))
+    if fresh:
+        run_sync(fresh, **common)
+    if again:
+        run_sync(again, **common, replace=True)
+    for i in lacking:  # the audio upgrade setting: the track added to the file, or the episode again
+        if sonarr_sync.SETTINGS.get("upgrade_mode") == "add_track" and not inst and not common.get("video") and not proxy:
+            add_audio_soon(i, audio)
+        else:
+            run_sync([i], **common, replace=True, **({} if body.get("retry") is True else {"kind": "upgrade"}))
+    return web.json_response({"queued": len(ids), "downloaded": len(fresh), "replaced": len(again), "audio_added": len(lacking)})
 
 
 async def v1_stop(request):
@@ -4978,6 +5328,43 @@ async def security_headers(request, response):
         response.headers.setdefault(name, value)
 
 
+def resume_queue() -> int:
+    """The jobs a restart stopped, queued again in the order they were picked, a paused one still paused."""
+    try:
+        jobs = json.loads(sonarr_sync.QUEUE_FILE.read_text())
+    except (OSError, ValueError):
+        return 0
+    n = 0
+    for batch, job in sorted(jobs.items()) if isinstance(jobs, dict) else []:
+        ids = [i for i in job.get("episodes") or [] if isinstance(i, int) and i > 0]
+        if not ids or not BATCH_ID.fullmatch(batch):
+            continue
+        if job.get("paused"):
+            sonarr_sync.paused_jobs.add(batch)
+        if isinstance(job.get("options"), dict):
+            sonarr_sync.job_options[batch] = job["options"]
+        print(f"Picking up job {batch} again: {len(ids)} episode{'s' if len(ids) > 1 else ''}{' (paused)' if job.get('paused') else ''}", flush=True)
+        thread = run_sync(list(dict.fromkeys(ids)), replace=job.get("replace") is True, kind=job.get("kind") or "manual",
+                          numbering=job.get("numbering"), batch=batch, sonarr=job.get("sonarr") or "", proxy=job.get("proxy") or "",
+                          video=job.get("video"), extra=job.get("extra") if isinstance(job.get("extra"), dict) else None)
+        sonarr_sync.restoring[batch] = (thread, job)  # kept in the file until it runs
+        n += len(ids)
+    return n
+
+
+async def watch_queue():
+    """The jobs' queue kept on disk every few seconds, so a restart (an update) loses no episode still to come."""
+    await asyncio.to_thread(resume_queue)
+    await asyncio.sleep(30)  # the jobs picked up have built their queue again: not written empty meanwhile
+    last = None
+    while True:
+        try:
+            last = await asyncio.to_thread(sonarr_sync.save_queue, last)
+        except OSError as e:
+            print(f"Could not keep the queue: {e}", flush=True)
+        await asyncio.sleep(5)
+
+
 def background(loop):
     """A loop that runs for as long as the server does, as aiohttp's cleanup context."""
     async def context(app):
@@ -4994,11 +5381,13 @@ app.cleanup_ctx.append(background(run_automatic_syncs))
 app.cleanup_ctx.append(stop_unshackle)
 app.cleanup_ctx.append(background(watch_health))
 app.cleanup_ctx.append(background(watch_alerts))
+app.cleanup_ctx.append(background(watch_remote_logins))
 app.cleanup_ctx.append(background(watch_prechecks))
 app.cleanup_ctx.append(background(watch_upgrades))
 app.cleanup_ctx.append(background(watch_upgrade_checks))
 app.cleanup_ctx.append(background(watch_updates))
 app.cleanup_ctx.append(background(watch_backups))
+app.cleanup_ctx.append(background(watch_queue))
 app.add_routes([
     web.get("/", index),
     *[web.get(path, static_file) for path in STATIC],
@@ -5049,6 +5438,7 @@ app.add_routes([
     web.post("/api/unshackle/restart", restart_unshackle),
     web.get("/api/unshackle/log", unshackle_log),
     web.post(r"/api/unshackle/maintenance/{action}", unshackle_maintenance),
+    web.post(r"/api/unshackle/cache/{tag}/clear", clear_cache_of),
     web.post("/api/unshackle/allow-proxies", allow_proxies),
     web.post(r"/api/unshackle/jobs/{job_id}/cancel", cancel_job),
     web.get("/api/cookies", list_cookies),
@@ -5067,18 +5457,20 @@ app.add_routes([
     web.post(r"/api/unshackle/config-file/{action:open|version|save}", unshackle_yaml),
     web.get("/api/cdm", list_cdm),
     web.post(r"/api/cdm/{action:add|delete|choose|remote-save|remote-delete}", cdm_action),
-    web.post("/api/cdm/test", cdm_test),
     web.get("/api/inbox", inbox),
     web.post(r"/api/inbox/{action:read|clear}", inbox_action),
-    web.post("/api/cdm/reprovision", cdm_reprovision),
     web.post(r"/api/runs/{run_id}/stop", stop_run),
     web.post(r"/api/jobs/{batch}/stop", stop_job),
+    web.delete(r"/api/jobs/{batch}", delete_job),
     web.post(r"/api/jobs/{batch}/{action:pause|resume}", pause_job),
+    web.get(r"/api/jobs/{batch}/options", job_options),
+    web.post(r"/api/jobs/{batch}/options", job_options),
     web.post(r"/api/queue/{episode_id:\d+}/remove", unqueue),
     web.post(r"/api/queue/{episode_id:\d+}/add", requeue),
     web.delete(r"/api/runs/{run_id}", delete_run),
     web.get(r"/api/runs/{run_id}/diagnostic", run_diagnostic),
     web.post(r"/api/runs/{run_id}/input", answer_run),
+    web.post(r"/api/remote-logins/{login:[\w-]+}/input", answer_remote_login),
     web.post(r"/api/audio-upgrade/{episode_id:\d{1,9}}", confirm_audio),
     web.post("/api/runs/clear", clear_runs),
     web.post("/api/password", change_password),

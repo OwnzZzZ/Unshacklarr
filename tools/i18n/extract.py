@@ -35,7 +35,8 @@ def wanted(text: str) -> bool:
         return False
     if re.fullmatch(r"[a-z0-9_:.\-/]+", text):  # an identifier, a CSS class, a key, a path
         return False
-    if re.fullmatch(r"([a-z0-9-]+ ?)+", text) and all(w in CSS_CLASSES or "-" in w for w in text.split()):
+    # words apart by one space, as one pattern: "([a-z0-9-]+ ?)+" tried every split of a long lowercase sentence (2 min)
+    if re.fullmatch(r"[a-z0-9-]+( [a-z0-9-]+)* ?", text) and all(w in CSS_CLASSES or "-" in w for w in text.split()):
         return False  # "btn small primary": classes
     if re.match(r"^[#.\[/&]|^https?:|^\w+://|^--|^[a-z]+\(|^\$|^%|^@media", text):
         return False

@@ -51,15 +51,16 @@ function activityLater() {  // the history asked again, not while the tab is out
   if (document.hidden) runsTimer = setTimeout(activityLater, 15000); else openActivity();
 }
 /* The downloads going on now, pushed by the server as they move; the whole list again when one starts or ends. */
-let liveFeed = null, liveNext = null;
+let liveFeed = null, liveNext = null, liveDrawn = 0;
 function followLive() {
   if (liveFeed || !window.EventSource || document.hidden) return;
   liveFeed = new EventSource("/api/runs/live");
   liveFeed.onmessage = (e) => {
     if ($("#tab-log").hidden) { liveFeed.close(); liveFeed = null; return; }
     if (document.hidden) return;  // nothing drawn out of sight: the next message, once back, draws it
-    // several messages waiting (a slow phone, a tab just back): only the last one is drawn, once per frame
-    if (liveNext === null) requestAnimationFrame(() => { const data = liveNext; liveNext = null; liveTick(data); });
+    // several messages waiting (a slow phone, a tab just back, a long job): only the last one is drawn, once a second
+    if (liveNext === null) setTimeout(() => requestAnimationFrame(() => { const data = liveNext; liveNext = null; liveDrawn = Date.now(); liveTick(data); }),
+      Math.max(0, 1000 - (Date.now() - liveDrawn)));
     liveNext = e.data;
   };
   liveFeed.onerror = () => { liveFeed?.close(); liveFeed = null; };  // polling takes over; the next load tries again
@@ -170,16 +171,20 @@ const itemKey = (i) => (i?.job ? `job:${i.job}` : i?.id);
 const itemRow = (i) => (i.job ? jobRow(i) : listRow(i));
 const FINISHING = new Set(["joining", "finishing", "renaming", "importing"]);
 /* Where a job's episodes stand: counts, and how far it is as a whole. */
+/* Where an episode of a job stands, as its counts say it: waiting for a slot counts as queued (by mj23au, #10). */
+function cardKind(c) {
+  if (c.waiting || (isLive(c) && c.step === "queued")) return "queued";
+  if (isLive(c)) return FINISHING.has(c.step) ? "finishing" : "downloading";
+  if (["downloaded", "kept", "import"].includes(c.outcome)) return "done";
+  return c.outcome === "failed" || c.outcome === "cancelled" ? c.outcome : "stopped";
+}
 function jobState(j) {
   const n = { done: 0, failed: 0, stopped: 0, cancelled: 0, downloading: 0, finishing: 0, queued: 0 };
   let progress = 0;
   for (const c of j.cards) {
-    if (c.waiting || (isLive(c) && c.step === "queued")) n.queued++;  // waiting for a slot counts as queued (by mj23au, #10)
-    else if (isLive(c)) { if (FINISHING.has(c.step)) { n.finishing++; progress += 0.95; } else { n.downloading++; progress += (Number(c.live?.progress) || 0) / 100 * 0.9; } }
-    else if (["downloaded", "kept", "import"].includes(c.outcome)) { n.done++; progress += 1; }
-    else if (c.outcome === "failed") { n.failed++; progress += 1; }
-    else if (c.outcome === "cancelled") { n.cancelled++; progress += 1; }
-    else { n.stopped++; progress += 1; }
+    const kind = cardKind(c);
+    n[kind]++;
+    progress += kind === "queued" ? 0 : kind === "finishing" ? 0.95 : kind === "downloading" ? (Number(c.live?.progress) || 0) / 100 * 0.9 : 1;
   }
   const live = n.queued + n.downloading + n.finishing > 0;
   const paused = j.cards.some((c) => c.waiting && c.paused);
@@ -199,6 +204,8 @@ function jobRow(j) {
       : el("span", { className: `chip o-${st.n.failed ? "failed" : st.n.stopped && !st.n.done ? "stopped" : "downloaded"}`,
           textContent: st.n.failed ? `${st.n.failed} failed` : !st.n.done && (st.n.stopped || st.n.cancelled) ? "Stopped" : `${st.n.done}/${j.cards.length}` }));
 }
+const jobHidden = new Set();  // the kinds of episodes hidden in a job (done, queued…), from its counts
+const jobCards = new Map();  // card id -> {sig, li}: the cards of the job shown, kept while they don't change
 const openCards = new Set();  // a job's cards unfolded: they stay so as the job moves on
 let justOpened = null;  // the card unfolding now: it alone fades in
 let following = null;  // a card unfolded by hand while downloading: once done, the next download unfolds in its place
@@ -211,7 +218,7 @@ function afterTracks(c) {
   const lv = c.live || {}, phase = String(lv.phase || "");
   if (phase.startsWith("mux")) return muxPct(c) != null ? `Muxing ${muxPct(c)}%` : "Muxing";
   if (phase.startsWith("repack")) return "Repackaging";
-  if (lv.total_tracks && Number(lv.completed_tracks) >= Number(lv.total_tracks)) return c.cdm ? "Decrypting" : "Processing the tracks";
+  if (lv.total_tracks && Number(lv.completed_tracks) >= Number(lv.total_tracks)) return "Processing the tracks";
   return "";
 }
 /* How far serve's mux is, from the file it writes in its work folder (Unshacklarr reads that folder when it is
@@ -227,24 +234,16 @@ function muxLeft(c) {
   return rate > 0 ? duration(((c.mux.total - c.mux.done) / rate) * 1000) : "";
 }
 const since = (iso) => iso ? duration(Date.now() - new Date(iso)) : "";
-/* The proxy a download goes through: serve's word once it has one, else what was asked; "" for none. */
+/* The proxy asked for a download; "" for none. */
 function proxyOf(c) {
-  if (c.proxy) return c.proxy.provider ? [c.proxy.provider, c.proxy.region?.toUpperCase()].filter(Boolean).join(" · ") : "Custom proxy";
   const asked = c.setup?.proxy;
-  return !asked || asked === "none" || "proxy" in c ? "" : asked.includes("//") ? "Custom proxy" : asked.toUpperCase();
+  return !asked || asked === "none" ? "" : asked.includes("//") ? "Custom proxy" : asked.toUpperCase();
 }
 /* The video asked for this download over the series' ladder: "1080p H.264"; "" when none was. */
 function videoOf(c) {
   const v = c.video_override;
   if (!v) return "";
   return [v.quality && `${v.quality}p`, { AVC: "H.264", HEVC: "H.265" }[v.vcodec] || v.vcodec].filter(Boolean).join(" ");
-}
-/* The CDM a download decrypts with: its device, its DRM and level (L3, SL2000), or the server's. */
-function cdmOf(c) {
-  const d = c.cdm;
-  if (!d) return "";
-  const drm = [d.drm, d.level != null ? `${d.drm === "PlayReady" ? "SL" : "L"}${d.level}` : ""].filter(Boolean).join(" ");
-  return d.server ? `The server's (${drm})` : [d.name, drm].filter(Boolean).join(" · ");
 }
 function metaChip(icon, text) {
   const chip = el("span", { className: "mchip" });
@@ -263,26 +262,46 @@ function renderJob(j) {
     st.live && st.n.queued ? el("button", { className: `btn small${st.paused ? " primary" : ""}`, textContent: st.paused ? "Resume" : "Pause",
       title: st.paused ? "The next episode starts" : "The current download finishes; the next one waits",
       onclick: (e) => pauseJob(j, !st.paused, e.target) }) : "",
+    st.live && st.n.queued ? el("button", { className: "btn small", textContent: "Options", title: "Download options for the episodes still to come in this job",
+      onclick: () => openJobOptions(j) }) : "",
     st.live ? el("button", { className: "btn small danger", textContent: "Stop the job", title: "Stops the current download. The queued episodes don't start",
       onclick: (e) => stopJob(j, e.target) }) : "",
-    !st.live && retryable.length ? el("button", { className: "btn small primary", textContent: `Retry ${retryable.length} failed`,
-      title: "Downloads them again, in this job", onclick: (e) => retryJob(j, retryable, e.target) }) : ""].filter(Boolean);
+    retryable.length ? el("button", { className: "btn small primary", textContent: `Retry ${retryable.length} failed`,
+      title: st.live ? "Downloads them again, before the episodes still to come" : "Downloads them again, in this job",
+      onclick: (e) => retryJob(j, retryable, e.target) }) : "",
+    !st.live ? el("button", { className: "btn small", textContent: "Delete the job", title: "Removes every episode of this job from the history",
+      onclick: (e) => deleteJob(j, e.target) }) : ""].filter(Boolean);
   $("#cd-foot").replaceChildren(...acts.map((b) => { const copy = b.cloneNode(true); copy.onclick = b.onclick; return copy; }));
   const head = el("div", { className: "cd-head" }, thumb("detail", posterOf(first)),
     el("div", {}, el("h3", { textContent: title }),
       el("small", { className: "line1", textContent: `${first.service} · ${KIND[first.kind] || first.kind} · started ${day(started)} ${started.toLocaleTimeString(LOCALE)}` }),
       el("small", { className: "line2" }, el("b", { textContent: first.service }), `${KIND[first.kind] || first.kind} · ${day(started)} ${time(started)}`)),
     el("div", { className: "act" }, ...acts));
-  const overall = el("div", { className: "job-sum" },
-    el("div", { className: "job-counts" }, ...(st.paused ? [el("span", { className: "paused", textContent: "⏸ Paused: the next episode waits" })] : []), ...[["done", "Done", "ok"], ["downloading", "Downloading", "now"], ["finishing", "Finishing", "now"],
-      ["queued", "Queued", ""], ["failed", "Failed", "err"], ["stopped", "Stopped", ""], ["cancelled", "Cancelled", ""]]
-      .filter(([k]) => st.n[k]).map(([k, label, cls]) => el("span", { className: cls }, el("b", { textContent: st.n[k] }), label))),
+  // each count shows or hides its episodes: a job of 200 episodes, its failed ones alone in sight
+  const counts = el("div", { className: "job-counts" }, ...(st.paused ? [el("span", { className: "paused", textContent: "⏸ Paused: the next episode waits" })] : []), ...[["done", "Done", "ok"], ["downloading", "Downloading", "now"], ["finishing", "Finishing", "now"],
+    ["queued", "Queued", ""], ["failed", "Failed", "err"], ["stopped", "Stopped", ""], ["cancelled", "Cancelled", ""]]
+    .filter(([k]) => st.n[k]).map(([k, label, cls]) => el("button", { type: "button", className: `${cls}${jobHidden.has(k) ? " off" : ""}`, ariaPressed: String(!jobHidden.has(k)),
+      title: jobHidden.has(k) ? "Show these episodes" : "Hide these episodes", onclick: () => { jobHidden.has(k) ? jobHidden.delete(k) : jobHidden.add(k); renderConsole(); } },
+      el("b", { textContent: st.n[k] }), label)));
+  const overall = el("div", { className: "job-sum" }, counts,
     el("span", { className: "bar" }, el("i", { style: `width:${st.progress}%`, dataset: { k: `job:${j.job}` } })));
   const isDownloading = (c) => isLive(c) && !c.waiting && !FINISHING.has(c.step) && !isQueued(c);
   const followed = j.cards.find((c) => c.id === following);
   const next = followed && !isDownloading(followed) && !isQueued(followed) && j.cards.find(isDownloading);
   if (next) { openCards.delete(followed.id); openCards.add(next.id); following = next.id; }
-  const cards = el("ol", { className: "job-cards" }, ...j.cards.map((c) => {
+  const shown = j.cards.filter((c) => !jobHidden.has(cardKind(c)));
+  const cards = shown.map((c) => {
+    // a card that doesn't move (done, queued, folded) is the same element as at the last draw: a job of 200 episodes
+    // redrawn each second rebuilt 200 cards and froze the page
+    const still = !openCards.has(c.id) && (c.waiting || !isLive(c));
+    const sig = still && JSON.stringify([c.outcome, c.ended, c.cause, c.size, c.waiting, c.paused]);
+    const kept = still && jobCards.get(c.id);
+    if (kept && kept.sig === sig) return kept.li;
+    const li = jobCard(c);
+    if (still) jobCards.set(c.id, { sig, li }); else jobCards.delete(c.id);
+    return li;
+  });
+  function jobCard(c) {
     const live = isLive(c);
     const label = c.waiting ? "Queued" : live ? (FINISHING.has(c.step) ? { joining: "Joining parts", finishing: "Finishing", renaming: "Renaming", importing: "Importing" }[c.step]
       : isQueued(c) ? "Waiting for a slot" : afterTracks(c) || `Downloading ${Math.round(Number(c.live?.progress) || 0)}%`) : outcomeOf(c);
@@ -325,11 +344,27 @@ function renderJob(j) {
         ...(acts.length ? [el("div", { className: "jacts" }, ...acts)] : []),  // unfolded: its actions in its head, not a line of their own
         el("span", { className: "chev", ariaHidden: "true", textContent: "›", onclick: fold })),  // last, after the actions
       ...(open ? [el("div", { className: "jbody" + (justOpened === c.id ? " opening" : "") }, ...runBody(c))] : []));
-  }));
-  keepPromptFocus(() => $("#cd-main").replaceChildren(el("div", { style: "display:grid;gap:18px" }, head, st.live ? overall : jobDone(j, st), cards)));
+  }
+  // the same job drawn again: its list keeps its elements, only the cards that changed are put in
+  let list = $("#cd-main").querySelector(`ol.job-cards[data-job="${j.job}"]`);
+  if (!list) { list = el("ol", { className: "job-cards", dataset: { job: j.job } }); jobCards.clear(); }
+  cards.forEach((li, i) => { if (list.children[i] !== li) list.insertBefore(li, list.children[i] || null); });
+  while (list.children.length > cards.length) list.lastChild.remove();
+  const sum = st.live ? overall : el("div", { style: "display:grid;gap:12px" }, jobDone(j, st), counts), box = list.parentElement;
+  keepPromptFocus(() => box?.isConnected ? (box.children[0].replaceWith(head), box.children[1].replaceWith(sum))  // the list stays where it is
+    : $("#cd-main").replaceChildren(el("div", { style: "display:grid;gap:18px" }, head, sum, list)));
   glideBars($("#cd-main"));
   $("#cd-raw").hidden = false;
   if ($("#cd-raw").open && termFor !== `job:${j.job}`) streamJob(j.job);
+  const now = j.cards.find(isDownloading) || j.cards.find((c) => isLive(c) && !c.waiting && !isQueued(c));
+  renderDock({ ...(now ? dockOf(now) : { ep: `${j.cards.length} episodes`, line: st.words.join(" · "),
+    pct: st.live ? `${st.progress}%` : st.n.failed ? `${st.n.failed} failed` : "✓", tone: st.live ? "" : st.n.failed ? "err" : "ok", progress: st.progress }),
+    acts: [
+      st.live && st.n.queued ? { key: "pause", label: st.paused ? "Resume the job" : "Pause the job", icon: st.paused ? DOCK.play : DOCK.pause, cls: st.paused ? "on" : "",
+        go: (b) => pauseJob(j, !st.paused, b) } : null,
+      st.live && st.n.queued ? { key: "opts", label: "Options of this job", icon: DOCK.opts, go: () => openJobOptions(j) } : null,
+      retryable.length ? { key: "retry", label: `Retry ${retryable.length} failed`, icon: DOCK.retry, cls: "retry", go: (b) => retryJob(j, retryable, b) } : null,
+      st.live ? { key: "stop", label: "Stop the job", icon: DOCK.stop, cls: "stop", go: (b) => stopJob(j, b) } : null].filter(Boolean) });
 }
 /* A job over, in a few words: how long, how big. */
 function jobTotals(j) {
@@ -357,7 +392,7 @@ function jobDone(j, st) {
 function listRow(c) {
   const started = new Date(c.started);
   const sub = isLive(c)
-    ? (c.action ? `${c.service} · waiting for you: code ${c.action.code}` : c.prompt ? `${c.service} · waiting for your answer`
+    ? (c.prompt ? `${c.service} · waiting for your answer`
       : c.waiting ? `${c.service} · in the queue` : isQueued(c) ? `${c.service} · waiting for a slot` : `${c.service} · ${afterTracks(c) || speedOf(c) || c.step}`)
     : c.outcome === "unavailable" && c.checks > 1 ? `${c.service} · checked ${c.checks} times, last ${day(started)} ${time(started)}`
     : `${day(started)} ${time(started)}${c.ended ? ` · ${duration(new Date(c.ended) - started)}` : ""}`;
@@ -383,7 +418,7 @@ async function showLeftovers() {
   $("#con").classList.add("open");
   document.querySelectorAll(".crow").forEach((r) => r.classList.toggle("sel", r.id === "con-left"));
   $("#cd-top-title").textContent = "Waiting in downloads";
-  $("#cd-raw").hidden = true;
+  $("#cd-raw").hidden = true; renderDock(null);
   $("#cd-foot").replaceChildren();
   let r;
   try { r = await api("/api/leftovers"); } catch (e) { return $("#cd-main").replaceChildren(failed(e.message, showLeftovers)); }
@@ -435,7 +470,7 @@ async function showMissing() {
   $("#con").classList.add("open");
   document.querySelectorAll(".crow").forEach((r) => r.classList.toggle("sel", r.id === "con-missing"));
   $("#cd-top-title").textContent = "Catch up";
-  $("#cd-raw").hidden = true;
+  $("#cd-raw").hidden = true; renderDock(null);
   $("#cd-foot").replaceChildren();
   $("#cd-main").replaceChildren(loading("Asking Sonarr what your series miss…"));
   let r;
@@ -479,7 +514,7 @@ async function showUpgrades(fresh = true) {
   $("#con").classList.add("open");
   document.querySelectorAll(".crow").forEach((r) => r.classList.toggle("sel", r.id === "con-upgrades"));
   $("#cd-top-title").textContent = "Upgrades";
-  $("#cd-raw").hidden = true;
+  $("#cd-raw").hidden = true; renderDock(null);
   $("#cd-foot").replaceChildren();
   let r;
   if (upgradeSonarr && !(S.config.settings.sonarrs || []).some((i) => i.name === upgradeSonarr)) upgradeSonarr = "";
@@ -565,7 +600,7 @@ async function showStats() {
   $("#con").classList.add("open");
   document.querySelectorAll(".crow").forEach((r) => r.classList.toggle("sel", r.id === "con-stats"));
   $("#cd-top-title").textContent = "Stats";
-  $("#cd-raw").hidden = true;
+  $("#cd-raw").hidden = true; renderDock(null);
   $("#cd-foot").replaceChildren();
   let st;
   try { st = await api("/api/stats"); } catch (e) { return $("#cd-main").replaceChildren(failed(e.message, showStats)); }
@@ -639,7 +674,71 @@ function renderDetail(c) {
   glideBars($("#cd-main"));
   $("#cd-raw").hidden = !!c.waiting;  // not started: no output yet
   if ($("#cd-raw").open && !c.waiting && termFor !== c.id) streamRun(c);
+  renderDock(c.waiting ? null : dockOf(c));
 }
+/* The bar at the bottom of a job or a download: the episode going on (or how it ended), the job's actions on a phone
+   (its head has them on a wide screen), and the output, opened over the page. Its elements stay from one draw to the
+   next (a live download redraws each second): a press started on a button is not lost. */
+const DOCK = {
+  term: '<path d="m5 8 4 4-4 4M12 16h7"/>', up: '<path d="M6 15l6-6 6 6"/>', pause: '<path d="M8 5v14M16 5v14"/>', play: '<path d="M7 5v14l11-7z"/>',
+  opts: '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',
+  retry: '<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>', stop: '<rect x="6" y="6" width="12" height="12" rx="2"/>',
+};
+function dockOf(c) {  // one download: where it stands, in a line
+  const live = isLive(c), pct = Math.round(Number(c.live?.progress) || 0);
+  const track = (c.tracks || []).find((t) => t.progress < 100)?.label;
+  const line = live ? [afterTracks(c) || (FINISHING.has(c.step) ? c.step : track && `downloading ${track}`), speedOf(c), timeLeft(c) && `${timeLeft(c)} left`].filter(Boolean).join(" · ")
+    : [outcomeOf(c), c.cause].filter(Boolean).join(" · ");
+  return { ep: c.sxxeyy, line, pct: live ? `${pct}%` : c.outcome === "downloaded" ? "✓" : "", tone: live ? "" : c.outcome === "downloaded" ? "ok" : c.outcome === "failed" ? "err" : "",
+    progress: live ? pct : 100, acts: [] };
+}
+function renderDock(d) {
+  const dock = $("#dock"), detail = $("#con-detail");
+  detail.classList.toggle("docked", !!d);
+  detail.classList.toggle("docked-acts", !!d?.acts.length);
+  dock.hidden = !d;
+  if (!d) return closeSheet();
+  if (!dock.firstChild) {
+    const svg = (path) => { const s = document.createElementNS("http://www.w3.org/2000/svg", "svg"); s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("aria-hidden", "true"); s.innerHTML = path; return s; };
+    dock.append(el("span", { className: "d-ico" }, svg(DOCK.term)),
+      el("div", { className: "d-mid" }, el("div", { className: "d-l1" }, el("b"), el("span"), el("em")), el("span", { className: "bar" }, el("i"))),
+      el("div", { className: "d-acts" }), el("span", { className: "d-sep" }),
+      el("button", { type: "button", className: "d-open", ariaLabel: "Show the output", onclick: () => (dock.classList.contains("open") ? closeSheet() : openSheet()) }, svg(DOCK.up)));
+  }
+  const [b, span, em] = dock.querySelector(".d-l1").children;
+  b.textContent = d.ep; span.textContent = d.line; span.title = d.line; em.textContent = d.pct; em.className = d.tone || "";
+  dock.querySelector(".bar i").style.width = `${d.progress}%`;
+  const acts = dock.querySelector(".d-acts"), key = d.acts.map((a) => `${a.key}:${a.label}`).join("|");
+  if (acts.dataset.key !== key) {  // rebuilt only when they change: a press is not lost to a redraw
+    acts.dataset.key = key;
+    acts.replaceChildren(...d.acts.map((a) => { const btn = el("button", { type: "button", className: a.cls || "", ariaLabel: a.label }); btn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${a.icon}</svg>`; return btn; }));
+  }
+  [...acts.children].forEach((btn, i) => { btn.onclick = () => d.acts[i].go(btn); });  // the latest job state
+  dock.querySelector(".d-sep").hidden = !d.acts.length;
+}
+/* The output, in the bar itself: it grows upwards and folds back (not over the page: a terminal under a transform
+   took its scrollbar's drags wrong). */
+function openSheet() {
+  const raw = $("#cd-raw"), dock = $("#dock");
+  dock.prepend(raw);
+  dock.classList.add("open");
+  raw.open = true;  // its toggle streams the output
+}
+function closeSheet() {
+  const raw = $("#cd-raw"), dock = $("#dock");
+  if (!dock.classList.contains("open")) return;
+  dock.classList.remove("open");
+  raw.open = false;
+  $("#cd-foot").before(raw);  // back in its place, hidden while the bar is there
+}
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("#dock").classList.contains("open")) closeSheet(); });
+$("#dock").addEventListener("click", (e) => {  // the bar's line opens or folds the output, as its arrow does
+  if (e.target.closest(".d-acts, .d-open, .cd-raw")) return;  // its buttons do their own; the output's head folds it
+  $("#dock").classList.contains("open") ? closeSheet() : openSheet();
+});
+document.addEventListener("click", (e) => {  // a click beside the open output folds it (not one in a dialog it opened)
+  if ($("#dock").classList.contains("open") && !$("#dock").contains(e.target) && !e.target.closest("dialog, .toast")) closeSheet();
+});
 /* The same, as round icon buttons for a job's card (the common tooltip says what each does). */
 const ACT_ICONS = {
   stop: '<rect x="6" y="6" width="12" height="12" rx="2"/>', import: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
@@ -669,6 +768,8 @@ function runActs(c) {
     live && c.job_id ? el("button", { className: "btn small danger", textContent: "Stop", onclick: (e) => stopRun(c, e.target) }) : "",
     !live && (c.outcome === "kept" || c.outcome === "import") ? el("button", { className: "btn small primary", textContent: c.outcome === "kept" ? "Import anyway" : "Import", onclick: (e) => importKept(c, e.target) }) : "",
     !live && c.episodeId && !["downloaded", "kept", "import"].includes(c.outcome) ? el("button", { className: "btn small primary", textContent: "Retry", onclick: (e) => retryRun(c, e.target) }) : "",
+    !live && c.episodeId && !["downloaded", "kept", "import"].includes(c.outcome) ? el("button", { className: "btn small", textContent: "Retry with…",
+      title: "Retry with other download options, this time only", onclick: () => openRetryOptions(c) }) : "",
     !live ? el("button", { className: "btn small", textContent: "Diagnostic", title: "A file to attach to a GitHub issue: versions, settings and this attempt's log, without passwords, keys or tokens",
       onclick: () => downloadDiagnostic(c) }) : "",
     !live ? el("button", { className: "btn small", textContent: "Delete", onclick: (e) => deleteRun(c, e.target) }) : "",
@@ -725,7 +826,6 @@ function runBody(c) {
       el("span", { className: "l", textContent: STEPS[i] }),
       el("span", { className: "s", textContent: STEPS_SHORT[i] }))]));
   const parts = [steps];
-  if (live && c.action) parts.push(actionBox(c));
   if (live && c.prompt) parts.push(promptBox(c.prompt));
   if (live && c.notice) parts.push(el("div", { className: "cd-note warn" },  // Unshackle 6: waits for an approval, nothing to type
     el("b", { textContent: `${c.service || "The service"} is waiting for you` }), el("span", { textContent: c.notice })));
@@ -815,9 +915,8 @@ function openSetup(c, at) {
   setupPop.style.top = `${r.bottom + 8 + p.height > innerHeight - 8 ? Math.max(8, r.top - p.height - 8) : r.bottom + 8}px`;
 }
 function setupBox(c) {
-  const known = "proxy" in c || c.setup.proxy === "none";
   const rows = [["Runs on", c.setup.via], ["On the service", c.serviceEpisode !== c.sxxeyy && c.serviceEpisode],
-    ["Proxy", proxyOf(c) || (known ? "None" : "")], ["Video asked", videoOf(c)], ["CDM", cdmOf(c)], ["Attempt", c.attempts > 1 && String(c.attempts)]].filter(([, v]) => v);
+    ["Proxy", proxyOf(c) || (c.setup.proxy === "none" ? "None" : "")], ["Video asked", videoOf(c)], ["Attempt", c.attempts > 1 && String(c.attempts)]].filter(([, v]) => v);
   const copy = el("button", { type: "button", className: "jact", ariaLabel: "Copy the command",
     onclick: () => navigator.clipboard.writeText(c.setup.command).then(() => toast("Command copied"), () => toast("The browser refused to copy", true)) });
   copy.innerHTML = ICON_COPY;
@@ -825,38 +924,74 @@ function setupBox(c) {
     el("div", { className: "cmd" }, el("code", { textContent: c.setup.command }), copy)];
 }
 $("#cd-raw").addEventListener("toggle", () => {
-  if (!$("#cd-raw").open) return;
+  if (!$("#cd-raw").open) return closeSheet();  // its head pressed: down again
   if (picked_run?.startsWith("job:")) { if (termFor !== picked_run) streamJob(picked_run.slice(4)); return; }
   const c = runCards.find((x) => x.id === picked_run);
   if (c && !c.waiting && termFor !== c.id) streamRun(c);
 });
-/* The output in full (Debug) or its essentials: what happens, warnings and errors, without Unshackle's own log. */
-let termMode = (() => { try { return localStorage.getItem("unshacklarr.termMode") || "essentials"; } catch { return "essentials"; } })();
-const DROPPED = /\x1b\[90m {2}\d\d:\d\d:\d\d (?:DEBUG|INFO) |\x1b\[90mdebug · /;  // Unshackle's INFO and DEBUG lines, the debug traces
+/* The output's bytes as text, a character cut between two chunks kept for the next. */
 function termFilter() {
   const decoder = new TextDecoder();
-  let carry = "";
-  return (bytes) => {
-    const text = carry + decoder.decode(bytes, { stream: true }), cut = text.lastIndexOf("\n");
-    let out = cut < 0 ? "" : text.slice(0, cut + 1);
-    carry = cut < 0 ? text : text.slice(cut + 1);
-    if (termMode === "essentials") out = out.split(/(?<=\n)/).filter((line) => !DROPPED.test(line)).join("");
-    if (carry && !/\x1b\[90m {2}\d\d:|\x1b\[90mdebug/.test(carry)) { out += carry; carry = ""; }  // a progress line, redrawn in place: now
+  return (bytes) => decoder.decode(bytes, { stream: true });
+}
+/* A job's own download options, for its episodes still to come: over the series' options, the series unchanged. */
+let jobOpts = null;
+async function openJobOptions(j) {
+  const service = j.cards[0].service;
+  $("#jobopts-err").textContent = "";
+  try {
+    const [now, specs] = await Promise.all([api(`/api/jobs/${encodeURIComponent(j.job)}/options`), loadServiceOptions(service).catch(() => [])]);
+    // the options its episodes have now: the series' and the ones above it, then the job's own; one the job turned off
+    // (false, "") is not shown
+    const shownNow = (k) => Object.fromEntries(Object.entries({ ...(now.base?.[k] || {}), ...(now[k] || {}) }).filter(([, v]) => v !== false && v !== ""));
+    jobOpts = { job: j.job, service, base: now.base || {}, options: shownNow("options"), service_options: shownNow("service_options") };
+    showOptsDialog(specs, "Options of this job", "Apply to this job");
+  } catch (e) { toast(e.message, true); }
+}
+function showOptsDialog(specs, title, apply, help = "For the episodes still to come in this job. It starts from the options they have now; what you change is for this job only, the series itself does not change.") {
+  $("#jobopts-title").textContent = title;
+  $("#jobopts-help").textContent = help;
+  $("#jobopts-apply").textContent = apply;
+  optionsEditor($("#jobopts-dl"), S.dlOptions, jobOpts.options);
+  optionsEditor($("#jobopts-own"), specs, jobOpts.service_options, true);
+  $("#jobopts-dialog").showModal();
+}
+/* A Retry with other options, this once: the series' options to start from, the series unchanged. */
+async function openRetryOptions(c) {
+  const conf = S.config.series?.[c.tvdbId] || {}, service = conf.service || c.service, per = S.config.service_defaults?.[service] || {};
+  const base = { options: { ...S.config.defaults, ...per.options, ...conf.options }, service_options: { ...per.service_options, ...conf.service_options } };
+  const shown = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== false && v !== ""));
+  $("#jobopts-err").textContent = "";
+  jobOpts = { retry: c, service, base, options: shown(base.options), service_options: shown(base.service_options) };
+  showOptsDialog(await loadServiceOptions(service).catch(() => []), `Retry ${c.sxxeyy} with`, "Retry",
+    "For this download only. It starts from the series' options; the series itself does not change.");
+}
+$("#jobopts-form").onsubmit = async (e) => {
+  if (e.submitter?.value !== "apply" || !jobOpts) return;
+  e.preventDefault();  // open until the server takes them: a wrong value is said here
+  // only what differs from what its episodes would have anyway; one taken away turns that option off for the job
+  const changes = (k) => {
+    const base = jobOpts.base[k] || {}, now = Object.fromEntries(Object.entries(jobOpts[k]).filter(([, v]) => v !== "" && v !== undefined));
+    const out = Object.fromEntries(Object.entries(now).filter(([f, v]) => base[f] !== v));
+    for (const [f, v] of Object.entries(base)) if (!(f in now) && v !== false && v !== "") out[f] = v === true ? false : "";
     return out;
   };
-}
-function showTermMode() { document.querySelectorAll(".term-mode button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === termMode))); }
-document.querySelectorAll(".term-mode button").forEach((b) => b.onclick = (e) => {
-  e.preventDefault();  // in the output's head: a click here doesn't fold it
-  termMode = b.dataset.mode;
-  try { localStorage.setItem("unshacklarr.termMode", termMode); } catch { /* this visit only */ }
-  showTermMode();
-  const was = termFor;
-  termFor = null;
-  if (was?.startsWith("job:")) streamJob(was.slice(4));
-  else { const c = runCards.find((x) => x.id === was); if (c) streamRun(c); }
-});
-showTermMode();
+  try {
+    if (jobOpts.retry) {
+      const c = jobOpts.retry;
+      await api("/api/download", { method: "POST", body: JSON.stringify({ episodeIds: [c.episodeId], retry: true, ...(c.batch ? { batch: c.batch } : {}),
+        ...forSonarr([c]), service: jobOpts.service, options: changes("options"), service_options: changes("service_options") }) });
+      $("#jobopts-dialog").close();
+      toast(`${c.series} ${c.sxxeyy}: downloading again, with these options`);
+      picked_run = null;
+      return setTimeout(openActivity, 1500);
+    }
+    await api(`/api/jobs/${encodeURIComponent(jobOpts.job)}/options`, { method: "POST",
+      body: JSON.stringify({ service: jobOpts.service, options: changes("options"), service_options: changes("service_options") }) });
+    $("#jobopts-dialog").close();
+    toast("Options applied to the episodes still to come in this job");
+  } catch (err) { $("#jobopts-err").textContent = err.message; }
+};
 async function pauseJob(j, pause, button) {
   button.disabled = true;
   runCards = runCards.map((c) => (c.batch === j.job && c.waiting ? { ...c, paused: pause } : c));  // at once
@@ -908,22 +1043,6 @@ async function stopRun(c, button) {
   try { await api(`/api/runs/${encodeURIComponent(c.id)}/stop`, { method: "POST" }); toast(`Stopping ${c.series} ${c.sxxeyy}`); }
   catch (e) { button.disabled = false; toast(e.message, true); }
 }
-/* What the service waits for from you (a TV login): the link to open and the code to enter. */
-function actionBox(c) {
-  const a = c.action, left = a.expires_at ? Math.max(0, Math.round(a.expires_at - Date.now() / 1000)) : null;
-  const code = el("button", { className: "act-code", type: "button", textContent: a.code, title: "Copy the code", onclick: async () => {
-    try { await navigator.clipboard.writeText(a.code); toast("Code copied"); } catch { /* no clipboard: it is on screen */ }
-  } });
-  return el("div", { className: "act-box", role: "status" },
-    el("b", { textContent: `${a.service || c.service}: ${a.message || "action needed"}` }),
-    el("span", { textContent: "Open the link, log in if asked, and enter this code. The download goes on by itself." }),
-    code,
-    el("div", { className: "act-row" },
-      // a link only to a web page: the service's words are data, never a javascript: URL
-      /^https:\/\/[^\s"<>]+$/.test(a.url || "") ? el("a", { className: "btn primary", href: a.url, target: "_blank", rel: "noopener", textContent: `Open ${a.url.replace(/^https:\/\/(www\.)?/, "")}` })
-        : el("span", { textContent: a.url || "" }),
-      left !== null ? el("small", { textContent: left ? `expires in ${Math.ceil(left / 60)} min` : "expired: the next try asks for a new code" }) : ""));
-}
 /* A question the service asks while downloading (an OTP code, a PIN): a field, and the answer sent to it. */
 const promptDrafts = {};  // what was typed, kept across the page's redraws
 function promptBox(p) {
@@ -936,9 +1055,10 @@ function promptBox(p) {
     if (!field.value.trim()) return field.focus();
     send.disabled = true;
     try {
-      await api(`/api/runs/${encodeURIComponent(p.run)}/input`, { method: "POST", body: JSON.stringify({ response: field.value }) });
+      await api(p.login ? `/api/remote-logins/${encodeURIComponent(p.login)}/input` : `/api/runs/${encodeURIComponent(p.run)}/input`,
+        { method: "POST", body: JSON.stringify({ response: field.value }) });
       delete promptDrafts[p.id];
-      toast("Sent: the download goes on");
+      toast(p.login ? "Sent" : "Sent: the download goes on");
     } catch (err) { send.disabled = false; toast(err.message, true); }
   } }, field, send);
   return el("div", { className: "act-box", role: "status" },

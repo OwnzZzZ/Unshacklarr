@@ -22,6 +22,8 @@ DL_OPTIONS = [
     ('vbitrate_range', 'text', "Video Bitrate range in kbps (e.g., '6000-7000'). Selects the highest bitrate within the range.", []),
     ('abitrate_range', 'text', "Audio Bitrate range in kbps (e.g., '128-256'). Selects the highest bitrate within the range.", []),
     ('range', 'list', 'Video Color Range(s) to download, defaults to SDR.', ['SDR', 'HLG', 'HDR10', 'HDR10+', 'DV', 'HYBRID']),
+    ('generate_dv', 'flag', 'With -r HYBRID, make Dolby Vision from the HDR10+ metadata when a title has no Dolby Vision track.', []),
+    ('include_sample', 'flag', 'Download the full title, then also cut a 60 second sample from each muxed file into a Sample folder next to it.', []),
     ('channels', 'number', 'Audio Channel(s) to download. Matches sub-channel layouts like 5.1 with 6.0 implicitly.', []),
     ('no_atmos', 'flag', 'Exclude Dolby Atmos audio tracks when selecting audio.', []),
     ('lang', 'list', "Language(s) wanted for Video and Audio (comma-separated). Use 'orig' to select the original language, e.g. 'orig,en' for both original and English. Prefix a value with '-' to exclude it, e.g. 'all,-es'.", []),
@@ -94,7 +96,8 @@ def flag_of(name: str) -> str:
 
 
 def name_of(flag: str) -> str:
-    return NAMES.get(flag) or flag.lstrip("-").replace("-", "_")
+    """An option's parameter name, as click makes it from a flag: dashes off, inner ones as _, lower case (-B: b)."""
+    return NAMES.get(flag) or flag.lstrip("-").replace("-", "_").lower()
 
 
 # Taken by unshackle serve only: `unshackle dl` has no flag for them, so the command shown leaves them out
@@ -163,7 +166,7 @@ def from_dl_config(dl: dict, service: str) -> dict:
 
 def to_params(options: dict, specs: list[dict]) -> dict:
     """{--flag: value} to {name: typed value}; an empty value or a flag set to false is left out."""
-    by_flag = {s["flag"]: s for s in specs}
+    by_flag = {s["flag"]: s for s in specs} | {s["short"]: s for s in specs if s.get("short")}  # -B: its spec's name
     params = {}
     for flag, value in options.items():
         if value in (None, False, ""):
@@ -192,7 +195,6 @@ def command_line(request: dict) -> str:
         value = ",".join(map(str, value)) if isinstance(value, list) else str(value)
         return [flag_of(name), HIDDEN.sub("//***@", value)]
 
-    own = [a for k, v in request.items() if k not in dl_names and k not in ("service", "title_id", "wanted", "output_dir", "debug")
-           for a in args(k, v)]
+    own = [a for k, v in (request.get("service_params") or {}).items() for a in args(k, v)]
     return shlex.join(["unshackle", "dl", *[a for k, v in request.items() if k in dl_names for a in args(k, v)],
                        request["service"], *own, str(request["title_id"]), "-w", ",".join(request["wanted"])])

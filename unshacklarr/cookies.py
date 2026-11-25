@@ -15,8 +15,9 @@ from unshacklarr.files import shared_or_private, write_atomic
 NAME = re.compile(r"[A-Za-z0-9][\w.-]{0,39}")  # a service tag or a profile: never a path
 MAX_SIZE = 1_000_000
 # Anti-bot and analytics cookies: they last minutes or hours whatever the login does, so they
-# say nothing about whether the file still logs in (Akamai, Cloudflare, DataDome, Google, Meta).
-NOISE = re.compile(r"^(ak_bmsc|bm_\w+|_abck|__cf_bm|cf_clearance|__cfruid|datadome|_ga\w*|_gid|_gat\w*|_gcl_\w+|_fbp|_fbc)$", re.IGNORECASE)
+# say nothing about whether the file still logs in (Akamai, Cloudflare, DataDome, Google, Meta; Amazon's load
+# balancer, a week; Apple's utsdc, an hour).
+NOISE = re.compile(r"^(ak_bmsc|bm_\w+|_abck|__cf_bm|cf_clearance|__cfruid|datadome|_ga\w*|_gid|_gat\w*|_gcl_\w+|_fbp|_fbc|AWSALB\w*|utsdc)$", re.IGNORECASE)
 
 
 class CookieError(ValueError):

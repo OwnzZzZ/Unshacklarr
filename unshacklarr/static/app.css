@@ -109,7 +109,6 @@ nav .short { display: none; }
 #inbox-list.enter .inbox-item { animation: inbox-in .35s cubic-bezier(.2, .7, .3, 1) both; animation-delay: calc(min(var(--i), 12) * 30ms); }
 @keyframes inbox-in { from { opacity: 0; transform: translateY(8px); } }
 #inbox-dialog[open]:not(.menu) { animation: inbox-pop .22s ease-out; } @keyframes inbox-pop { from { opacity: 0; transform: translateY(14px) scale(.98); } }
-.inbox-item .code-chip { justify-self: start; margin-top: 6px; font: 600 13px ui-monospace, SFMono-Regular, Menlo, monospace; padding: 2px 8px;
   border: 1px dashed var(--line); border-radius: 6px; background: var(--bg); color: var(--muted); cursor: copy; }
 #sync.spin .ico { animation: spin 1.2s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -217,7 +216,8 @@ body.drawer-open .savebar { display: none; }
 .ep .chip { justify-self: end; }
 .term { height: 60vh; min-height: 320px; background: #0d1219; border: 1px solid var(--line); border-radius: 8px;
   padding: 8px; overflow-x: auto; overflow-y: hidden; }
-.term .xterm { width: max-content; }
+.term .xterm { width: max-content; padding-right: 12px; }  /* its scrollbar beside the text, not under it: at 120 columns
+   wider than the box, the text covered it and a drag selected text instead */
 /* The fit reads the box's height: with border-box it counted the padding too, one row more than shows, so the
    newest line sat under the bottom edge (by mj23au). And a scrollbar that stays, so the output reads as scrollable */
 .term { box-sizing: content-box; }
@@ -554,7 +554,8 @@ input[type=checkbox].switch:checked { background: var(--accent); } input[type=ch
 .sx-head .dx-add { margin: 0 0 0 auto; width: auto !important; min-width: 0; align-self: center; cursor: pointer; }
 .sx .svc-block { padding: 16px; margin: 0 0 12px; border-radius: 12px; background: rgb(0 0 0 / .14); }
 .sx .svc-block-head { justify-content: flex-start; gap: 10px; margin-bottom: 2px; } .sx .svc-block-head small { color: var(--muted); font-size: 12.5px; }
-.sx .svc-block-head .btn { margin-left: auto; }
+.sx .svc-block-head { flex-wrap: wrap; } .sx .svc-block-head .btn { white-space: nowrap; }
+.sx .svc-block-head .btn:first-of-type { margin-left: auto; }
 @media (max-width: 900px) {
   .sx .sx-hero.dx-hero { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "logo id" "order order"; }
   .sx-head:has(.dx-add) { flex-wrap: wrap; } .sx-head:has(.dx-add) > div { flex: 1 1 200px; } .sx-head .dx-add { margin: 4px 0 0 50px; }
@@ -928,15 +929,47 @@ body.gated > :not(.gate):not(.toasts) { display: none !important; }
 .cd-raw summary .ico { color: var(--accent); } .cd-raw summary .t { flex: 1; }
 .cd-raw summary .chev { width: 16px; height: 16px; fill: none; stroke: var(--muted); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; transition: transform .15s; }
 .cd-raw[open] summary .chev { transform: rotate(90deg); }
-.cd-raw:not([open]) .term-mode { display: none; }
-.cd-raw .term-mode { margin: 0; font-weight: 500; } .cd-raw .term-mode button { padding: 4px 10px; font-size: 12.5px; }
 .cd-raw .term { height: 46vh; border: 0; border-top: 1px solid var(--line); border-radius: 0; }
+/* The bar at the bottom of a job or a download: where it stands, its actions on a phone, and the output over the page */
+.dock { position: sticky; bottom: 12px; z-index: 5; display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 14px;
+  border-radius: 14px; background: rgb(30 38 53 / .96); border: 1px solid var(--line); box-shadow: 0 10px 30px rgb(0 0 0 / .45);
+  backdrop-filter: blur(8px); font-size: 13px; margin-top: auto; }
+.dock .d-ico { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; background: var(--field-bg);
+  border: 1px solid var(--line); color: var(--accent); flex: none; }
+.dock svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.dock .d-mid { flex: 1; min-width: 0; display: grid; gap: 5px; }
+.dock .d-ico, .dock .d-mid { cursor: pointer; }  /* the line opens the output too */
+.dock .d-l1 { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
+.dock .d-l1 b { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; white-space: nowrap; }
+.dock .d-l1 span { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
+.dock .d-l1 em { margin-left: auto; font-style: normal; color: var(--accent); font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+.dock .d-l1 em.ok { color: var(--ok); } .dock .d-l1 em.err { color: var(--err); }
+.dock .bar { height: 3px; }
+.dock .d-acts { display: flex; gap: 6px; flex: none; }
+.dock .d-acts button { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--line); background: var(--field-bg); color: var(--text);
+  display: grid; place-items: center; cursor: pointer; padding: 0; }
+.dock .d-acts button:hover { border-color: var(--field-line-hover); }
+.dock .d-acts .stop { color: var(--err); } .dock .d-acts .retry, .dock .d-acts .on { color: var(--accent); }
+.dock .d-sep { width: 1px; height: 24px; background: var(--line); flex: none; }
+.dock .d-open { width: 34px; height: 34px; border-radius: 9px; border: 0; background: var(--accent); color: var(--accent-ink);
+  display: grid; place-items: center; flex: none; cursor: pointer; padding: 0; }
+.dock .d-open svg { stroke-width: 2.4; }
+.con-detail.docked > .cd-raw { display: none; }  /* the output opens in the bar */
+.dock.open { flex-wrap: wrap; row-gap: 10px; }
+.dock.open > .cd-raw { flex: 1 0 100%; order: -1; }  /* the bar grows upwards: the output above its line */
+.dock.open > .cd-raw .term { height: min(36vh, 380px); }  /* the job above stays in sight: its head and a few episodes */
+.dock.open .d-open svg { transform: rotate(180deg); }
+@media (min-width: 701px) { .dock .d-acts, .dock .d-sep { display: none; } }  /* the job's actions are in its head there */
 .con-none { margin: auto; text-align: center; color: var(--muted); max-width: 40ch; }
 /* A job: its episodes as cards, one after the other */
 .job-sum { display: grid; gap: 10px; } .job-sum .bar { height: 6px; }
 .job-counts { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--muted); }
 .job-counts b { font-size: 20px; color: var(--text); margin-right: 6px; font-variant-numeric: tabular-nums; }
 .job-counts .paused { color: var(--warn); font-weight: 600; }
+.job-counts button { all: unset; cursor: pointer; border-radius: 6px; padding: 2px 6px; margin: -2px -6px; }
+.job-counts button:hover { background: var(--hover, rgba(127,127,127,.12)); }
+.job-counts button:focus-visible { outline: 2px solid var(--accent); }
+.job-counts button.off { opacity: .45; text-decoration: line-through; }
 .job-counts .ok b { color: var(--ok); } .job-counts .now b { color: var(--accent); } .job-counts .err b { color: var(--err); }
 .job-cards { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .jcard { border: 1px solid var(--line); border-radius: 10px; background: var(--bg); overflow: hidden; }  /* no transition: redrawn twice a second, it would replay */
@@ -1163,7 +1196,6 @@ button.pill[aria-pressed="true"] { background: rgb(79 179 191 / .16); border-col
 @media (max-width: 700px) { .ck-row { grid-template-columns: 1fr; gap: 4px; } }
 .act-box { display: grid; gap: 8px; justify-items: start; padding: 14px 16px; border: 1px solid var(--warn); border-radius: 12px; background: rgb(230 185 74 / .08); }
 .act-box > b { color: var(--warn); } .act-box > span { color: var(--muted); font-size: 13px; }
-.act-code { font: 700 26px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .12em; padding: 6px 12px; border: 1px dashed var(--line);
   border-radius: 8px; background: var(--bg); color: var(--text); cursor: copy; }
 .act-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; } .act-row small { color: var(--muted); }
 .act-box .q { color: var(--text); font-size: 14px; } .act-box form { width: 100%; }
@@ -1173,7 +1205,7 @@ button.pill[aria-pressed="true"] { background: rgb(79 179 191 / .16); border-col
 .sx .cdm-dev .st:not(:empty) { justify-self: end; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; background: rgb(255 255 255 / .06); }
 .sx .cdm-dev .st.ok { background: rgb(63 185 122 / .14); } .sx .cdm-dev .st.bad { background: rgb(226 87 76 / .14); } .sx .cdm-dev .st.warn { background: rgb(230 185 74 / .14); } .sx .cdm-dev .st.run { background: rgb(79 179 191 / .14); }
 @media (max-width: 700px) { .sx-head:has(> .btn) { flex-wrap: wrap; } .sx-head:has(> .btn) > div { flex: 1 1 200px; } .sx-head > .btn { margin: 4px 0 0 50px; } .sx .cdm-dev .st:not(:empty) { justify-self: start; } }
-#cdm-alerts { gap: 8px; } #cdm-hero-test:empty { display: none; }
+#cdm-alerts { gap: 8px; }
 .cdm-alert { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: space-between; padding: 10px 14px; border: 1px solid rgb(229 83 75 / .45);
   border-radius: 10px; background: rgb(229 83 75 / .08); font-size: 13.5px; } .cdm-alert b { color: var(--err); }
 .cdm-svcs-box, .cdm-devs { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
@@ -1193,7 +1225,6 @@ button.pill[aria-pressed="true"] { background: rgb(79 179 191 / .16); border-col
 .cdm-dev { display: grid; grid-template-columns: 10px minmax(0, 1.5fr) auto minmax(0, 1fr) 76px 30px; gap: 6px 14px; align-items: center; padding: 9px 14px; }
 .cdm-dev + .cdm-dev { border-top: 1px solid var(--line); }
 .cdm-dev[aria-expanded] { cursor: pointer; } .cdm-dev[aria-expanded]:hover { background: rgb(255 255 255 / .025); } .cdm-dev[aria-expanded]:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.cdm-dev .cdm-more { cursor: auto; }
 .cdm-dev .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
 .cdm-dev.t-ok .dot { background: var(--ok); } .cdm-dev.t-bad .dot { background: var(--err); } .cdm-dev.t-warn .dot { background: var(--warn); }
 .cdm-dev .who { display: grid; min-width: 0; }
@@ -1203,16 +1234,6 @@ button.pill[aria-pressed="true"] { background: rgb(79 179 191 / .16); border-col
 .cdm-dev .used { display: flex; flex-wrap: wrap; gap: 3px; min-width: 0; } .cdm-dev .used small { color: var(--muted); font-size: 12px; }
 .cdm-dev .cdm-chip { padding: 0 7px; font-size: 11px; font-weight: 500; }
 .cdm-dev .st { font-size: 12px; font-weight: 600; text-align: right; color: var(--muted); white-space: nowrap; }
-.cdm-dev.t-run .dot { background: var(--accent); animation: cdm-ping 1s ease-out infinite; } .cdm-dev .st.run { color: var(--accent); animation: cdm-blink 1.2s ease-in-out infinite; }
-.cdm-dev.just .dot { animation: cdm-land .5s cubic-bezier(.3, 1.6, .5, 1); } .cdm-dev.just .st { animation: cdm-in .35s ease-out; }
-@keyframes cdm-ping { 0% { box-shadow: 0 0 0 0 rgb(79 179 191 / .6); } 100% { box-shadow: 0 0 0 7px rgb(79 179 191 / 0); } }
-@keyframes cdm-blink { 50% { opacity: .45; } }
-@keyframes cdm-land { 0% { transform: scale(.2); } 60% { transform: scale(1.7); } 100% { transform: scale(1); } }
-@keyframes cdm-in { from { opacity: 0; transform: translateX(6px); } }
-@media (prefers-reduced-motion: reduce) { .cdm-dev .dot, .cdm-dev .st { animation: none !important; } }
-.cdm-dev .st.ok { color: var(--ok); } .cdm-dev .st.bad { color: var(--err); } .cdm-dev .st.warn { color: var(--warn); }
-.cdm-more { grid-column: 2 / -1; font-size: 12.5px; }
-.cdm-dev .why { margin: 4px 0 0; overflow-wrap: anywhere; } .cdm-dev .why.bad { color: var(--err); } .cdm-dev .why.warn { color: var(--warn); }
 .cdm-more-btn { width: 100%; padding: 10px; border: 0; border-top: 1px solid var(--line); border-radius: 0 0 10px 10px; background: none; color: var(--accent); font: inherit; font-size: 13px; cursor: pointer; }
 .cdm-pop { position: fixed; inset: auto; margin: 0; width: min(320px, calc(100vw - 16px)); max-height: min(340px, calc(100vh - 16px)); display: grid; grid-template-rows: auto auto minmax(0, 1fr);
   gap: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 10px; background: #0d1219; color: var(--text); box-shadow: 0 12px 32px rgb(0 0 0 / .5); overflow: hidden; }
@@ -1226,8 +1247,6 @@ button.pill[aria-pressed="true"] { background: rgb(79 179 191 / .16); border-col
 .cdm-pop.menu { width: min(230px, calc(100vw - 16px)); padding: 6px; gap: 4px; } .cdm-pop.menu .cdm-pop-t { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cdm-pop.menu .cdm-opt small { white-space: normal; }
 .cdm-tools { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; } .cdm-tools + .con-filters { margin-bottom: 10px; } .cdm-tools .con-search { margin: 0; flex: 1; }
-.cdm-facts { display: grid; grid-template-columns: minmax(110px, max-content) minmax(0, 1fr); gap: 4px 14px; margin: 8px 0 2px; }
-.cdm-facts dt { color: var(--muted); } .cdm-facts dd { margin: 0; overflow-wrap: anywhere; }
 .cdm-note { color: var(--warn); font-size: 13px; margin: 0 2px 8px; }
 .cdm-empty { padding: 12px 14px; margin: 0; font-size: 13px; }
 .remote-modal { width: min(520px, calc(100vw - 32px)); max-width: none; }
@@ -1404,7 +1423,8 @@ button.pill[aria-pressed="true"] { background: rgb(79 179 191 / .16); border-col
   .sched-filter::-webkit-scrollbar { display: none; }
   .sched-filter::after { content: ""; flex: 0 0 4px; }  /* the last pill clears the edge once scrolled */
   .sched-filter .pill { flex: 1 0 auto; justify-content: center; min-height: 40px; white-space: nowrap; }
-  .con { grid-template-columns: 1fr; height: auto; min-height: 0; border: 0; background: none; border-radius: 0; }
+  .con { grid-template-columns: 1fr; height: auto; min-height: 0; border: 0; background: none; border-radius: 0; overflow: visible; }
+  .con-detail { overflow: visible; }  /* the page scrolls: the bar stays at the bottom of the screen */
   .con-list, #runs-history { overflow: visible; flex: none; }
   .con-list { border-right: 0; padding: 0; background: none; }
   .con .con-detail { display: none; padding: 4px 0 12px; }
@@ -1425,8 +1445,13 @@ button.pill[aria-pressed="true"] { background: rgb(79 179 191 / .16); border-col
   .steps .l { display: none; } .steps .s { display: inline; }
   .cd-stats { gap: 22px; flex-wrap: nowrap; } .cd-stats b { font-size: 16px; }
   .cd-stats div:nth-child(4) { display: none; }
-  .cd-foot { display: flex; gap: 10px; }
-  .cd-foot .btn { flex: 1; min-height: 44px; }
+  .cd-foot { display: flex; flex-wrap: wrap; gap: 10px; }
+  .cd-foot .btn { flex: 1 1 auto; min-height: 44px; white-space: nowrap; }  /* five buttons: a second row, never a label on two lines */
+  .dock { bottom: calc(76px + env(safe-area-inset-bottom)); padding: 8px 8px 8px 10px; gap: 8px; }
+  .dock .d-ico, .dock .d-l1 span { display: none; }
+  .dock .d-acts button { width: 32px; height: 32px; }
+  .con-detail.docked-acts .cd-foot { display: none; }  /* the bar has the job's actions */
+  .dock.open > .cd-raw .term { height: 30dvh; }
   .cd-tracks .t { grid-template-columns: 1fr auto; } .cd-tracks .t .bar { grid-column: 1 / -1; grid-row: 2; }
   .cd-raw .term { height: 60dvh; min-height: 280px; }
   .icon-hide { opacity: .8; width: 36px; height: 36px; }
@@ -1743,3 +1768,13 @@ input[type=time]:focus:not(.bad) { border-color: var(--accent); box-shadow: 0 0 
 .folder-path { font-family: ui-monospace, monospace; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
 .folder-list { max-height: min(50vh, 360px); margin: 0; } .folder-list .url-hit { grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 8px; }
 .folder-list .url-hit span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .folder-form .status-err:empty { display: none; }
+/* A ladder picker: Edit ladders after its chips; the options it takes over, and the video it picks under a command */
+.ax-seg .ax-edit { align-self: center; margin-left: 4px; font-size: 13px; color: var(--accent); }
+.ladder-clash { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 8px; padding: 8px 12px; border-radius: 9px; font-size: 13px;
+  color: var(--warn); background: color-mix(in srgb, var(--warn) 10%, transparent); border: 1px solid color-mix(in srgb, var(--warn) 35%, var(--line)); }
+.ladder-clash[hidden] { display: none; }
+.dx-cmd .dx-ladder { font-size: 12.5px; color: var(--accent); overflow-wrap: anywhere; }
+
+/* Cookies: files Unshackle cannot write */
+.ck-locked { margin: 0; padding-left: 1.2em; }
+.ck-locked code { word-break: break-all; }
